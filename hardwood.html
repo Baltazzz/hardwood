@@ -1,0 +1,2087 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HARDWOOD — carrière basket</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap');
+
+  :root{
+    --court:#20242e;          /* nettement moins sombre */
+    --court2:#272c38;
+    --panel:#2f3542;
+    --panel2:#3a4150;
+    --line:#454d5d;
+    --chalk:#f4f0e8;
+    --chalk-dim:#b4b6ad;
+    --wood:#d0955a;
+    --wood-deep:#b0742f;
+    --orange:#f07a4e;
+    --orange-soft:#f7a184;
+    --sky:#79b3c9;
+    --up:#63d091;
+    --down:#f47079;
+    --gold:#ecc873;
+    --steel:#a6afbd;
+    --shadow: 0 14px 34px rgba(0,0,0,.34);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--court);min-height:100%}
+  #app{
+    font-family:'Barlow',system-ui,sans-serif;
+    color:var(--chalk);
+    min-height:100%;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.45;
+  }
+  .wrap{
+    max-width:940px;margin:0 auto;padding:22px 18px 60px;
+  }
+
+  /* ---------- Ambiance de fond ---------- */
+  .stage{
+    position:relative;border-radius:20px;overflow:hidden;
+    background:
+      radial-gradient(120% 80% at 50% -10%, rgba(236,106,67,.09), transparent 55%),
+      radial-gradient(90% 60% at 50% 120%, rgba(201,138,75,.07), transparent 60%),
+      linear-gradient(180deg,var(--court2),var(--court));
+    border:1px solid var(--line);
+    box-shadow:var(--shadow);
+  }
+  .stage::before{ /* lignes de parquet en bas */
+    content:"";position:absolute;inset:auto 0 0 0;height:120px;opacity:.10;
+    background:repeating-linear-gradient(90deg,transparent 0 46px,var(--wood) 46px 47px);
+    pointer-events:none;
+  }
+
+  h1,h2,h3,.disp{font-family:'Oswald',sans-serif;letter-spacing:.02em;text-transform:uppercase}
+  .eyebrow{font-family:'Barlow Semi Condensed',sans-serif;font-weight:600;letter-spacing:.22em;
+    text-transform:uppercase;font-size:11px;color:var(--orange-soft)}
+
+  /* ---------- Écran titre ---------- */
+  .title-screen{padding:60px 26px 54px;text-align:center;position:relative}
+  .ball{
+    width:74px;height:74px;border-radius:50%;margin:0 auto 22px;position:relative;
+    background:radial-gradient(circle at 34% 30%, #ff8a52, var(--orange) 55%, #d5410f 100%);
+    box-shadow:0 0 0 4px rgba(255,90,31,.14), 0 14px 34px rgba(255,90,31,.35);
+  }
+  .ball::before,.ball::after{content:"";position:absolute;background:#2a0f04;opacity:.85}
+  .ball::before{inset:0;border-radius:50%;
+    background:
+      radial-gradient(circle at 50% 50%, transparent 46%, transparent 47%),
+      linear-gradient(90deg,transparent 48.4%, #35150699 48.4% 51.6%, transparent 51.6%),
+      linear-gradient(0deg,transparent 48.4%, #35150699 48.4% 51.6%, transparent 51.6%);}
+  .ball::after{width:74px;height:34px;left:0;top:20px;border:2px solid #35150688;border-left:none;border-right:none;border-radius:50%;background:transparent}
+  .title-screen h1{font-size:clamp(46px,10vw,80px);font-weight:700;line-height:.9;margin-bottom:6px}
+  .title-screen h1 .o{color:var(--orange)}
+  .title-screen .tag{color:var(--chalk-dim);font-size:15px;max-width:440px;margin:14px auto 0}
+  .kbd{font-family:'Barlow Semi Condensed';font-size:12px;color:var(--steel);margin-top:26px;letter-spacing:.06em}
+
+  /* ---------- Boutons ---------- */
+  .btn{
+    font-family:'Oswald',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.05em;
+    background:var(--orange);color:#1a0800;border:none;border-radius:11px;
+    padding:14px 30px;font-size:16px;cursor:pointer;transition:transform .12s ease, box-shadow .2s ease, background .2s;
+    box-shadow:0 8px 22px rgba(255,90,31,.32);
+  }
+  .btn:hover{transform:translateY(-2px);background:var(--orange-soft)}
+  .btn:active{transform:translateY(0)}
+  .btn.ghost{background:transparent;color:var(--chalk);border:1px solid var(--line);box-shadow:none}
+  .btn.ghost:hover{border-color:var(--orange);color:var(--orange-soft);background:rgba(255,90,31,.06)}
+  .btn.sm{padding:9px 16px;font-size:13px;border-radius:9px}
+  .btn:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+  /* ---------- Création ---------- */
+  .create{padding:34px 26px 40px}
+  .create .step-h{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
+  .create .step-h .num{font-family:'Oswald';font-size:13px;color:var(--orange);font-weight:600;
+    border:1px solid var(--orange);border-radius:6px;padding:2px 8px}
+  .create h2{font-size:30px;font-weight:600}
+  .create .sub{color:var(--chalk-dim);font-size:14px;margin:2px 0 22px}
+  .opt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:11px}
+  .opt{
+    background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:15px 15px 14px;
+    cursor:pointer;transition:.16s;text-align:left;position:relative;overflow:hidden;color:var(--chalk);
+  }
+  .opt:hover{border-color:var(--orange);transform:translateY(-2px)}
+  .opt.pick{border-color:var(--orange);background:rgba(255,90,31,.08)}
+  .opt .flag{font-size:24px;line-height:1}
+  .opt .ttl{font-family:'Oswald';font-weight:600;font-size:17px;margin-top:8px}
+  .opt .desc{font-size:12.5px;color:var(--chalk-dim);margin-top:3px;line-height:1.35}
+  .opt .abbr{position:absolute;top:12px;right:13px;font-family:'Oswald';font-weight:700;color:var(--steel);font-size:13px}
+
+  .field{margin-top:4px}
+  .field label{display:block;font-family:'Barlow Semi Condensed';font-weight:600;letter-spacing:.14em;
+    text-transform:uppercase;font-size:11px;color:var(--chalk-dim);margin-bottom:7px}
+  .field input{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    color:var(--chalk);padding:13px 14px;font-family:'Oswald';font-size:19px;letter-spacing:.02em}
+  .field input:focus{outline:none;border-color:var(--orange)}
+  .nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:26px;gap:12px}
+
+  /* scouting reveal */
+  .scout{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin-top:6px}
+  .scout .hype{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+  .stars{font-size:22px;letter-spacing:2px;color:var(--gold)}
+  .stars .off{color:#3a3f48}
+
+  /* ---------- HUD joueur ---------- */
+  .hud{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:16px}
+  @media(min-width:720px){.hud{grid-template-columns:290px 1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
+  .player-card{position:relative;overflow:hidden;
+    background:linear-gradient(160deg,var(--panel2),var(--panel));}
+  .player-card .club-stripe{position:absolute;top:0;left:0;height:100%;width:6px;background:var(--orange)}
+  .pc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding-left:8px}
+  .pc-name{font-family:'Oswald';font-weight:700;font-size:23px;line-height:1;text-transform:uppercase}
+  .pc-meta{color:var(--chalk-dim);font-size:12.5px;margin-top:5px;font-family:'Barlow Semi Condensed';letter-spacing:.04em}
+  .pc-flag{font-size:26px}
+  .ovr-badge{width:74px;height:74px;border-radius:50%;line-height:1;position:relative;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none;
+    background:conic-gradient(var(--orange) calc(var(--pct,70)*1%), #232a33 0)}
+  .ovr-badge::before{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--panel2)}
+  .ovr-badge .n{position:relative;font-family:'Oswald';font-weight:700;font-size:31px;color:var(--chalk)}
+  .ovr-badge .l{position:relative;font-family:'Barlow Semi Condensed';font-size:9px;letter-spacing:.16em;color:var(--chalk-dim);margin-top:1px}
+  .pc-club{padding-left:8px;margin-top:14px;display:flex;align-items:center;gap:9px}
+  .club-dot{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;
+    font-family:'Oswald';font-weight:700;font-size:12px;color:#0c0f14}
+  .pc-club .cn{font-family:'Oswald';font-weight:600;font-size:15px}
+  .pc-club .cl{font-size:11px;color:var(--chalk-dim);font-family:'Barlow Semi Condensed';letter-spacing:.08em}
+  .meters{margin-top:15px;padding-left:8px;display:grid;gap:9px}
+  .meter .mrow{display:flex;justify-content:space-between;font-size:11px;color:var(--chalk-dim);
+    font-family:'Barlow Semi Condensed';letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
+  .bar{height:6px;background:#0c0f14;border-radius:6px;overflow:hidden}
+  .bar > i{display:block;height:100%;border-radius:6px;transition:width .5s ease}
+
+  /* attributs */
+  .attrs{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 18px}
+  @media(min-width:520px){.attrs{grid-template-columns:repeat(4,1fr)}}
+  .attr .arow{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+  .attr .an{font-size:12px;color:var(--chalk-dim);font-family:'Barlow Semi Condensed';letter-spacing:.06em;text-transform:uppercase}
+  .attr .av{font-family:'Oswald';font-weight:600;font-size:15px}
+  .attr .abar{height:5px;background:#0c0f14;border-radius:5px;overflow:hidden}
+  .attr .abar > i{display:block;height:100%;background:linear-gradient(90deg,var(--wood-deep),var(--wood));border-radius:5px;transition:width .5s}
+  .flash-up{animation:fu .9s ease}
+  .flash-down{animation:fd .9s ease}
+  @keyframes fu{0%{color:var(--up)}100%{color:inherit}}
+  @keyframes fd{0%{color:var(--down)}100%{color:inherit}}
+
+  /* ---------- Événement ---------- */
+  .event{padding:24px 22px 22px}
+  .event .season-tag{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .chip{font-family:'Barlow Semi Condensed';font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+    font-size:11px;padding:4px 11px;border-radius:20px;background:rgba(255,90,31,.12);color:var(--orange-soft);
+    border:1px solid rgba(255,90,31,.3)}
+  .chip.n{background:var(--panel2);color:var(--chalk-dim);border-color:var(--line)}
+  .event h2{font-size:24px;font-weight:600;line-height:1.08;margin-bottom:10px}
+  .event .body{color:#d7d4c9;font-size:15.5px;line-height:1.55;max-width:640px}
+  .choices{display:grid;gap:11px;margin-top:20px}
+  .choice{
+    text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:15px 16px;cursor:pointer;transition:.16s;display:flex;gap:13px;align-items:flex-start;color:var(--chalk);
+  }
+  .choice:hover{border-color:var(--orange);transform:translateX(3px);background:rgba(255,90,31,.05)}
+  .choice .pip{width:9px;height:9px;border-radius:50%;background:var(--orange);margin-top:7px;flex:none;box-shadow:0 0 10px var(--orange)}
+  .choice .ct{font-family:'Oswald';font-weight:500;font-size:16px;line-height:1.25}
+  .choice .cd{font-size:12.5px;color:var(--chalk-dim);margin-top:2px}
+  .choice:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+  /* résultat de saison — scoreboard */
+  .scoreboard{padding:24px 22px 24px}
+  .sb-head{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+  .sb-head h2{font-size:26px}
+  .statline{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:6px 0 16px}
+  @media(min-width:560px){.statline{grid-template-columns:repeat(6,1fr)}}
+  .stat-cell{background:var(--court);border:1px solid var(--line);border-radius:11px;padding:12px 8px;text-align:center}
+  .stat-cell .sv{font-family:'Oswald';font-weight:700;font-size:26px;color:var(--chalk)}
+  .stat-cell.hot{border-color:var(--orange);background:linear-gradient(180deg,rgba(255,90,31,.12),var(--court))}
+  .stat-cell.hot .sv{color:var(--orange)}
+  .stat-cell .sl{font-family:'Barlow Semi Condensed';font-size:10px;letter-spacing:.14em;color:var(--chalk-dim);text-transform:uppercase;margin-top:2px}
+  .verdict{background:var(--court);border:1px solid var(--line);border-left:3px solid var(--orange);
+    border-radius:10px;padding:13px 15px;font-size:14.5px;color:#d7d4c9;margin-bottom:14px}
+  .accolades{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+  .badge{font-family:'Barlow Semi Condensed';font-weight:600;font-size:12px;letter-spacing:.05em;
+    padding:6px 12px;border-radius:8px;background:linear-gradient(135deg,#2a2413,#20242e);
+    border:1px solid var(--gold);color:var(--gold)}
+  .badge.title{background:linear-gradient(135deg,#3a2a0c,#241a06);color:#ffdd8a}
+
+  /* palmarès / fin */
+  .end{padding:34px 26px 40px;text-align:center}
+  .end .legend-title{font-family:'Oswald';font-weight:700;font-size:clamp(34px,7vw,56px);
+    background:linear-gradient(90deg,var(--gold),var(--orange));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .end .subline{color:var(--chalk-dim);margin-top:2px}
+  .legend-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;max-width:520px;margin:24px auto}
+  @media(min-width:520px){.legend-grid{grid-template-columns:repeat(4,1fr)}}
+  .lg{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 8px}
+  .lg .v{font-family:'Oswald';font-weight:700;font-size:30px;color:var(--orange)}
+  .lg .l{font-size:11px;color:var(--chalk-dim);font-family:'Barlow Semi Condensed';letter-spacing:.1em;text-transform:uppercase}
+  .timeline{max-width:560px;margin:22px auto 0;text-align:left}
+  .tl-row{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+  .tl-row .yr{font-family:'Oswald';font-weight:600;color:var(--chalk-dim);min-width:64px}
+  .tl-row .ev{color:#d7d4c9}
+  .tl-row .ev b{color:var(--chalk);font-weight:600}
+
+  .foot-note{text-align:center;color:var(--steel);font-size:11.5px;margin-top:22px;font-family:'Barlow Semi Condensed';letter-spacing:.04em}
+  .inline-mini{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+  .inline-mini span{font-size:12px;color:var(--chalk-dim)}
+  .inline-mini b{color:var(--up)}
+  .inline-mini b.dn{color:var(--down)}
+  @keyframes enter{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  #stage>*{animation:enter .34s cubic-bezier(.2,.7,.2,1) both}
+  @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+
+  /* ---------- Panthéon ---------- */
+  .hof-list{display:flex;flex-direction:column;gap:10px}
+  .hof-row{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;transition:.16s}
+  .hof-row:hover{border-color:var(--wood);transform:translateY(-1px)}
+  .hof-row.top{border-color:var(--gold);box-shadow:0 0 0 1px rgba(232,194,104,.25)}
+  .hof-row .rk{font-family:'Oswald';font-weight:700;font-size:20px;color:var(--gold);width:26px;text-align:center;flex:none}
+  .hof-main{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+  .hof-name{font-family:'Oswald';font-weight:600;font-size:16px;color:var(--chalk)}
+  .hof-sub{font-size:12.5px;color:var(--chalk-dim)}
+  .hof-score{font-family:'Oswald';text-align:right;flex:none;display:flex;flex-direction:column;line-height:1.05}
+  .hof-score b{font-size:22px;color:var(--orange)}
+  .hof-score small{font-size:10px;color:var(--chalk-dim);letter-spacing:.08em;text-transform:uppercase}
+  .best-chip{display:inline-flex;align-items:center;gap:6px;margin-top:16px;padding:6px 14px;border:1px solid var(--line);
+    border-radius:999px;font-size:12.5px;color:var(--chalk-dim);font-family:'Barlow Semi Condensed';letter-spacing:.04em}
+  .best-chip b{color:var(--gold)}
+
+  /* ---------- Récap fin de carrière ---------- */
+  .recap-block{max-width:620px;margin:22px auto 0}
+  .press{background:var(--panel);border-left:3px solid var(--wood);border-radius:0 10px 10px 0;padding:11px 14px;margin-bottom:9px}
+  .press-txt{font-size:14px;color:var(--chalk);font-style:italic;line-height:1.4}
+  .press-src{font-size:11.5px;color:var(--chalk-dim);text-align:right;margin-top:4px;font-family:'Barlow Semi Condensed';letter-spacing:.04em}
+  .spark{display:flex;align-items:flex-end;gap:3px;justify-content:center;height:56px;margin:6px 0}
+  .spark-bar{width:8px;background:linear-gradient(180deg,var(--sky),#3f6f86);border-radius:3px 3px 0 0;opacity:.85}
+  .spark-bar.pk{background:linear-gradient(180deg,var(--gold),var(--wood-deep));opacity:1}
+  .spark-cap{font-size:11.5px;color:var(--chalk-dim);font-family:'Barlow Semi Condensed';letter-spacing:.04em}
+  .best-season{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;text-align:center}
+  .bs-line{font-family:'Oswald';font-size:16px;margin-bottom:8px}
+  .bs-stats{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;font-family:'Oswald';font-weight:600;font-size:15px}
+  .bs-stats span{color:var(--chalk)}
+</style>
+</head>
+<body>
+<div id="app"><div class="wrap"><div class="stage" id="stage"></div>
+<div class="foot-note" id="foot">Prototype — carrière générée à la volée. Aucune donnée sauvegardée entre les sessions.</div>
+</div></div>
+
+<script>
+(function(){
+"use strict";
+const stage = document.getElementById('stage');
+
+/* ============================================================
+   DONNÉES
+============================================================ */
+const POSITIONS = [
+  {id:'PG', name:'Meneur',      abbr:'PG', emoji:'🧠', desc:'Le cerveau. Vision, dribble, tempo.',  w:{passe:.28,dribble:.24,adr3:.16,tir:.10,qi:.14,def:.05,reb:.01,ath:.02}},
+  {id:'SG', name:'Arrière',     abbr:'SG', emoji:'🎯', desc:'Le scoreur. Tir, adresse, création.', w:{tir:.24,adr3:.24,dribble:.18,passe:.10,ath:.10,def:.08,qi:.05,reb:.01}},
+  {id:'SF', name:'Ailier',      abbr:'SF', emoji:'🗡️', desc:'Le couteau suisse. Deux côtés du terrain.', w:{tir:.18,adr3:.16,def:.16,ath:.16,dribble:.12,reb:.10,qi:.08,passe:.04}},
+  {id:'PF', name:'Ailier fort', abbr:'PF', emoji:'🛡️', desc:'Le combattant. Rebond, défense, impact.', w:{reb:.24,def:.22,tir:.14,ath:.16,qi:.10,adr3:.08,passe:.04,dribble:.02}},
+  {id:'C',  name:'Pivot',       abbr:'C',  emoji:'🗼', desc:'La tour. Raquette, protection, présence.', w:{reb:.28,def:.24,ath:.18,tir:.14,qi:.10,adr3:.03,passe:.02,dribble:.01}},
+];
+const ATTRS = [
+  {id:'tir', name:'Tir'},{id:'adr3', name:'3 points'},{id:'dribble', name:'Dribble'},
+  {id:'passe', name:'Passe'},{id:'def', name:'Défense'},{id:'reb', name:'Rebond'},
+  {id:'ath', name:'Athlé'},{id:'qi', name:'QI jeu'},
+];
+const STYLES = [
+  {id:'playmaker', name:'Chef d\'orchestre', emoji:'🎩', desc:'Tu fais jouer les autres : passe et lecture du jeu avant tout.', boost:{passe:7,qi:4,dribble:2}},
+  {id:'scorer',    name:'Gâchette',           emoji:'🎯', desc:'Ton truc, c\'est marquer : tir pur et adresse à 3 points.',    boost:{tir:7,adr3:5}},
+  {id:'slasher',   name:'Slasher athlétique', emoji:'⚡', desc:'Tu attaques le cercle sans relâche : explosivité et dribble.', boost:{ath:6,dribble:5,tir:2}},
+  {id:'lockdown',  name:'Stoppeur',           emoji:'🛡️', desc:'Tu prends le meilleur adverse : défense et intensité.',       boost:{def:7,ath:3,reb:2}},
+  {id:'anchor',    name:'Tour de contrôle',   emoji:'🗼', desc:'Tu règnes dans la raquette : rebond et protection du cercle.', boost:{reb:7,def:4,ath:1}},
+  {id:'twoway',    name:'Two-way polyvalent', emoji:'♻️', desc:'Solide des deux côtés, sans point faible évident.',           boost:{tir:2,def:3,passe:2,reb:2,qi:3}},
+];
+// Légendes réelles, utilisées uniquement comme comparaisons/inspiration (aucune citation inventée)
+const LEGENDS = {
+  PG:['Magic Johnson','Stephen Curry','Tony Parker','Luka Dončić','Steve Nash'],
+  SG:['Michael Jordan','Kobe Bryant','Dwyane Wade','James Harden'],
+  SF:['LeBron James','Larry Bird','Kevin Durant','Kawhi Leonard'],
+  PF:['Tim Duncan','Dirk Nowitzki','Giannis Antetokounmpo','Charles Barkley'],
+  C:['Shaquille O\'Neal','Hakeem Olajuwon','Nikola Jokić','Kareem Abdul-Jabbar']
+};
+const LIFESTYLES = [
+  {id:'pro',    name:'Ultra-pro',   emoji:'🥇', desc:'Salle, sommeil, régime. Progresse plus vite, se blesse peu.', grow:1.14, injury:.7,  scandal:.4, money:.9},
+  {id:'balance',name:'Équilibré',   emoji:'⚖️', desc:'Le juste milieu. Rien d\'extrême, rien de risqué.',           grow:1.0,  injury:1.0, scandal:1.0, money:1.0},
+  {id:'party',  name:'Fêtard',      emoji:'🎉', desc:'Nuits, hype, réseaux. Popularité facile, corps exposé.',      grow:.85,  injury:1.5, scandal:1.9, money:1.15},
+  {id:'grinder',name:'Acharné',     emoji:'🔥', desc:'Bosseur obsessionnel. Gros gains, corps sous pression.',       grow:1.2,  injury:1.4, scandal:.6, money:.85},
+];
+
+// Nations: path 'us' (lycée->NCAA->draft) ou 'eu' (formation->pro->europe->NBA). strength = force nation en sélection.
+const NATIONS = [
+  {id:'US', name:'États-Unis', flag:'🇺🇸', path:'us', strength:98, names:['Marcus','Jaylen','DeShawn','Tyrese','Cameron','Isaiah','Brandon','Malik'], last:['Carter','Brooks','Williams','Jackson','Hayes','Coleman','Reed','Bishop']},
+  {id:'FR', name:'France',     flag:'🇫🇷', path:'eu', strength:88, names:['Enzo','Nolan','Théo','Malik','Lucas','Adam','Yanis','Noah'], last:['Traoré','Dubois','Ndiaye','Lefèvre','Moreau','Diallo','Girard','Bonnet']},
+  {id:'RS', name:'Serbie',     flag:'🇷🇸', path:'eu', strength:90, names:['Nikola','Vasilije','Aleksa','Stefan','Marko','Luka','Petar','Ognjen'], last:['Jović','Petrović','Milić','Đorđević','Savić','Kostić','Ilić','Radović']},
+  {id:'ES', name:'Espagne',   flag:'🇪🇸', path:'eu', strength:87, names:['Sergio','Álex','Pau','Marc','Hugo','Dario','Iker','Juan'], last:['Garrido','Fernández','Rubio','Hernán','Ortiz','Vidal','Sáez','Cano']},
+  {id:'DE', name:'Allemagne', flag:'🇩🇪', path:'eu', strength:89, names:['Leon','Max','Jonas','Finn','Noah','Elias','Ben','Luis'], last:['Wagner','Schröder','Bauer','Keller','Vogel','Hartmann','Braun','Frank']},
+  {id:'GR', name:'Grèce',     flag:'🇬🇷', path:'eu', strength:85, names:['Giannis','Kostas','Thanasis','Nikos','Vasilis','Dimitris','Panos','Alexis'], last:['Papadópoulos','Antetokoúmpo','Kaláthis','Sloúkas','Larentzákis','Mitóglou']},
+  {id:'AU', name:'Australie', flag:'🇦🇺', path:'us', strength:84, names:['Josh','Jack','Dyson','Tyler','Ben','Matt','Cooper','Riley'], last:['Giddey','Daniels','Mills','Ingles','Landale','Exum','Green','Baynes']},
+  {id:'CA', name:'Canada',    flag:'🇨🇦', path:'us', strength:88, names:['Shai','RJ','Andrew','Dillon','Jamal','Cory','Nickeil','Bennedict'], last:['Barrett','Wiggins','Murray','Brooks','Alexander','Powell','Dort','Mathurin']},
+  {id:'SI', name:'Slovénie',  flag:'🇸🇮', path:'eu', strength:80, names:['Luka','Goran','Vlatko','Klemen','Žiga','Edo','Aleksej','Rok'], last:['Dončić','Dragić','Čančar','Prepelič','Blažič','Nikolić','Murić']},
+];
+
+// Pyramide: du plus bas au sommet. starter/star = OVR pour être titulaire / star. prestige = attrait.
+const LEAGUES = {
+  academy:  {tier:5, emoji:'🌱', name:'Centre de formation', short:'FORMATION', color:'#7d8794', starter:46, star:60, prestige:1, region:'eu', clubs:['INSEP','Centre Fédéral','Pôle Espoirs ASVEL','Académie Monaco','Centre Nanterre']},
+  college:  {tier:5, emoji:'🎓', name:'NCAA (université US)', short:'NCAA', color:'#7a5cff', starter:48, star:62, prestige:2, region:'us', clubs:['Duke','Kentucky','Gonzaga','UConn','Kansas','Baylor','Arizona','Houston']},
+  second:   {tier:4, emoji:'🔷', name:'2e division pro', short:'PRO 2', color:'#8a6d3b', starter:60, star:71, prestige:3, region:'eu', clubs:['Nancy','Roanne','Saint-Quentin','Vichy','Blois','Fos-sur-Mer','Denain']},
+  gleague:  {tier:4, emoji:'🔶', name:'G League', short:'G-LEAGUE', color:'#3b6d8a', starter:64, star:74, prestige:4, region:'us', clubs:['Rip City','Ignite','Windy City','Long Island','Rio Grande','Maine']},
+  national: {tier:3, emoji:'🏆', name:'Élite nationale', short:'ÉLITE NAT.', color:'#3b8a6d', starter:69, star:80, prestige:6, region:'eu', clubs:['ASVEL','Strasbourg','Bayern','Alba Berlin','Milan','Bologne','Valence','Málaga','Tenerife']},
+  euro:     {tier:2, emoji:'⭐', name:'EuroLeague', short:'EUROLEAGUE', color:'#c98a4b', starter:77, star:87, prestige:9, region:'eu', clubs:['Real Madrid','FC Barcelone','Panathinaïkos','Olympiakos','Fenerbahçe','Monaco','Baskonia','Maccabi','Žalgiris']},
+  nba:      {tier:1, emoji:'🏀', name:'NBA', short:'NBA', color:'#ec6a43', starter:78, star:90, prestige:12, region:'us', clubs:['Boston','L.A. Lakers','Golden State','Denver','Milwaukee','Miami','New York','Dallas','Phoenix','OKC','Philadelphie','Memphis']},
+};
+const clubColor = (lg)=>LEAGUES[lg]?LEAGUES[lg].color:'#5c6b7a';
+
+/* ============================================================
+   ÉTAT
+============================================================ */
+let G = null;
+function rnd(a,b){return a+Math.random()*(b-a);}
+function ri(a,b){return Math.floor(rnd(a,b+1));}
+function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function round(v,d=0){const p=Math.pow(10,d);return Math.round(v*p)/p;}
+// Jet d'action : la réussite dépend de l'attribut concerné vs une difficulté. Toujours une part d'aléatoire.
+function actionRoll(attr, diff){ return Math.random() < clamp(0.12 + (attr - diff)*0.011, 0.06, 0.9); }
+function attrOf(p, key){ return p.attrs[key]||50; }
+// Variance : on fait légèrement fluctuer un delta pour que le même choix ne donne jamais exactement la même chose
+function jit(v){ if(!v) return 0; const f=0.72+Math.random()*0.56; const r=Math.round(v*f); return v>0?Math.max(1,r):Math.min(-1,r); }
+// Salaire annuel estimé (k€) : quadratique en prestige de ligue, boosté par ton niveau et ta réputation
+function salaryFor(lgKey, o, rep){
+  const lg=LEAGUES[lgKey]; if(!lg) return 0;
+  const over = clamp(o - lg.starter, -8, 22);
+  const base = lg.prestige*lg.prestige*6;      // FORMATION ~6 → NBA ~864
+  const perf = clamp(1 + over*0.14, 0.4, 4.2);
+  const repB = 1 + rep/180;
+  return Math.max(Math.round(base*perf*repB), lg.prestige*20);
+}
+
+function newPlayer(){
+  return {
+    step:0, nation:null, pos:null, style:null, life:null, name:'',
+    age:16, year:1,
+    attrs:{}, potential:0, hype:0,
+    league:null, club:null, contractY:0, salary:0,
+    reputation:8, morale:62, coach:55, media:50, popularity:12, fitness:100, money:0,
+    peakOvr:0,
+    seasons:[], timeline:[], accolades:{}, // accolades counts
+    // season scaffolding
+    curEvents:[], evIndex:0, seasonMods:{}, pendingOffers:null,
+    natCap:0, retired:false, hof:false,
+    nbaStruggle:0, triedDraft:false, declined:{}, firstNbaAge:null,
+    pendingFA:false, riskMod:1, swanOffered:false, earlyBet:false,
+    flags:{}, clutch:0
+  };
+}
+
+/* OVR pondéré par le poste */
+function ovr(p){
+  const w = POSITIONS.find(x=>x.id===p.pos).w;
+  let s=0; for(const k in w){ s += (p.attrs[k]||0)*w[k]; }
+  return Math.round(s);
+}
+// Rôle dans l'équipe : évolue selon ton niveau vs la ligue et ton temps de jeu récent
+function roleOf(p){
+  const lg=LEAGUES[p.league]; if(!lg) return {key:'espoir',label:'🌱 Espoir'};
+  const o=ovr(p); const lastMin=p.seasons.length?p.seasons[p.seasons.length-1].minutes:0;
+  if(o>=lg.star+2) return {key:'franchise',label:'👑 Franchise player'};
+  if(o>=lg.star-2) return {key:'star',label:'⭐ Star de l\'équipe'};
+  if(o>=lg.starter) return {key:'starter',label:'🏀 Titulaire'};
+  if(o>=lg.starter-6 || lastMin>=14) return {key:'rotation',label:'🔄 Rotation'};
+  return {key:'bench',label:'🪑 Bout de banc'};
+}
+
+/* ============================================================
+   RENDU HUD
+============================================================ */
+function meter(label,val,color){
+  return `<div class="meter"><div class="mrow"><span>${label}</span><span>${Math.round(val)}</span></div>
+    <div class="bar"><i style="width:${clamp(val,0,100)}%;background:${color}"></i></div></div>`;
+}
+function renderHUD(){
+  const p=G, o=ovr(p), pos=POSITIONS.find(x=>x.id===p.pos), lg=LEAGUES[p.league];
+  const cc=clubColor(p.league);
+  const attrsHtml = ATTRS.map(a=>`
+    <div class="attr"><div class="arow"><span class="an">${a.name}</span>
+      <span class="av" id="av-${a.id}">${p.attrs[a.id]}</span></div>
+      <div class="abar"><i style="width:${p.attrs[a.id]}%"></i></div></div>`).join('');
+  return `<div class="hud">
+    <div class="card player-card">
+      <div class="club-stripe" style="background:${cc}"></div>
+      <div class="pc-top">
+        <div><div class="pc-name">${p.name}</div>
+          <div class="pc-meta">${p.nation.flag} ${pos.emoji} ${pos.name} · ${p.age} ans</div></div>
+        <div class="ovr-badge" style="--pct:${o}"><div class="n" id="ovrN">${o}</div><div class="l">OVR</div></div>
+      </div>
+      <div class="pc-club">
+        <div class="club-dot" style="background:${cc}">${(p.club||'?').slice(0,2).toUpperCase()}</div>
+        <div><div class="cn">${p.club||'Sans club'}</div>
+          <div class="cl">${lg?lg.short:''}${p.club&&p.seasons.length?` · <span style="color:var(--sky)">${roleOf(p).label}</span>`:''}</div></div>
+      </div>
+      <div class="meters">
+        ${meter('Réputation',p.reputation,'linear-gradient(90deg,#a86a2e,#ec6a43)')}
+        ${meter('Moral',p.morale,'linear-gradient(90deg,#3a7a58,#5ec98a)')}
+        ${meter('Forme',p.fitness,'linear-gradient(90deg,#3f6f86,#6fa8bf)')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="eyebrow" style="margin-bottom:12px">Fiche technique</div>
+      <div class="attrs">${attrsHtml}</div>
+      <div style="display:flex;gap:18px;margin-top:16px;flex-wrap:wrap">
+        ${miniStat('Coach',p.coach)} ${miniStat('Médias',p.media)} ${miniStat('Popularité',p.popularity)}
+        <div><div class="an" style="font-size:11px;color:var(--chalk-dim);text-transform:uppercase;letter-spacing:.06em;font-family:'Barlow Semi Condensed'">Salaire/an</div>
+          <div class="av" style="font-family:'Oswald';font-weight:600;font-size:15px;color:var(--up)">${p.salary?money(p.salary):'—'}</div></div>
+        <div style="margin-left:auto"><div class="an" style="font-size:11px;color:var(--chalk-dim);text-transform:uppercase;letter-spacing:.06em;font-family:'Barlow Semi Condensed'">Fortune</div>
+          <div class="av" style="font-family:'Oswald';font-weight:600;font-size:15px;color:var(--gold)">${money(p.money)}</div></div>
+      </div>
+    </div>
+  </div>`;
+}
+function miniStat(l,v){return `<div><div style="font-size:11px;color:var(--chalk-dim);text-transform:uppercase;letter-spacing:.06em;font-family:'Barlow Semi Condensed'">${l}</div>
+  <div style="font-family:'Oswald';font-weight:600;font-size:15px">${Math.round(v)}</div></div>`;}
+function money(m){ if(m>=1000) return (m/1000).toFixed(1).replace('.0','')+' M€'; return Math.round(m)+' k€'; }
+
+/* ============================================================
+   ÉCRANS : TITRE + CRÉATION
+============================================================ */
+/* ============================================================
+   PANTHÉON (score + sauvegarde des carrières)
+   localStorage quand le jeu tourne dans un vrai navigateur ; repli mémoire sinon.
+============================================================ */
+const HOF_KEY='hardwood_hof_v1';
+let hofMem=null;
+function hofLoad(){ if(hofMem!==null) return hofMem; try{ const r=localStorage.getItem(HOF_KEY); hofMem=r?JSON.parse(r):[]; }catch(e){ hofMem=[]; } return hofMem; }
+function hofSave(list){ hofMem=list; try{ localStorage.setItem(HOF_KEY, JSON.stringify(list)); }catch(e){} }
+function hofAdd(rec){ const list=hofLoad().slice(); list.push(rec); list.sort((a,b)=>b.score-a.score); if(list.length>12) list.length=12; hofSave(list); return list; }
+function hofClear(){ hofMem=[]; try{ localStorage.removeItem(HOF_KEY); }catch(e){} }
+function hofBest(){ const l=hofLoad(); return l.length?l[0].score:0; }
+
+function renderHallOfFame(){
+  const list=hofLoad();
+  const rows = list.length ? list.map((r,i)=>`
+    <div class="hof-row ${i===0?'top':''}" data-i="${i}" style="cursor:pointer">
+      <span class="rk">${i+1}</span>
+      <span class="hof-main">
+        <span class="hof-name">${r.flag||'🏀'} ${r.name} ${r.posEmoji||''}</span>
+        <span class="hof-sub">${r.tier} · ${r.seasons} saisons · pic ${r.peak} OVR${r.nba?' · 🏀 passé par la NBA':''}</span>
+        <span class="hof-sub">🏆 ${r.champs} titre${r.champs>1?'s':''} · ⭐ ${r.mvps} MVP · 🌟 ${r.allstars} All-Star · 🎯 record ${r.bestPts} pts</span>
+      </span>
+      <span class="hof-score"><b>${r.score}</b><small>score</small></span>
+    </div>`).join('')
+    : `<p class="body" style="text-align:center;color:var(--chalk-dim);margin:34px 0">🏀 Aucune carrière enregistrée pour l'instant.<br>Termine une carrière pour entrer au Panthéon.</p>`;
+  stage.innerHTML = `<div class="end" style="text-align:left">
+    <div class="eyebrow" style="text-align:center">🏆 Panthéon</div>
+    <h2 style="text-align:center;font-size:26px;margin:6px 0 4px">Tes plus grandes carrières</h2>
+    <p class="body" style="text-align:center;color:var(--chalk-dim);margin-bottom:18px;font-size:13.5px">Classées par score légende. Clique une carrière pour la revoir. Bats ton record.</p>
+    <div class="hof-list" style="max-width:660px;margin:0 auto">${rows}</div>
+    <div style="margin-top:26px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn" id="hofBack">Retour</button>
+      ${list.length?`<button class="btn ghost" id="hofClear">Vider le Panthéon</button>`:''}
+    </div>
+  </div>`;
+  document.getElementById('hofBack').onclick=()=>screenTitle();
+  stage.querySelectorAll('.hof-row').forEach(el=>{ el.onclick=()=>renderCareerDetail(list[+el.dataset.i]); });
+  const hc=document.getElementById('hofClear'); if(hc) hc.onclick=()=>{ if(confirm('Effacer toutes les carrières du Panthéon ?')){ hofClear(); renderHallOfFame(); } };
+}
+
+function renderCareerDetail(r){
+  if(!r){ renderHallOfFame(); return; }
+  stage.innerHTML = `<div class="end">
+    <div class="eyebrow">Carrière au Panthéon</div>
+    <div class="legend-title" style="font-size:30px">${r.tier}</div>
+    <p class="subline">${r.flag||'🏀'} ${r.posEmoji||''} ${r.posName||''} · ${r.seasons} saisons · pic ${r.peak} OVR${r.nba?' · 🏀 passé par la NBA':''}</p>
+    <div class="legend-grid">
+      <div class="lg"><div class="v">${r.score}</div><div class="l">Score légende</div></div>
+      <div class="lg"><div class="v">${r.champs}</div><div class="l">Titres</div></div>
+      <div class="lg"><div class="v">${r.mvps}</div><div class="l">MVP</div></div>
+      <div class="lg"><div class="v">${r.allstars}</div><div class="l">All-Star</div></div>
+      <div class="lg"><div class="v">${r.clutch||0}</div><div class="l">Clutch</div></div>
+    </div>
+    ${r.headline?`<div class="recap-block"><div class="press"><div class="press-txt">${r.headline}</div></div></div>`:''}
+    ${r.ovrSeries&&r.ovrSeries.length>1?`<div class="recap-block" style="text-align:center">${sparkline(r.ovrSeries)}</div>`:''}
+    <div class="recap-block" style="text-align:center"><span class="hof-sub">🎯 Record de points sur une saison : <b style="color:var(--orange)">${r.bestPts}</b></span></div>
+    <div style="margin-top:26px;text-align:center;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn ghost" id="cardBtn2">🖼️ Ma carte</button>
+      <button class="btn" id="detBack">Retour au Panthéon</button>
+    </div>
+  </div>`;
+  document.getElementById('cardBtn2').onclick=()=>renderCareerCard(r, ()=>renderCareerDetail(r));
+  document.getElementById('detBack').onclick=()=>renderHallOfFame();
+}
+
+function renderCareerCard(r, back){
+  if(!r){ (back||screenTitle)(); return; }
+  stage.innerHTML = `<div class="end" style="max-width:560px">
+    <div class="eyebrow" style="text-align:center">🖼️ Ta carte de carrière</div>
+    <p class="body" style="text-align:center;color:var(--chalk-dim);font-size:13.5px;margin:6px 0 16px">Screenshote-la ou télécharge-la pour la partager avec tes potes.</p>
+    <div style="display:flex;justify-content:center"><canvas id="careerCard" style="width:100%;max-width:380px;border-radius:16px;box-shadow:var(--shadow)"></canvas></div>
+    <div style="margin-top:22px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn" id="dlCard">⬇️ Télécharger l'image</button>
+      <button class="btn ghost" id="cardBack">Retour</button>
+    </div>
+    <p class="body" id="dlHint" style="text-align:center;color:var(--chalk-dim);font-size:12px;margin-top:10px;display:none">Si le téléchargement ne se lance pas, fais simplement une capture d'écran.</p>
+  </div>`;
+  const canvas=document.getElementById('careerCard');
+  const draw=()=>drawCard(canvas,r);
+  if(document.fonts && document.fonts.ready){ document.fonts.ready.then(draw); setTimeout(draw,300); } else draw();
+  document.getElementById('cardBack').onclick=()=>(back||screenTitle)();
+  document.getElementById('dlCard').onclick=()=>{
+    try{ const a=document.createElement('a'); a.download='hardwood_'+(r.name||'carriere').replace(/\s+/g,'_')+'.png'; a.href=canvas.toDataURL('image/png'); document.body.appendChild(a); a.click(); a.remove(); }
+    catch(e){ document.getElementById('dlHint').style.display='block'; }
+  };
+}
+
+function drawCard(canvas, r){
+  const W=1080, H=1350, x=canvas.getContext('2d');
+  canvas.width=W; canvas.height=H;
+  const C={chalk:'#f4f0e8',dim:'#b4b6ad',orange:'#f07a4e',gold:'#ecc873',sky:'#79b3c9',up:'#63d091',panel:'#333a47',line:'#4a5266'};
+  // fond dégradé
+  const g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,'#2b3140'); g.addColorStop(0.55,'#20242e'); g.addColorStop(1,'#171a21');
+  x.fillStyle=g; x.fillRect(0,0,W,H);
+  // halo chaud en haut
+  const rg=x.createRadialGradient(W/2,-120,60,W/2,-120,760); rg.addColorStop(0,'rgba(240,122,78,0.20)'); rg.addColorStop(1,'rgba(240,122,78,0)');
+  x.fillStyle=rg; x.fillRect(0,0,W,700);
+  // cadre
+  x.strokeStyle=C.line; x.lineWidth=3; roundRect(x,28,28,W-56,H-56,26); x.stroke();
+  x.textAlign='center'; x.textBaseline='alphabetic';
+  // titre HARDWOOD
+  x.font='800 46px Oswald, Arial, sans-serif'; x.fillStyle=C.chalk;
+  spacedText(x,'HARDWOOD',W/2,118,8);
+  x.fillStyle=C.orange; x.fillRect(W/2-70,138,140,5);
+  // nom + drapeau
+  x.font='700 76px Oswald, Arial, sans-serif'; x.fillStyle=C.chalk;
+  x.fillText(`${r.flag||'🏀'} ${truncate(r.name||'Joueur',16)}`, W/2, 232);
+  // poste / style / nation
+  x.font='500 30px "Barlow Semi Condensed", Arial, sans-serif'; x.fillStyle=C.dim;
+  const sub=[`${r.posEmoji||''} ${r.posName||''}`.trim(), r.styleName?`${r.styleEmoji||''} ${r.styleName}`.trim():'', r.nation||''].filter(Boolean).join('   ·   ');
+  x.fillText(sub, W/2, 280);
+  // badge tier
+  x.font='800 52px Oswald, Arial, sans-serif';
+  const tw=x.measureText(r.tier||'').width; const bw=Math.min(Math.max(tw+90,360),W-140);
+  x.fillStyle='rgba(236,200,115,0.10)'; x.strokeStyle=C.gold; x.lineWidth=2.5;
+  roundRect(x,(W-bw)/2,320,bw,88,44); x.fill(); x.stroke();
+  x.fillStyle=C.gold; x.fillText(r.tier||'', W/2, 380);
+  if(r.hof){ x.font='600 24px "Barlow Semi Condensed", Arial, sans-serif'; x.fillStyle=C.gold; x.fillText('★ HALL OF FAME ★', W/2, 438); }
+  // grille de stats 3x2
+  const cells=[['Score',r.score],['Titres',r.champs],['MVP',r.mvps],['All-Star',r.allstars],['Pic OVR',r.peak],['Clutch',r.clutch||0]];
+  const gx0=90, gy0=488, gw=(W-180), cwid=gw/3, chei=150;
+  for(let i=0;i<cells.length;i++){ const cx=gx0+(i%3)*cwid, cy=gy0+Math.floor(i/3)*(chei+22);
+    x.fillStyle='rgba(255,255,255,0.035)'; x.strokeStyle=C.line; x.lineWidth=1.5; roundRect(x,cx+10,cy,cwid-20,chei,18); x.fill(); x.stroke();
+    x.fillStyle=C.chalk; x.font='700 68px Oswald, Arial, sans-serif'; x.fillText(String(cells[i][1]), cx+cwid/2, cy+82);
+    x.fillStyle=C.dim; x.font='600 25px "Barlow Semi Condensed", Arial, sans-serif'; spacedText(x,String(cells[i][0]).toUpperCase(),cx+cwid/2,cy+122,1.5);
+  }
+  // ligne saisons / record / nba
+  let yy=gy0+2*(chei+22)+40;
+  x.fillStyle=C.sky; x.font='600 30px "Barlow Semi Condensed", Arial, sans-serif';
+  x.fillText(`${r.seasons} saisons   ·   record ${r.bestPts} pts/match${r.nba?'   ·   🏀 NBA':''}`, W/2, yy);
+  // sparkline OVR
+  if(r.ovrSeries && r.ovrSeries.length>1){ drawSpark(x, r.ovrSeries, W/2-300, yy+34, 600, 90, C); yy+=150; } else yy+=40;
+  // citation presse
+  if(r.headline){ x.fillStyle=C.dim; x.font='italic 500 30px Georgia, serif';
+    wrapText(x, r.headline, W/2, yy+50, W-200, 42); }
+  // footer
+  x.fillStyle=C.dim; x.font='600 26px "Barlow Semi Condensed", Arial, sans-serif';
+  spacedText(x,'🏀 HARDWOOD',W/2,H-70,2);
+}
+function roundRect(x,rx,ry,w,h,r){ x.beginPath(); x.moveTo(rx+r,ry); x.arcTo(rx+w,ry,rx+w,ry+h,r); x.arcTo(rx+w,ry+h,rx,ry+h,r); x.arcTo(rx,ry+h,rx,ry,r); x.arcTo(rx,ry,rx+w,ry,r); x.closePath(); }
+function spacedText(x,str,cx,cy,sp){ x.save(); const chs=[...str]; let tot=0; const ws=chs.map(c=>{const w=x.measureText(c).width;tot+=w+sp;return w;}); tot-=sp; let px=cx-tot/2; x.textAlign='left'; chs.forEach((c,i)=>{ x.fillText(c,px,cy); px+=ws[i]+sp; }); x.restore(); }
+function truncate(s,n){ s=String(s); return s.length>n?s.slice(0,n-1)+'…':s; }
+function wrapText(x,text,cx,cy,maxW,lh){ const words=String(text).split(' '); let line='',yy=cy,lines=[]; words.forEach(w=>{ const t=line?line+' '+w:w; if(x.measureText(t).width>maxW && line){ lines.push(line); line=w; } else line=t; }); if(line)lines.push(line); lines.slice(0,4).forEach((ln,i)=>x.fillText(ln,cx,yy+i*lh)); }
+function drawSpark(x,series,ox,oy,w,h,C){ const mn=Math.min(...series),mx=Math.max(...series),rng=Math.max(1,mx-mn); const n=series.length; const bw=Math.min(w/n*0.66,26); const gap=(w-bw*n)/(n+1); series.forEach((v,i)=>{ const bh=14+((v-mn)/rng)*(h-14); const bx=ox+gap+i*(bw+gap); const isPk=v===mx; x.fillStyle=isPk?C.gold:'rgba(121,179,201,0.85)'; roundRect(x,bx,oy+h-bh,bw,bh,4); x.fill(); }); }
+
+function screenTitle(){
+  const best=hofBest();
+  stage.innerHTML = `<div class="title-screen">
+    <div class="ball"></div>
+    <div class="eyebrow">Carrière · saison après saison</div>
+    <h1>HARD<span class="o">W</span>OOD</h1>
+    <p class="tag">De 16 à 38 ans, écris ta légende du basket. Chaque choix pèse : le talent ouvre des portes, les décisions décident du reste. La NBA est le sommet — encore faut-il y arriver.</p>
+    <div style="margin-top:28px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn" id="go">Commencer ma carrière</button>
+      <button class="btn ghost" id="hof">🏆 Panthéon</button>
+    </div>
+    ${best?`<div class="best-chip">🏆 Meilleur score légende : <b>${best}</b></div>`:''}
+    <div class="kbd">Écris ta légende, saison après saison</div>
+  </div>`;
+  document.getElementById('go').onclick=()=>{ G=newPlayer(); screenCreate(); };
+  document.getElementById('hof').onclick=()=>renderHallOfFame();
+}
+
+function screenCreate(){
+  const p=G;
+  if(p.step===0){ // nation
+    stage.innerHTML = wrapCreate(1,'Ton pays','Il façonne ton parcours, tes stats de départ et ta sélection nationale.',
+      NATIONS.map((n,i)=>`<button class="opt ${p.nation&&p.nation.id===n.id?'pick':''}" data-i="${i}">
+        <div class="flag">${n.flag}</div><div class="ttl">${n.name}</div>
+        <div class="desc">${n.path==='us'?'Voie US : université → draft':'Voie Europe : formation → clubs'} · Sélection ${n.strength}</div></button>`).join(''),
+      false, !!p.nation);
+    bindOpts(NATIONS,(n)=>{p.nation=n;});
+  }
+  else if(p.step===1){ // position
+    stage.innerHTML = wrapCreate(2,'Ton poste','Il décide de ton rôle sur le terrain et de ce qui te fera briller.',
+      POSITIONS.map((pos,i)=>`<button class="opt ${p.pos===pos.id?'pick':''}" data-i="${i}">
+        <div class="abbr">${pos.emoji} ${pos.abbr}</div><div class="ttl">${pos.name}</div>
+        <div class="desc">${pos.desc}</div></button>`).join(''), false, !!p.pos);
+    bindOpts(POSITIONS,(pos)=>{p.pos=pos.id;});
+  }
+  else if(p.step===2){ // style de jeu
+    stage.innerHTML = wrapCreate(3,'Ton style de jeu','Très tôt, tu te forges une identité. Elle oriente tes stats de départ et ta façon de progresser.',
+      STYLES.map((st,i)=>`<button class="opt ${p.style===st.id?'pick':''}" data-i="${i}">
+        <div class="ttl">${st.emoji} ${st.name}</div><div class="desc">${st.desc}</div></button>`).join(''), false, !!p.style);
+    bindOpts(STYLES,(st)=>{p.style=st.id;});
+  }
+  else if(p.step===3){ // lifestyle
+    stage.innerHTML = wrapCreate(4,'Ton mode de vie','La discipline forge ta progression… et ta réputation.',
+      LIFESTYLES.map((l,i)=>`<button class="opt ${p.life===l.id?'pick':''}" data-i="${i}">
+        <div class="ttl">${l.emoji} ${l.name}</div><div class="desc">${l.desc}</div></button>`).join(''), false, !!p.life);
+    bindOpts(LIFESTYLES,(l)=>{p.life=l.id;});
+  }
+  else if(p.step===4){ // scouting reveal + name
+    rollTalent();
+    const hypeStars = starStr(p.hype);
+    const st=STYLES.find(x=>x.id===p.style);
+    stage.innerHTML = wrapCreate(5,'Rapport de détection','Les recruteurs ont observé ton profil. Voici ce qu\'ils voient.',
+      `<div class="scout">
+        <div class="hype"><span class="stars">${hypeStars}</span>
+          <span style="color:var(--chalk-dim);font-size:13px">Potentiel évalué par les scouts · ${st?st.emoji+' '+st.name:''}</span></div>
+        <div class="attrs">${ATTRS.map(a=>`<div class="attr"><div class="arow"><span class="an">${a.name}</span>
+          <span class="av">${p.attrs[a.id]}</span></div><div class="abar"><i style="width:${p.attrs[a.id]}%"></i></div></div>`).join('')}</div>
+        <div class="field" style="margin-top:20px"><label>Ton nom de joueur</label>
+          <input id="pname" value="${p.name}" maxlength="22" autocomplete="off"></div>
+      </div>`, true, true);
+    document.getElementById('nextC').textContent='Signer ma première licence';
+  }
+  wireNav();
+}
+function wrapCreate(num,title,sub,inner,isLast,canNext){
+  return `<div class="create">
+    <div class="step-h"><span class="num">${num} / 5</span></div>
+    <h2>${title}</h2><p class="sub">${sub}</p>
+    <div class="opt-grid">${isLast?'':inner}</div>${isLast?inner:''}
+    <div class="nav-row">
+      <button class="btn ghost sm" id="backC">${num===1?'Annuler':'Retour'}</button>
+      <button class="btn" id="nextC" ${canNext?'':'disabled style="opacity:.4;pointer-events:none"'}>Continuer</button>
+    </div></div>`;
+}
+function bindOpts(list,setter){
+  stage.querySelectorAll('.opt').forEach(el=>{
+    el.onclick=()=>{ setter(list[+el.dataset.i]);
+      stage.querySelectorAll('.opt').forEach(o=>o.classList.remove('pick'));
+      el.classList.add('pick');
+      const nx=document.getElementById('nextC'); nx.disabled=false; nx.style.opacity=1; nx.style.pointerEvents='auto';
+    };
+  });
+}
+function wireNav(){
+  const back=document.getElementById('backC'), next=document.getElementById('nextC');
+  if(back) back.onclick=()=>{ if(G.step===0){screenTitle();return;} G.step--; screenCreate(); };
+  if(next) next.onclick=()=>{
+    if(G.step===4){ const inp=document.getElementById('pname'); G.name=(inp.value.trim()||G.name); startCareer(); return; }
+    G.step++; screenCreate();
+  };
+}
+function starStr(n){ // n 1..5
+  let s=''; for(let i=1;i<=5;i++){ s+= i<=n?'★':'<span class="off">★</span>'; } return s;
+}
+function rollTalent(){
+  const p=G, pos=POSITIONS.find(x=>x.id===p.pos);
+  // base 30-46, bumped on primary attrs of the position
+  ATTRS.forEach(a=>{ p.attrs[a.id]=ri(28,44); });
+  // boost les 3 attributs clés du poste
+  const keys=Object.entries(pos.w).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>x[0]);
+  keys.forEach(k=>{ p.attrs[k]=clamp(p.attrs[k]+ri(6,14),0,60); });
+  // nation US légèrement plus athlétique
+  if(p.nation.path==='us'){ p.attrs.ath=clamp(p.attrs.ath+ri(2,7),0,65); }
+  // style de jeu : oriente le profil de départ
+  const st=STYLES.find(x=>x.id===p.style);
+  if(st){ for(const k in st.boost){ p.attrs[k]=clamp(p.attrs[k]+st.boost[k],0,66); } }
+  // potentiel caché + hype
+  const roll=Math.random();
+  p.potential = roll>.90?ri(95,99) : roll>.62?ri(89,95) : roll>.30?ri(82,90) : ri(75,83);
+  p.hype = p.potential>=95?5 : p.potential>=89?4 : p.potential>=82?3 : p.potential>=77?2 : 1;
+  if(!p.name){ p.name = pick(p.nation.names)+' '+pick(p.nation.last); }
+}
+
+/* ============================================================
+   DÉMARRAGE DE CARRIÈRE
+============================================================ */
+function startCareer(){
+  const p=G;
+  p.league = p.nation.path==='us' ? 'college' : 'academy';
+  p.club = pick(LEAGUES[p.league].clubs);
+  p.contractY = 2; p.salary = p.league==='college'?0:ri(20,60);
+  p.age=16; p.year=1;
+  pushTL(`Débuts à <b>${p.club}</b> (${LEAGUES[p.league].short}).`);
+  beginSeason();
+}
+function pushTL(html){ G.timeline.push({age:G.age, html}); }
+
+/* ============================================================
+   BOUCLE DE SAISON
+============================================================ */
+function beginSeason(){
+  const p=G;
+  p.seasonMods={ tir:0,adr3:0,dribble:0,passe:0,def:0,reb:0,ath:0,qi:0,
+                 reputation:0,morale:0,coach:0,media:0,popularity:0,money:0,fitness:0,
+                 perfBonus:0, injuryGames:0, forceMove:null };
+  // recharge forme en intersaison
+  p.fitness = clamp(p.fitness + ri(8,20), 40, 100);
+  // 2 événements narratifs par saison : moins de choix, mais plus de poids
+  const n = 2;
+  p.curEvents = drawEvents(n);
+  p.riskMod = 1 + ((p.riskMod||1)-1)*0.5; // le risque accumulé (fêtes, etc.) s'estompe avec le temps
+  p.evIndex=0;
+  nextEventOrSim();
+}
+function nextEventOrSim(){
+  if(G.evIndex < G.curEvents.length){ renderEvent(G.curEvents[G.evIndex]); }
+  else { simulateSeason(); }
+}
+
+/* ---- Sélection d'événements selon le contexte ---- */
+function drawEvents(n){
+  const p=G, lg=LEAGUES[p.league], pool=[];
+  for(const ev of EVENTS){
+    if(ev.when && !ev.when(p,lg)) continue;
+    if(ev.cat==='injury' && p.seasons.length && p.seasons[p.seasons.length-1].injured) continue; // jamais deux blessures de suite
+    let wgt = ev.weight?ev.weight(p,lg):1;
+    if(wgt<=0) continue;
+    pool.push({ev,wgt});
+  }
+  const chosen=[]; const used=new Set();
+  for(let i=0;i<n && pool.length;i++){
+    const total=pool.reduce((s,x)=>s+x.wgt,0);
+    let r=Math.random()*total, pickEv=null,idx=-1;
+    for(let j=0;j<pool.length;j++){ r-=pool[j].wgt; if(r<=0){pickEv=pool[j].ev;idx=j;break;} }
+    if(!pickEv){pickEv=pool[0].ev;idx=0;}
+    chosen.push(pickEv); used.add(pickEv.id);
+    pool.splice(idx,1);
+    // évite deux events de même catégorie unique
+    for(let k=pool.length-1;k>=0;k--){ if(pool[k].ev.cat===pickEv.cat && pickEv.solo){ pool.splice(k,1); } }
+  }
+  return chosen;
+}
+
+/* ---- Rendu d'un événement ---- */
+const CAT_TAG={injury:'🩹 Pépin physique',training:'🎯 Travail',form:'🧊 Méforme',system:'📋 Système',
+  community:'❤️ Hors-terrain',rivalry:'🔥 Rivalité',leadership:'🧭 Leadership',pressure:'⏱️ Money-time',
+  agentbiz:'💼 Business',personal:'🏠 Vie perso',twilight:'🌇 Vétéran',comeback:'💪 Retour',
+  social:'📱 Réseaux',contract:'📝 Contrat',media:'🎤 Médias',business:'💼 Business',
+  locker:'🚪 Vestiaire',nation:'🌍 Sélection',youth:'🌱 Jeunesse',lifestyle:'🌙 Hygiène de vie',nightlife:'🌙 Sortie',
+  clutch:'🎯 Money-time',defense:'🛡️ Stop décisif',duel:'⚔️ Duel',finals:'🏆 Finale',presser:'🎤 Conférence',
+  payoff:'⭐ Aura',wakeup:'🌙 Coup de semonce',chem:'🤝 Vestiaire',
+  allstar:'🌟 All-Star',modern:'📺 Débat ligue',superteam:'🌟 Super-groupe',homecoming:'🏠 Retour aux sources',interview:'🎤 Grand entretien'};
+function catTag(ev){ return CAT_TAG[ev.cat] || (ev.tag?('📌 '+ev.tag):'📌 Événement'); }
+function renderEvent(ev){
+  const p=G, lg=LEAGUES[p.league];
+  const ctx={p,lg};
+  const body = typeof ev.body==='function'?ev.body(ctx):ev.body;
+  const title= typeof ev.title==='function'?ev.title(ctx):ev.title;
+  const choices = ev.choices(ctx);
+  stage.innerHTML = renderHUD() + `<div class="card event" style="margin-top:2px">
+    <div class="season-tag">
+      <span class="chip">📅 Saison ${p.year} · ${p.age} ans</span>
+      <span class="chip n">${LEAGUES[p.league].emoji||'🏀'} ${lg.short} — ${p.club}</span>
+      <span class="chip n">${catTag(ev)}</span>
+    </div>
+    <h2>${title}</h2>
+    <div class="body">${body}</div>
+    <div class="choices">${choices.map((c,i)=>`
+      <button class="choice" data-i="${i}"><span class="pip"></span>
+        <span><span class="ct">${c.label}</span>${c.hint?`<span class="cd">${c.hint}</span>`:''}</span></button>`).join('')}
+    </div></div>`;
+  stage.querySelectorAll('.choice').forEach(el=>{
+    el.onclick=()=>{ const c=choices[+el.dataset.i]; applyChoice(c,ctx); };
+  });
+}
+function applyChoice(choice, ctx){
+  const p=G;
+  const eff = typeof choice.effect==='function'?choice.effect(ctx):choice.effect||{};
+  const deltas=[];
+  for(const k in eff){
+    if(k==='forceMove'){ p.seasonMods.forceMove=eff[k]; continue; }
+    if(k==='flag'){ p.flags[eff[k]]=(p.flags[eff[k]]||0)+1; continue; }
+    if(k==='clutch'){ p.clutch=(p.clutch||0)+eff[k]; continue; }
+    if(k==='riskUp'){ p.riskMod=clamp((p.riskMod||1)+eff[k],0.8,1.9); continue; }
+    if(k==='pendingFA'){ p.pendingFA=true; continue; }
+    if(k==='injuryGames'){ p.seasonMods.injuryGames+=eff[k]; deltas.push({k:'Blessure',v:-eff[k],raw:true}); continue; }
+    if(k==='perfBonus'){ p.seasonMods.perfBonus+=eff[k]; continue; }
+    if(k==='money'){ p.money=Math.max(0,p.money+eff[k]); deltas.push({k:'Fortune',v:eff[k],money:true}); continue; }
+    if(ATTRS.find(a=>a.id===k)){ const jv=jit(eff[k]); p.attrs[k]=clamp(p.attrs[k]+jv,1,99); deltas.push({k:ATTRS.find(a=>a.id===k).name,v:jv}); }
+    else if(k in p){ const jv=jit(eff[k]); p[k]=clamp(p[k]+jv,0,100); deltas.push({k:capitalize(k),v:jv}); }
+  }
+  if(choice.tl) pushTL(typeof choice.tl==='function'?choice.tl(ctx):choice.tl);
+  // petit retour visuel via bandeau
+  showDeltaFlash(choice.outcome?(typeof choice.outcome==='function'?choice.outcome(ctx):choice.outcome):null, deltas);
+  p.evIndex++;
+}
+function capitalize(s){const map={reputation:'Réputation',morale:'Moral',coach:'Coach',media:'Médias',popularity:'Popularité',fitness:'Forme'};return map[s]||s;}
+function showDeltaFlash(outcome, deltas){
+  const p=G;
+  const mini = deltas.filter(d=>d.v!==0).map(d=>{
+    if(d.money) return `<span>${d.k} <b class="${d.v<0?'dn':''}">${d.v>0?'+':''}${money(Math.abs(d.v)).replace(' €','')}</b></span>`;
+    const cls = d.v<0?'dn':''; const sign=d.v>0?'+':'';
+    return `<span>${d.k} <b class="${cls}">${sign}${d.v}</b></span>`;
+  }).join('');
+  const card=document.createElement('div');
+  card.className='card'; card.style.marginTop='12px'; card.style.borderLeft='3px solid var(--orange)';
+  card.innerHTML = `${outcome?`<div class="body" style="font-size:14.5px">${outcome}</div>`:''}
+    ${mini?`<div class="inline-mini">${mini}</div>`:''}
+    <div style="text-align:right;margin-top:14px"><button class="btn sm" id="contBtn">Suite</button></div>`;
+  stage.querySelector('.event').replaceWith(card);
+  document.getElementById('contBtn').onclick=()=>nextEventOrSim();
+}
+
+/* ============================================================
+   SIMULATION DE SAISON
+============================================================ */
+function simulateSeason(){
+  const p=G, lg=LEAGUES[p.league], pos=POSITIONS.find(x=>x.id===p.pos);
+  const o=ovr(p);
+  // ----- TEMPS DE JEU : selon le niveau vs seuil de titulaire de la ligue -----
+  const gap = o - lg.starter;
+  const youngRun = p.age<=21 ? 1 : 0;              // les jeunes ont un peu de temps de jeu offert
+  let minutes = clamp(21 + gap*1.35 + youngRun + (p.coach-50)/14, 6, 36); // la confiance du coach compte
+  const form = clamp((p.fitness/100)*0.85 + 0.15 + (p.morale-50)/240, 0.6, 1.2);
+  const injuryPenalty = clamp(p.seasonMods.injuryGames/82, 0, .6);
+  minutes = minutes*(1-injuryPenalty);
+  const perf = clamp(form + p.seasonMods.perfBonus/100, .6, 1.25);
+
+  // ----- PRODUCTION : calculée par 36 min, puis ramenée au temps de jeu réel -----
+  // outclass = à quel point tu domines le niveau (une ligue plus faible = stats plus faciles)
+  const outclass = clamp(o - lg.starter, -10, 15);
+  const skill = (o - 40) * 0.22;
+  const scoreUse = {PG:1.0, SG:1.12, SF:1.02, PF:0.90, C:0.92}[p.pos];
+  const pts36 = clamp((5.5 + skill + outclass*0.36) * scoreUse, 3, 33);
+  const ast36 = clamp(p.attrs.passe*0.085*({PG:1.6,SG:1.0,SF:0.8,PF:0.6,C:0.5}[p.pos]) + ({PG:2.6,SG:1.2,SF:1.0,PF:0.7,C:0.6}[p.pos]), 0.4, 11.5);
+  const reb36 = clamp(p.attrs.reb*0.095*({C:1.5,PF:1.25,SF:0.9,SG:0.6,PG:0.5}[p.pos]) + ({C:2.6,PF:2.0,SF:1.2,SG:0.8,PG:0.6}[p.pos]), 0.4, 14);
+  const mFactor = minutes/36;
+  let pts = clamp(pts36*mFactor*perf + rnd(-1.3,1.3), 0, 34);
+  let ast = clamp(ast36*mFactor*perf + rnd(-0.7,0.7), 0, 13);
+  let reb = clamp(reb36*mFactor*perf + rnd(-0.8,0.8), 0, 17);
+  pts=round(pts,1); ast=round(ast,1); reb=round(reb,1);
+
+  // succès collectif : prestige club + ton niveau + hasard
+  const teamRating = clamp(lg.prestige*3 + (o-lg.starter)*1.2 + rnd(-14,14), 5, 100);
+  const wins = clamp(Math.round(teamRating*0.62), 6, 64);
+
+  // accolades
+  const acc=[]; const A=(k)=>{acc.push(k); p.accolades[k]=(p.accolades[k]||0)+1;};
+  const isNBA = p.league==='nba', isEuro=p.league==='euro';
+  const rookie = p.seasons.length===0 || (p.seasons.length>0 && p.seasons[p.seasons.length-1].league!==p.league && p.firstIn!==p.league);
+  if(!p.firstIn) p.firstIn=p.league;
+
+  const star = o>=lg.star;
+  if(star && minutes>24){
+    if(isNBA){ A('All-Star'); }
+    else if(isEuro){ A('All-EuroLeague'); }
+    else { A('MVP '+lg.short); }
+  }
+  if(isNBA && pts>=26 && o>=87){ A('Meilleur marqueur'); }
+  if(isNBA && o>=91 && wins>=48 && Math.random()>.45){ A('MVP'); }
+  if(isEuro && o>=89 && wins>=45 && Math.random()>.5){ A('MVP EuroLeague'); }
+  if(p.attrs.def>=88 && (p.pos==='C'||p.pos==='PF'||p.pos==='SF') && Math.random()>.6 && minutes>26 && (isNBA||isEuro)){ A('Meilleur défenseur'); }
+  // titre
+  const championOdds = clamp((teamRating-58)/60,0,.7);
+  let champion=false;
+  if(wins>=Math.round(lg.prestige*3.2) && Math.random()<championOdds+ (o>=lg.star?.12:0)){ champion=true; A(lg.tier===1?'Champion NBA':lg.tier===2?'Champion EuroLeague':'Champion '+lg.short); }
+  // rookie award
+  if(rookie && (isNBA||isEuro) && o>=lg.star-3 && pts>14){ A(isNBA?'Rookie de l\'année':'Meilleur jeune'); }
+
+  // rangement saison
+  const season={year:p.year,age:p.age,league:p.league,club:p.club,pts,ast,reb,wins,ovr:o,minutes:round(minutes,0),acc:acc.slice(),champion,injured:p.seasonMods.injuryGames>0};
+  p.seasons.push(season);
+  p.peakOvr=Math.max(p.peakOvr,o);
+
+  // sélection nationale (tournoi tous les 2 ans à partir de rep suffisante)
+  let natLine=null;
+  if(p.reputation>=45 && p.year%2===0){
+    const tourn = pick(['Coupe du Monde','Jeux Olympiques', p.nation.path==='eu'?'EuroBasket':'Coupe des Amériques']);
+    const natPower = clamp(p.nation.strength + (o-70)*0.6 + rnd(-16,16),20,105);
+    let medal=null;
+    if(natPower>96){ medal='Or'; A('🥇 '+tourn); }
+    else if(natPower>88){ medal='Argent'; A('🥈 '+tourn); }
+    else if(natPower>80){ medal='Bronze'; A('🥉 '+tourn); }
+    natLine={tourn,medal, mvp:(o>=88 && natPower>90 && Math.random()>.6)};
+    if(natLine.mvp){ A('MVP '+tourn); }
+    if(medal) pushTL(`${medalEmoji(medal)} <b>${medal}</b> à ${tourn} avec ${p.nation.name}.`);
+  }
+
+  // effets moraux post-saison
+  if(star){ p.morale=clamp(p.morale+6,0,100); p.reputation=clamp(p.reputation+ (isNBA?7:isEuro?5:4),0,100); p.popularity=clamp(p.popularity+(isNBA?6:3),0,100); }
+  else if(minutes<12){ p.morale=clamp(p.morale-7,0,100); }
+  if(champion){ p.morale=clamp(p.morale+10,0,100); p.reputation=clamp(p.reputation+6,0,100); }
+  p.reputation=clamp(p.reputation + (pts-12)*0.25 + (o-lg.starter)*0.15, 0, 100);
+  // gains financiers approximatifs
+  p.money += p.salary + (isNBA?p.popularity*4: p.popularity*1.2) + p.reputation*(isNBA?1.5:0.6);
+
+  if(p.league==='nba'){ if(p.firstNbaAge===null) p.firstNbaAge=p.age; p.nbaStruggle = minutes<14 ? (p.nbaStruggle+1) : 0; }
+  else { p.nbaStruggle=0; }
+
+  renderSeasonResult(season, natLine, champion);
+}
+function medalEmoji(m){return m==='Or'?'🥇':m==='Argent'?'🥈':'🥉';}
+
+function reducedMotion(){ try{return !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);}catch(e){return false;} }
+function easeOut(x){return 1-Math.pow(1-x,3);}
+function animateStats(){
+  if(reducedMotion() || !window.requestAnimationFrame) return;
+  stage.querySelectorAll('.stat-cell .sv').forEach(el=>{
+    const target=parseFloat(el.textContent); if(isNaN(target)) return;
+    const dec = el.textContent.indexOf('.')>=0 ? 1 : 0;
+    const now=()=> (window.performance&&performance.now)?performance.now():Date.now();
+    const dur=520, t0=now();
+    el.textContent=(target*0.15).toFixed(dec);
+    function frame(){ const k=Math.min(1,(now()-t0)/dur);
+      el.textContent=(target*(0.15+0.85*easeOut(k))).toFixed(dec);
+      if(k<1) requestAnimationFrame(frame); else el.textContent=target.toFixed(dec); }
+    requestAnimationFrame(frame);
+  });
+}
+function renderSeasonResult(s, natLine, champion){
+  const p=G, lg=LEAGUES[p.league];
+  const cells=[
+    ['PTS',s.pts],['REB',s.reb],['PAS',s.ast],['MIN',s.minutes],['VIC',s.wins],['OVR',s.ovr]
+  ];
+  let verdict = seasonVerdict(s,lg);
+  const prev = p.seasons.length>=2 ? p.seasons[p.seasons.length-2].ovr : null;
+  const delta = prev!==null ? s.ovr - prev : null;
+  const deltaHtml = delta!==null && delta!==0
+    ? `<span class="chip" style="background:${delta>0?'rgba(63,208,122,.14)':'rgba(255,82,98,.14)'};border-color:${delta>0?'var(--up)':'var(--down)'};color:${delta>0?'var(--up)':'var(--down)'}">${delta>0?'▲':'▼'} ${Math.abs(delta)} OVR vs saison passée</span>`
+    : '';
+  const accHtml = s.acc.length? `<div class="accolades">${s.acc.map(a=>`<span class="badge ${a.includes('MVP')||a.includes('Champion')?'title':''}">${a}</span>`).join('')}</div>`:'';
+  const natHtml = natLine? `<div class="verdict" style="border-left-color:var(--gold)">Sélection ${p.nation.flag} — ${natLine.tourn}${natLine.medal?` : <b style="color:var(--gold)">${natLine.medal}</b>`:' : éliminé en phase finale'}${natLine.mvp?' · <b>MVP du tournoi</b>':''}.</div>`:'';
+  stage.innerHTML = renderHUD() + `<div class="card scoreboard">
+    <div class="sb-head"><h2>Saison ${p.year} — bilan</h2>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">${deltaHtml}<span class="chip n">${lg.short} · ${p.club}</span></div></div>
+    <div class="statline">${cells.map((c,i)=>`<div class="stat-cell${i===0?' hot':''}"><div class="sv">${c[1]}</div><div class="sl">${c[0]}</div></div>`).join('')}</div>
+    <div class="verdict">${verdict}</div>
+    ${natHtml}${accHtml}
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:18px">
+      <div>${p.age>=33?`<button class="btn ghost sm" id="retireBtn">Raccrocher les crampons</button>`:''}</div>
+      <button class="btn" id="afterSeason">Intersaison →</button>
+    </div>
+  </div>`;
+  document.getElementById('afterSeason').onclick=()=>postSeason();
+  const rb=document.getElementById('retireBtn'); if(rb) rb.onclick=()=>endCareer('choice');
+  animateStats();
+}
+function seasonVerdict(s,lg){
+  const gap=s.ovr-lg.starter;
+  if(s.minutes<10) return `Saison compliquée : peu de temps de jeu, tu tournes surtout au bout du banc. Il faut hausser le ton ou changer d'air.`;
+  if(s.ovr>=lg.star) return `Saison référence. Tu es l'un des tout meilleurs de ${lg.name} — les projecteurs sont braqués sur toi.`;
+  if(gap>=4) return `Bonne saison de titulaire à ${s.club}. Tu tiens ton rang et tu attires le regard.`;
+  return `Saison correcte, tu grappilles ta place dans la rotation. Le vrai palier reste à franchir.`;
+}
+
+/* ============================================================
+   INTERSAISON : progression, transferts, retraite
+============================================================ */
+function postSeason(){
+  const p=G, lg=LEAGUES[p.league], o=ovr(p);
+  // --- progression / déclin ---
+  applyAging();
+  // --- retraite ? ---
+  if(p.age>=34){
+    const oNow=ovr(p);
+    if(p.age>=38 || (oNow < lg.starter-10) ){ return endCareer('forced'); }
+  }
+  // --- mouvement de club / promotion / draft ---
+  const move = resolveMovement();
+  // avance le temps
+  p.year++; p.age++;
+  p.contractY = Math.max(0,p.contractY-1);
+  // build offer screen if a move happened, else continue
+  if(move){ renderMoveScreen(move); }
+  else { beginSeason(); }
+}
+
+function applyAging(){
+  const p=G, life=LIFESTYLES.find(l=>l.id===p.life), pos=POSITIONS.find(x=>x.id===p.pos);
+  const lastMin = p.seasons.length?p.seasons[p.seasons.length-1].minutes:15;
+  const minFactor = clamp(0.85 + lastMin/55, 0.85, 1.3); // le temps de jeu accélère (peu punitif)
+  // Courbe d'âge réaliste : montée jusqu'à ~25, pic/plateau 26-31, déclin dès 32
+  const young = p.age<=24, dev = p.age<=27, prime = p.age<=31, decline = p.age>=32;
+  const stB=(STYLES.find(x=>x.id===p.style)||{}).boost||{};
+  ATTRS.forEach(a=>{
+    // plafond PAR attribut : proche du potentiel pour tes points forts de poste, plus bas ailleurs ; bonus sur ton style
+    const w = pos.w[a.id]||0;
+    const styleBonus = stB[a.id]?5:0;
+    const ceil = clamp(Math.round(p.potential - (w>=0.16?0 : w>=0.08?8 : 15) + styleBonus), 40, 99);
+    const roomA = clamp(ceil - p.attrs[a.id], 0, 40); // marge propre à cet attribut
+    let d=0;
+    if(young){
+      d = clamp(roomA*0.16,0,4.2) * life.grow * minFactor + rnd(-0.3,0.7);
+    } else if(dev){
+      d = clamp(roomA*0.10,0,2.6) * life.grow * minFactor + rnd(-0.4,0.5);
+    } else if(prime){
+      d = (roomA>2?clamp(roomA*0.05,0,1.1):0) + rnd(-0.4,0.5)*life.grow;
+    } else if(decline){
+      const fast=['ath','dribble','def','reb']; const g=(p.age-31);
+      d = fast.includes(a.id)? -rnd(1.4,2.8+g*0.5) : -rnd(0.5,1.3+g*0.25);
+    }
+    p.attrs[a.id]=clamp(Math.round(p.attrs[a.id]+d),1,99);
+  });
+  // usure blessure : mode de vie risqué grignote l'athlé (rare)
+  if(Math.random() < 0.05*life.injury){ p.attrs.ath=clamp(p.attrs.ath-ri(1,3),1,99); }
+}
+
+/* Décide s'il faut proposer un transfert / promotion / draft cette intersaison */
+function resolveMovement(){
+  const p=G, lg=LEAGUES[p.league], o=ovr(p);
+  const last=p.seasons[p.seasons.length-1];
+
+  // forceMove imposé par un choix d'événement
+  if(p.seasonMods.forceMove){ return buildMove(p.seasonMods.forceMove); }
+
+  // --- Free agency : le joueur a refusé de prolonger → de vraies offres arrivent ---
+  if(p.pendingFA){ p.pendingFA=false; return {type:'freeAgency'}; }
+
+  // --- NBA : le pari a échoué (pas de temps de jeu) → opportunité de retour en Europe ---
+  if(p.league==='nba' && p.nbaStruggle>=2 && o<LEAGUES.nba.starter){
+    return {type:'nbaReturn', to:'euro', club:pick(LEAGUES.euro.clubs)};
+  }
+
+  // --- SCÉNARIO SPÉCIAL : légende européenne en fin de carrière, jamais passée par la NBA ---
+  // Une franchise lui offre un contrat court "pour la beauté du geste" (31-34 ans)
+  if(p.league==='euro' && p.age>=31 && p.age<=34 && p.firstNbaAge===null && !p.swanOffered
+     && o>=LEAGUES.euro.star-1 && p.reputation>=70 && Math.random()<0.5){
+    p.swanOffered=true;
+    return {type:'nbaSwan', to:'nba', club:pick(LEAGUES.nba.clubs)};
+  }
+
+  // ================= VOIE US =================
+  if(p.league==='college'){
+    const yrs=p.seasons.length;
+    if(o>=60 || yrs>=3 || p.age>=21){ return {type:'draftDecl', origin:'college'}; }
+    return null;
+  }
+  if(p.league==='gleague' && o>=LEAGUES.gleague.starter+2 && p.age<=28){
+    return {type:'callup', to:'nba', club:pick(LEAGUES.nba.clubs)};
+  }
+
+  // ================= VOIE EUROPE =================
+  if(p.league==='academy' && (o>=LEAGUES.second.starter-2 || p.age>=19)){
+    return {type:'promo', to:'second', club:pick(LEAGUES.second.clubs)};
+  }
+  if(p.league==='second' && o>=LEAGUES.national.starter-3){
+    return {type:'promo', to:'national', club:pick(LEAGUES.national.clubs)};
+  }
+  // Jeune talent européen qui perce vite : opportunité de DRAFT NBA (une seule fois, avant 23 ans)
+  if((p.league==='national'||p.league==='euro') && p.age<=22 && !p.triedDraft && o>=72 && p.reputation>=40){
+    p.triedDraft=true;
+    return {type:'draftDecl', origin:'euro'};
+  }
+  if(p.league==='national' && o>=LEAGUES.euro.starter-3){
+    return {type:'promo', to:'euro', club:pick(LEAGUES.euro.clubs)};
+  }
+  // Star européenne confirmée : fenêtre NBA à un seuil atteignable, seulement dans la fenêtre de prime (≤29 ans)
+  const declinedRecently = p.declined.nbaYear && (p.year - p.declined.nbaYear) < 3;
+  if(p.league==='euro' && p.age<=29 && o>=LEAGUES.euro.starter+1 && p.reputation>=52 && !declinedRecently && Math.random()<0.55){
+    return {type:'nbaWindow', to:'nba', club:pick(LEAGUES.nba.clubs)};
+  }
+
+  // Transferts latéraux une fois installé (varier les clubs)
+  if(last && o>=lg.star-3 && p.contractY<=0 && lg.clubs.length>1 && Math.random()>0.45){
+    let nc=pick(lg.clubs); let t=0; while(nc===p.club && t<8){ nc=pick(lg.clubs); t++; }
+    if(nc!==p.club) return {type:'transfer', to:p.league, club:nc};
+  }
+
+  // Relégation si trop faible
+  if(o < lg.starter-9 && lg.tier<5){
+    const down={nba:'euro',euro:'national',national:'second',gleague:'second',second:'academy'}[p.league];
+    if(down) return {type:'demote', to:down, club:pick(LEAGUES[down].clubs)};
+  }
+  return null;
+}
+function buildMove(fm){
+  const to = fm.to || G.league;
+  let club = fm.club;
+  if(!club){
+    const clubs = LEAGUES[to].clubs;
+    club = pick(clubs);
+    let t=0; while(club===G.club && clubs.length>1 && t<10){ club=pick(clubs); t++; }
+  }
+  return {type:fm.type||'transfer', to, club};
+}
+
+function draftProjection(o,rep){
+  // meilleur OVR/réputation => meilleur pick
+  const score = o*1.3 + rep*0.7 + rnd(-18,18);
+  if(score>150) return ri(1,5);
+  if(score>135) return ri(4,14);
+  if(score>120) return ri(12,30);
+  if(score>108) return ri(28,45);
+  if(score>98)  return ri(40,60);
+  return ri(61,80); // non draftée
+}
+
+/* Écran de transfert / promotion / draft avec choix */
+function renderMoveScreen(move){
+  const p=G, o=ovr(p);
+  let title,body,choices;
+  const toLg = move.to?LEAGUES[move.to]:null;
+
+  if(move.type==='draftDecl'){
+    const eu = move.origin==='euro';
+    title = eu ? `Te déclarer à la draft NBA ?` : `L'heure de la draft`;
+    body = eu
+      ? `Tu perces vite en Europe et les recruteurs NBA rôdent. Tu peux te déclarer à la draft dès maintenant — un pari sur ton potentiel — ou continuer à bâtir ton nom en Europe avant de tenter le grand saut.`
+      : `Ta carrière universitaire t'ouvre les portes de la draft. Te déclarer, c'est saisir ta chance maintenant ; d'autres attendent une saison de plus pour grimper dans les projections.`;
+    choices=[
+      {label:`Me déclarer à la draft`, hint:'Tenter la NBA', apply:()=>{ const pos=draftProjection(o,p.reputation);
+        if(pos<=60) renderMoveScreen({type:'draft', pos, to:'nba', club:pick(LEAGUES.nba.clubs)});
+        else renderMoveScreen({type:'undrafted', origin:move.origin}); }},
+      eu
+        ? {label:`Rester en Europe et progresser`, hint:'Bâtir avant de sauter', apply:()=>{ p.morale=clamp(p.morale+2,0,100); beginSeasonKeep(); }}
+        : {label:`Rester une saison de plus à la fac`, hint:'Grimper dans les projections', apply:()=>{ beginSeasonKeep(); }}
+    ];
+  }
+  else if(move.type==='draft'){
+    const rnd1 = move.pos<=30;
+    title = `Draft NBA — appelé en position ${move.pos}`;
+    body = `Ton nom résonne dans la salle. <b>${move.club}</b> te sélectionne au ${ordinal(move.pos)} rang${rnd1?' du premier tour':' (second tour)'}. Le rêve devient contrat.`;
+    choices=[
+      {label:`Signer avec ${move.club}`, hint:'Direction la NBA', apply:()=>doMove(move,{reputation:+8,morale:+10,popularity:+10})},
+      {label:'Refuser et rester une saison de plus à la fac', hint:'Prendre le temps de mûrir', apply:()=>{ p.morale=clamp(p.morale-3,0,100); beginSeasonKeep(); }}
+    ];
+  }
+  else if(move.type==='undrafted'){
+    const eu = move.origin==='euro';
+    title = `Non drafté`;
+    body = eu
+      ? `Ton nom n'est pas appelé à la draft. Pas de drame : tu es déjà une valeur montante en Europe, et d'autres portes s'ouvriront plus tard.`
+      : `Aucune équipe n'appelle ton nom. La porte principale se ferme — mais les acharnés trouvent toujours un chemin.`;
+    choices = eu ? [
+      {label:`Continuer à t'imposer en Europe`, hint:'Ta chance NBA reviendra', apply:()=>{ p.morale=clamp(p.morale-2,0,100); beginSeasonKeep(); }},
+      {label:`Rejoindre la G League pour viser un call-up`, hint:'La petite porte US', apply:()=>doMove({type:'promo',to:'gleague',club:pick(LEAGUES.gleague.clubs)},{morale:-3,salary:ri(40,90)})}
+    ] : [
+      {label:'Rejoindre la G League et se battre pour un call-up', hint:'La voie difficile vers la NBA', apply:()=>doMove({type:'promo',to:'gleague',club:pick(LEAGUES.gleague.clubs)},{morale:-4,salary:ri(40,90)})},
+      {label:'Signer un gros contrat en EuroLeague', hint:'Devenir une star en Europe', apply:()=>doMove({type:'promo',to:'euro',club:pick(LEAGUES.euro.clubs)},{morale:+3,salary:ri(300,900),reputation:+4})}
+    ];
+  }
+  else if(move.type==='nbaJump'){
+    title = `La NBA t'appelle`;
+    body = `Après avoir marqué l'EuroLeague, une franchise NBA — <b>${move.club}</b> — pose une offre sur la table. Le grand saut, avec tout ce qu'il implique : plus d'argent, plus de lumière, mais un rôle à reconquérir.`;
+    choices=[
+      {label:`Tenter l'aventure NBA à ${move.club}`, hint:'Le sommet mondial', apply:()=>doMove(move,{morale:+6,popularity:+12,reputation:+5,salary:ri(500,2500)})},
+      {label:'Rester roi en Europe', hint:'Statut de franchise player garanti', apply:()=>{ p.morale=clamp(p.morale+4,0,100); p.reputation=clamp(p.reputation+3,0,100); beginSeasonKeep(); }}
+    ];
+  }
+  else if(move.type==='nbaWindow'){
+    title = `Une fenêtre s'ouvre en NBA`;
+    body = `Après tes performances en EuroLeague, <b>${move.club}</b> te propose un contrat NBA. Le grand saut : plus d'argent et la lumière mondiale, mais un rôle à conquérir — et rien ne garantit que ça marche.`;
+    choices=[
+      {label:`Tenter la NBA à ${move.club}`, hint:'Le pari du sommet', apply:()=>doMove(move,{morale:+5,popularity:+10,reputation:+4})},
+      {label:`Rester une référence en Europe`, hint:'Franchise player garanti', apply:()=>{ p.declined.nbaYear=p.year; p.morale=clamp(p.morale+4,0,100); p.reputation=clamp(p.reputation+3,0,100); beginSeasonKeep(); }}
+    ];
+  }
+  else if(move.type==='nbaReturn'){
+    title = `Le pari NBA tourne court`;
+    body = `Le temps de jeu ne vient pas, tu t'enlises au bout du banc. <b>${move.club}</b> (EuroLeague) t'offre un rôle majeur et la lumière que la NBA t'a refusée. Revenir, c'est rebondir la tête haute.`;
+    choices=[
+      {label:`Rebondir en EuroLeague à ${move.club}`, hint:'Redevenir une star', apply:()=>{ p.nbaStruggle=0; doMove(move,{morale:+4,reputation:+1}); }},
+      {label:`S'accrocher en NBA une saison de plus`, hint:'Refuser d\'abandonner (risqué)', apply:()=>{ p.nbaStruggle=0; p.morale=clamp(p.morale-3,0,100); beginSeasonKeep(); }}
+    ];
+  }
+  else if(move.type==='freeAgency'){
+    const flg=LEAGUES[p.league];
+    const pool=flg.clubs.filter(c=>c!==p.club); const rivals=[];
+    for(let k=0;k<2 && pool.length;k++){ const idx=Math.floor(Math.random()*pool.length); rivals.push(pool[idx]); pool.splice(idx,1); }
+    const upMap={academy:'second',second:'national',national:'euro',gleague:'nba',euro:'nba'};
+    const upKey=upMap[p.league];
+    const canUp = upKey && o>=LEAGUES[upKey].starter-2 && p.age<=30;
+    const salStay=Math.round(salaryFor(p.league,o,p.reputation)*1.06);
+    title = `🖊️ Free agency ouverte`;
+    body = `Tu as refusé de prolonger : te voilà libre sur le marché. Plusieurs offres concrètes sont sur la table — à toi de choisir ton avenir.`;
+    choices=[
+      {label:`Re-signer à ${p.club}`, hint:`Stabilité, tu connais la maison · 💰 ${money(salStay)}/an`,
+        apply:()=>{ p.contractY=ri(2,4); p.salary=salStay; p.morale=clamp(p.morale+4,0,100); p.coach=clamp(p.coach+3,0,100); pushTL(`Prolonge à <b>${p.club}</b> · 💰 ${money(salStay)}/an.`); beginSeason(); }}
+    ];
+    rivals.forEach((rc,i)=>{ const sal=Math.round(salaryFor(p.league,o,p.reputation)*(1.12+i*0.08));
+      choices.push({label:`Signer à ${rc}`, hint:`${i===0?'Projet ambitieux':'Gros chèque, nouveau vestiaire'} · 💰 ${money(sal)}/an`,
+        apply:()=>doMove({type:'transfer',to:p.league,club:rc},{morale:+2,reputation:+2,salary:sal})}); });
+    if(canUp){ const uc=pick(LEAGUES[upKey].clubs); const sal=salaryFor(upKey,o,p.reputation);
+      choices.push({label:`Viser plus haut : ${uc} (${LEAGUES[upKey].short})`, hint:`Monter d'un cran, tout à prouver · 💰 ${money(sal)}/an`,
+        apply:()=>doMove({type:'promo',to:upKey,club:uc},{morale:+4,reputation:+3,salary:sal})}); }
+  }
+  else if(move.type==='nbaSwan'){
+    title = `🌟 La NBA t'appelle, pour l'histoire`;
+    body = `Tu as tout gagné en Europe. Sur le tard, <b>${move.club}</b> t'offre un contrat court — un an ou deux — pour vivre enfin le rêve NBA et finir en beauté. Un dernier grand frisson.`;
+    choices=[
+      {label:`Vivre le rêve à ${move.club}`, hint:'Baroud d\'honneur au sommet',
+        apply:()=>doMove(move,{morale:+8,popularity:+12,reputation:+3})},
+      {label:`Rester une légende européenne`, hint:'Fidèle à l\'Europe jusqu\'au bout',
+        apply:()=>{ p.morale=clamp(p.morale+5,0,100); p.reputation=clamp(p.reputation+2,0,100); beginSeasonKeep(); }}
+    ];
+  }
+  else if(move.type==='callup'){
+    title = `Call-up en NBA !`;
+    body = `Ton travail en G League a payé : <b>${move.club}</b> te signe un contrat NBA. À toi de saisir ta chance sous les projecteurs.`;
+    choices=[{label:`Signer avec ${move.club}`, hint:'Enfin la NBA', apply:()=>doMove(move,{morale:+9,popularity:+8,reputation:+5})}];
+  }
+  else if(move.type==='promo'){
+    title = `Palier franchi — ${toLg.name}`;
+    body = `Ton niveau ne passe plus inaperçu. <b>${move.club}</b> (${toLg.short}) t'offre un contrat pour monter d'un cran. Plus fort, plus exposé.`;
+    choices=[
+      {label:`Signer à ${move.club}`, hint:`Monter en ${toLg.short}`, apply:()=>doMove(move,{morale:+5,reputation:+3})},
+      {label:'Rester encore un an pour dominer', hint:'Consolider avant de monter', apply:()=>{ p.morale=clamp(p.morale-2,0,100); beginSeasonKeep(); }}
+    ];
+  }
+  else if(move.type==='transfer'){
+    const tl=LEAGUES[move.to];
+    const pool=tl.clubs.filter(c=>c!==p.club);
+    const opts=[]; if(move.club && move.club!==p.club) opts.push(move.club);
+    while(opts.length<2 && pool.length){ const idx=Math.floor(Math.random()*pool.length); const c=pool[idx]; pool.splice(idx,1); if(!opts.includes(c)) opts.push(c); }
+    title = `Le marché s'agite autour de toi`;
+    body = `Ta cote grimpe : plusieurs clubs de ${tl.short} veulent te recruter. Changer de maillot, c'est de l'ambition — et la pression qui va avec.`;
+    choices = opts.map((c,i)=>{ const sal=Math.round(salaryFor(move.to,o,p.reputation)*(1.1+i*0.08));
+      return {label:`Rejoindre ${c}`, hint:`${i===0?'Le favori pour ta signature':'Offre alléchante'} · 💰 ${money(sal)}/an`,
+        apply:()=>doMove({type:'transfer',to:move.to,club:c},{morale:+3,reputation:+2,salary:sal})}; });
+    choices.push({label:`Rester fidèle à ${p.club}`, hint:'La loyauté paie aussi (+moral, +vestiaire)',
+      apply:()=>{ p.morale=clamp(p.morale+4,0,100); p.reputation=clamp(p.reputation+2,0,100); p.coach=clamp(p.coach+3,0,100); beginSeasonKeep(); }});
+  }
+  else if(move.type==='demote'){
+    title = `Rétrogradé en ${toLg.short}`;
+    body = `Le niveau ne suit plus. Faute de temps de jeu, tu redescends à <b>${move.club}</b> pour te relancer. Le basket ne pardonne pas — mais les retours existent.`;
+    choices=[{label:'Rebondir plus bas', hint:'Se relancer', apply:()=>doMove(move,{morale:-8,reputation:-4})}];
+  }
+
+  const singleDest = move.to && !['freeAgency','transfer','draftDecl'].includes(move.type);
+  const salaryLine = singleDest ? `<div class="body" style="margin-top:2px;color:var(--up);font-family:'Barlow Semi Condensed';letter-spacing:.03em">💰 Salaire annuel estimé : <b>${money(salaryFor(move.to,o,p.reputation))}</b></div>` : '';
+  stage.innerHTML = renderHUD() + `<div class="card event">
+    <div class="season-tag"><span class="chip">📅 Intersaison · ${p.age} ans</span>
+      <span class="chip n">💼 Marché des transferts</span></div>
+    <h2>${title}</h2><div class="body">${body}</div>${salaryLine}
+    <div class="choices">${choices.map((c,i)=>`<button class="choice" data-i="${i}"><span class="pip"></span>
+      <span><span class="ct">${c.label}</span>${c.hint?`<span class="cd">${c.hint}</span>`:''}</span></button>`).join('')}</div>
+  </div>`;
+  stage.querySelectorAll('.choice').forEach(el=>{ el.onclick=()=>choices[+el.dataset.i].apply(); });
+}
+function ordinal(n){ return n===1?'1er':n+'e'; }
+
+function doMove(move,eff){
+  const p=G;
+  const from=p.club;
+  p.league=move.to; p.club=move.club;
+  p.contractY = ri(2,4);
+  let explicitSal=null;
+  for(const k in (eff||{})){ if(k==='salary'){ explicitSal=eff[k]; } else { p[k]=clamp(p[k]+eff[k],0,100);} }
+  p.salary = (explicitSal!=null) ? explicitSal : salaryFor(p.league, ovr(p), p.reputation);
+  const lg=LEAGUES[p.league];
+  pushTL(`Signe à <b>${p.club}</b> (${lg.short}) · 💰 ${money(p.salary)}/an.`);
+  beginSeason();
+}
+function beginSeasonKeep(){ // reste dans le club, mais renouvelle le contexte
+  const p=G; if(p.contractY<=0) p.contractY=ri(1,3);
+  beginSeason();
+}
+
+/* ============================================================
+   FIN DE CARRIÈRE
+============================================================ */
+function pressReview(p, s){
+  const outlets=['L\'Équipe','ESPN','The Athletic','Gazzetta','Marca','BasketNews','SLAM'];
+  const O=()=>pick(outlets);
+  const nm=p.name, nat=p.nation.name, q=[];
+  if(s.legend>=300) q.push([O(),`« ${nm}, tout simplement l'un des plus grands de l'histoire. On racontera le jeu avant et après lui. »`]);
+  else if(s.legend>=230) q.push([O(),`« Une carrière de légende. ${nm} entre au panthéon du basket, et la place est mille fois méritée. »`]);
+  else if(s.legend>=180) q.push([O(),`« ${nm} aura été une superstar de son époque, un nom qui a compté au tout premier plan. »`]);
+  else if(s.legend>=130) q.push([O(),`« Un très grand joueur, régulièrement All-Star. ${nm} laisse une trace durable. »`]);
+  else if(s.legend>=85) q.push([O(),`« ${nm}, un pro respecté de tous, une belle carrière au meilleur niveau qu'il a pu atteindre. »`]);
+  else q.push([O(),`« Le sommet lui a échappé, mais ${nm} n'a jamais rien lâché. Un vrai combattant du parquet. »`]);
+  if(s.champs>=3) q.push([O(),`« ${s.champs} titres au palmarès : ${nm} est un serial winner, un compétiteur dans l'âme. »`]);
+  else if(s.champs>=1) q.push([O(),`« Champion : ${nm} aura connu la consécration collective. Le graal touché du doigt. »`]);
+  else q.push([O(),`« Le titre lui aura manqué, mais son niveau de jeu ne s'est jamais discuté. »`]);
+  const nba=p.seasons.some(x=>x.league==='nba');
+  if(nba && s.peakOvr>=90) q.push([O(),`« Du talent brut détecté tôt jusqu'au sommet NBA : la trajectoire d'un joueur d'exception. »`]);
+  else if(nba) q.push([O(),`« Il aura vécu son rêve NBA et porté haut les couleurs de ${nat}. »`]);
+  else q.push([O(),`« Une carrière européenne pleine, référence de son championnat et fierté de ${nat}. »`]);
+  if((p.clutch||0)>=4) q.push([O(),`« Un sang-froid glacial dans les money-times : ${nm} vivait pour les moments qui comptent. »`]);
+  if(s.mvps>=1) q.push([O(),`« Élu MVP, ${nm} a régné sur sa ligue. La marque des tout meilleurs. »`]);
+  for(let i=q.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [q[i],q[j]]=[q[j],q[i]]; }
+  return q.slice(0,3);
+}
+function sparkline(series){
+  if(!series||series.length<2) return '';
+  const mn=Math.min(...series), mx=Math.max(...series), rng=Math.max(1,mx-mn), peak=mx;
+  const bars=series.map(v=>{ const h=8+Math.round((v-mn)/rng*40); const isPeak=v===peak;
+    return `<span class="spark-bar ${isPeak?'pk':''}" style="height:${h}px" title="OVR ${v}"></span>`; }).join('');
+  return `<div class="spark">${bars}</div><div class="spark-cap">Évolution OVR · pic ${mx}</div>`;
+}
+function endCareer(reason){
+  const p=G; p.retired=true;
+  const A=p.accolades;
+  const cnt=(k)=>A[k]||0;
+  const champs = Object.keys(A).filter(k=>k.startsWith('Champion')).reduce((s,k)=>s+A[k],0);
+  const mvps = cnt('MVP');
+  const allstars = cnt('All-Star')+cnt('All-EuroLeague');
+  const medalsG = Object.keys(A).filter(k=>k.startsWith('🥇')).reduce((s,k)=>s+A[k],0);
+  const scoringT = cnt('Meilleur marqueur');
+
+  // score légende (le clutch compte : les moments décisifs marquent une carrière)
+  let legend = p.peakOvr*1.0 + champs*14 + mvps*22 + allstars*5 + medalsG*10 + scoringT*8
+             + cnt('MVP EuroLeague')*10 + cnt('Rookie de l\'année')*6 + cnt('Meilleur défenseur')*6
+             + Math.min(p.seasons.length,20)*1.5 + p.reputation*0.3 + (p.clutch||0)*3;
+  legend=Math.round(legend);
+  p.hof = legend>=210 || (champs>=1 && p.peakOvr>=90) || mvps>=1;
+
+  let tier, blurb;
+  if(legend>=300){ tier='G.O.A.T.'; blurb='On ne parlera plus du basket sans prononcer ton nom. Une ère porte ta signature.'; }
+  else if(legend>=230){ tier='Légende — Hall of Fame'; blurb='Tu entres au Panthéon. Ton maillot est retiré, ton héritage est écrit.'; }
+  else if(legend>=180){ tier='Superstar'; blurb='Une carrière énorme, des sommets touchés, un nom qui a compté au plus haut niveau.'; }
+  else if(legend>=130){ tier='All-Star'; blurb='Tu as brillé parmi l\'élite. Une belle et solide carrière de haut niveau.'; }
+  else if(legend>=85){ tier='Joueur de rotation'; blurb='Un vrai pro, respecté dans les vestiaires. Tu as vécu du basket, ce que peu réussissent.'; }
+  else { tier='Parcours de combattant'; blurb='Le sommet t\'a échappé, mais tu as tout donné. Le basket garde une place pour les acharnés.'; }
+
+  const sceneStats={legend, champs, mvps, allstars, peakOvr:p.peakOvr};
+  const quotes = pressReview(p, sceneStats);
+  const ovrSeries = p.seasons.map(s=>s.ovr);
+  const bestSeason = p.seasons.length ? p.seasons.reduce((b,s)=> (s.pts*1.0+s.reb*0.6+s.ast*0.7)>(b.pts*1.0+b.reb*0.6+b.ast*0.7)?s:b, p.seasons[0]) : null;
+  const bestPts = p.seasons.reduce((m,s)=>Math.max(m,s.pts),0);
+  const reachedNBA = p.seasons.some(s=>s.league==='nba');
+
+  // --- Données de carrière (carte partageable + Panthéon) ---
+  const rec={ name:p.name, flag:p.nation.flag, posEmoji:POSITIONS.find(x=>x.id===p.pos).emoji, pos:p.pos, posName:POSITIONS.find(x=>x.id===p.pos).name,
+      styleName:(STYLES.find(x=>x.id===p.style)||{}).name||'', styleEmoji:(STYLES.find(x=>x.id===p.style)||{}).emoji||'',
+      tier, score:legend, champs, mvps, allstars, peak:p.peakOvr, seasons:p.seasons.length,
+      bestPts:Math.round(bestPts*10)/10, nba:reachedNBA, clutch:p.clutch||0, ovrSeries,
+      headline:(quotes[0]?quotes[0][1]:''), nation:p.nation.name, hof:p.hof, date:Date.now() };
+  p.cardRec=rec; p.endReason=reason;
+  if(!p.savedHOF){ p.savedHOF=true; hofAdd(rec); }
+
+  const allAcc = Object.entries(A).sort((a,b)=>b[1]-a[1]);
+  const tl = p.timeline.slice(-14);
+
+  p.endSummary =
+    `🏀 HARDWOOD — ${p.name} ${p.nation.flag}\n`+
+    `${tier} · ${p.seasons.length} saisons · pic ${p.peakOvr} OVR\n`+
+    `Titres ${champs} · MVP ${mvps} · All-Star ${allstars} · Score légende ${legend}\n`+
+    `À toi de faire mieux.`;
+
+  stage.innerHTML = `<div class="end">
+    <div class="eyebrow">Fin de carrière · ${p.name}</div>
+    <div class="legend-title">${tier}</div>
+    <p class="subline">${p.nation.flag} ${POSITIONS.find(x=>x.id===p.pos).emoji} ${POSITIONS.find(x=>x.id===p.pos).name} · ${p.seasons.length} saisons · pic à ${p.peakOvr} OVR${p.hof?' · <b style="color:var(--gold)">Hall of Fame</b>':''}</p>
+    <p class="body" style="max-width:520px;margin:14px auto 0;text-align:center">${blurb}</p>
+
+    <div class="legend-grid">
+      <div class="lg"><div class="v">${legend}</div><div class="l">Score légende</div></div>
+      <div class="lg"><div class="v">${champs}</div><div class="l">Titres</div></div>
+      <div class="lg"><div class="v">${mvps}</div><div class="l">MVP</div></div>
+      <div class="lg"><div class="v">${allstars}</div><div class="l">All-Star</div></div>
+      <div class="lg"><div class="v">${p.clutch||0}</div><div class="l">Moments clutch</div></div>
+    </div>
+
+    <div class="recap-block">
+      <div class="eyebrow" style="text-align:center;margin-bottom:10px">🗞️ Ce que la presse retient</div>
+      ${quotes.map(q=>`<div class="press"><div class="press-txt">${q[1]}</div><div class="press-src">— ${q[0]}</div></div>`).join('')}
+    </div>
+
+    ${ovrSeries.length>1?`<div class="recap-block" style="text-align:center">${sparkline(ovrSeries)}</div>`:''}
+
+    ${bestSeason?`<div class="recap-block best-season">
+      <div class="eyebrow" style="margin-bottom:6px">🌟 Meilleure saison</div>
+      <div class="bs-line"><b>${bestSeason.club}</b> <span style="color:var(--chalk-dim)">(${LEAGUES[bestSeason.league].short}, ${bestSeason.age} ans)</span></div>
+      <div class="bs-stats"><span>🏀 ${bestSeason.pts} pts</span><span>💪 ${bestSeason.reb} reb</span><span>🎯 ${bestSeason.ast} pas</span><span>📊 OVR ${bestSeason.ovr}</span></div>
+    </div>`:''}
+
+    ${allAcc.length?`<div class="accolades" style="justify-content:center;max-width:640px;margin:14px auto 6px">
+      ${allAcc.map(([k,v])=>`<span class="badge ${k.includes('MVP')||k.includes('Champion')||k.includes('🥇')?'title':''}">${k}${v>1?` ×${v}`:''}</span>`).join('')}</div>`:''}
+
+    <div class="timeline">
+      <div class="eyebrow" style="margin:24px 0 8px">Moments de carrière</div>
+      ${tl.map(t=>`<div class="tl-row"><span class="yr">${t.age} ans</span><span class="ev">${t.html}</span></div>`).join('')}
+    </div>
+
+    <div style="margin-top:28px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn" id="again">Nouvelle carrière</button>
+      <button class="btn ghost" id="cardBtn">🖼️ Ma carte</button>
+      <button class="btn ghost" id="hofView">🏆 Panthéon</button>
+      <button class="btn ghost" id="copyBtn">Copier mon résumé</button>
+      <button class="btn ghost" id="share">Voir la fiche complète</button>
+    </div>
+  </div>`;
+  document.getElementById('again').onclick=()=>{ G=newPlayer(); screenCreate(); };
+  document.getElementById('cardBtn').onclick=()=>renderCareerCard(p.cardRec, ()=>endCareer(p.endReason));
+  document.getElementById('hofView').onclick=()=>renderHallOfFame();
+  document.getElementById('share').onclick=()=>renderFullSheet();
+  document.getElementById('copyBtn').onclick=()=>copyShare(p.endSummary);
+}
+function copyShare(text){
+  const done=()=>{ const b=document.getElementById('copyBtn'); if(b){ const old=b.textContent; b.textContent='Copié !'; setTimeout(()=>{b.textContent=old;},1600);} };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text,done));
+  } else fallbackCopy(text,done);
+}
+function fallbackCopy(text,done){
+  try{
+    const ta=document.createElement('textarea'); ta.value=text;
+    ta.style.position='fixed'; ta.style.top='0'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta); done();
+  }catch(e){ /* silencieux : copie non supportée */ }
+}
+
+function renderFullSheet(){
+  const p=G;
+  const rows = p.seasons.map(s=>`<div class="tl-row">
+    <span class="yr">S${s.year} · ${s.age}a</span>
+    <span class="ev"><b>${s.club}</b> <span style="color:var(--chalk-dim)">(${LEAGUES[s.league].short})</span> — ${s.pts} pts, ${s.reb} reb, ${s.ast} pas · OVR ${s.ovr}${s.acc.length?` · <span style="color:var(--gold)">${s.acc.join(', ')}</span>`:''}</span></div>`).join('');
+  stage.innerHTML = `<div class="end" style="text-align:left">
+    <div class="eyebrow" style="text-align:center">Feuille de match — carrière complète</div>
+    <h2 style="text-align:center;font-size:28px;margin:6px 0 18px">${p.name}</h2>
+    <div class="timeline" style="max-width:640px">${rows}</div>
+    <div style="margin-top:26px;text-align:center"><button class="btn" id="back2">Retour au bilan</button></div>
+  </div>`;
+  document.getElementById('back2').onclick=()=>endCareer('review');
+}
+
+/* ============================================================
+   BANQUE D'ÉVÉNEMENTS
+   cat: catégorie · when(p,lg): condition · weight(p,lg): pondération
+   choices(ctx): [{label,hint,effect,outcome,tl}]
+============================================================ */
+const EVENTS = [
+  // ---------- JEUNESSE / FORMATION ----------
+  {id:'coach_pos', cat:'youth', tag:'Formation', solo:true,
+    when:(p,lg)=>lg.tier>=4 && p.age<=21,
+    title:'Le coach veut te changer de poste',
+    body:({p})=>`Ton entraîneur pense que ton avenir est ailleurs que là où tu joues. « Tu as le profil pour évoluer différemment », te dit-il. Accepter, c'est repartir un peu de zéro pour gagner en polyvalence.`,
+    choices:()=>[
+      {label:'Accepter et apprendre le nouveau rôle', hint:'+QI, +polyvalence, moral en baisse court terme',
+        effect:{qi:+4, passe:+2, def:+2, morale:-3}, outcome:'Tu ravales ta fierté et bosses le nouveau poste. Ton intelligence de jeu grimpe.'},
+      {label:'Refuser, rester sur tes forces', hint:'Concentré sur ton point fort',
+        effect:{coach:-4}, outcome:'Tu tiens ta ligne. Le coach hausse les épaules, un peu déçu.'}
+    ]},
+
+  {id:'early_pro', cat:'youth', tag:'Décision', solo:true,
+    when:(p,lg)=>lg.tier===5 && p.age>=17 && p.age<=19 && ovr(p)>=LEAGUES.academy.star-8,
+    title:'Un club pro te fait les yeux doux',
+    body:({p})=>`Un club de division inférieure te propose de signer pro tout de suite. Plus d'argent, mais moins de temps de jeu garanti face à des adultes. La formation, elle, te laisserait dominer ta catégorie encore un an.`,
+    weight:()=>1.4,
+    choices:()=>[
+      {label:'Signer pro maintenant', hint:'Passer pro tout de suite (gros pari)',
+        effect:{forceMove:{type:'promo',to:'second'}, morale:+4, money:+30}, outcome:'Tu franchis le pas vers le monde pro plus tôt que prévu.'},
+      {label:'Rester en formation encore un an', hint:'Dominer avant de monter',
+        effect:{tir:+2, dribble:+2, qi:+1}, outcome:'Tu restes et tu écrases ta catégorie. Ton jeu s\'affine.'}
+    ]},
+
+  {id:'growth_spurt', cat:'youth', tag:'Physique',
+    when:(p,lg)=>p.age<=20,
+    title:'Poussée de croissance',
+    body:`Ton corps change vite. Bien géré, c'est de l'explosivité en plus. Mal géré, ce sont des douleurs de croissance qui traînent.`,
+    weight:()=>0.7,
+    choices:()=>[
+      {label:'Programme de renforcement encadré', hint:'+Athlé, léger risque',
+        effect:{ath:+4, fitness:-4}, outcome:'Tu prends de la caisse. Les cuisses brûlent, mais ça paie.'},
+      {label:'Y aller doucement, préserver le corps', hint:'Prudence',
+        effect:{ath:+1, fitness:+5}, outcome:'Tu temporises. Le corps te remercie.'}
+    ]},
+
+  // ---------- MÉDIAS ----------
+  {id:'media_punchline', cat:'media',
+    when:(p,lg)=>p.reputation>=25,
+    title:'Micro tendu après un gros match',
+    body:({p})=>`Un journaliste te cherche : « Certains disent que tu es surcoté. Réponse ? » La salle attend. Ce que tu dis fera la une demain.`,
+    choices:()=>[
+      {label:'Balancer une punchline assassine', hint:'+Popularité, coach méfiant',
+        effect:{popularity:+8, media:+4, coach:-4}, outcome:'Ta phrase tourne en boucle sur les réseaux. Le vestiaire sourit, le coach moins.'},
+      {label:'Rester humble et renvoyer vers le collectif', hint:'+Coach, +médias',
+        effect:{coach:+5, media:+3, popularity:+1}, outcome:'Réponse propre, pro. Les vétérans apprécient.'},
+      {label:'Envoyer une vanne qui détend', hint:'Équilibré',
+        effect:{popularity:+4, media:+2, morale:+2}, outcome:'Rires dans la salle. Tu marques des points en sympathie.'}
+    ]},
+
+  {id:'transfer_rumor', cat:'media',
+    when:(p,lg)=>p.reputation>=40 && lg.tier<=3,
+    title:'Une rumeur de transfert fuite',
+    body:({p})=>`La presse annonce que tu serais sur le départ. Ton président fulmine, tes coéquipiers te regardent différemment. Comment tu gères ?`,
+    choices:()=>[
+      {label:'Démentir publiquement et rassurer', hint:'+Coach, +vestiaire',
+        effect:{coach:+5, morale:+3, media:+2}, outcome:'Tu calmes le jeu. Le club apprécie ta loyauté affichée.'},
+      {label:'Ni oui ni non, entretenir le flou', hint:'+Réputation, coach nerveux',
+        effect:{reputation:+4, coach:-3, popularity:+3}, outcome:'Le mystère fait monter ta cote… et la tension.'}
+    ]},
+
+  // ---------- MODE DE VIE / BUSINESS ----------
+  {id:'sneaker_deal', cat:'business', solo:true,
+    when:(p,lg)=>p.popularity>=25 || lg.tier<=2,
+    title:'Un équipementier pose un contrat',
+    body:({p})=>`Une marque de sneakers veut t'habiller. Gros chèque, séances photo, obligations marketing. C'est de l'argent et de la lumière — mais aussi du temps volé à l'entraînement.`,
+    choices:()=>[
+      {label:'Signer le gros contrat', hint:'+Argent, +Popularité, -focus',
+        effect:{money:+220, popularity:+9, tir:-1}, outcome:'Ton visage s\'affiche en ville. Le compte en banque respire.'},
+      {label:'Négocier un deal léger, garder le focus basket', hint:'Équilibre',
+        effect:{money:+70, popularity:+4}, outcome:'Deal raisonnable. Tu gardes la tête au jeu.'},
+      {label:'Refuser, tout pour le terrain', hint:'+Progression',
+        effect:{tir:+2, adr3:+2, coach:+2}, outcome:'Tu déclines. Tes séances supplémentaires parlent pour toi.'}
+    ]},
+
+  {id:'night_out', cat:'lifestyle',
+    when:(p,lg)=>true,
+    title:'Soirée la veille d\'un match',
+    body:({p})=>`Les cadres du vestiaire t'invitent à sortir. Refuser peut te couper du groupe ; accepter, c'est jouer avec ta fraîcheur.`,
+    weight:(p)=>{const l=LIFESTYLES.find(x=>x.id===p.life);return l.id==='party'?1.6:l.id==='pro'?0.5:1;},
+    choices:()=>[
+      {label:'Sortir avec le groupe', hint:'+Vestiaire, -Forme',
+        effect:{morale:+5, fitness:-10, coach:-2}, outcome:'Bonne soirée, liens resserrés. Le réveil pique un peu.'},
+      {label:'Décliner poliment, dodo', hint:'+Forme, un peu à l\'écart',
+        effect:{fitness:+6, morale:-2}, outcome:'Tu rentres tôt. Frais pour demain, mais un peu en marge.'}
+    ]},
+
+  {id:'invest', cat:'business', solo:true,
+    when:(p,lg)=>p.money>=200,
+    title:'Une opportunité d\'investissement',
+    body:({p})=>`Un proche te propose de placer une partie de tes gains dans un projet. Ça peut rapporter gros… ou partir en fumée.`,
+    weight:()=>0.7,
+    choices:()=>[
+      {label:'Investir une grosse somme', hint:'Pari risqué',
+        effect:({p})=>{ const win=Math.random()>.5; return win?{money:+Math.round(p.money*0.6)}:{money:-Math.round(p.money*0.4)}; },
+        outcome:({p})=>'Les marchés décident… le résultat est tombé sur ton compte.'},
+      {label:'Placer prudemment', hint:'Petit gain sûr',
+        effect:({p})=>({money:+Math.round(p.money*0.08+20)}), outcome:'Rendement modeste mais tranquille.'},
+      {label:'Ne pas toucher à ton argent', hint:'Sécurité',
+        effect:{morale:+1}, outcome:'Tu gardes ton magot au chaud.'}
+    ]},
+
+  // ---------- VESTIAIRE ----------
+  {id:'star_clash', cat:'locker',
+    when:(p,lg)=>lg.tier<=3 && p.reputation>=40,
+    title:'Bras de fer avec la star de l\'équipe',
+    body:({p})=>`Le leader du vestiaire supporte mal ta montée en puissance. Les ballons circulent moins vers toi. Il faut trancher.`,
+    choices:()=>[
+      {label:'T\'imposer, réclamer plus de ballons', hint:'+Réputation, tension',
+        effect:{reputation:+5, perfBonus:+6, coach:-3, morale:-2}, outcome:'Tu prends le pouvoir sur le terrain. Le vestiaire se réorganise autour de toi.'},
+      {label:'Jouer collectif, gagner le respect par le travail', hint:'+Coach, +QI',
+        effect:{coach:+5, qi:+2, morale:+3}, outcome:'Tu baisses la tête et bosses. Peu à peu, le respect vient.'}
+    ]},
+
+  {id:'benched', cat:'locker', solo:true,
+    when:(p,lg)=>{const last=p.seasons[p.seasons.length-1]; return last && last.minutes<16 && p.age<32;},
+    title:'Le coach te laisse sur le banc',
+    body:({p})=>`Les minutes se font rares. Tu ronges ton frein en bout de banc. Trois voies s'offrent à toi.`,
+    choices:()=>[
+      {label:'Travailler deux fois plus à l\'entraînement', hint:'+Progression réelle',
+        effect:{tir:+2, def:+2, ath:+1, coach:+3}, outcome:'Tu transformes la frustration en carburant. Le coach le remarque.'},
+      {label:'Demander un transfert', hint:'Forcer un départ',
+        effect:{forceMove:{type:'transfer'}, coach:-5, reputation:+1}, outcome:'Tu claques la porte pour aller jouer ailleurs.'},
+      {label:'Te plaindre dans la presse', hint:'+Popularité, -Coach',
+        effect:{media:+3, popularity:+3, coach:-8, morale:-2}, outcome:'Ton coup de gueule fait du bruit. La relation avec le staff se tend franchement.'}
+    ]},
+
+  {id:'mentor', cat:'locker', solo:true,
+    when:(p,lg)=>p.age<=24 && lg.tier<=3,
+    title:'Un vétéran te prend sous son aile',
+    body:`Un ancien du vestiaire, en fin de carrière, voit quelque chose en toi. Il te propose de te transmettre ce qu'il sait — à condition que tu sois assidu.`,
+    weight:()=>0.9,
+    choices:()=>[
+      {label:'Boire ses conseils, arriver plus tôt chaque jour', hint:'+QI, +Défense',
+        effect:{qi:+4, def:+3, morale:+2}, outcome:'Ses lectures de jeu deviennent les tiennes. Tu grandis vite.'},
+      {label:'Le remercier mais rester dans ton coin', hint:'Neutre',
+        effect:{morale:+1}, outcome:'Tu préfères ta propre méthode. Le vétéran respecte, sans insister.'}
+    ]},
+
+  // ---------- BLESSURES ----------
+  {id:'ankle', cat:'injury', solo:true,
+    when:(p,lg)=>true,
+    title:'Entorse à la cheville',
+    body:`Réception maladroite, la cheville tourne. Le staff médical est prudent. Toi, tu veux jouer.`,
+    weight:(p)=>{const l=LIFESTYLES.find(x=>x.id===p.life);return 0.16*l.injury*(p.riskMod||1);},
+    choices:()=>[
+      {label:'Forcer le retour, serrer les dents', hint:'-Forme, risque, perf en baisse',
+        effect:{injuryGames:12, fitness:-14, ath:-1, perfBonus:-5, coach:+2}, outcome:'Tu reviens trop tôt. Tu joues diminué mais tu montres du caractère.'},
+      {label:'Respecter les délais de guérison', hint:'Manquer des matchs, revenir sain',
+        effect:{injuryGames:18, fitness:+4}, outcome:'Tu prends le temps. Le corps guérit correctement.'}
+    ]},
+
+  {id:'big_injury', cat:'injury', solo:true,
+    when:(p,lg)=>p.age>=20,
+    title:'Genou : le diagnostic tombe',
+    body:`Un mauvais appui, un craquement. L'IRM confirme une grosse blessure. Longue absence en vue. La façon dont tu traverses ça définira la suite.`,
+    weight:(p)=>{const l=LIFESTYLES.find(x=>x.id===p.life);return 0.05*l.injury*(p.riskMod||1);},
+    choices:()=>[
+      {label:'Rééducation exemplaire, revenir plus fort mentalement', hint:'Longue absence, moral solide',
+        effect:{injuryGames:45, ath:-4, fitness:-10, qi:+3, morale:+2, reputation:-2}, outcome:'Des mois de travail dans l\'ombre. Tu perds en explosivité mais tu gagnes en tête.'},
+      {label:'Précipiter le retour pour ne pas perdre ta place', hint:'Risque de rechute',
+        effect:{injuryGames:30, ath:-7, fitness:-18, perfBonus:-8}, outcome:'Tu reviens trop vite. Le genou n\'est pas le même, et ça se voit.'}
+    ]},
+
+  // ---------- NATIONALE ----------
+  {id:'first_call', cat:'nation', solo:true,
+    when:(p,lg)=>p.reputation>=42 && !p.natCap,
+    title:'Première convocation en sélection',
+    body:({p})=>`Le sélectionneur de ${p.nation.name} ${p.nation.flag} t'appelle pour la première fois. Endosser le maillot national, c'est un honneur — et une exposition nouvelle.`,
+    choices:({p})=>[
+      {label:'Répondre présent avec fierté', hint:'+Réputation, +Popularité',
+        effect:{reputation:+6, popularity:+6, morale:+5}, tl:()=>`Première sélection avec ${p.nation.name}.`,
+        outcome:'Hymne, maillot, frissons. Une nouvelle dimension à ta carrière.'}
+    ]},
+
+  {id:'nation_leader', cat:'nation',
+    when:(p,lg)=>p.natCap && ovr(p)>=80,
+    title:'On te veut capitaine de la sélection',
+    body:({p})=>`La fédération voit en toi le leader de la nouvelle génération ${p.nation.flag}. Le brassard, c'est du poids sur les épaules autant qu'un honneur.`,
+    weight:()=>0.8,
+    choices:()=>[
+      {label:'Accepter le brassard', hint:'+Réputation, pression',
+        effect:{reputation:+7, morale:+3, popularity:+4}, outcome:'Tu deviens le visage de ta sélection. Les attentes montent d\'un cran.'},
+      {label:'Laisser le rôle à un plus ancien', hint:'Rester concentré',
+        effect:{coach:+2, morale:+2}, outcome:'Tu préfères montrer l\'exemple sans le brassard.'}
+    ]},
+
+  // ---------- CONTRAT ----------
+  {id:'extension', cat:'contract', solo:true,
+    when:(p,lg)=>p.contractY<=1 && ovr(p)>=lg.starter,
+    title:'Ton club propose une prolongation',
+    body:({p})=>`${p.club} veut te prolonger. Sécuriser ton avenir tout de suite, ou parier sur toi-même en testant le marché à la fin de saison ?`,
+    weight:()=>1.1,
+    choices:()=>[
+      {label:'Prolonger et sécuriser', hint:'+Argent stable, +Coach',
+        effect:{money:+120, coach:+4, morale:+3}, outcome:'Tu signes. Le club et toi, c\'est reparti pour un tour.'},
+      {label:'Parier sur toi, tester la free agency', hint:'Des offres tomberont en fin de saison',
+        effect:{pendingFA:true, reputation:+2, perfBonus:+4, coach:-2}, outcome:'Tu refuses la première offre. En fin de saison, tu écouteras le marché — à toi de le mériter d\'ici là.'}
+    ]},
+
+  // ---------- ENTRAÎNEMENT / DÉVELOPPEMENT ----------
+  {id:'training_focus', cat:'training', solo:true,
+    when:(p,lg)=>p.age<=30,
+    title:'Le chantier de l\'intersaison',
+    body:`Tu as ciblé un axe pour passer un cap. Où mets-tu l'énergie de ton travail cette année ?`,
+    weight:()=>1.3,
+    choices:()=>[
+      {label:'Ton tir et ton adresse extérieure', hint:'+Tir, +3pts',
+        effect:{tir:+3, adr3:+3, coach:+1}, outcome:'Des milliers de shoots plus tard, ta main est plus sûre.'},
+      {label:'Ta création et ta vision de jeu', hint:'+Passe, +Dribble',
+        effect:{passe:+3, dribble:+3}, outcome:'Ton jeu s\'ouvre, tu lis le terrain différemment.'},
+      {label:'Ta défense et ton physique', hint:'+Défense, +Athlé',
+        effect:{def:+3, ath:+2, reb:+1}, outcome:'Plus dur à passer, plus dur à bouger.'}
+    ]},
+
+  {id:'slump', cat:'form',
+    when:(p,lg)=>p.reputation>=30,
+    title:'Passage à vide',
+    body:`Les shoots ne rentrent plus, la confiance vacille. Les tribunes commencent à murmurer.`,
+    weight:()=>0.8,
+    choices:()=>[
+      {label:'Retour aux fondamentaux, tête baissée', hint:'+QI, patience',
+        effect:{qi:+2, tir:+1, morale:-2}, outcome:'Tu simplifies ton jeu. Petit à petit, ça revient.'},
+      {label:'Forcer pour t\'en sortir seul', hint:'Risqué',
+        effect:{perfBonus:-4, morale:-1, reputation:+1}, outcome:'Tu multiplies les tentatives. Ça passe ou ça casse.'}
+    ]},
+
+  {id:'coach_change', cat:'system', solo:true,
+    when:(p,lg)=>lg.tier<=3,
+    title:'Nouveau coach, nouveau système',
+    body:`Le club change d'entraîneur. Sa philosophie ne ressemble pas à celle de son prédécesseur — à toi de t'y adapter.`,
+    weight:()=>0.7,
+    choices:()=>[
+      {label:'Épouser son système à fond', hint:'+QI, +Coach',
+        effect:{qi:+2, coach:+5}, outcome:'Tu deviens un relais du coach sur le terrain.'},
+      {label:'Imposer ton style', hint:'+Réputation, friction',
+        effect:{reputation:+3, coach:-4, perfBonus:+3}, outcome:'Tu joues à ta main. Le courant passe mal avec le staff.'}
+    ]},
+
+  {id:'community', cat:'community',
+    when:(p,lg)=>true,
+    title:'Action auprès des jeunes du quartier',
+    body:`On te sollicite pour un événement caritatif avec les gamins de ta ville. Du temps hors du parquet, mais une image forte.`,
+    weight:()=>0.55,
+    choices:()=>[
+      {label:'T\'investir à fond', hint:'+Popularité, +Moral',
+        effect:{popularity:+5, morale:+3}, outcome:'Les sourires des gamins valent tous les contrats. Ta cote de sympathie grimpe.'},
+      {label:'Décliner, rester focalisé', hint:'Repos',
+        effect:{fitness:+3}, outcome:'Tu préfères te préserver. On comprend, sans plus.'}
+    ]},
+
+  {id:'rivalry', cat:'rivalry',
+    when:(p,lg)=>p.reputation>=45 && lg.tier<=2,
+    title:'Un rival te cherche',
+    body:`Un joueur de ton calibre, dans une équipe adverse, t'a pris pour cible dans la presse. Le duel est lancé.`,
+    weight:()=>0.7,
+    choices:()=>[
+      {label:'Répondre sur le terrain', hint:'+Perf, +Réputation',
+        effect:{perfBonus:+5, reputation:+3, morale:+2}, outcome:'Tu laisses parler ton jeu. Le duel devient un classique.'},
+      {label:'Ignorer et rester au-dessus', hint:'+Coach, sérénité',
+        effect:{coach:+3, qi:+1}, outcome:'Tu ne rentres pas dans son jeu. Les observateurs saluent ta maturité.'}
+    ]},
+
+  {id:'leadership', cat:'leadership',
+    when:(p,lg)=>ovr(p)>=76,
+    title:'Le vestiaire se tourne vers toi',
+    body:`Les jeunes du groupe cherchent un repère, et ton nom revient. Endosser ce rôle, c'est du poids — et de l'influence.`,
+    weight:()=>0.6,
+    choices:()=>[
+      {label:'Devenir le leader du vestiaire', hint:'+Réputation, +Coach',
+        effect:{reputation:+4, coach:+3, morale:+2}, outcome:'Tu prends la parole, tu montres l\'exemple. Le groupe te suit.'},
+      {label:'Mener par l\'exemple, sans le rôle', hint:'Discret',
+        effect:{qi:+2}, outcome:'Tu préfères les actes aux discours.'}
+    ]},
+
+  {id:'playoff_push', cat:'pressure',
+    when:(p,lg)=>lg.tier<=2 && p.reputation>=40,
+    title:'Match couperet en playoffs',
+    body:`Série décisive, tout se joue ce soir. Le coach te demande si tu veux le ballon dans le money-time.`,
+    weight:()=>0.7,
+    choices:()=>[
+      {label:'Réclamer les ballons chauds', hint:'+Perf, pression',
+        effect:{perfBonus:+6, reputation:+2}, outcome:'Tu prends tes responsabilités dans le money-time. Frissons garantis.'},
+      {label:'Faire confiance au collectif', hint:'+Coach',
+        effect:{coach:+3, qi:+1}, outcome:'Tu joues juste, tu sers les copains. Le coach apprécie.'}
+    ]},
+
+  {id:'agent', cat:'agentbiz', solo:true,
+    when:(p,lg)=>p.reputation>=45,
+    title:'Un agent influent veut te représenter',
+    body:`Un agent réputé, carnet d'adresses en or, propose de gérer ta carrière. Ça se paie, mais ça ouvre des portes.`,
+    weight:()=>0.55,
+    choices:()=>[
+      {label:'Signer avec lui', hint:'+Réputation, -Argent',
+        effect:{reputation:+5, money:-60, popularity:+3}, outcome:'Ton nom circule désormais dans les bons bureaux.'},
+      {label:'Rester avec ton agent actuel', hint:'Fidélité',
+        effect:{morale:+2, money:+20}, outcome:'Tu gardes ta confiance dans ton entourage historique.'}
+    ]},
+
+  {id:'personal', cat:'personal',
+    when:(p,lg)=>true,
+    title:'La vie en dehors du parquet',
+    body:`Entre déplacements et matchs, tes proches réclament du temps. Trouver l'équilibre te rendrait plus solide dans la tête.`,
+    weight:()=>0.5,
+    choices:()=>[
+      {label:'Prendre du temps pour tes proches', hint:'+Moral',
+        effect:{morale:+5}, outcome:'Tu recharges les batteries loin du bruit. La tête est plus légère.'},
+      {label:'Tout donner au basket cette saison', hint:'+Progression, -Moral',
+        effect:{tir:+1, def:+1, ath:+1, morale:-3}, outcome:'Tu mets tout de côté pour le jeu. Efficace, mais éprouvant.'}
+    ]},
+
+  {id:'veteran_role', cat:'twilight', solo:true,
+    when:(p,lg)=>p.age>=32,
+    title:'Le rôle de vétéran',
+    body:`Les jambes répondent moins, mais ton expérience vaut de l'or. Le club te voit désormais en guide pour les jeunes.`,
+    weight:()=>1.0,
+    choices:()=>[
+      {label:'Accepter un rôle de mentor', hint:'+Coach, +Réputation',
+        effect:{coach:+4, reputation:+2, qi:+1}, outcome:'Tu transmets ce que tu sais. Le vestiaire te vénère.'},
+      {label:'Refuser de lâcher ta place de titulaire', hint:'Fierté, friction',
+        effect:{perfBonus:+3, coach:-3, morale:+2}, outcome:'Tu veux encore ton temps de jeu. Le bras de fer commence.'}
+    ]},
+
+  {id:'comeback', cat:'comeback',
+    when:(p,lg)=>{const l=p.seasons[p.seasons.length-1]; return !!(l && l.injured);},
+    title:'Le retour de blessure',
+    body:`Après des semaines à l'écart, tu retrouves le parquet. La confiance dans ton corps se reconstruit match après match.`,
+    weight:()=>1.4,
+    choices:()=>[
+      {label:'Retour progressif et intelligent', hint:'+Forme, patience',
+        effect:{fitness:+8, qi:+1, morale:+2}, outcome:'Tu reviens sans forcer. Le corps répond bien.'},
+      {label:'Vouloir tout rattraper d\'un coup', hint:'Risqué',
+        effect:{perfBonus:-3, fitness:-4, reputation:+1}, outcome:'Tu brûles les étapes pour prouver que tu es de retour.'}
+    ]},
+
+  {id:'social_media', cat:'social',
+    when:(p,lg)=>p.popularity>=20,
+    title:'Ton action devient virale',
+    body:`Un geste spectaculaire de ta dernière rencontre explose sur les réseaux. L'occasion de surfer sur la vague.`,
+    weight:()=>0.5,
+    choices:()=>[
+      {label:'Alimenter le buzz', hint:'+Popularité',
+        effect:{popularity:+7, media:+2}, outcome:'Les vues s\'envolent, ton nom dépasse le cercle des initiés.'},
+      {label:'Rester discret et bosser', hint:'+Progression',
+        effect:{tir:+1, dribble:+1}, outcome:'Tu laisses le bruit retomber et tu retournes au travail.'}
+    ]},
+
+  {id:'nightlife', cat:'nightlife',
+    when:(p,lg)=>p.age<=31,
+    title:'Sortie avec les potes ce soir ?',
+    body:`La bande t'invite à sortir après une grosse semaine. Décompresser fait du bien... mais la nuit peut coûter cher.`,
+    weight:()=>0.8,
+    choices:({p})=>{ const l=LIFESTYLES.find(x=>x.id===p.life); const risky=(l.id==='party');
+      return [
+        {label:'Sortir et profiter', hint:'+Popularité, risque de pépin (parfois du bon)',
+          effect:(ctx)=>{ const r=Math.random(); const injP=risky?0.34:0.20;
+            if(r<injP){ ctx.night='bad'; return {injuryGames:ri(6,12), fitness:-8, popularity:+5, riskUp:+0.25, flag:'nightOwl'}; }
+            if(r>0.88){ ctx.night='good'; return {popularity:+8, reputation:+4, morale:+5, qi:+1, flag:'nightOwl'}; }
+            ctx.night='ok'; return {popularity:+6, fitness:-3, morale:+3, riskUp:+0.15, flag:'nightOwl'}; },
+          outcome:(ctx)=> ctx.night==='bad'?'La soirée dérape un peu... réveil difficile et petit pépin à la clé.'
+                        : ctx.night==='good'?'Belle soirée — tu y fais une rencontre qui va compter (contacts, image, énergie). Parfois ça sourit.'
+                        : 'Bonne soirée, sans excès. On verra demain à l\'entraînement.'},
+        {label:'Rester au calme et récupérer', hint:'+Forme, sérieux',
+          effect:{fitness:+7, qi:+1, riskUp:-0.2}, outcome:'Repos, sommeil, glace. Le corps te remerciera.'}
+      ]; }},
+
+  {id:'media_controversy', cat:'media',
+    when:(p,lg)=>p.popularity>=25 && p.reputation>=35,
+    title:'Une phrase sort de son contexte',
+    body:`Un média monte en épingle une de tes déclarations. Le vestiaire et les fans attendent ta réaction.`,
+    weight:()=>0.55,
+    choices:()=>[
+      {label:'Assumer et clarifier posément', hint:'+Réputation, +Coach',
+        effect:{reputation:+4, coach:+2, media:+2}, outcome:'Tu désamorces avec classe. Ton image en sort grandie.'},
+      {label:'Répondre cash, du tac au tac', hint:'Buzz, mais scandale',
+        effect:{popularity:+6, reputation:-5, coach:-2}, outcome:'Ça fait le buzz, mais certains n\'ont pas apprécié le ton.'}
+    ]},
+
+  {id:'overwork', cat:'training',
+    when:(p,lg)=>p.age<=29,
+    title:'Doubler les séances ?',
+    body:`Tu peux enchaîner une deuxième séance quotidienne pour passer un cap. Efficace, mais ton corps a ses limites.`,
+    weight:(p)=>p.life==='grinder'?0.9:0.45,
+    choices:()=>[
+      {label:'Tout donner, double dose', hint:'+Progression, risque',
+        effect:()=> (Math.random()<0.25)
+          ? {injuryGames:ri(8,16), fitness:-10, ath:+1, perfBonus:-3, riskUp:+0.2}
+          : {ath:+2, def:+1, tir:+1, fitness:-4, riskUp:+0.1},
+        outcome:'Tu pousses la machine au maximum.'},
+      {label:'Charge maîtrisée', hint:'Progrès sûr',
+        effect:{qi:+2, fitness:+4}, outcome:'Tu bosses intelligemment, sans casse.'}
+    ]},
+
+  /* ========================================================
+     MOMENTS D'ACTION — l'issue dépend de tes stats + aléatoire
+  ======================================================== */
+  {id:'clutch_shot', cat:'clutch',
+    when:(p,lg)=>p.reputation>=28 && lg.tier<=3,
+    title:'Le tir de la gagne',
+    body:({lg})=>`Dernière possession, un point de retard, la salle retient son souffle. Le ballon est pour toi. Que fais-tu ?`,
+    weight:()=>1.05,
+    choices:({p})=>{ const shot=Math.round((attrOf(p,'tir')+attrOf(p,'adr3'))/2);
+      return [
+        {label:'Je prends le tir de la gagne', hint:`Dépend de ton tir (${shot})`,
+          effect:(ctx)=>{ const ok=actionRoll(shot,70); ctx.ok=ok; return ok?{reputation:+7,morale:+8,popularity:+6,clutch:+1,flag:'clutchHero'}:{reputation:-3,morale:-5,popularity:+1}; },
+          outcome:(ctx)=> ctx.ok?'Splash au buzzer ! Tu délivres tout un peuple. Le genre de tir qui fait les légendes.':'Le tir s\'écrase sur le cercle, la sirène retentit. Rageant — mais tu as pris tes responsabilités.'},
+        {label:'Je sers le coéquipier démarqué', hint:`Dépend de ta vision (${attrOf(p,'qi')})`,
+          effect:(ctx)=>{ const ok=actionRoll(attrOf(p,'qi'),58); ctx.ok=ok; return ok?{reputation:+4,coach:+5,morale:+4}:{coach:+1,morale:-2}; },
+          outcome:(ctx)=> ctx.ok?'Passe parfaite, panier de la gagne ! Le coach adore ta lucidité.':'Ta passe est interceptée. Le banc grimace.'},
+        {label:'Je provoque la faute', hint:`Dépend de ton explosivité (${attrOf(p,'ath')})`,
+          effect:(ctx)=>{ const ok=actionRoll(attrOf(p,'ath'),62); ctx.ok=ok; return ok?{reputation:+3,morale:+5,clutch:+1}:{morale:-3,reputation:-1}; },
+          outcome:(ctx)=> ctx.ok?'Tu attaques le cercle, coup de sifflet ! Lancers de la gagne, sang-froid total.':'Pas de sifflet. Tu forces, ça ne passe pas.'}
+      ]; }},
+
+  {id:'defensive_stand', cat:'defense',
+    when:(p,lg)=>p.reputation>=30 && lg.tier<=3 && (p.pos==='C'||p.pos==='PF'||p.pos==='SF'),
+    title:'Le stop décisif',
+    body:()=>`Une possession pour tout gagner, mais c'est l'adversaire qui a le ballon. Le money-time se joue aussi en défense.`,
+    weight:()=>0.9,
+    choices:({p})=>[
+      {label:'Je tente le contre', hint:`Dépend de ta défense (${attrOf(p,'def')})`,
+        effect:(ctx)=>{ const ok=actionRoll(Math.round((attrOf(p,'def')+attrOf(p,'ath'))/2),70); ctx.ok=ok; return ok?{reputation:+6,morale:+7,clutch:+1,flag:'lockdown'}:{reputation:-2,morale:-4}; },
+        outcome:(ctx)=> ctx.ok?'CONTRE monumental sur la sirène ! Le public explose, tu as tout verrouillé.':'Tu mords sur la feinte, panier encaissé. Dur.'},
+      {label:'Je défends propre, sans faute', hint:`Dépend de ton QI (${attrOf(p,'qi')})`,
+        effect:(ctx)=>{ const ok=actionRoll(attrOf(p,'qi'),60); ctx.ok=ok; return ok?{reputation:+4,coach:+4}:{morale:-2}; },
+        outcome:(ctx)=> ctx.ok?'Défense parfaite, tir contré par ta position. Money-time maîtrisé.':'Il trouve la faille malgré tout. Rien à te reprocher.'}
+    ]},
+
+  {id:'finals_moment', cat:'finals',
+    when:(p,lg)=>lg.tier<=2 && p.reputation>=48,
+    title:({lg})=>`Match décisif — titre ${lg.short} en jeu`,
+    body:({lg})=>`Money-time du match qui donne le titre ${lg.short}. Le genre de soirée dont on parle vingt ans après. Comment abordes-tu ces dernières minutes ?`,
+    weight:()=>1.1,
+    choices:({p})=>{ const scorer=Math.round((attrOf(p,'tir')+attrOf(p,'adr3')+attrOf(p,'dribble'))/3);
+      return [
+        {label:'Je prends le match sur mes épaules', hint:`Dépend de ton scoring (${scorer})`,
+          effect:(ctx)=>{ const ok=actionRoll(scorer,74); ctx.ok=ok; return ok?{reputation:+9,morale:+10,popularity:+8,clutch:+2,flag:'finalsHero'}:{reputation:-2,morale:-6,popularity:+2}; },
+          outcome:(ctx)=> ctx.ok?'Récital dans le money-time ! Tu portes ton équipe vers le titre — une prestation pour l\'histoire.':'Tu forces, la réussite n\'est pas là ce soir. La marche était haute.'},
+        {label:'Je joue collectif et je fais confiance au groupe', hint:`Dépend de ton QI (${attrOf(p,'qi')})`,
+          effect:(ctx)=>{ const ok=actionRoll(attrOf(p,'qi'),66); ctx.ok=ok; return ok?{reputation:+6,coach:+6,morale:+7,clutch:+1}:{coach:+2,morale:-3}; },
+          outcome:(ctx)=> ctx.ok?'Tu orchestres à la perfection, tout le monde touche le ballon. Le titre au bout, en patron discret.':'Le collectif se grippe dans le money-time. Ça passe à côté.'}
+      ]; }},
+
+  {id:'rival_duel', cat:'duel',
+    when:(p,lg)=>p.reputation>=42 && lg.tier<=2,
+    title:'Le duel au sommet',
+    body:()=>`Ce soir tu affrontes l'autre grand nom du championnat. Tous les regards sont sur ce face-à-face. Tu veux marquer les esprits ?`,
+    weight:(p)=>p.flags&&p.flags.rival?1.1:0.75,
+    choices:({p})=>{ const scorer=Math.round((attrOf(p,'tir')+attrOf(p,'dribble'))/2);
+      return [
+        {label:'Je le défie et je prends feu', hint:`Dépend de ton scoring (${scorer})`,
+          effect:(ctx)=>{ const ok=actionRoll(scorer,72); ctx.ok=ok; return ok?{reputation:+7,morale:+6,popularity:+6,flag:'rival'}:{reputation:-2,morale:-3,flag:'rival'}; },
+          outcome:(ctx)=> ctx.ok?'Tu le domines de la tête et des épaules. Le duel tourne à ta démonstration.':'Il prend le dessus ce soir. Ça pique l\'orgueil — la revanche viendra.'},
+        {label:'Je le musèle en défense', hint:`Dépend de ta défense (${attrOf(p,'def')})`,
+          effect:(ctx)=>{ const ok=actionRoll(attrOf(p,'def'),68); ctx.ok=ok; return ok?{reputation:+5,coach:+4,flag:'rival'}:{morale:-2,flag:'rival'}; },
+          outcome:(ctx)=> ctx.ok?'Tu l\'étouffes toute la soirée. Les défenseurs aussi font des statements.':'Il trouve des solutions. Soirée frustrante face à lui.'}
+      ]; }},
+
+  {id:'presser_hostile', cat:'presser',
+    when:(p,lg)=>p.popularity>=22 && p.reputation>=32,
+    title:'Conférence de presse tendue',
+    body:()=>`Après une défaite, un journaliste te cherche ouvertement devant les caméras. La salle attend ta réaction.`,
+    weight:()=>0.6,
+    choices:({p})=>[
+      {label:'Je réponds avec aplomb et charisme', hint:`Dépend de ton QI (${attrOf(p,'qi')})`,
+        effect:(ctx)=>{ const ok=actionRoll(attrOf(p,'qi'),58); ctx.ok=ok; return ok?{reputation:+5,popularity:+5,media:+3}:{reputation:-2,media:+1}; },
+        outcome:(ctx)=> ctx.ok?'Réponse classe et maîtrisée, la punchline fait le tour des réseaux. Respect.':'Ta réponse tombe à plat, le clip tourne en boucle pour de mauvaises raisons.'},
+      {label:'Je reste factuel et je coupe court', hint:'Sûr, sans éclat',
+        effect:{coach:+2, media:+1}, outcome:'Tu bottes en touche proprement. Rien à signaler.'}
+    ]},
+
+  /* ========================================================
+     ÉVÉNEMENTS LIÉS — débloqués par tes choix précédents
+  ======================================================== */
+  {id:'clutch_payoff', cat:'payoff', solo:true,
+    when:(p,lg)=>((p.flags&&p.flags.clutchHero)||0)>=2 && lg.tier<=2,
+    title:'Réputation de clutch',
+    body:()=>`À force de briller dans les money-times, tu es devenu LE joueur à qui l'on confie les ballons chauds. Cette aura, ça se cultive.`,
+    weight:()=>1.2,
+    choices:()=>[
+      {label:'J\'embrasse ce rôle de clutch player', hint:'+Réputation durable, +sang-froid',
+        effect:{reputation:+5, perfBonus:+5, morale:+4, clutch:+1}, outcome:'Tu deviens le patron des fins de match. Les adversaires te craignent quand le chrono tourne.'},
+      {label:'Je relativise, un match reste collectif', hint:'+Vestiaire',
+        effect:{coach:+4, qi:+2}, outcome:'Tu renvoies vers le groupe. Le vestiaire apprécie ton humilité.'}
+    ]},
+
+  {id:'night_wakeup', cat:'wakeup', solo:true,
+    when:(p,lg)=>((p.flags&&p.flags.nightOwl)||0)>=2,
+    title:'Le coup de semonce',
+    body:()=>`Tes sorties répétées ont fini par se voir : le staff te convoque, un article insinue des choses. Un tournant. Comment réagis-tu ?`,
+    weight:()=>1.3,
+    choices:({p})=>[
+      {label:'Je me reprends en main, à fond', hint:'+Forme, -risque, +sérieux',
+        effect:{fitness:+8, coach:+4, riskUp:-0.4, reputation:+2, flag:'reformed'}, outcome:'Tu remets la machine d\'aplomb. Le staff retrouve confiance, ton corps aussi.'},
+      {label:'Je continue à vivre comme je l\'entends', hint:'Assumé, mais ça peut coûter cher',
+        effect:()=> (Math.random()<0.3) ? {popularity:+8, reputation:-4, riskUp:+0.3} : {popularity:+5, morale:+3, riskUp:+0.2},
+        outcome:'Tu restes toi-même. La suite dira si c\'était un pari gagnant.'}
+    ]},
+
+  /* ========================================================
+     RÔLE DANS L'ÉQUIPE — dépend de ta place (évolue chaque saison)
+  ======================================================== */
+  {id:'role_leader', cat:'locker', solo:true,
+    when:(p,lg)=>['starter','star','franchise'].includes(roleOf(p).key),
+    title:'Le coach veut faire de toi un cadre',
+    body:()=>`<i>(Réunion tactique, tableau blanc noirci de schémas.)</i> Le staff veut bâtir le collectif autour de toi. Endosser ce statut, c'est du poids — et de l'influence.`,
+    weight:()=>1.0,
+    choices:()=>[
+      {label:'Accepter d\'être le patron sur le terrain', hint:'+Réputation, +Coach',
+        effect:{reputation:+5, coach:+4, morale:+3}, outcome:'Tu prends les commandes. Le vestiaire se range derrière toi.'},
+      {label:'Rester focalisé sur ton jeu, sans les galons', hint:'Discret, +sérénité',
+        effect:{morale:+3, perfBonus:+3}, outcome:'Tu préfères parler sur le parquet. Ça te va très bien.'}
+    ]},
+
+  {id:'role_fight', cat:'locker', solo:true,
+    when:(p,lg)=>['bench','rotation'].includes(roleOf(p).key) && p.age<=30 && lg.tier<=3,
+    title:'Gratter du temps de jeu',
+    body:()=>`<i>(Fin d'entraînement, le coach range ses plots sans un regard.)</i> Tu tournes peu en ce moment. Comment tu abordes ta situation ?`,
+    weight:()=>1.15,
+    choices:()=>[
+      {label:'Bosser dans l\'ombre et forcer la main du coach', hint:'+Sérieux (peut débloquer ta place)',
+        effect:{coach:+5, perfBonus:+4, morale:-2}, outcome:'Tu redoubles d\'efforts à l\'entraînement. Le coach le remarque.'},
+      {label:'Demander plus de responsabilités, franchement', hint:'Direct : ça passe ou ça casse',
+        effect:()=> (Math.random()<0.5)?{coach:+3, reputation:+3}:{coach:-4, reputation:+1},
+        outcome:'Tu vas voir le staff en face. La réponse dépendra de ton bagout... et des résultats.'},
+      {label:'Réclamer un départ pour jouer ailleurs', hint:'Changer d\'air pour du temps de jeu',
+        effect:{forceMove:{type:'transfer'}, morale:+2}, outcome:'Tu demandes à rebondir dans un club où tu joueras vraiment.'}
+    ]},
+
+  /* ========================================================
+     CULTURE BASKET RÉELLE — références, idoles, moments d'époque
+  ======================================================== */
+  {id:'idol', cat:'youth', solo:true,
+    when:(p,lg)=>p.age<=19,
+    title:'Ton idole de jeunesse',
+    body:({p})=>{ const L=pick(LEGENDS[p.pos]||['un immense joueur']);
+      return `<i>(Casque sur les oreilles, vieilles mixtapes en boucle jusqu'à 2h du matin.)</i> Gamin, tu as usé les vidéos de <b>${L}</b>. Ce soir, tu bosses en repensant à ce qui t'a fait aimer ce jeu.`; },
+    weight:()=>0.75,
+    choices:({p})=>[
+      {label:'Copier ses gestes signature', hint:'+un point fort de ton style',
+        effect:({p})=>{ const st=STYLES.find(x=>x.id===p.style); const k=st?Object.keys(st.boost)[0]:'tir'; return {[k]:+3, morale:+2}; },
+        outcome:'Tu passes des heures à imiter ses moves. À force, ça rentre.'},
+      {label:'T\'inspirer surtout de sa mentalité', hint:'+QI, +sérieux',
+        effect:{qi:+2, coach:+2}, outcome:'Tu retiens son état d\'esprit de tueur. Ça vaut de l\'or.'}
+    ]},
+
+  {id:'comparison', cat:'media', solo:true,
+    when:(p,lg)=>p.age<=24 && p.hype>=3 && lg.tier<=3,
+    title:'La comparaison qui fait du bruit',
+    body:({p})=>{ const L=pick(LEGENDS[p.pos]||['un grand nom']);
+      return `<i>(Plateau télé, le consultant s'emballe, le bandeau clignote.)</i> Un analyste réputé compare ton profil à celui de <b>${L}</b>, toutes proportions gardées. La hype s'emballe autour de ton nom.`; },
+    weight:()=>0.7,
+    choices:()=>[
+      {label:'M\'en servir de carburant', hint:'+Motivation, +Popularité',
+        effect:{popularity:+5, morale:+4, perfBonus:+3}, outcome:'Tu transformes la pression en énergie. Les projecteurs ne te font pas peur.'},
+      {label:'Garder la tête froide', hint:'+Sérénité, +vestiaire',
+        effect:{coach:+3, morale:+2}, outcome:'Tu balaies la comparaison d\'un revers de main. Sagesse saluée.'}
+    ]},
+
+  {id:'all_star', cat:'allstar', solo:true,
+    when:(p,lg)=>lg.tier<=1 && p.reputation>=55,
+    title:'Week-end All-Star',
+    body:()=>`<i>(Paillettes, caméras à 360°, le public scande déjà.)</i> Tu es convié au grand raout de la ligue. On te propose le concours de dunks, devant le monde entier. Tu te lances ?`,
+    weight:()=>0.8,
+    choices:({p})=>[
+      {label:'Participer au concours de dunks', hint:`Show télé (dépend de ton athlé, ${attrOf(p,'ath')})`,
+        effect:(ctx)=>{ const ok=actionRoll(attrOf(p,'ath'),68); ctx.ok=ok; return ok?{popularity:+10,reputation:+4,media:+3}:{popularity:+4,media:+1}; },
+        outcome:(ctx)=> ctx.ok?'Dunk de l\'année, l\'arène s\'embrase ! Ton nom explose partout.':'Tu vises une figure trop ambitieuse, elle ne passe pas. Le buzz reste sympa.'},
+      {label:'Profiter du week-end tranquillement', hint:'+Repos, image posée',
+        effect:{fitness:+5, media:+1}, outcome:'Tu savoures le moment sans te cramer. Reposé pour la suite.'}
+    ]},
+
+  {id:'load_mgmt', cat:'modern',
+    when:(p,lg)=>lg.tier<=2 && p.age>=29,
+    title:'Souffler ou jouer à tout prix ?',
+    body:()=>`<i>(Le médecin te tend une feuille, le coach attend ta réponse.)</i> Le calendrier est infernal et tes jambes accusent le coup. La ligue débat sans fin du "load management". Et toi ?`,
+    weight:()=>0.7,
+    choices:()=>[
+      {label:'Lever le pied pour être frais en playoffs', hint:'+Forme, image ternie auprès du public',
+        effect:{fitness:+10, popularity:-3, coach:+2}, outcome:'Tu te préserves par intelligence. Les fans râlent, ton corps respire.'},
+      {label:'Jouer chaque match pour le maillot', hint:'+Réputation, corps sous tension',
+        effect:{reputation:+4, riskUp:+0.2, fitness:-4}, outcome:'Tu réponds présent coûte que coûte. Les puristes adorent, tes genoux moins.'}
+    ]},
+
+  {id:'super_team', cat:'superteam', solo:true,
+    when:(p,lg)=>lg.tier<=1 && ['star','franchise'].includes(roleOf(p).key) && p.reputation>=60,
+    title:'L\'appel du super-groupe',
+    body:()=>`<i>(Coup de fil discret d'une autre star, tard le soir.)</i> On te propose de rejoindre une équipe bâtie pour tout rafler, quitte à partager la lumière. Chasser la bague ensemble, ou rester le patron de ton projet ?`,
+    weight:()=>0.7,
+    choices:()=>[
+      {label:'Rejoindre le super-groupe (chasser le titre)', hint:'+Chances de titre, -aura perso',
+        effect:{forceMove:{type:'transfer'}, reputation:-2, morale:+4, coach:+2}, outcome:'Tu t\'associes aux meilleurs. Les puristes jasent, mais les bagues font taire les critiques.'},
+      {label:'Rester le leader de ton équipe', hint:'+Aura, faire gagner les tiens',
+        effect:{reputation:+5, morale:+3, perfBonus:+3}, outcome:'Tu refuses la facilité. Gagner avec ton club aurait une autre saveur.'}
+    ]},
+
+  {id:'legacy_interview', cat:'interview', solo:true,
+    when:(p,lg)=>p.age>=30 && p.reputation>=50,
+    title:'Grand entretien : ton héritage',
+    body:()=>`<i>(Studio tamisé, une seule caméra, le journaliste se penche vers toi.)</i> « Comment aimeriez-vous qu'on se souvienne de vous ? » La question te cueille. Que réponds-tu ?`,
+    weight:()=>0.65,
+    choices:()=>[
+      {label:'« Comme un compétiteur qui n\'a rien lâché »', hint:'+Réputation, +vestiaire',
+        effect:{reputation:+4, coach:+2, media:+2}, outcome:'Réponse sincère et fédératrice. Le clip tourne, en bien cette fois.'},
+      {label:'« Comme quelqu\'un qui a fait rêver les gens »', hint:'+Popularité',
+        effect:{popularity:+6, media:+2}, outcome:'Tu joues la carte de l\'émotion. Le public adore.'}
+    ]},
+
+  {id:'rookie_interview', cat:'interview', solo:true,
+    when:(p,lg)=>p.seasons.length<=1 && p.age<=22,
+    title:'Ta première grande interview',
+    body:()=>`<i>(Micro tendu, spots dans les yeux, ton cœur bat un peu vite.)</i> Pour ta première interview télé marquante, le ton que tu donnes va coller à ton image un moment.`,
+    weight:()=>0.8,
+    choices:()=>[
+      {label:'Humble et travailleur', hint:'+Coach, +vestiaire',
+        effect:{coach:+4, reputation:+2}, outcome:'Tu tapes juste : le staff et les vétérans apprécient ta modestie.'},
+      {label:'Ambitieux et sûr de toi', hint:'+Popularité, attentes en hausse',
+        effect:{popularity:+6, morale:+3}, outcome:'Tu affiches tes ambitions. Le public accroche, la pression monte d\'un cran.'}
+    ]},
+];
+
+/* ============================================================
+   petit hook : marquer la première sélection
+============================================================ */
+const _sim = simulateSeason;
+simulateSeason = function(){
+  const p=G;
+  if(p.reputation>=42 && !p.natCap && p.year%2===0) p.natCap=true;
+  return _sim.apply(this,arguments);
+};
+
+/* ============================================================
+   GO
+============================================================ */
+screenTitle();
+})();
+</script>
+</body>
+</html>

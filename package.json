@@ -7,10 +7,13 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "audit": "node tests/audit.mjs"
+    "audit": "node tests/audit.mjs",
+    "gen:data": "node scripts/gen-club-data.mjs",
+    "ship": "node scripts/ship.mjs"
   },
   "devDependencies": {
     "jsdom": "^27.4.0",
+    "read-excel-file": "^9.3.4",
     "vite": "^8.1.1"
   }
 }

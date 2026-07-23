@@ -30,7 +30,8 @@ export const EVENTS = [
     weight:()=>1.4,
     choices:()=>[
       {label:'Signer pro maintenant', hint:'Passer pro tout de suite (gros pari)',
-        effect:{forceMove:{type:'promo',to:'second'}, morale:+4, money:+30}, outcome:'Tu franchis le pas vers le monde pro plus tôt que prévu.'},
+        effect:({p})=>({forceMove:{type:'promo', to:p.nation.path==='au'?'nbl1':'second'}, morale:+4, money:+30}),
+        outcome:'Tu franchis le pas vers le monde pro plus tôt que prévu.'},
       {label:'Rester en formation encore un an', hint:'Dominer avant de monter',
         effect:{tir:+2, dribble:+2, qi:+1}, outcome:'Tu restes et tu écrases ta catégorie. Ton jeu s\'affine.'}
     ]},

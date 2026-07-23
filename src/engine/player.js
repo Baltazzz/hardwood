@@ -47,6 +47,12 @@ export function salaryFor(lgKey, o, rep){
   const repB = 1 + rep/180;
   return Math.max(Math.round(base*perf*repB), lg.prestige*20);
 }
+// Modulateur de salaire lié au prestige réel d'un club précis (0-100). null = pas de donnée
+// par club (euro/nba) : pas de modulation. Borné pour rester dans une fourchette raisonnable.
+export function clubSalaryMod(prestige){
+  if(prestige==null) return 1;
+  return clamp(0.8 + (prestige/100)*0.5, 0.8, 1.3);
+}
 
 function rollTalent(p){
   const pos = POSITIONS.find(x=>x.id===p.pos);
@@ -55,8 +61,8 @@ function rollTalent(p){
   // boost les 3 attributs clés du poste
   const keys=Object.entries(pos.w).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>x[0]);
   keys.forEach(k=>{ p.attrs[k]=clamp(p.attrs[k]+ri(6,14),0,60); });
-  // nation US légèrement plus athlétique
-  if(p.nation.path==='us'){ p.attrs.ath=clamp(p.attrs.ath+ri(2,7),0,65); }
+  // nation US/Australie légèrement plus athlétique
+  if(p.nation.path==='us'||p.nation.path==='au'){ p.attrs.ath=clamp(p.attrs.ath+ri(2,7),0,65); }
   // style de jeu : oriente le profil de départ
   const st=STYLES.find(x=>x.id===p.style);
   if(st){ for(const k in st.boost){ p.attrs[k]=clamp(p.attrs[k]+st.boost[k],0,66); } }

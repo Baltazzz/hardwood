@@ -5,6 +5,7 @@ import { LIFESTYLES } from '../data/lifestyles.js';
 import { LEAGUES } from '../data/leagues.js';
 import { ovr, salaryFor } from './player.js';
 import { EVENTS } from './events.js';
+import { pickClubName } from './clubs.js';
 import { rnd, ri, pick, clamp, round, jit, capitalize, money } from './utils.js';
 import { renderEvent, showDeltaFlash, renderSeasonResult, renderMoveScreen, endCareer } from '../ui/screens.js';
 
@@ -14,7 +15,7 @@ import { renderEvent, showDeltaFlash, renderSeasonResult, renderMoveScreen, endC
 export function startCareer(){
   const p=G;
   p.league = p.nation.path==='us' ? 'college' : 'academy';
-  p.club = pick(LEAGUES[p.league].clubs);
+  p.club = pickClubName(p.league, p.nation.id);
   p.contractY = 2; p.salary = p.league==='college'?0:ri(20,60);
   p.age=16; p.year=1;
   pushTL(`Débuts à <b>${p.club}</b> (${LEAGUES[p.league].short}).`);
@@ -144,7 +145,7 @@ export function simulateSeason(){
   // titre
   const championOdds = clamp((teamRating-58)/60,0,.7);
   let champion=false;
-  if(wins>=Math.round(lg.prestige*3.2) && Math.random()<championOdds+ (o>=lg.star?.12:0)){ champion=true; A(lg.tier===1?'Champion NBA':lg.tier===2?'Champion EuroLeague':'Champion '+lg.short); }
+  if(wins>=Math.round(lg.prestige*3.2) && Math.random()<championOdds+ (o>=lg.star?.12:0)){ champion=true; A(isNBA?'Champion NBA':isEuro?'Champion EuroLeague':'Champion '+lg.short); }
   // rookie award
   if(rookie && (isNBA||isEuro) && o>=lg.star-3 && pts>14){ A(isNBA?'Rookie de l\'année':'Meilleur jeune'); }
 
@@ -156,7 +157,8 @@ export function simulateSeason(){
   // sélection nationale (tournoi tous les 2 ans à partir de rep suffisante)
   let natLine=null;
   if(p.reputation>=45 && p.year%2===0){
-    const tourn = pick(['Coupe du Monde','Jeux Olympiques', p.nation.path==='eu'?'EuroBasket':'Coupe des Amériques']);
+    const zoneTourn = p.nation.path==='eu' ? 'EuroBasket' : p.nation.path==='au' ? 'Coupe d\'Asie' : 'Coupe des Amériques';
+    const tourn = pick(['Coupe du Monde','Jeux Olympiques', zoneTourn]);
     const natPower = clamp(p.nation.strength + (o-70)*0.6 + rnd(-16,16),20,105);
     let medal=null;
     if(natPower>96){ medal='Or'; A('🥇 '+tourn); }
@@ -245,6 +247,8 @@ function applyAging(){
 function resolveMovement(){
   const p=G, lg=LEAGUES[p.league], o=ovr(p);
   const last=p.seasons[p.seasons.length-1];
+  // dernier rung avant la NBA : EuroLeague pour les chemins eu/us, NBL pour l'Australie
+  const continental = p.nation.path==='au' ? 'nbl' : 'euro';
 
   // forceMove imposé par un choix d'événement
   if(p.seasonMods.forceMove){ return buildMove(p.seasonMods.forceMove); }
@@ -252,17 +256,17 @@ function resolveMovement(){
   // --- Free agency : le joueur a refusé de prolonger → de vraies offres arrivent ---
   if(p.pendingFA){ p.pendingFA=false; return {type:'freeAgency'}; }
 
-  // --- NBA : le pari a échoué (pas de temps de jeu) → opportunité de retour en Europe ---
+  // --- NBA : le pari a échoué (pas de temps de jeu) → opportunité de retour au rung continental ---
   if(p.league==='nba' && p.nbaStruggle>=2 && o<LEAGUES.nba.starter){
-    return {type:'nbaReturn', to:'euro', club:pick(LEAGUES.euro.clubs)};
+    return {type:'nbaReturn', to:continental, club:pickClubName(continental, p.nation.id)};
   }
 
-  // --- SCÉNARIO SPÉCIAL : légende européenne en fin de carrière, jamais passée par la NBA ---
+  // --- SCÉNARIO SPÉCIAL : légende continentale en fin de carrière, jamais passée par la NBA ---
   // Une franchise lui offre un contrat court "pour la beauté du geste" (31-34 ans)
-  if(p.league==='euro' && p.age>=31 && p.age<=34 && p.firstNbaAge===null && !p.swanOffered
-     && o>=LEAGUES.euro.star-1 && p.reputation>=70 && Math.random()<0.5){
+  if((p.league==='euro'||p.league==='nbl') && p.age>=31 && p.age<=34 && p.firstNbaAge===null && !p.swanOffered
+     && o>=LEAGUES[p.league].star-1 && p.reputation>=70 && Math.random()<0.5){
     p.swanOffered=true;
-    return {type:'nbaSwan', to:'nba', club:pick(LEAGUES.nba.clubs)};
+    return {type:'nbaSwan', to:'nba', club:pickClubName('nba', p.nation.id)};
   }
 
   // ================= VOIE US =================
@@ -272,51 +276,59 @@ function resolveMovement(){
     return null;
   }
   if(p.league==='gleague' && o>=LEAGUES.gleague.starter+2 && p.age<=28){
-    return {type:'callup', to:'nba', club:pick(LEAGUES.nba.clubs)};
+    return {type:'callup', to:'nba', club:pickClubName('nba', p.nation.id)};
   }
 
-  // ================= VOIE EUROPE =================
-  if(p.league==='academy' && (o>=LEAGUES.second.starter-2 || p.age>=19)){
-    return {type:'promo', to:'second', club:pick(LEAGUES.second.clubs)};
+  // ================= VOIE EUROPE (3 paliers domestiques) =================
+  if(p.league==='academy' && p.nation.path==='eu' && (o>=LEAGUES.third.starter-2 || p.age>=19)){
+    return {type:'promo', to:'third', club:pickClubName('third', p.nation.id)};
+  }
+  if(p.league==='third' && o>=LEAGUES.second.starter-3){
+    return {type:'promo', to:'second', club:pickClubName('second', p.nation.id)};
   }
   if(p.league==='second' && o>=LEAGUES.national.starter-3){
-    return {type:'promo', to:'national', club:pick(LEAGUES.national.clubs)};
+    return {type:'promo', to:'national', club:pickClubName('national', p.nation.id)};
   }
-  // Jeune talent européen qui perce vite : opportunité de DRAFT NBA (une seule fois, avant 23 ans)
-  if((p.league==='national'||p.league==='euro') && p.age<=22 && !p.triedDraft && o>=72 && p.reputation>=40){
+
+  // ================= VOIE AUSTRALIE (formation -> NBL1 -> NBL) =================
+  if(p.league==='academy' && p.nation.path==='au' && (o>=LEAGUES.nbl1.starter-2 || p.age>=19)){
+    return {type:'promo', to:'nbl1', club:pickClubName('nbl1', p.nation.id)};
+  }
+  if(p.league==='nbl1' && o>=LEAGUES.nbl.starter-3){
+    return {type:'promo', to:'nbl', club:pickClubName('nbl', p.nation.id)};
+  }
+
+  // Jeune talent international qui perce vite : opportunité de DRAFT NBA (une seule fois, avant 23 ans)
+  if((p.league==='national'||p.league==='euro'||p.league==='nbl1'||p.league==='nbl') && p.age<=22 && !p.triedDraft && o>=72 && p.reputation>=40){
     p.triedDraft=true;
-    return {type:'draftDecl', origin:'euro'};
+    return {type:'draftDecl', origin:'intl'};
   }
   if(p.league==='national' && o>=LEAGUES.euro.starter-3){
-    return {type:'promo', to:'euro', club:pick(LEAGUES.euro.clubs)};
+    return {type:'promo', to:'euro', club:pickClubName('euro', p.nation.id)};
   }
-  // Star européenne confirmée : fenêtre NBA à un seuil atteignable, seulement dans la fenêtre de prime (≤29 ans)
+  // Star continentale confirmée : fenêtre NBA à un seuil atteignable, seulement dans la fenêtre de prime (≤29 ans)
   const declinedRecently = p.declined.nbaYear && (p.year - p.declined.nbaYear) < 3;
-  if(p.league==='euro' && p.age<=29 && o>=LEAGUES.euro.starter+1 && p.reputation>=52 && !declinedRecently && Math.random()<0.55){
-    return {type:'nbaWindow', to:'nba', club:pick(LEAGUES.nba.clubs)};
+  if((p.league==='euro'||p.league==='nbl') && p.age<=29 && o>=LEAGUES[p.league].starter+1 && p.reputation>=52 && !declinedRecently && Math.random()<0.55){
+    return {type:'nbaWindow', to:'nba', club:pickClubName('nba', p.nation.id)};
   }
 
   // Transferts latéraux une fois installé (varier les clubs)
-  if(last && o>=lg.star-3 && p.contractY<=0 && lg.clubs.length>1 && Math.random()>0.45){
-    let nc=pick(lg.clubs); let t=0; while(nc===p.club && t<8){ nc=pick(lg.clubs); t++; }
-    if(nc!==p.club) return {type:'transfer', to:p.league, club:nc};
+  if(last && o>=lg.star-3 && p.contractY<=0 && Math.random()>0.45){
+    const nc = pickClubName(p.league, p.nation.id, {exclude:p.club});
+    if(nc && nc!==p.club) return {type:'transfer', to:p.league, club:nc};
   }
 
   // Relégation si trop faible
   if(o < lg.starter-9 && lg.tier<5){
-    const down={nba:'euro',euro:'national',national:'second',gleague:'second',second:'academy'}[p.league];
-    if(down) return {type:'demote', to:down, club:pick(LEAGUES[down].clubs)};
+    const down={ nba:continental, euro:'national', nbl:'nbl1', national:'second',
+                 gleague:'second', second:'third', third:'academy', nbl1:'academy' }[p.league];
+    if(down) return {type:'demote', to:down, club:pickClubName(down, p.nation.id)};
   }
   return null;
 }
 function buildMove(fm){
   const to = fm.to || G.league;
-  let club = fm.club;
-  if(!club){
-    const clubs = LEAGUES[to].clubs;
-    club = pick(clubs);
-    let t=0; while(club===G.club && clubs.length>1 && t<10){ club=pick(clubs); t++; }
-  }
+  const club = fm.club || pickClubName(to, G.nation.id, {exclude:G.club});
   return {type:fm.type||'transfer', to, club};
 }
 

@@ -201,7 +201,7 @@ export function renderMoveScreen(move){
       : `Ta carrière universitaire t'ouvre les portes de la draft. Te déclarer, c'est saisir ta chance maintenant ; d'autres attendent une saison de plus pour grimper dans les projections.`;
     choices=[
       {label:`Me déclarer à la draft`, hint:'Tenter la NBA', apply:()=>{ const pos=draftProjection(o,p.reputation);
-        if(pos<=60) renderMoveScreen({type:'draft', pos, to:'nba', club:pickClubName('nba', p.nation.id)});
+        if(pos<=60) renderMoveScreen({type:'draft', pos, to:'nba', club:pickClubName('nba', p.nation.id), origin:move.origin});
         else renderMoveScreen({type:'undrafted', origin:move.origin}); }},
       intl
         ? {label:`Continuer à progresser à l'international`, hint:'Bâtir avant de sauter', apply:()=>{ p.morale=clamp(p.morale+2,0,100); beginSeasonKeep(); }}
@@ -210,11 +210,14 @@ export function renderMoveScreen(move){
   }
   else if(move.type==='draft'){
     const rnd1 = move.pos<=30;
+    const late = move.pos>30; // fin de 1er tour / 2e tour : peu d'attentes, temps de jeu à mériter
     title = `Draft NBA — appelé en position ${move.pos}`;
-    body = `Ton nom résonne dans la salle. <b>${move.club}</b> te sélectionne au ${ordinal(move.pos)} rang${rnd1?' du premier tour':' (second tour)'}. Le rêve devient contrat.`;
+    body = `Ton nom résonne dans la salle. <b>${move.club}</b> te sélectionne au ${ordinal(move.pos)} rang${rnd1?' du premier tour':' (second tour)'}. Le rêve devient contrat${late?', mais rien n\'est garanti : à toi de forcer la main du coach.':'.'}`;
     choices=[
-      {label:`Signer avec ${move.club}`, hint:'Direction la NBA', apply:()=>doMove(move,{reputation:+8,morale:+10,popularity:+10})},
-      {label:'Refuser et rester une saison de plus à la fac', hint:'Prendre le temps de mûrir', apply:()=>{ p.morale=clamp(p.morale-3,0,100); beginSeasonKeep(); }}
+      {label:`Signer avec ${move.club}`, hint: late?'Direction la NBA — un rôle à conquérir':'Direction la NBA',
+        apply:()=>{ p.draftPos=move.pos; doMove(move, late?{reputation:+2,morale:+4,popularity:+2}:{reputation:+8,morale:+10,popularity:+10}); }},
+      {label:'Refuser et rester une saison de plus', hint: move.origin==='college'?'Prendre le temps de mûrir à la fac':'Prendre le temps de progresser',
+        apply:()=>{ p.morale=clamp(p.morale-3,0,100); beginSeasonKeep(); }}
     ];
   }
   else if(move.type==='undrafted'){
@@ -366,25 +369,31 @@ export function endCareer(reason){
   const p=G; p.retired=true;
   const A=p.accolades;
   const cnt=(k)=>A[k]||0;
-  const champs = Object.keys(A).filter(k=>k.startsWith('Champion')).reduce((s,k)=>s+A[k],0);
+  // les titres au sommet (NBA/EuroLeague/NBL) comptent nettement plus que les titres de paliers
+  // mineurs (formation, 2e/3e division...) : gagner en académie ne devrait pas peser comme un titre NBA
+  const champTitles = Object.keys(A).filter(k=>k.startsWith('Champion'));
+  const champsElite = (A['Champion NBA']||0) + (A['Champion EuroLeague']||0) + (A['Champion NBL']||0);
+  const champs = champTitles.reduce((s,k)=>s+A[k],0); // total, gardé pour l'affichage/la presse
+  const champsMinor = champs - champsElite;
   const mvps = cnt('MVP');
   const allstars = cnt('All-Star')+cnt('All-EuroLeague');
   const medalsG = Object.keys(A).filter(k=>k.startsWith('🥇')).reduce((s,k)=>s+A[k],0);
   const scoringT = cnt('Meilleur marqueur');
 
-  // score légende (le clutch compte : les moments décisifs marquent une carrière)
-  let legend = p.peakOvr*1.0 + champs*14 + mvps*22 + allstars*5 + medalsG*10 + scoringT*8
-             + cnt('MVP EuroLeague')*10 + cnt('Rookie de l\'année')*6 + cnt('Meilleur défenseur')*6
-             + Math.min(p.seasons.length,20)*1.5 + p.reputation*0.3 + (p.clutch||0)*3;
+  // score légende : le trophée rare (MVP, titre au sommet) pèse largement plus que la longévité
+  // ou le statut de star répété (le clutch compte aussi : les moments décisifs marquent une carrière)
+  let legend = p.peakOvr*0.75 + champsElite*22 + champsMinor*5 + mvps*20 + allstars*4 + medalsG*10 + scoringT*8
+             + cnt('MVP EuroLeague')*12 + cnt('Rookie de l\'année')*6 + cnt('Meilleur défenseur')*6
+             + Math.min(p.seasons.length,20)*1.2 + p.reputation*0.22 + (p.clutch||0)*3;
   legend=Math.round(legend);
-  p.hof = legend>=210 || (champs>=1 && p.peakOvr>=90) || mvps>=1;
+  p.hof = legend>=250 || (champsElite>=1 && p.peakOvr>=91) || mvps>=1;
 
   let tier, blurb;
-  if(legend>=300){ tier='G.O.A.T.'; blurb='On ne parlera plus du basket sans prononcer ton nom. Une ère porte ta signature.'; }
-  else if(legend>=230){ tier='Légende — Hall of Fame'; blurb='Tu entres au Panthéon. Ton maillot est retiré, ton héritage est écrit.'; }
-  else if(legend>=180){ tier='Superstar'; blurb='Une carrière énorme, des sommets touchés, un nom qui a compté au plus haut niveau.'; }
-  else if(legend>=130){ tier='All-Star'; blurb='Tu as brillé parmi l\'élite. Une belle et solide carrière de haut niveau.'; }
-  else if(legend>=85){ tier='Joueur de rotation'; blurb='Un vrai pro, respecté dans les vestiaires. Tu as vécu du basket, ce que peu réussissent.'; }
+  if(legend>=340){ tier='G.O.A.T.'; blurb='On ne parlera plus du basket sans prononcer ton nom. Une ère porte ta signature.'; }
+  else if(legend>=260){ tier='Légende — Hall of Fame'; blurb='Tu entres au Panthéon. Ton maillot est retiré, ton héritage est écrit.'; }
+  else if(legend>=200){ tier='Superstar'; blurb='Une carrière énorme, des sommets touchés, un nom qui a compté au plus haut niveau.'; }
+  else if(legend>=145){ tier='All-Star'; blurb='Tu as brillé parmi l\'élite. Une belle et solide carrière de haut niveau.'; }
+  else if(legend>=90){ tier='Joueur de rotation'; blurb='Un vrai pro, respecté dans les vestiaires. Tu as vécu du basket, ce que peu réussissent.'; }
   else { tier='Parcours de combattant'; blurb='Le sommet t\'a échappé, mais tu as tout donné. Le basket garde une place pour les acharnés.'; }
 
   const sceneStats={legend, champs, mvps, allstars, peakOvr:p.peakOvr};

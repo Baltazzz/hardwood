@@ -2,6 +2,7 @@ import { G } from './state.js';
 import { ATTRS, POSITIONS } from '../data/positions.js';
 import { STYLES } from '../data/styles.js';
 import { LIFESTYLES } from '../data/lifestyles.js';
+import { ARCHETYPES } from '../data/archetypes.js';
 import { LEAGUES } from '../data/leagues.js';
 import { ovr, salaryFor } from './player.js';
 import { EVENTS } from './events.js';
@@ -103,6 +104,16 @@ export function simulateSeason(){
   const gap = o - lg.starter;
   const youngRun = p.age<=21 ? 1 : 0;              // les jeunes ont un peu de temps de jeu offert
   let minutes = clamp(21 + gap*1.35 + youngRun + (p.coach-50)/14, 6, 36); // la confiance du coach compte
+  // Drafté tard (ou en fin de tableau) : la confiance du staff n'est pas acquise, il faut
+  // gratter chaque minute — pénalité qui s'estompe après une saison ou deux en NBA.
+  if(p.league==='nba' && p.draftPos!=null){
+    const nbaSeasonsSoFar = p.seasons.filter(s=>s.league==='nba').length;
+    if(nbaSeasonsSoFar<2){
+      const standing = clamp((p.draftPos-4)*0.28, 0, 13);
+      minutes -= standing * (nbaSeasonsSoFar===0 ? 1 : 0.5);
+    }
+  }
+  minutes = clamp(minutes, 3, 36);
   const form = clamp((p.fitness/100)*0.85 + 0.15 + (p.morale-50)/240, 0.6, 1.2);
   const injuryPenalty = clamp(p.seasonMods.injuryGames/82, 0, .6);
   minutes = minutes*(1-injuryPenalty);
@@ -139,8 +150,8 @@ export function simulateSeason(){
     else { A('MVP '+lg.short); }
   }
   if(isNBA && pts>=26 && o>=87){ A('Meilleur marqueur'); }
-  if(isNBA && o>=91 && wins>=48 && Math.random()>.45){ A('MVP'); }
-  if(isEuro && o>=89 && wins>=45 && Math.random()>.5){ A('MVP EuroLeague'); }
+  if(isNBA && o>=lg.star && wins>=36 && Math.random()>.6){ A('MVP'); }
+  if(isEuro && o>=lg.star && wins>=26 && Math.random()>.6){ A('MVP EuroLeague'); }
   if(p.attrs.def>=88 && (p.pos==='C'||p.pos==='PF'||p.pos==='SF') && Math.random()>.6 && minutes>26 && (isNBA||isEuro)){ A('Meilleur défenseur'); }
   // titre
   const championOdds = clamp((teamRating-58)/60,0,.7);
@@ -215,10 +226,13 @@ export function postSeason(){
 
 function applyAging(){
   const p=G, life=LIFESTYLES.find(l=>l.id===p.life), pos=POSITIONS.find(x=>x.id===p.pos);
+  const arch = ARCHETYPES.find(a=>a.id===p.devArchetype) || ARCHETYPES[0];
   const lastMin = p.seasons.length?p.seasons[p.seasons.length-1].minutes:15;
-  const minFactor = clamp(0.85 + lastMin/55, 0.85, 1.3); // le temps de jeu accélère (peu punitif)
-  // Courbe d'âge réaliste : montée jusqu'à ~25, pic/plateau 26-31, déclin dès 32
-  const young = p.age<=24, dev = p.age<=27, prime = p.age<=31, decline = p.age>=32;
+  // le temps de jeu réel (donc la performance/le rôle obtenu) pèse fort sur la vitesse de progression
+  const minFactor = clamp(0.7 + lastMin/50, 0.7, 1.4);
+  // Courbe d'âge décalée par trajectoire (precoce monte/plafonne plus tôt, tardif l'inverse)
+  const shift = arch.peakAgeShift;
+  const young = p.age<=24+shift, dev = p.age<=27+shift, prime = p.age<=31+shift, decline = p.age>=32+shift;
   const stB=(STYLES.find(x=>x.id===p.style)||{}).boost||{};
   ATTRS.forEach(a=>{
     // plafond PAR attribut : proche du potentiel pour tes points forts de poste, plus bas ailleurs ; bonus sur ton style
@@ -228,14 +242,14 @@ function applyAging(){
     const roomA = clamp(ceil - p.attrs[a.id], 0, 40); // marge propre à cet attribut
     let d=0;
     if(young){
-      d = clamp(roomA*0.16,0,4.2) * life.grow * minFactor + rnd(-0.3,0.7);
+      d = (clamp(roomA*0.16,0,4.2) * life.grow * minFactor + rnd(-0.3,0.7)) * arch.youngMult;
     } else if(dev){
-      d = clamp(roomA*0.10,0,2.6) * life.grow * minFactor + rnd(-0.4,0.5);
+      d = (clamp(roomA*0.10,0,2.6) * life.grow * minFactor + rnd(-0.4,0.5)) * arch.devMult;
     } else if(prime){
-      d = (roomA>2?clamp(roomA*0.05,0,1.1):0) + rnd(-0.4,0.5)*life.grow;
+      d = ((roomA>2?clamp(roomA*0.05,0,1.1):0) + rnd(-0.4,0.5)*life.grow) * arch.primeMult;
     } else if(decline){
-      const fast=['ath','dribble','def','reb']; const g=(p.age-31);
-      d = fast.includes(a.id)? -rnd(1.4,2.8+g*0.5) : -rnd(0.5,1.3+g*0.25);
+      const fast=['ath','dribble','def','reb']; const g=(p.age-(31+shift));
+      d = (fast.includes(a.id)? -rnd(1.4,2.8+g*0.5) : -rnd(0.5,1.3+g*0.25)) * arch.declineMult;
     }
     p.attrs[a.id]=clamp(Math.round(p.attrs[a.id]+d),1,99);
   });
@@ -256,9 +270,10 @@ function resolveMovement(){
   // --- Free agency : le joueur a refusé de prolonger → de vraies offres arrivent ---
   if(p.pendingFA){ p.pendingFA=false; return {type:'freeAgency'}; }
 
-  // --- NBA : le pari a échoué (pas de temps de jeu) → opportunité de retour au rung continental ---
+  // --- NBA : le pari a échoué (pas de temps de jeu) → renvoyé se relancer, en G-League côté US, sinon au rung continental ---
   if(p.league==='nba' && p.nbaStruggle>=2 && o<LEAGUES.nba.starter){
-    return {type:'nbaReturn', to:continental, club:pickClubName(continental, p.nation.id)};
+    const sendTo = p.nation.path==='us' ? 'gleague' : continental;
+    return {type:'nbaReturn', to:sendTo, club:pickClubName(sendTo, p.nation.id)};
   }
 
   // --- SCÉNARIO SPÉCIAL : légende continentale en fin de carrière, jamais passée par la NBA ---
@@ -277,6 +292,16 @@ function resolveMovement(){
   }
   if(p.league==='gleague' && o>=LEAGUES.gleague.starter+2 && p.age<=28){
     return {type:'callup', to:'nba', club:pickClubName('nba', p.nation.id)};
+  }
+
+  // --- DÉCLARATION À LA DRAFT — accessible à tous dès 19 ans, quel que soit le palier ---
+  // Plus aucun seuil de niveau/réputation à l'entrée : n'importe quel jeune joueur (hors
+  // college/G-League/NBA, qui ont leur propre filière) peut tenter sa chance, avec un temps
+  // de battement entre deux tentatives. Seul le résultat (draftProjection) reste dur et fidèle
+  // au niveau réel — un joueur pas prêt tentera sa chance et repartira très probablement non drafté.
+  if(p.age>=19 && p.age<=26 && (!p.lastDraftTry || p.year-p.lastDraftTry>=2) && Math.random()<0.65){
+    p.lastDraftTry = p.year;
+    return {type:'draftDecl', origin:'intl'};
   }
 
   // ================= VOIE EUROPE (3 paliers domestiques) =================
@@ -298,11 +323,6 @@ function resolveMovement(){
     return {type:'promo', to:'nbl', club:pickClubName('nbl', p.nation.id)};
   }
 
-  // Jeune talent international qui perce vite : opportunité de DRAFT NBA (une seule fois, avant 23 ans)
-  if((p.league==='national'||p.league==='euro'||p.league==='nbl1'||p.league==='nbl') && p.age<=22 && !p.triedDraft && o>=72 && p.reputation>=40){
-    p.triedDraft=true;
-    return {type:'draftDecl', origin:'intl'};
-  }
   if(p.league==='national' && o>=LEAGUES.euro.starter-3){
     return {type:'promo', to:'euro', club:pickClubName('euro', p.nation.id)};
   }

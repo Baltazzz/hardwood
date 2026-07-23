@@ -1,13 +1,14 @@
 import { POSITIONS, ATTRS } from '../data/positions.js';
 import { STYLES } from '../data/styles.js';
 import { LEAGUES } from '../data/leagues.js';
+import { ARCHETYPES } from '../data/archetypes.js';
 import { clamp, ri, pick } from './utils.js';
 
 export function newPlayer(){
   return {
     step:0, nation:null, pos:null, style:null, life:null, name:'',
     age:16, year:1,
-    attrs:{}, potential:0, hype:0,
+    attrs:{}, potential:0, hype:0, devArchetype:null,
     league:null, club:null, contractY:0, salary:0,
     reputation:8, morale:62, coach:55, media:50, popularity:12, fitness:100, money:0,
     peakOvr:0,
@@ -15,7 +16,7 @@ export function newPlayer(){
     // season scaffolding
     curEvents:[], evIndex:0, seasonMods:{}, pendingOffers:null,
     natCap:0, retired:false, hof:false,
-    nbaStruggle:0, triedDraft:false, declined:{}, firstNbaAge:null,
+    nbaStruggle:0, draftPos:null, lastDraftTry:null, declined:{}, firstNbaAge:null,
     pendingFA:false, riskMod:1, swanOffered:false, earlyBet:false,
     flags:{}, clutch:0
   };
@@ -54,8 +55,16 @@ export function clubSalaryMod(prestige){
   return clamp(0.8 + (prestige/100)*0.5, 0.8, 1.3);
 }
 
+function pickArchetype(){
+  const total = ARCHETYPES.reduce((s,a)=>s+a.weight,0);
+  let r = Math.random()*total;
+  for(const a of ARCHETYPES){ r -= a.weight; if(r<=0) return a; }
+  return ARCHETYPES[0];
+}
+
 function rollTalent(p){
   const pos = POSITIONS.find(x=>x.id===p.pos);
+  p.devArchetype = pickArchetype().id;
   // base 30-46, bumped on primary attrs of the position
   ATTRS.forEach(a=>{ p.attrs[a.id]=ri(28,44); });
   // boost les 3 attributs clés du poste

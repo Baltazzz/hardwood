@@ -6,11 +6,18 @@
 //
 // Usage : npm run ship [-- "message de commit"]
 
-import { execSync } from 'node:child_process';
+import { execSync, execFileSync } from 'node:child_process';
 
 function run(cmd) {
   console.log(`\n$ ${cmd}`);
   execSync(cmd, { stdio: 'inherit' });
+}
+
+// Pour les arguments contenant des retours à la ligne (message de commit) : execFileSync
+// passe l'argument tel quel au process, sans repasser par un shell qui échapperait les \n.
+function runArgs(file, args) {
+  console.log(`\n$ ${file} ${args.map(a => (a.includes('\n') ? '"…"' : a)).join(' ')}`);
+  execFileSync(file, args, { stdio: 'inherit' });
 }
 
 function step(label, fn) {
@@ -36,7 +43,7 @@ if (!staged) {
   console.log('Rien à committer — audit et build OK, dépôt déjà à jour.');
   process.exit(0);
 }
-step('Commit', () => run(`git commit -m ${JSON.stringify(commitMessage)}`));
+step('Commit', () => runArgs('git', ['commit', '-m', commitMessage]));
 step('Push', () => run('git push'));
 
 console.log('\n✓ Ship terminé : audit OK, build OK, poussé sur le dépôt distant.');

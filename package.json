@@ -6,9 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "audit": "node tests/audit.mjs"
   },
   "devDependencies": {
+    "jsdom": "^27.4.0",
     "vite": "^8.1.1"
   }
 }

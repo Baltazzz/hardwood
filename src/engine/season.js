@@ -4,9 +4,9 @@ import { STYLES } from '../data/styles.js';
 import { LIFESTYLES } from '../data/lifestyles.js';
 import { ARCHETYPES } from '../data/archetypes.js';
 import { LEAGUES } from '../data/leagues.js';
-import { ovr, salaryFor } from './player.js';
+import { ovr, salaryFor, arrivalCoachTrust } from './player.js';
 import { EVENTS } from './events.js';
-import { pickClubName } from './clubs.js';
+import { pickClubName, clubInfo } from './clubs.js';
 import { rnd, ri, pick, clamp, round, jit, capitalize, money } from './utils.js';
 import { renderEvent, showDeltaFlash, renderSeasonResult, renderMoveScreen, endCareer } from '../ui/screens.js';
 
@@ -203,6 +203,10 @@ export function simulateSeason(){
   else if(minutes<12){ p.morale=clamp(p.morale-7,0,100); }
   if(champion){ p.morale=clamp(p.morale+10,0,100); p.reputation=clamp(p.reputation+6*mediaAmp,0,100); }
   p.reputation=clamp(p.reputation + ((pts-12)*0.25 + (o-lg.starter)*0.15)*mediaAmp, 0, 100);
+  // La confiance du staff se regagne (ou s'effrite) avec les prestations réelles — plus vite
+  // qu'elle ne s'est perdue à l'arrivée, pour qu'une période d'adaptation dure 1-2 saisons,
+  // pas cinq. Une bonne saison à forte production/minutes restaure nettement la confiance.
+  p.coach = clamp(p.coach + (pts-11)*0.9 + (minutes-16)*0.35 + (champion?6:0), 0, 100);
   // gains financiers approximatifs
   p.money += p.salary + (isNBA?p.popularity*4: p.popularity*1.2) + p.reputation*(isNBA?1.5:0.6);
 
@@ -319,22 +323,30 @@ function resolveMovement(){
 
   // ================= VOIE US =================
   if(p.league==='college'){
-    const yrs=p.seasons.length;
-    if(o>=60 || yrs>=3 || p.age>=21){ return {type:'draftDecl', origin:'college'}; }
+    if(!p.draftEntered){
+      if(p.age>=22) return {type:'draftDecl', origin:'college', forced:true}; // éligibilité automatique : dernière chance
+      const yrs=p.seasons.length;
+      if(p.age>=19 && (o>=60 || yrs>=3 || p.age>=21)){ return {type:'draftDecl', origin:'college'}; }
+    }
     return null;
   }
   if(p.league==='gleague' && o>=LEAGUES.gleague.starter+2 && p.age<=28){
     return {type:'callup', to:'nba', club:pickClubName('nba', p.nation.id)};
   }
 
-  // --- DÉCLARATION À LA DRAFT — accessible à tous dès 19 ans, quel que soit le palier ---
-  // Plus aucun seuil de niveau/réputation à l'entrée : n'importe quel jeune joueur (hors
-  // college/G-League/NBA, qui ont leur propre filière) peut tenter sa chance, avec un temps
-  // de battement entre deux tentatives. Seul le résultat (draftProjection) reste dur et fidèle
-  // au niveau réel — un joueur pas prêt tentera sa chance et repartira très probablement non drafté.
-  if(p.age>=19 && p.age<=26 && (!p.lastDraftTry || p.year-p.lastDraftTry>=2) && Math.random()<0.65){
-    p.lastDraftTry = p.year;
-    return {type:'draftDecl', origin:'intl'};
+  // --- DÉCLARATION À LA DRAFT — fenêtre 19-22 ans, une seule vraie entrée par carrière ---
+  // Accessible à tous les paliers (hors college/G-League/NBA, qui ont leur propre filière),
+  // sans seuil de niveau/réputation. Au-delà de 22 ans on n'est plus draftable : éligibilité
+  // automatique forcée cette dernière année si le joueur n'a encore jamais tenté sa chance.
+  // La probabilité de se déclarer volontairement monte avec l'âge (on attend d'être prêt).
+  if(!p.draftEntered){
+    if(p.age>=22){
+      return {type:'draftDecl', origin:'intl', forced:true};
+    }
+    if(p.age>=19){
+      const declareChance = {19:0.30, 20:0.55, 21:0.8}[p.age] ?? 0.5;
+      if(Math.random()<declareChance) return {type:'draftDecl', origin:'intl'};
+    }
   }
 
   // ================= VOIE EUROPE (3 paliers domestiques) =================
@@ -396,14 +408,19 @@ export function draftProjection(o,rep){
   return ri(61,80); // non draftée
 }
 
-export function doMove(move,eff){
+export function doMove(move,eff,kind){
   const p=G;
   p.league=move.to; p.club=move.club;
   p.contractY = ri(2,4);
   let explicitSal=null;
-  for(const k in (eff||{})){ if(k==='salary'){ explicitSal=eff[k]; } else { p[k]=clamp(p[k]+eff[k],0,100);} }
+  for(const k in (eff||{})){ if(k==='salary'){ explicitSal=eff[k]; } else if(k!=='coach'){ p[k]=clamp(p[k]+eff[k],0,100);} }
   p.salary = (explicitSal!=null) ? explicitSal : salaryFor(p.league, ovr(p), p.reputation);
   const lg=LEAGUES[p.league];
+  // Nouveau club, nouveau staff qui ne te connaît pas encore : la confiance du coach est
+  // recalculée à partir de zéro selon ton statut d'arrivée et l'exigence réelle du club —
+  // elle ne se transporte plus telle quelle depuis l'ancien club.
+  const info = clubInfo(p.league, p.nation.id, p.club);
+  p.coach = arrivalCoachTrust(p, ovr(p), lg, info?.prestige ?? null, info?.category ?? null, kind);
   pushTL(`Signe à <b>${p.club}</b> (${lg.short}) · 💰 ${money(p.salary)}/an.`);
   beginSeason();
 }

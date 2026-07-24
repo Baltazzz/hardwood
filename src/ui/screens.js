@@ -195,18 +195,28 @@ export function renderMoveScreen(move){
 
   if(move.type==='draftDecl'){
     const intl = move.origin==='intl';
-    title = intl ? `Te déclarer à la draft NBA ?` : `L'heure de la draft`;
-    body = intl
-      ? `Tu perces vite à l'international et les recruteurs NBA rôdent. Tu peux te déclarer à la draft dès maintenant — un pari sur ton potentiel — ou continuer à bâtir ton nom avant de tenter le grand saut.`
-      : `Ta carrière universitaire t'ouvre les portes de la draft. Te déclarer, c'est saisir ta chance maintenant ; d'autres attendent une saison de plus pour grimper dans les projections.`;
-    choices=[
-      {label:`Me déclarer à la draft`, hint:'Tenter la NBA', apply:()=>{ const pos=draftProjection(o,p.reputation);
-        if(pos<=60) renderMoveScreen({type:'draft', pos, to:'nba', club:pickClubName('nba', p.nation.id), origin:move.origin});
-        else renderMoveScreen({type:'undrafted', origin:move.origin}); }},
-      intl
-        ? {label:`Continuer à progresser à l'international`, hint:'Bâtir avant de sauter', apply:()=>{ p.morale=clamp(p.morale+2,0,100); beginSeasonKeep(); }}
-        : {label:`Rester une saison de plus à la fac`, hint:'Grimper dans les projections', apply:()=>{ beginSeasonKeep(); }}
-    ];
+    const declare = ()=>{
+      p.draftEntered = true; // la vraie entrée à la draft, une seule fois par carrière
+      const pos=draftProjection(o,p.reputation);
+      if(pos<=60) renderMoveScreen({type:'draft', pos, to:'nba', club:pickClubName('nba', p.nation.id), origin:move.origin});
+      else renderMoveScreen({type:'undrafted', origin:move.origin});
+    };
+    if(move.forced){
+      title = `Éligibilité automatique à la draft`;
+      body = `Tu as 22 ans : c'est la limite d'âge, la draft t'intègre automatiquement cette année. Dernière chance de te faire appeler.`;
+      choices=[{label:`Me présenter à la draft`, hint:'Dernière chance', apply:declare}];
+    } else {
+      title = intl ? `Te déclarer à la draft NBA ?` : `L'heure de la draft`;
+      body = intl
+        ? `Tu perces vite à l'international et les recruteurs NBA rôdent. Tu peux te déclarer à la draft dès maintenant — un pari sur ton potentiel, une seule vraie tentative dans ta carrière — ou continuer à bâtir ton nom avant de tenter le grand saut.`
+        : `Ta carrière universitaire t'ouvre les portes de la draft. Te déclarer maintenant, c'est saisir ta chance mais aussi la jouer d'un coup — tu n'auras qu'une vraie entrée dans ta carrière. D'autres attendent une saison de plus pour grimper dans les projections.`;
+      choices=[
+        {label:`Me déclarer à la draft`, hint:'Tenter la NBA (une seule vraie entrée possible)', apply:declare},
+        intl
+          ? {label:`Continuer à progresser à l'international`, hint:'Bâtir avant de sauter', apply:()=>{ p.morale=clamp(p.morale+2,0,100); beginSeasonKeep(); }}
+          : {label:`Rester une saison de plus à la fac`, hint:'Grimper dans les projections', apply:()=>{ beginSeasonKeep(); }}
+      ];
+    }
   }
   else if(move.type==='draft'){
     const rnd1 = move.pos<=30;
@@ -215,7 +225,7 @@ export function renderMoveScreen(move){
     body = `Ton nom résonne dans la salle. <b>${move.club}</b> te sélectionne au ${ordinal(move.pos)} rang${rnd1?' du premier tour':' (second tour)'}. Le rêve devient contrat${late?', mais rien n\'est garanti : à toi de forcer la main du coach.':'.'}`;
     choices=[
       {label:`Signer avec ${move.club}`, hint: late?'Direction la NBA — un rôle à conquérir':'Direction la NBA',
-        apply:()=>{ p.draftPos=move.pos; doMove(move, late?{reputation:+2,morale:+4,popularity:+2}:{reputation:+8,morale:+10,popularity:+10}); }},
+        apply:()=>{ p.draftPos=move.pos; doMove(move, late?{reputation:+2,morale:+4,popularity:+2}:{reputation:+8,morale:+10,popularity:+10}, 'draft'); }},
       {label:'Refuser et rester une saison de plus', hint: move.origin==='college'?'Prendre le temps de mûrir à la fac':'Prendre le temps de progresser',
         apply:()=>{ p.morale=clamp(p.morale-3,0,100); beginSeasonKeep(); }}
     ];
@@ -224,21 +234,21 @@ export function renderMoveScreen(move){
     const intl = move.origin==='intl';
     title = `Non drafté`;
     body = intl
-      ? `Ton nom n'est pas appelé à la draft. Pas de drame : tu es déjà une valeur montante à l'international, et d'autres portes s'ouvriront plus tard.`
-      : `Aucune équipe n'appelle ton nom. La porte principale se ferme — mais les acharnés trouvent toujours un chemin.`;
+      ? `Ton nom n'est pas appelé à la draft. C'était ta seule vraie tentative — désormais agent libre, c'est par le circuit international ou la G League que tu devras te faire remarquer pour espérer un jour rejoindre la NBA.`
+      : `Aucune équipe n'appelle ton nom. C'était ta seule vraie tentative — la porte de la draft est refermée pour de bon. Agent libre, tu devras te frayer un chemin par la G League ou l'international.`;
     choices = intl ? [
-      {label:`Continuer à t'imposer à l'international`, hint:'Ta chance NBA reviendra', apply:()=>{ p.morale=clamp(p.morale-2,0,100); beginSeasonKeep(); }},
-      {label:`Rejoindre la G League pour viser un call-up`, hint:'La petite porte US', apply:()=>doMove({type:'promo',to:'gleague',club:pickClubName('gleague', p.nation.id)},{morale:-3,salary:ri(40,90)})}
+      {label:`Continuer à t'imposer à l'international`, hint:'Ta chance NBA viendra par un autre chemin', apply:()=>{ p.morale=clamp(p.morale-2,0,100); beginSeasonKeep(); }},
+      {label:`Rejoindre la G League pour viser un call-up`, hint:'La petite porte US', apply:()=>doMove({type:'promo',to:'gleague',club:pickClubName('gleague', p.nation.id)},{morale:-3,salary:ri(40,90)},'promo')}
     ] : [
-      {label:'Rejoindre la G League et se battre pour un call-up', hint:'La voie difficile vers la NBA', apply:()=>doMove({type:'promo',to:'gleague',club:pickClubName('gleague', p.nation.id)},{morale:-4,salary:ri(40,90)})},
-      {label:`Signer un gros contrat en ${LEAGUES[continental].name}`, hint:'Devenir une star à l\'international', apply:()=>doMove({type:'promo',to:continental,club:pickClubName(continental, p.nation.id)},{morale:+3,salary:ri(300,900),reputation:+4})}
+      {label:'Rejoindre la G League et se battre pour un call-up', hint:'La voie difficile vers la NBA', apply:()=>doMove({type:'promo',to:'gleague',club:pickClubName('gleague', p.nation.id)},{morale:-4,salary:ri(40,90)},'promo')},
+      {label:`Signer un gros contrat en ${LEAGUES[continental].name}`, hint:'Devenir une star à l\'international', apply:()=>doMove({type:'promo',to:continental,club:pickClubName(continental, p.nation.id)},{morale:+3,salary:ri(300,900),reputation:+4},'promo')}
     ];
   }
   else if(move.type==='nbaJump'){
     title = `La NBA t'appelle`;
     body = `Après avoir marqué l'EuroLeague, une franchise NBA — <b>${move.club}</b> — pose une offre sur la table. Le grand saut, avec tout ce qu'il implique : plus d'argent, plus de lumière, mais un rôle à reconquérir.`;
     choices=[
-      {label:`Tenter l'aventure NBA à ${move.club}`, hint:'Le sommet mondial', apply:()=>doMove(move,{morale:+6,popularity:+12,reputation:+5,salary:ri(500,2500)})},
+      {label:`Tenter l'aventure NBA à ${move.club}`, hint:'Le sommet mondial', apply:()=>doMove(move,{morale:+6,popularity:+12,reputation:+5,salary:ri(500,2500)},'nbaWindow')},
       {label:'Rester roi en Europe', hint:'Statut de franchise player garanti', apply:()=>{ p.morale=clamp(p.morale+4,0,100); p.reputation=clamp(p.reputation+3,0,100); beginSeasonKeep(); }}
     ];
   }
@@ -246,7 +256,7 @@ export function renderMoveScreen(move){
     title = `Une fenêtre s'ouvre en NBA`;
     body = `Après tes performances en ${LEAGUES[p.league].name}, <b>${move.club}</b> te propose un contrat NBA. Le grand saut : plus d'argent et la lumière mondiale, mais un rôle à conquérir — et rien ne garantit que ça marche.`;
     choices=[
-      {label:`Tenter la NBA à ${move.club}`, hint:'Le pari du sommet', apply:()=>doMove(move,{morale:+5,popularity:+10,reputation:+4})},
+      {label:`Tenter la NBA à ${move.club}`, hint:'Le pari du sommet', apply:()=>doMove(move,{morale:+5,popularity:+10,reputation:+4},'nbaWindow')},
       {label:`Rester une référence en ${LEAGUES[p.league].short}`, hint:'Franchise player garanti', apply:()=>{ p.declined.nbaYear=p.year; p.morale=clamp(p.morale+4,0,100); p.reputation=clamp(p.reputation+3,0,100); beginSeasonKeep(); }}
     ];
   }
@@ -254,7 +264,7 @@ export function renderMoveScreen(move){
     title = `Le pari NBA tourne court`;
     body = `Le temps de jeu ne vient pas, tu t'enlises au bout du banc. <b>${move.club}</b> (${LEAGUES[move.to].short}) t'offre un rôle majeur et la lumière que la NBA t'a refusée. Revenir, c'est rebondir la tête haute.`;
     choices=[
-      {label:`Rebondir en ${LEAGUES[move.to].short} à ${move.club}`, hint:'Redevenir une star', apply:()=>{ p.nbaStruggle=0; doMove(move,{morale:+4,reputation:+1}); }},
+      {label:`Rebondir en ${LEAGUES[move.to].short} à ${move.club}`, hint:'Redevenir une star', apply:()=>{ p.nbaStruggle=0; doMove(move,{morale:+4,reputation:+1},'nbaReturn'); }},
       {label:`S'accrocher en NBA une saison de plus`, hint:'Refuser d\'abandonner (risqué)', apply:()=>{ p.nbaStruggle=0; p.morale=clamp(p.morale-3,0,100); beginSeasonKeep(); }}
     ];
   }
@@ -274,17 +284,17 @@ export function renderMoveScreen(move){
     ];
     rivals.forEach((rc,i)=>{ const sal=Math.round(salaryFor(p.league,o,p.reputation)*1.1*clubSalaryMod(rc.prestige));
       choices.push({label:`Signer à ${rc.name}`, hint:`${flavor(rc)||(i===0?'Projet ambitieux':'Gros chèque, nouveau vestiaire')} · 💰 ${money(sal)}/an`,
-        apply:()=>doMove({type:'transfer',to:p.league,club:rc.name},{morale:+2,reputation:+2,salary:sal})}); });
+        apply:()=>doMove({type:'transfer',to:p.league,club:rc.name},{morale:+2,reputation:+2,salary:sal},'freeAgent')}); });
     if(canUp){ const uc=pickClub(upKey, p.nation.id, {popularity:p.popularity}); const sal=Math.round(salaryFor(upKey,o,p.reputation)*clubSalaryMod(uc.prestige));
       choices.push({label:`Viser plus haut : ${uc.name} (${LEAGUES[upKey].short})`, hint:`${flavor(uc)||'Monter d\'un cran, tout à prouver'} · 💰 ${money(sal)}/an`,
-        apply:()=>doMove({type:'promo',to:upKey,club:uc.name},{morale:+4,reputation:+3,salary:sal})}); }
+        apply:()=>doMove({type:'promo',to:upKey,club:uc.name},{morale:+4,reputation:+3,salary:sal},'promo')}); }
   }
   else if(move.type==='nbaSwan'){
     title = `🌟 La NBA t'appelle, pour l'histoire`;
     body = `Tu as tout gagné en ${LEAGUES[p.league].name}. Sur le tard, <b>${move.club}</b> t'offre un contrat court — un an ou deux — pour vivre enfin le rêve NBA et finir en beauté. Un dernier grand frisson.`;
     choices=[
       {label:`Vivre le rêve à ${move.club}`, hint:'Baroud d\'honneur au sommet',
-        apply:()=>doMove(move,{morale:+8,popularity:+12,reputation:+3})},
+        apply:()=>doMove(move,{morale:+8,popularity:+12,reputation:+3},'nbaSwan')},
       {label:`Rester une légende de ${LEAGUES[p.league].short}`, hint:'Fidèle jusqu\'au bout',
         apply:()=>{ p.morale=clamp(p.morale+5,0,100); p.reputation=clamp(p.reputation+2,0,100); beginSeasonKeep(); }}
     ];
@@ -292,13 +302,13 @@ export function renderMoveScreen(move){
   else if(move.type==='callup'){
     title = `Call-up en NBA !`;
     body = `Ton travail en G League a payé : <b>${move.club}</b> te signe un contrat NBA. À toi de saisir ta chance sous les projecteurs.`;
-    choices=[{label:`Signer avec ${move.club}`, hint:'Enfin la NBA', apply:()=>doMove(move,{morale:+9,popularity:+8,reputation:+5})}];
+    choices=[{label:`Signer avec ${move.club}`, hint:'Enfin la NBA', apply:()=>doMove(move,{morale:+9,popularity:+8,reputation:+5},'callup')}];
   }
   else if(move.type==='promo'){
     title = `Palier franchi — ${toLg.name}`;
     body = `Ton niveau ne passe plus inaperçu. <b>${move.club}</b> (${toLg.short}) t'offre un contrat pour monter d'un cran. Plus fort, plus exposé.`;
     choices=[
-      {label:`Signer à ${move.club}`, hint:`Monter en ${toLg.short}`, apply:()=>doMove(move,{morale:+5,reputation:+3})},
+      {label:`Signer à ${move.club}`, hint:`Monter en ${toLg.short}`, apply:()=>doMove(move,{morale:+5,reputation:+3},'promo')},
       {label:'Rester encore un an pour dominer', hint:'Consolider avant de monter', apply:()=>{ p.morale=clamp(p.morale-2,0,100); beginSeasonKeep(); }}
     ];
   }
@@ -311,14 +321,14 @@ export function renderMoveScreen(move){
     body = `Ta cote grimpe : plusieurs clubs de ${tl.short} veulent te recruter. Changer de maillot, c'est de l'ambition — et la pression qui va avec.`;
     choices = opts.map((c,i)=>{ const sal=Math.round(salaryFor(move.to,o,p.reputation)*1.1*clubSalaryMod(c.prestige));
       return {label:`Rejoindre ${c.name}`, hint:`${flavor(c)||(i===0?'Le favori pour ta signature':'Offre alléchante')} · 💰 ${money(sal)}/an`,
-        apply:()=>doMove({type:'transfer',to:move.to,club:c.name},{morale:+3,reputation:+2,salary:sal})}; });
+        apply:()=>doMove({type:'transfer',to:move.to,club:c.name},{morale:+3,reputation:+2,salary:sal},'freeAgent')}; });
     choices.push({label:`Rester fidèle à ${p.club}`, hint:'La loyauté paie aussi (+moral, +vestiaire)',
       apply:()=>{ p.morale=clamp(p.morale+4,0,100); p.reputation=clamp(p.reputation+2,0,100); p.coach=clamp(p.coach+3,0,100); beginSeasonKeep(); }});
   }
   else if(move.type==='demote'){
     title = `Rétrogradé en ${toLg.short}`;
     body = `Le niveau ne suit plus. Faute de temps de jeu, tu redescends à <b>${move.club}</b> pour te relancer. Le basket ne pardonne pas — mais les retours existent.`;
-    choices=[{label:'Rebondir plus bas', hint:'Se relancer', apply:()=>doMove(move,{morale:-8,reputation:-4})}];
+    choices=[{label:'Rebondir plus bas', hint:'Se relancer', apply:()=>doMove(move,{morale:-8,reputation:-4},'demote')}];
   }
 
   const singleDest = move.to && !['freeAgency','transfer','draftDecl'].includes(move.type);

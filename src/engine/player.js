@@ -16,7 +16,7 @@ export function newPlayer(){
     // season scaffolding
     curEvents:[], evIndex:0, seasonMods:{}, pendingOffers:null,
     natCap:0, retired:false, hof:false,
-    nbaStruggle:0, draftPos:null, lastDraftTry:null, declined:{}, firstNbaAge:null,
+    nbaStruggle:0, draftPos:null, draftEntered:false, declined:{}, firstNbaAge:null,
     pendingFA:false, riskMod:1, swanOffered:false, earlyBet:false,
     flags:{}, clutch:0
   };
@@ -54,6 +54,39 @@ export function salaryFor(lgKey, o, rep){
 export function clubSalaryMod(prestige){
   if(prestige==null) return 1;
   return clamp(0.8 + (prestige/100)*0.5, 0.8, 1.3);
+}
+
+// Catégories réelles (issues des données de clubs) qui accentuent ou adoucissent l'exigence
+// au-delà du seul prestige numérique.
+const DEMANDING_CATEGORIES = new Set(['Elite','Blue Blood','Historic Club','Historic Program','Modern Power','Historic G League','Talent Factory','G League Contender']);
+const FORGIVING_CATEGORIES = new Set(['Rebuilding','New Project','Rising Project','Rising Program','G League Rebuilding','Average','G League Average','Promotion Candidate']);
+
+// Confiance initiale du staff à la signature : dépend de ton statut d'arrivée (kind) et de
+// l'exigence réelle du club (prestige + catégorie). Remplace l'ancien comportement qui
+// conservait intégralement la confiance du club précédent, ce qui n'avait pas de sens.
+export function arrivalCoachTrust(p, o, lg, prestige, category, kind){
+  const span = Math.max(1, lg.star - lg.starter);
+  const standing = clamp((o - (lg.starter-8)) / (span+8), 0, 1.15); // ta position relative au niveau attendu ici
+  let base = 35 + standing*40;
+
+  if(kind==='draft'){
+    const posFactor = clamp(1 - (p.draftPos||30)/70, 0, 1); // le rang pèse plus que le niveau brut pour un rookie
+    base = 32 + posFactor*30 + standing*14;
+  } else if(kind==='demote'){
+    base = Math.max(base, 74); // terrain conquis : on t'attend en sauveur, quel que soit l'écart brut
+  } else if(kind==='nbaSwan'){
+    base = Math.max(base, 68); // statut de légende déjà reconnu
+  } else if(kind==='nbaReturn'){
+    base = Math.min(base, 46); // retour d'un échec : la confiance ne se redonne pas d'emblée
+  }
+
+  let demand = prestige==null ? 55 : prestige;
+  if(category && DEMANDING_CATEGORIES.has(category)) demand += 10;
+  else if(category && FORGIVING_CATEGORIES.has(category)) demand -= 8;
+  demand = clamp(demand, 10, 100);
+
+  const demandPenalty = clamp((demand-50)*0.28, -14, 16) * clamp(1.25 - base/100, 0.35, 1.25);
+  return clamp(Math.round(base - demandPenalty), 15, 92);
 }
 
 function pickArchetype(){

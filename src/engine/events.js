@@ -134,6 +134,19 @@ export const EVENTS = [
         effect:{coach:+5, qi:+2, morale:+3}, outcome:'Tu baisses la tête et bosses. Peu à peu, le respect vient.'}
     ]},
 
+  {id:'coach_trust_low', cat:'locker', solo:true,
+    when:(p,lg)=>p.coach<45,
+    title:'Un nouveau staff, pas encore convaincu',
+    body:()=>`Le coach ne te connaît pas encore vraiment. Tu sens qu'il te regarde avec circonspection, comme le reste du staff — la confiance, ici, se mérite.`,
+    weight:()=>1.15,
+    choices:()=>[
+      {label:'Bosser deux fois plus à l\'entraînement pour prouver ta valeur', hint:'+Confiance du staff',
+        effect:{coach:+6, fitness:-3}, outcome:'Tu arrives tôt, repars tard. Le staff commence à noter ton sérieux.'},
+      {label:'Demander une discussion franche avec le coach', hint:'Risqué, dépend du courant qui passe',
+        effect:()=>(Math.random()<0.55)?{coach:+8, morale:+2}:{coach:-3, morale:-2},
+        outcome:'Tu mets les choses à plat. Ça passe... ou ça casse un peu plus.'}
+    ]},
+
   {id:'benched', cat:'locker', solo:true,
     when:(p,lg)=>{const last=p.seasons[p.seasons.length-1]; return last && last.minutes<16 && p.age<32;},
     title:'Le coach te laisse sur le banc',

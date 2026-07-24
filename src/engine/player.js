@@ -34,7 +34,8 @@ export function roleOf(p){
   const o=ovr(p); const lastMin=p.seasons.length?p.seasons[p.seasons.length-1].minutes:0;
   if(o>=lg.star+2) return {key:'franchise',label:'👑 Franchise player'};
   if(o>=lg.star-2) return {key:'star',label:'⭐ Star de l\'équipe'};
-  if(o>=lg.starter) return {key:'starter',label:'🏀 Titulaire'};
+  // un coach qui te fait confiance t'ouvre le poste de titulaire même un cran en-dessous de la barre pure
+  if(o>=lg.starter || (o>=lg.starter-3 && p.coach>=75)) return {key:'starter',label:'🏀 Titulaire'};
   if(o>=lg.starter-6 || lastMin>=14) return {key:'rotation',label:'🔄 Rotation'};
   return {key:'bench',label:'🪑 Bout de banc'};
 }
@@ -75,8 +76,11 @@ function rollTalent(p){
   // style de jeu : oriente le profil de départ
   const st=STYLES.find(x=>x.id===p.style);
   if(st){ for(const k in st.boost){ p.attrs[k]=clamp(p.attrs[k]+st.boost[k],0,66); } }
-  // potentiel caché + hype
-  const roll=Math.random();
+  // potentiel caché + hype (corrélation légère avec la trajectoire précoce : les prodiges
+  // qu'on annonce déjà comme "précoces" sont plus souvent aussi ceux au potentiel élite —
+  // ne change pas la distribution de potentiel des autres trajectoires)
+  const potBoost = p.devArchetype==='precocious' ? 0.15 : 0;
+  const roll=Math.random()+potBoost;
   p.potential = roll>.90?ri(95,99) : roll>.62?ri(89,95) : roll>.30?ri(82,90) : ri(75,83);
   p.hype = p.potential>=95?5 : p.potential>=89?4 : p.potential>=82?3 : p.potential>=77?2 : 1;
   if(!p.name){ p.name = pick(p.nation.names)+' '+pick(p.nation.last); }

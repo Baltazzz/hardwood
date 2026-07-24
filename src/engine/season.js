@@ -32,8 +32,10 @@ export function beginSeason(){
   p.seasonMods={ tir:0,adr3:0,dribble:0,passe:0,def:0,reb:0,ath:0,qi:0,
                  reputation:0,morale:0,coach:0,media:0,popularity:0,money:0,fitness:0,
                  perfBonus:0, injuryGames:0, forceMove:null };
-  // recharge forme en intersaison
-  p.fitness = clamp(p.fitness + ri(8,20), 40, 100);
+  // recharge de forme en intersaison : de moins en moins efficace avec l'âge, la forme
+  // s'use sur la durée d'une carrière plutôt que de repartir à l'identique chaque année
+  const ageWear = clamp((p.age-27)*0.6, 0, 10);
+  p.fitness = clamp(p.fitness + clamp(ri(8,20)-ageWear, 3, 20), 30, 100);
   // 2 événements narratifs par saison : moins de choix, mais plus de poids
   const n = 2;
   p.curEvents = drawEvents(n);
@@ -103,7 +105,7 @@ export function simulateSeason(){
   // ----- TEMPS DE JEU : selon le niveau vs seuil de titulaire de la ligue -----
   const gap = o - lg.starter;
   const youngRun = p.age<=21 ? 1 : 0;              // les jeunes ont un peu de temps de jeu offert
-  let minutes = clamp(21 + gap*1.35 + youngRun + (p.coach-50)/14, 6, 36); // la confiance du coach compte
+  let minutes = clamp(21 + gap*1.35 + youngRun + (p.coach-50)/9, 6, 36); // la confiance du coach compte, et pèse fort
   // Drafté tard (ou en fin de tableau) : la confiance du staff n'est pas acquise, il faut
   // gratter chaque minute — pénalité qui s'estompe après une saison ou deux en NBA.
   if(p.league==='nba' && p.draftPos!=null){
@@ -113,9 +115,15 @@ export function simulateSeason(){
       minutes -= standing * (nbaSeasonsSoFar===0 ? 1 : 0.5);
     }
   }
+  // Prodige précoce (potentiel élite + trajectoire précoce) : très rare, les clubs le
+  // poussent plus tôt sur le terrain — ne concerne qu'une frange infime de la population.
+  if(p.age<=20 && p.potential>=95 && p.devArchetype==='precocious'){ minutes += ri(4,7); }
   minutes = clamp(minutes, 3, 36);
-  const form = clamp((p.fitness/100)*0.85 + 0.15 + (p.morale-50)/240, 0.6, 1.2);
-  const injuryPenalty = clamp(p.seasonMods.injuryGames/82, 0, .6);
+  const form = clamp((p.fitness/100)*0.85 + 0.15 + (p.morale-50)/130, 0.6, 1.2); // le moral pèse nettement plus qu'avant
+  // L'argent accumulé finance un meilleur suivi médical : réduit (dans une mesure raisonnable)
+  // le temps perdu à cause des blessures de la saison.
+  const medicalCare = clamp(1 - Math.min(p.money,3000)/3000*0.25, 0.75, 1);
+  const injuryPenalty = clamp(p.seasonMods.injuryGames/82, 0, .6) * medicalCare;
   minutes = minutes*(1-injuryPenalty);
   const perf = clamp(form + p.seasonMods.perfBonus/100, .6, 1.25);
 
@@ -144,19 +152,26 @@ export function simulateSeason(){
   if(!p.firstIn) p.firstIn=p.league;
 
   const star = o>=lg.star;
-  if(star && minutes>24){
+  // Un joueur très populaire peut décrocher une place All-Star par le vote des fans, même
+  // un cran sous la barre pure ovr — comme dans un vrai vote All-Star. Ne touche que cette
+  // sélection précise (pas le statut "star" qui gouverne moral/réputation ci-dessous).
+  const allStarPick = star || ((isNBA||isEuro) && o>=lg.star-2 && p.popularity>=78);
+  if(allStarPick && minutes>24){
     if(isNBA){ A('All-Star'); }
     else if(isEuro){ A('All-EuroLeague'); }
     else { A('MVP '+lg.short); }
   }
   if(isNBA && pts>=26 && o>=87){ A('Meilleur marqueur'); }
-  if(isNBA && o>=lg.star && wins>=36 && Math.random()>.6){ A('MVP'); }
-  if(isEuro && o>=lg.star && wins>=26 && Math.random()>.6){ A('MVP EuroLeague'); }
+  // Le clutch pèse dans les votes de fin de saison (MVP/titre) : un joueur au sang-froid
+  // reconnu incline légèrement la balance en sa faveur.
+  const clutchVoteBoost = clamp((p.clutch||0)*0.012, 0, 0.08);
+  if(isNBA && o>=lg.star && wins>=38 && Math.random()>(.67-clutchVoteBoost)){ A('MVP'); }
+  if(isEuro && o>=lg.star && wins>=28 && Math.random()>(.67-clutchVoteBoost)){ A('MVP EuroLeague'); }
   if(p.attrs.def>=88 && (p.pos==='C'||p.pos==='PF'||p.pos==='SF') && Math.random()>.6 && minutes>26 && (isNBA||isEuro)){ A('Meilleur défenseur'); }
   // titre
-  const championOdds = clamp((teamRating-58)/60,0,.7);
+  const championOdds = clamp((teamRating-58)/60,0,.7) + clamp((p.clutch||0)*0.006,0,.04);
   let champion=false;
-  if(wins>=Math.round(lg.prestige*3.2) && Math.random()<championOdds+ (o>=lg.star?.12:0)){ champion=true; A(isNBA?'Champion NBA':isEuro?'Champion EuroLeague':'Champion '+lg.short); }
+  if(wins>=Math.round(lg.prestige*3.3) && Math.random()<championOdds+ (o>=lg.star?.12:0)){ champion=true; A(isNBA?'Champion NBA':isEuro?'Champion EuroLeague':'Champion '+lg.short); }
   // rookie award
   if(rookie && (isNBA||isEuro) && o>=lg.star-3 && pts>14){ A(isNBA?'Rookie de l\'année':'Meilleur jeune'); }
 
@@ -181,10 +196,13 @@ export function simulateSeason(){
   }
 
   // effets moraux post-saison
-  if(star){ p.morale=clamp(p.morale+6,0,100); p.reputation=clamp(p.reputation+ (isNBA?7:isEuro?5:4),0,100); p.popularity=clamp(p.popularity+(isNBA?6:3),0,100); }
+  // Les médias pilotent l'exposition : plus t'es médiatisé, plus l'opinion publique amplifie
+  // aussi bien tes bonnes que tes mauvaises saisons (plus à gagner, plus à perdre).
+  const mediaAmp = clamp(0.55 + p.media/95, 0.55, 1.5);
+  if(star){ p.morale=clamp(p.morale+6,0,100); p.reputation=clamp(p.reputation+ (isNBA?7:isEuro?5:4)*mediaAmp,0,100); p.popularity=clamp(p.popularity+(isNBA?6:3),0,100); }
   else if(minutes<12){ p.morale=clamp(p.morale-7,0,100); }
-  if(champion){ p.morale=clamp(p.morale+10,0,100); p.reputation=clamp(p.reputation+6,0,100); }
-  p.reputation=clamp(p.reputation + (pts-12)*0.25 + (o-lg.starter)*0.15, 0, 100);
+  if(champion){ p.morale=clamp(p.morale+10,0,100); p.reputation=clamp(p.reputation+6*mediaAmp,0,100); }
+  p.reputation=clamp(p.reputation + ((pts-12)*0.25 + (o-lg.starter)*0.15)*mediaAmp, 0, 100);
   // gains financiers approximatifs
   p.money += p.salary + (isNBA?p.popularity*4: p.popularity*1.2) + p.reputation*(isNBA?1.5:0.6);
 
@@ -227,9 +245,24 @@ export function postSeason(){
 function applyAging(){
   const p=G, life=LIFESTYLES.find(l=>l.id===p.life), pos=POSITIONS.find(x=>x.id===p.pos);
   const arch = ARCHETYPES.find(a=>a.id===p.devArchetype) || ARCHETYPES[0];
-  const lastMin = p.seasons.length?p.seasons[p.seasons.length-1].minutes:15;
-  // le temps de jeu réel (donc la performance/le rôle obtenu) pèse fort sur la vitesse de progression
-  const minFactor = clamp(0.7 + lastMin/50, 0.7, 1.4);
+  const lastSeason = p.seasons.length ? p.seasons[p.seasons.length-1] : null;
+  const lastMin = lastSeason ? lastSeason.minutes : 15;
+  // Facteur de croissance composite : le temps de jeu reste le facteur dominant, à
+  // l'identique d'avant (même formule/plafond). Le moral et la performance réelle de la
+  // saison (vs ce qu'on attend à ce niveau) viennent moduler ce facteur EN PLUS, de façon
+  // neutre autour de la moyenne — un joueur "dans la norme" n'est ni pénalisé ni avantagé
+  // par ces deux ajouts, seuls les écarts (bien/mal jouer, moral haut/bas) comptent.
+  let growthFactor = clamp(0.7 + lastMin/50, 0.7, 1.4);
+  // référence à 58 (proche du moral de départ typique), pas 50, pour rester neutre en moyenne
+  growthFactor *= clamp(1 + (p.morale-58)/560, 0.9, 1.08);
+  if(lastSeason){
+    const prodIndex = lastSeason.pts + lastSeason.ast*1.1 + lastSeason.reb*0.9;
+    const expected = clamp((lastSeason.ovr-40)*0.65, 4, 32);
+    const overperf = clamp((prodIndex-expected)/expected, -0.4, 0.5);
+    const winFactor = clamp((lastSeason.wins-30)/220, -0.05, 0.05);
+    growthFactor *= clamp(1 + overperf*0.14 + winFactor, 0.9, 1.1);
+  }
+  growthFactor = clamp(growthFactor, 0.6, 1.6);
   // Courbe d'âge décalée par trajectoire (precoce monte/plafonne plus tôt, tardif l'inverse)
   const shift = arch.peakAgeShift;
   const young = p.age<=24+shift, dev = p.age<=27+shift, prime = p.age<=31+shift, decline = p.age>=32+shift;
@@ -242,11 +275,11 @@ function applyAging(){
     const roomA = clamp(ceil - p.attrs[a.id], 0, 40); // marge propre à cet attribut
     let d=0;
     if(young){
-      d = (clamp(roomA*0.16,0,4.2) * life.grow * minFactor + rnd(-0.3,0.7)) * arch.youngMult;
+      d = (clamp(roomA*0.16,0,4.2) * life.grow * growthFactor + rnd(-0.3,0.7)) * arch.youngMult;
     } else if(dev){
-      d = (clamp(roomA*0.10,0,2.6) * life.grow * minFactor + rnd(-0.4,0.5)) * arch.devMult;
+      d = (clamp(roomA*0.10,0,2.6) * life.grow * growthFactor + rnd(-0.4,0.5)) * arch.devMult;
     } else if(prime){
-      d = ((roomA>2?clamp(roomA*0.05,0,1.1):0) + rnd(-0.4,0.5)*life.grow) * arch.primeMult;
+      d = ((roomA>2?clamp(roomA*0.05,0,1.1):0)*growthFactor + rnd(-0.4,0.5)*life.grow) * arch.primeMult;
     } else if(decline){
       const fast=['ath','dribble','def','reb']; const g=(p.age-(31+shift));
       d = (fast.includes(a.id)? -rnd(1.4,2.8+g*0.5) : -rnd(0.5,1.3+g*0.25)) * arch.declineMult;

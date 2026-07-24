@@ -3,7 +3,13 @@ import { LIFESTYLES } from '../data/lifestyles.js';
 import { STYLES } from '../data/styles.js';
 import { LEGENDS } from '../data/legends.js';
 import { ovr, roleOf, attrOf } from './player.js';
-import { actionRoll, ri, pick } from './utils.js';
+import { actionRoll, ri, pick, clamp } from './utils.js';
+
+// Poids d'exposition médiatique : plus le joueur est médiatisé, plus les événements liés
+// aux médias/à la polémique reviennent souvent. Utilisé par tous les événements cat:'media'.
+const mediaWeight = (p) => clamp(0.5 + p.media/70, 0.4, 2.2);
+// Poids "clutch" : un joueur au sang-froid reconnu se voit confier davantage de moments décisifs.
+const clutchWeight = (base) => (p) => clamp(base + (p.clutch||0)*0.14, base, base*2.2);
 
 /* ============================================================
    BANQUE D'ÉVÉNEMENTS
@@ -51,6 +57,7 @@ export const EVENTS = [
   // ---------- MÉDIAS ----------
   {id:'media_punchline', cat:'media',
     when:(p,lg)=>p.reputation>=25,
+    weight:mediaWeight,
     title:'Micro tendu après un gros match',
     body:({p})=>`Un journaliste te cherche : « Certains disent que tu es surcoté. Réponse ? » La salle attend. Ce que tu dis fera la une demain.`,
     choices:()=>[
@@ -64,6 +71,7 @@ export const EVENTS = [
 
   {id:'transfer_rumor', cat:'media',
     when:(p,lg)=>p.reputation>=40 && lg.tier<=3,
+    weight:mediaWeight,
     title:'Une rumeur de transfert fuite',
     body:({p})=>`La presse annonce que tu serais sur le départ. Ton président fulmine, tes coéquipiers te regardent différemment. Comment tu gères ?`,
     choices:()=>[
@@ -156,7 +164,7 @@ export const EVENTS = [
     when:(p,lg)=>true,
     title:'Entorse à la cheville',
     body:`Réception maladroite, la cheville tourne. Le staff médical est prudent. Toi, tu veux jouer.`,
-    weight:(p)=>{const l=LIFESTYLES.find(x=>x.id===p.life);return 0.16*l.injury*(p.riskMod||1);},
+    weight:(p)=>{const l=LIFESTYLES.find(x=>x.id===p.life); const fitRisk=clamp(1.7-p.fitness/85,0.6,1.7); return 0.16*l.injury*(p.riskMod||1)*fitRisk;},
     choices:()=>[
       {label:'Forcer le retour, serrer les dents', hint:'-Forme, risque, perf en baisse',
         effect:{injuryGames:12, fitness:-14, ath:-1, perfBonus:-5, coach:+2}, outcome:'Tu reviens trop tôt. Tu joues diminué mais tu montres du caractère.'},
@@ -168,7 +176,7 @@ export const EVENTS = [
     when:(p,lg)=>p.age>=20,
     title:'Genou : le diagnostic tombe',
     body:`Un mauvais appui, un craquement. L'IRM confirme une grosse blessure. Longue absence en vue. La façon dont tu traverses ça définira la suite.`,
-    weight:(p)=>{const l=LIFESTYLES.find(x=>x.id===p.life);return 0.05*l.injury*(p.riskMod||1);},
+    weight:(p)=>{const l=LIFESTYLES.find(x=>x.id===p.life); const fitRisk=clamp(1.7-p.fitness/85,0.6,1.7); return 0.05*l.injury*(p.riskMod||1)*fitRisk;},
     choices:()=>[
       {label:'Rééducation exemplaire, revenir plus fort mentalement', hint:'Longue absence, moral solide',
         effect:{injuryGames:45, ath:-4, fitness:-10, qi:+3, morale:+2, reputation:-2}, outcome:'Des mois de travail dans l\'ombre. Tu perds en explosivité mais tu gagnes en tête.'},
@@ -382,7 +390,7 @@ export const EVENTS = [
     when:(p,lg)=>p.popularity>=25 && p.reputation>=35,
     title:'Une phrase sort de son contexte',
     body:`Un média monte en épingle une de tes déclarations. Le vestiaire et les fans attendent ta réaction.`,
-    weight:()=>0.55,
+    weight:(p)=>mediaWeight(p)*0.55,
     choices:()=>[
       {label:'Assumer et clarifier posément', hint:'+Réputation, +Coach',
         effect:{reputation:+4, coach:+2, media:+2}, outcome:'Tu désamorces avec classe. Ton image en sort grandie.'},
@@ -412,7 +420,7 @@ export const EVENTS = [
     when:(p,lg)=>p.reputation>=28 && lg.tier<=3,
     title:'Le tir de la gagne',
     body:({lg})=>`Dernière possession, un point de retard, la salle retient son souffle. Le ballon est pour toi. Que fais-tu ?`,
-    weight:()=>1.05,
+    weight:clutchWeight(1.05),
     choices:({p})=>{ const shot=Math.round((attrOf(p,'tir')+attrOf(p,'adr3'))/2);
       return [
         {label:'Je prends le tir de la gagne', hint:`Dépend de ton tir (${shot})`,
@@ -430,7 +438,7 @@ export const EVENTS = [
     when:(p,lg)=>p.reputation>=30 && lg.tier<=3 && (p.pos==='C'||p.pos==='PF'||p.pos==='SF'),
     title:'Le stop décisif',
     body:()=>`Une possession pour tout gagner, mais c'est l'adversaire qui a le ballon. Le money-time se joue aussi en défense.`,
-    weight:()=>0.9,
+    weight:clutchWeight(0.9),
     choices:({p})=>[
       {label:'Je tente le contre', hint:`Dépend de ta défense (${attrOf(p,'def')})`,
         effect:(ctx)=>{ const ok=actionRoll(Math.round((attrOf(p,'def')+attrOf(p,'ath'))/2),70); ctx.ok=ok; return ok?{reputation:+6,morale:+7,clutch:+1,flag:'lockdown'}:{reputation:-2,morale:-4}; },
@@ -444,7 +452,7 @@ export const EVENTS = [
     when:(p,lg)=>lg.tier<=2 && p.reputation>=48,
     title:({lg})=>`Match décisif — titre ${lg.short} en jeu`,
     body:({lg})=>`Money-time du match qui donne le titre ${lg.short}. Le genre de soirée dont on parle vingt ans après. Comment abordes-tu ces dernières minutes ?`,
-    weight:()=>1.1,
+    weight:clutchWeight(1.1),
     choices:({p})=>{ const scorer=Math.round((attrOf(p,'tir')+attrOf(p,'adr3')+attrOf(p,'dribble'))/3);
       return [
         {label:'Je prends le match sur mes épaules', hint:`Dépend de ton scoring (${scorer})`,
@@ -474,7 +482,7 @@ export const EVENTS = [
     when:(p,lg)=>p.popularity>=22 && p.reputation>=32,
     title:'Conférence de presse tendue',
     body:()=>`Après une défaite, un journaliste te cherche ouvertement devant les caméras. La salle attend ta réaction.`,
-    weight:()=>0.6,
+    weight:(p)=>mediaWeight(p)*0.6,
     choices:({p})=>[
       {label:'Je réponds avec aplomb et charisme', hint:`Dépend de ton QI (${attrOf(p,'qi')})`,
         effect:(ctx)=>{ const ok=actionRoll(attrOf(p,'qi'),58); ctx.ok=ok; return ok?{reputation:+5,popularity:+5,media:+3}:{reputation:-2,media:+1}; },
@@ -563,7 +571,7 @@ export const EVENTS = [
     title:'La comparaison qui fait du bruit',
     body:({p})=>{ const L=pick(LEGENDS[p.pos]||['un grand nom']);
       return `<i>(Plateau télé, le consultant s'emballe, le bandeau clignote.)</i> Un analyste réputé compare ton profil à celui de <b>${L}</b>, toutes proportions gardées. La hype s'emballe autour de ton nom.`; },
-    weight:()=>0.7,
+    weight:(p)=>mediaWeight(p)*0.7,
     choices:()=>[
       {label:'M\'en servir de carburant', hint:'+Motivation, +Popularité',
         effect:{popularity:+5, morale:+4, perfBonus:+3}, outcome:'Tu transformes la pression en énergie. Les projecteurs ne te font pas peur.'},

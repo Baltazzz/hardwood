@@ -259,7 +259,7 @@ export function renderMoveScreen(move){
     ];
   }
   else if(move.type==='freeAgency'){
-    const rivals = pickClubs(p.league, p.nation.id, 2, {exclude:p.club});
+    const rivals = pickClubs(p.league, p.nation.id, 2, {exclude:p.club, popularity:p.popularity});
     const upMap = { academy: p.nation.path==='au'?'nbl1':'third', third:'second', second:'national', national:'euro',
                     nbl1:'nbl', nbl:'nba', gleague:'nba', euro:'nba' };
     const upKey=upMap[p.league];
@@ -275,7 +275,7 @@ export function renderMoveScreen(move){
     rivals.forEach((rc,i)=>{ const sal=Math.round(salaryFor(p.league,o,p.reputation)*1.1*clubSalaryMod(rc.prestige));
       choices.push({label:`Signer à ${rc.name}`, hint:`${flavor(rc)||(i===0?'Projet ambitieux':'Gros chèque, nouveau vestiaire')} · 💰 ${money(sal)}/an`,
         apply:()=>doMove({type:'transfer',to:p.league,club:rc.name},{morale:+2,reputation:+2,salary:sal})}); });
-    if(canUp){ const uc=pickClub(upKey, p.nation.id); const sal=Math.round(salaryFor(upKey,o,p.reputation)*clubSalaryMod(uc.prestige));
+    if(canUp){ const uc=pickClub(upKey, p.nation.id, {popularity:p.popularity}); const sal=Math.round(salaryFor(upKey,o,p.reputation)*clubSalaryMod(uc.prestige));
       choices.push({label:`Viser plus haut : ${uc.name} (${LEAGUES[upKey].short})`, hint:`${flavor(uc)||'Monter d\'un cran, tout à prouver'} · 💰 ${money(sal)}/an`,
         apply:()=>doMove({type:'promo',to:upKey,club:uc.name},{morale:+4,reputation:+3,salary:sal})}); }
   }
@@ -305,7 +305,7 @@ export function renderMoveScreen(move){
   else if(move.type==='transfer'){
     const tl=LEAGUES[move.to];
     const offered = move.club && move.club!==p.club ? [clubInfo(move.to, p.nation.id, move.club)].filter(Boolean) : [];
-    const extra = pickClubs(move.to, p.nation.id, 2-offered.length, {exclude:[p.club, ...offered.map(c=>c.name)]});
+    const extra = pickClubs(move.to, p.nation.id, 2-offered.length, {exclude:[p.club, ...offered.map(c=>c.name)], popularity:p.popularity});
     const opts = [...offered, ...extra];
     title = `Le marché s'agite autour de toi`;
     body = `Ta cote grimpe : plusieurs clubs de ${tl.short} veulent te recruter. Changer de maillot, c'est de l'ambition — et la pression qui va avec.`;
@@ -386,14 +386,14 @@ export function endCareer(reason){
              + cnt('MVP EuroLeague')*12 + cnt('Rookie de l\'année')*6 + cnt('Meilleur défenseur')*6
              + Math.min(p.seasons.length,20)*1.2 + p.reputation*0.22 + (p.clutch||0)*3;
   legend=Math.round(legend);
-  p.hof = legend>=250 || (champsElite>=1 && p.peakOvr>=91) || mvps>=1;
+  p.hof = legend>=270 || (champsElite>=1 && p.peakOvr>=91) || mvps>=1;
 
   let tier, blurb;
-  if(legend>=340){ tier='G.O.A.T.'; blurb='On ne parlera plus du basket sans prononcer ton nom. Une ère porte ta signature.'; }
-  else if(legend>=260){ tier='Légende — Hall of Fame'; blurb='Tu entres au Panthéon. Ton maillot est retiré, ton héritage est écrit.'; }
-  else if(legend>=200){ tier='Superstar'; blurb='Une carrière énorme, des sommets touchés, un nom qui a compté au plus haut niveau.'; }
-  else if(legend>=145){ tier='All-Star'; blurb='Tu as brillé parmi l\'élite. Une belle et solide carrière de haut niveau.'; }
-  else if(legend>=90){ tier='Joueur de rotation'; blurb='Un vrai pro, respecté dans les vestiaires. Tu as vécu du basket, ce que peu réussissent.'; }
+  if(legend>=365){ tier='G.O.A.T.'; blurb='On ne parlera plus du basket sans prononcer ton nom. Une ère porte ta signature.'; }
+  else if(legend>=280){ tier='Légende — Hall of Fame'; blurb='Tu entres au Panthéon. Ton maillot est retiré, ton héritage est écrit.'; }
+  else if(legend>=215){ tier='Superstar'; blurb='Une carrière énorme, des sommets touchés, un nom qui a compté au plus haut niveau.'; }
+  else if(legend>=155){ tier='All-Star'; blurb='Tu as brillé parmi l\'élite. Une belle et solide carrière de haut niveau.'; }
+  else if(legend>=92){ tier='Joueur de rotation'; blurb='Un vrai pro, respecté dans les vestiaires. Tu as vécu du basket, ce que peu réussissent.'; }
   else { tier='Parcours de combattant'; blurb='Le sommet t\'a échappé, mais tu as tout donné. Le basket garde une place pour les acharnés.'; }
 
   const sceneStats={legend, champs, mvps, allstars, peakOvr:p.peakOvr};

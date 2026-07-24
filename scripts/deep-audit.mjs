@@ -136,6 +136,10 @@ async function main() {
   const ages = nbaResults.map(r => r.firstNbaAge).sort((a, b) => a - b);
   const median = ages.length ? (ages.length % 2 ? ages[(ages.length - 1) / 2] : (ages[ages.length / 2 - 1] + ages[ages.length / 2]) / 2) : null;
 
+  const pathTotals = {};
+  nbaResults.forEach(r => { const p = r.arrivalPath || 'inconnu'; pathTotals[p] = (pathTotals[p] || 0) + 1; });
+  const pathPct = (n) => nbaResults.length ? Math.round((n / nbaResults.length) * 1000) / 10 : 0;
+
   console.log('=== Audit approfondi HARDWOOD ===');
   console.log(`Carrières jouées : ${N} (crashs : ${crashed})`);
   console.log(`\n-- b) Récompenses (sur ${completed} carrières complètes) --`);
@@ -149,6 +153,10 @@ async function main() {
   TIER_ORDER.forEach(t => console.log(`  ${t.padEnd(26)} : ${pct(tierCounts[t])}% (${tierCounts[t]})`));
 
   console.log(`\n-- c) Âge de première saison NBA (${nbaResults.length}/${completed} carrières -> NBA, médiane ${median}) --`);
+  console.log('Chemin d\'arrivée (total) :');
+  Object.entries(pathTotals).sort((a, b) => b[1] - a[1]).forEach(([k, v]) => {
+    console.log(`  ${(PATH_LABELS[k] || k).padEnd(22)} : ${pathPct(v)}% (${v})`);
+  });
   BRACKET_ORDER.forEach(b => {
     const d = byBracket[b];
     if (!d.total) { console.log(`  ${b.padEnd(6)} : 0`); return; }
@@ -157,7 +165,7 @@ async function main() {
   });
 
   console.log('\nRÉSULTATS BRUTS (JSON) :');
-  console.log(JSON.stringify({ N, crashed, completed, withTitle, withEliteTitle, withMVP, withAllStar, withHOF, withPhenom, tierCounts, nbaCount: nbaResults.length, median, byBracket }, null, 0));
+  console.log(JSON.stringify({ N, crashed, completed, withTitle, withEliteTitle, withMVP, withAllStar, withHOF, withPhenom, tierCounts, nbaCount: nbaResults.length, median, pathTotals, byBracket }, null, 0));
 }
 
 main().catch(err => { console.error('DEEP AUDIT ÉCHOUÉ :', err); process.exitCode = 1; });

@@ -16,14 +16,23 @@ export function getClubPool(tierKey, nationId) {
   return [{ name: 'Club libre', strength: 50, potential: 50, prestige: 50, category: null, comment: null }];
 }
 
-function weightedPick(pool) {
-  const total = pool.reduce((s, c) => s + Math.max(1, c.prestige ?? 1), 0);
+// popBias (0-0.5) accentue encore la préférence pour les clubs à fort prestige : les grosses
+// écuries se disputent les joueurs qui vendent (popularité), au-delà du seul niveau sportif.
+function clubWeight(c, popBias) {
+  const base = Math.max(1, c.prestige ?? 1);
+  return popBias ? base * (1 + popBias * (base / 100)) : base;
+}
+function weightedPick(pool, popBias = 0) {
+  const total = pool.reduce((s, c) => s + clubWeight(c, popBias), 0);
   let r = Math.random() * total;
   for (const c of pool) {
-    r -= Math.max(1, c.prestige ?? 1);
+    r -= clubWeight(c, popBias);
     if (r <= 0) return c;
   }
   return pool[pool.length - 1];
+}
+function popBiasOf(popularity) {
+  return popularity == null ? 0 : Math.max(0, Math.min(0.5, (popularity - 40) / 120));
 }
 
 function excludeNames(pool, exclude) {
@@ -34,19 +43,22 @@ function excludeNames(pool, exclude) {
 }
 
 // Tirage pondéré par prestige réel (les grands clubs recrutent plus souvent),
-// uniforme pour euro/nba (prestige=null, cf. getClubPool).
+// uniforme pour euro/nba (prestige=null, cf. getClubPool). opts.popularity (optionnel) :
+// accentue la préférence pour les gros clubs — à ne passer que là où des clubs se
+// disputent activement le joueur (marché des transferts), pas pour une promotion "objective".
 export function pickClub(tierKey, nationId, opts = {}) {
-  return weightedPick(excludeNames(getClubPool(tierKey, nationId), opts.exclude));
+  return weightedPick(excludeNames(getClubPool(tierKey, nationId), opts.exclude), popBiasOf(opts.popularity));
 }
 export function pickClubName(tierKey, nationId, opts = {}) {
   return pickClub(tierKey, nationId, opts).name;
 }
 // n tirages distincts (rivaux free agency, offres de transfert).
 export function pickClubs(tierKey, nationId, n, opts = {}) {
+  const popBias = popBiasOf(opts.popularity);
   let remaining = excludeNames(getClubPool(tierKey, nationId), opts.exclude);
   const picked = [];
   for (let i = 0; i < n && remaining.length; i++) {
-    const club = weightedPick(remaining);
+    const club = weightedPick(remaining, popBias);
     picked.push(club);
     remaining = remaining.filter(c => c.name !== club.name);
   }

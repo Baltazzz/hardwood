@@ -55,18 +55,10 @@ h1,h2,h3,.disp{font-family:'Oswald',sans-serif;letter-spacing:.02em;text-transfo
 
 /* ---------- Écran titre ---------- */
 .title-screen{padding:60px 26px 54px;text-align:center;position:relative}
-.ball{
-  width:74px;height:74px;border-radius:50%;margin:0 auto 22px;position:relative;
-  background:radial-gradient(circle at 34% 30%, #ff8a52, var(--orange) 55%, #d5410f 100%);
-  box-shadow:0 0 0 4px rgba(255,90,31,.14), 0 14px 34px rgba(255,90,31,.35);
+.brand-mark{
+  width:84px;height:84px;border-radius:19px;margin:0 auto 20px;display:block;
+  box-shadow:0 10px 30px rgba(240,122,78,.3), 0 0 0 1px rgba(255,255,255,.04);
 }
-.ball::before,.ball::after{content:"";position:absolute;background:#2a0f04;opacity:.85}
-.ball::before{inset:0;border-radius:50%;
-  background:
-    radial-gradient(circle at 50% 50%, transparent 46%, transparent 47%),
-    linear-gradient(90deg,transparent 48.4%, #35150699 48.4% 51.6%, transparent 51.6%),
-    linear-gradient(0deg,transparent 48.4%, #35150699 48.4% 51.6%, transparent 51.6%);}
-.ball::after{width:74px;height:34px;left:0;top:20px;border:2px solid #35150688;border-left:none;border-right:none;border-radius:50%;background:transparent}
 .title-screen h1{font-size:clamp(46px,10vw,80px);font-weight:700;line-height:.9;margin-bottom:6px}
 .title-screen h1 .o{color:var(--orange)}
 .title-screen .tag{color:var(--chalk-dim);font-size:15px;max-width:440px;margin:14px auto 0}

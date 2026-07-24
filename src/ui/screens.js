@@ -20,7 +20,7 @@ import { stage } from './dom.js';
 export function screenTitle(){
   const best=hofBest();
   stage.innerHTML = `<div class="title-screen">
-    <div class="ball"></div>
+    <img class="brand-mark" src="/logo-mark.png" alt="" width="84" height="84">
     <div class="eyebrow">Carrière · saison après saison</div>
     <h1>HARD<span class="o">W</span>OOD</h1>
     <p class="tag">De 16 à 38 ans, écris ta légende du basket. Chaque choix pèse : le talent ouvre des portes, les décisions décident du reste. La NBA est le sommet — encore faut-il y arriver.</p>

@@ -5,7 +5,7 @@ import { LIFESTYLES } from '../data/lifestyles.js';
 import { ARCHETYPES } from '../data/archetypes.js';
 import { LEAGUES } from '../data/leagues.js';
 import { ovr, salaryFor, arrivalCoachTrust } from './player.js';
-import { EVENTS } from './events.js';
+import { EVENTS, careerPhase } from './events.js';
 import { pickClubName, clubInfo } from './clubs.js';
 import { rnd, ri, pick, clamp, round, jit, capitalize, money } from './utils.js';
 import { renderEvent, showDeltaFlash, renderSeasonResult, renderMoveScreen, endCareer } from '../ui/screens.js';
@@ -49,27 +49,60 @@ export function nextEventOrSim(){
 }
 
 /* ---- Sélection d'événements selon le contexte ---- */
+// Anti-répétition : chaque event a des métadonnées optionnelles `phase` (early/mid/late/null),
+// `once` (max 1 fois par carrière) et `cooldown` (saisons avant de redevenir pleinement probable
+// après avoir été tiré). Le poids final combine la pondération propre de l'event avec un multiplicateur
+// de fraîcheur : un event vu récemment chute nettement, un event jamais vu remonte progressivement
+// avec les saisons passées éligible-mais-pas-tiré (p.evStats[id].streak).
 export function drawEvents(n){
   const p=G, lg=LEAGUES[p.league], pool=[];
+  const phase = careerPhase(p);
   for(const ev of EVENTS){
+    if(ev.phase && ev.phase!==phase) continue;
     if(ev.when && !ev.when(p,lg)) continue;
     if(ev.cat==='injury' && p.seasons.length && p.seasons[p.seasons.length-1].injured) continue; // jamais deux blessures de suite
+    const st = p.evStats[ev.id];
+    if(ev.once && st && st.count>=1) continue;
     let wgt = ev.weight?ev.weight(p,lg):1;
+    if(wgt<=0) continue;
+    wgt *= freshnessMult(ev, st, p.year);
     if(wgt<=0) continue;
     pool.push({ev,wgt});
   }
-  const chosen=[]; const used=new Set();
+  const chosen=[];
   for(let i=0;i<n && pool.length;i++){
     const total=pool.reduce((s,x)=>s+x.wgt,0);
     let r=Math.random()*total, pickEv=null,idx=-1;
     for(let j=0;j<pool.length;j++){ r-=pool[j].wgt; if(r<=0){pickEv=pool[j].ev;idx=j;break;} }
     if(!pickEv){pickEv=pool[0].ev;idx=0;}
-    chosen.push(pickEv); used.add(pickEv.id);
+    chosen.push(pickEv);
     pool.splice(idx,1);
     // évite deux events de même catégorie unique
     for(let k=pool.length-1;k>=0;k--){ if(pool[k].ev.cat===pickEv.cat && pickEv.solo){ pool.splice(k,1); } }
   }
+  // Bookkeeping fraîcheur : les tirés repartent à zéro, les éligibles-non-tirés voient leur
+  // "envie de sortir" progresser d'un cran.
+  const chosenIds = new Set(chosen.map(e=>e.id));
+  for(const {ev} of pool){ bumpStreak(p, ev.id); } // éligibles restés dans le pool (non tirés)
+  for(const ev of chosen){
+    p.evStats[ev.id] = { count:((p.evStats[ev.id]?.count)||0)+1, lastYear:p.year, streak:0 };
+    p.eventHistory.push(ev.id);
+  }
   return chosen;
+}
+function bumpStreak(p, id){
+  const st = p.evStats[id];
+  if(st) st.streak=(st.streak||0)+1;
+  else p.evStats[id] = { count:0, lastYear:null, streak:1 };
+}
+function freshnessMult(ev, st, year){
+  const cd = ev.cooldown ?? 3;
+  if(!st || st.count===0){
+    return clamp(1 + ((st?st.streak:0))*0.12, 1, 2.5); // jamais vu : remonte progressivement
+  }
+  const sinceLast = year - st.lastYear;
+  if(sinceLast>=cd) return 1;
+  return clamp(0.06 + (sinceLast/cd)*0.94, 0.06, 1); // vu récemment : nettement moins probable
 }
 
 export function applyChoice(choice, ctx){
@@ -229,6 +262,10 @@ export function seasonVerdict(s,lg){
 ============================================================ */
 export function postSeason(){
   const p=G, lg=LEAGUES[p.league], o=ovr(p);
+  // Une saison de plus bouclée dans ce club : l'ancienneté avance (doMove la remet à 0 si un
+  // transfert suit dans la foulée) — sert de garde-fou de cohérence pour les événements de statut
+  // "acquis" (leader du vestiaire, etc.) qui ne doivent pas sortir dès la signature.
+  p.clubTenure = (p.clubTenure||0) + 1;
   // --- progression / déclin ---
   applyAging();
   // --- retraite ? ---
@@ -421,6 +458,7 @@ export function doMove(move,eff,kind){
   // elle ne se transporte plus telle quelle depuis l'ancien club.
   const info = clubInfo(p.league, p.nation.id, p.club);
   p.coach = arrivalCoachTrust(p, ovr(p), lg, info?.prestige ?? null, info?.category ?? null, kind);
+  p.clubTenure = 0; // nouveau club, nouveau staff : l'ancienneté repart de zéro (cf. cohérence contextuelle)
   pushTL(`Signe à <b>${p.club}</b> (${lg.short}) · 💰 ${money(p.salary)}/an.`);
   beginSeason();
 }

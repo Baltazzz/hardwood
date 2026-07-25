@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Audit statistique approfondi (hors crash-rate/PPG déjà couverts par tests/audit.mjs) :
-// distribution des récompenses, des paliers de fin, et de l'âge de 1re saison NBA par
-// chemin d'arrivée (draft / fenêtre continentale / call-up / baroud d'honneur).
+// distribution des récompenses, des paliers de fin, de l'âge de 1re saison NBA par
+// chemin d'arrivée (draft / fenêtre continentale / call-up / baroud d'honneur), et diversité
+// des événements vécus (nb distinct par carrière, fréquence des plus vus/plus rares, jamais-vus).
 // Ne modifie rien au jeu — outil d'analyse en lecture seule, pilote les vrais boutons du DOM.
 //
 // Usage : node scripts/deep-audit.mjs [N]  (300 par défaut)
@@ -10,6 +11,7 @@ import { setupEnvironment } from '../tests/env.mjs';
 
 const N = Number(process.argv[2]) || 300;
 
+function round1(n) { return Math.round(n * 10) / 10; }
 function pickRandomEl(list) {
   const arr = Array.from(list);
   return arr[Math.floor(Math.random() * arr.length)];
@@ -63,6 +65,7 @@ function driveOneCareer(document, errors, state) {
     firstNbaAge: G.firstNbaAge,
     arrivalPath,
     phenom: youngMVP || youngElite,
+    eventHistory: (G.eventHistory || []).slice(),
   };
   clickId(document, 'again');
   return result;
@@ -86,6 +89,7 @@ async function main() {
   const screens = await import('../src/ui/screens.js');
   const state = await import('../src/engine/state.js');
   const player = await import('../src/engine/player.js');
+  const { EVENTS } = await import('../src/engine/events.js');
 
   screens.screenTitle();
   document.getElementById('go').click();
@@ -164,8 +168,37 @@ async function main() {
     console.log(`  ${b.padEnd(6)} : ${d.total.toString().padEnd(3)} — ${paths}`);
   });
 
+  // d) diversité des événements
+  const totalDefined = EVENTS.length;
+  const freq = new Map(); // id -> nb de carrières où il apparaît au moins 1 fois
+  let sumDistinct = 0, sumTotal = 0;
+  results.forEach(r => {
+    const hist = r.eventHistory || [];
+    sumTotal += hist.length;
+    const distinctInCareer = new Set(hist);
+    sumDistinct += distinctInCareer.size;
+    distinctInCareer.forEach(id => freq.set(id, (freq.get(id) || 0) + 1));
+  });
+  const avgDistinct = completed ? round1(sumDistinct / completed) : 0;
+  const avgTotal = completed ? round1(sumTotal / completed) : 0;
+  const seenIds = [...freq.keys()];
+  const neverSeenCount = totalDefined - seenIds.length;
+  const neverSeenPct = totalDefined ? round1((neverSeenCount / totalDefined) * 100) : 0;
+  const sortedByFreq = seenIds.map(id => ({ id, pct: round1((freq.get(id) / completed) * 100) })).sort((a, b) => b.pct - a.pct);
+  const top10 = sortedByFreq.slice(0, 10);
+  const bottom10 = sortedByFreq.slice(-10).reverse();
+
+  console.log(`\n-- d) Diversité des événements (${totalDefined} événements définis) --`);
+  console.log(`Événements distincts vus par carrière : ${avgDistinct} en moyenne (${avgTotal} événements vus au total en moyenne)`);
+  console.log(`Événements jamais vus sur l'ensemble du run : ${neverSeenPct}% (${neverSeenCount}/${totalDefined})`);
+  console.log('Top 10 événements les plus fréquents (% de carrières où ils apparaissent) :');
+  top10.forEach(e => console.log(`  ${e.id.padEnd(28)} : ${e.pct}%`));
+  console.log('Top 10 événements les plus rares (parmi ceux vus au moins une fois) :');
+  bottom10.forEach(e => console.log(`  ${e.id.padEnd(28)} : ${e.pct}%`));
+
   console.log('\nRÉSULTATS BRUTS (JSON) :');
-  console.log(JSON.stringify({ N, crashed, completed, withTitle, withEliteTitle, withMVP, withAllStar, withHOF, withPhenom, tierCounts, nbaCount: nbaResults.length, median, pathTotals, byBracket }, null, 0));
+  console.log(JSON.stringify({ N, crashed, completed, withTitle, withEliteTitle, withMVP, withAllStar, withHOF, withPhenom, tierCounts, nbaCount: nbaResults.length, median, pathTotals, byBracket,
+    diversity: { totalDefined, avgDistinct, avgTotal, neverSeenPct, neverSeenCount, top10, bottom10 } }, null, 0));
 }
 
 main().catch(err => { console.error('DEEP AUDIT ÉCHOUÉ :', err); process.exitCode = 1; });

@@ -98,34 +98,34 @@ function drawCard(canvas, r){
   x.strokeStyle=C.line; x.lineWidth=3; roundRect(x,28,34,W-56,H-62,26); x.stroke();
   x.textAlign='center'; x.textBaseline='alphabetic';
   // titre HARDWOOD
-  x.font='700 46px "Big Shoulders Display", Arial, sans-serif'; x.fillStyle=C.chalk;
+  x.font='700 46px "Bricolage Grotesque", Arial, sans-serif'; x.fillStyle=C.chalk;
   spacedText(x,'HARDWOOD',W/2,124,8);
   x.fillStyle=C.orange; x.fillRect(W/2-70,144,140,5);
   // nom + drapeau
-  x.font='700 76px "Big Shoulders Display", Arial, sans-serif'; x.fillStyle=C.chalk;
+  x.font='700 76px "Bricolage Grotesque", Arial, sans-serif'; x.fillStyle=C.chalk;
   x.fillText(`${r.flag||'🏀'} ${truncate(r.name||'Joueur',16)}`, W/2, 238);
   // poste / style / nation
-  x.font='600 30px "Big Shoulders Text", Arial, sans-serif'; x.fillStyle=C.dim;
+  x.font='600 30px "Bricolage Grotesque", Arial, sans-serif'; x.fillStyle=C.dim;
   const sub=[`${r.posEmoji||''} ${r.posName||''}`.trim(), r.styleName?`${r.styleEmoji||''} ${r.styleName}`.trim():'', r.nation||''].filter(Boolean).join('   ·   ');
   x.fillText(sub, W/2, 286);
   // badge tier
-  x.font='700 52px "Big Shoulders Display", Arial, sans-serif';
+  x.font='700 52px "Bricolage Grotesque", Arial, sans-serif';
   const tw=x.measureText(r.tier||'').width; const bw=Math.min(Math.max(tw+90,360),W-140);
   x.fillStyle='rgba(63,217,164,0.12)'; x.strokeStyle=C.mint; x.lineWidth=2.5;
   roundRect(x,(W-bw)/2,326,bw,88,44); x.fill(); x.stroke();
   x.fillStyle=C.mint; x.fillText(r.tier||'', W/2, 386);
-  if(r.hof){ x.font='700 24px "Big Shoulders Text", Arial, sans-serif'; x.fillStyle=C.mint; x.fillText('★ HALL OF FAME ★', W/2, 444); }
+  if(r.hof){ x.font='700 24px "Bricolage Grotesque", Arial, sans-serif'; x.fillStyle=C.mint; x.fillText('★ HALL OF FAME ★', W/2, 444); }
   // grille de stats 3x2
   const cells=[['Score',r.score],['Titres',r.champs],['MVP',r.mvps],['All-Star',r.allstars],['Pic OVR',r.peak],['Clutch',r.clutch||0]];
   const gx0=90, gy0=494, gw=(W-180), cwid=gw/3, chei=150;
   for(let i=0;i<cells.length;i++){ const cx=gx0+(i%3)*cwid, cy=gy0+Math.floor(i/3)*(chei+22);
     x.fillStyle='rgba(245,233,220,0.045)'; x.strokeStyle=C.line; x.lineWidth=1.5; roundRect(x,cx+10,cy,cwid-20,chei,18); x.fill(); x.stroke();
-    x.fillStyle=C.chalk; x.font='700 68px "Big Shoulders Display", Arial, sans-serif'; x.fillText(String(cells[i][1]), cx+cwid/2, cy+82);
-    x.fillStyle=C.dim; x.font='600 25px "Big Shoulders Text", Arial, sans-serif'; spacedText(x,String(cells[i][0]).toUpperCase(),cx+cwid/2,cy+122,1.5);
+    x.fillStyle=C.chalk; x.font='700 68px "Bricolage Grotesque", Arial, sans-serif'; x.fillText(String(cells[i][1]), cx+cwid/2, cy+82);
+    x.fillStyle=C.dim; x.font='600 25px "Bricolage Grotesque", Arial, sans-serif'; spacedText(x,String(cells[i][0]).toUpperCase(),cx+cwid/2,cy+122,1.5);
   }
   // ligne saisons / record / nba
   let yy=gy0+2*(chei+22)+40;
-  x.fillStyle=C.mint; x.font='600 30px "Big Shoulders Text", Arial, sans-serif';
+  x.fillStyle=C.mint; x.font='600 30px "Bricolage Grotesque", Arial, sans-serif';
   x.fillText(`${r.seasons} saisons   ·   record ${r.bestPts} pts/match${r.nba?'   ·   🏀 NBA':''}`, W/2, yy);
   // sparkline OVR
   if(r.ovrSeries && r.ovrSeries.length>1){ drawSpark(x, r.ovrSeries, W/2-300, yy+34, 600, 90, C); yy+=150; } else yy+=40;
@@ -133,7 +133,7 @@ function drawCard(canvas, r){
   if(r.headline){ x.fillStyle=C.dim; x.font='italic 500 30px Georgia, serif';
     wrapText(x, r.headline, W/2, yy+50, W-200, 42); }
   // footer
-  x.fillStyle=C.dim; x.font='600 26px "Big Shoulders Text", Arial, sans-serif';
+  x.fillStyle=C.dim; x.font='600 26px "Bricolage Grotesque", Arial, sans-serif';
   spacedText(x,'🏀 HARDWOOD',W/2,H-70,2);
 }
 function roundRect(x,rx,ry,w,h,r){ x.beginPath(); x.moveTo(rx+r,ry); x.arcTo(rx+w,ry,rx+w,ry+h,r); x.arcTo(rx+w,ry+h,rx,ry+h,r); x.arcTo(rx,ry+h,rx,ry,r); x.arcTo(rx,ry,rx+w,ry,r); x.closePath(); }

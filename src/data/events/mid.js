@@ -106,10 +106,10 @@ export const MID_EVENTS = [
     weight:clutchWeight(1.1),
     choices:({p})=>[
       {label:'Je prends le match sur mes épaules', hint:'Porter l\'équipe, quitte à tout miser',
-        effect:(ctx)=>{ const scorer=Math.round((attrOf(p,'tir')+attrOf(p,'adr3')+attrOf(p,'dribble'))/3); const ok=actionRoll(scorer,74); ctx.ok=ok; return ok?{reputation:+9,morale:+10,popularity:+8,clutch:+2,flag:'finalsHero'}:{reputation:-2,morale:-6,popularity:+2}; },
+        effect:(ctx)=>{ const scorer=Math.round((attrOf(p,'tir')+attrOf(p,'adr3')+attrOf(p,'dribble'))/3); const ok=actionRoll(scorer,74); ctx.ok=ok; return ok?{reputation:+9,morale:+10,popularity:+8,clutch:+2,flag:'finalsHero',forceFinals:true}:{reputation:-2,morale:-6,popularity:+2,forceFinals:false}; },
         outcome:(ctx)=> ctx.ok?'Récital dans le money-time ! Tu portes ton équipe vers le titre — une prestation pour l\'histoire.':'Tu forces, la réussite n\'est pas là ce soir. La marche était haute.'},
       {label:'Je joue collectif et je fais confiance au groupe', hint:'Faire confiance au collectif jusqu\'au bout',
-        effect:(ctx)=>{ const ok=actionRoll(attrOf(p,'qi'),66); ctx.ok=ok; return ok?{reputation:+6,coach:+6,morale:+7,clutch:+1}:{coach:+2,morale:-3}; },
+        effect:(ctx)=>{ const ok=actionRoll(attrOf(p,'qi'),66); ctx.ok=ok; return ok?{reputation:+6,coach:+6,morale:+7,clutch:+1,forceFinals:true}:{coach:+2,morale:-3,forceFinals:false}; },
         outcome:(ctx)=> ctx.ok?'Tu orchestres à la perfection, tout le monde touche le ballon. Le titre au bout, en patron discret.':'Le collectif se grippe dans le money-time. Ça passe à côté.'}
     ]},
 

@@ -31,7 +31,7 @@ export function beginSeason(){
   const p=G;
   p.seasonMods={ tir:0,adr3:0,dribble:0,passe:0,def:0,reb:0,ath:0,qi:0,
                  reputation:0,morale:0,coach:0,media:0,popularity:0,money:0,fitness:0,
-                 perfBonus:0, injuryGames:0, forceMove:null };
+                 perfBonus:0, injuryGames:0, forceMove:null, forceFinals:null };
   // recharge de forme en intersaison : de moins en moins efficace avec l'âge, la forme
   // s'use sur la durée d'une carrière plutôt que de repartir à l'identique chaque année
   const ageWear = clamp((p.age-27)*0.6, 0, 10);
@@ -111,6 +111,10 @@ export function applyChoice(choice, ctx){
   const deltas=[];
   for(const k in eff){
     if(k==='forceMove'){ p.seasonMods.forceMove=eff[k]; continue; }
+    // Cohérence enjeu -> résultat : quand un choix règle explicitement un enjeu de titre
+    // ("tir de la gagne pour le titre"), son issue doit déterminer le vrai résultat de la
+    // saison — pas une simple couleur narrative découplée du palmarès (voir simulateSeason).
+    if(k==='forceFinals'){ p.seasonMods.forceFinals=eff[k]; continue; }
     if(k==='flag'){ p.flags[eff[k]]=(p.flags[eff[k]]||0)+1; continue; }
     if(k==='clutch'){ p.clutch=(p.clutch||0)+eff[k]; continue; }
     if(k==='riskUp'){ p.riskMod=clamp((p.riskMod||1)+eff[k],0.8,1.9); continue; }
@@ -254,7 +258,15 @@ export function simulateSeason(){
   // titre — seuil de victoires ramené à l'échelle réelle du nombre de matchs de la ligue
   const championOdds = clamp((teamRating-58)/60,0,.7) + clamp((p.clutch||0)*0.006,0,.04);
   let champion=false;
-  if(wins>=Math.round(lg.prestige*3.3*leagueGames/82) && Math.random()<championOdds+ (o>=lg.star?.12:0)){ champion=true; A(isNBA?'Champion NBA':isEuro?'Champion EuroLeague':'Champion '+lg.short); }
+  // Cohérence enjeu -> résultat : si l'événement "match décisif, titre en jeu" a été résolu
+  // cette saison (finals_moment), son issue DÉCIDE le titre — plus de tirage indépendant qui
+  // pourrait contredire le récit ("tir raté mais titre quand même", ou l'inverse).
+  if(p.seasonMods.forceFinals!=null){
+    champion = p.seasonMods.forceFinals;
+    if(champion) A(isNBA?'Champion NBA':isEuro?'Champion EuroLeague':'Champion '+lg.short);
+  } else if(wins>=Math.round(lg.prestige*3.3*leagueGames/82) && Math.random()<championOdds+ (o>=lg.star?.12:0)){
+    champion=true; A(isNBA?'Champion NBA':isEuro?'Champion EuroLeague':'Champion '+lg.short);
+  }
   // rookie award
   if(rookie && (isNBA||isEuro) && o>=lg.star-3 && pts>14){ A(isNBA?'Rookie de l\'année':'Meilleur jeune'); }
 

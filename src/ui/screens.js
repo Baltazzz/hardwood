@@ -334,7 +334,7 @@ export function renderMoveScreen(move){
   }
 
   const singleDest = move.to && !['freeAgency','transfer','draftDecl'].includes(move.type);
-  const salaryLine = singleDest ? `<div class="body" style="margin-top:2px;color:var(--up);font-family:'Big Shoulders Text';font-weight:600;letter-spacing:.03em">💰 Salaire annuel estimé : <b>${money(salaryFor(move.to,o,p.reputation))}</b></div>` : '';
+  const salaryLine = singleDest ? `<div class="body" style="margin-top:2px;color:var(--up);font-family:'Bricolage Grotesque';font-weight:600;letter-spacing:.03em">💰 Salaire annuel estimé : <b>${money(salaryFor(move.to,o,p.reputation))}</b></div>` : '';
   stage.innerHTML = renderHUD() + `<div class="card event">
     <div class="season-tag"><span class="chip">📅 Intersaison · ${p.age} ans</span>
       <span class="chip n">💼 Marché des transferts</span></div>

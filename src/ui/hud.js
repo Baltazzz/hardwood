@@ -12,9 +12,38 @@ function meter(label,val,color){
   return `<div class="meter"><div class="mrow"><span>${label}</span><span>${Math.round(val)}</span></div>
     <div class="bar"><i style="width:${clamp(val,0,100)}%;background:${color}"></i></div></div>`;
 }
+
+// Tuile "Fiche technique" repliable : repliée par défaut, mémorise ensuite le dernier choix
+// (survit aux re-rendus de renderHUD à chaque écran, et aux rechargements de page).
+const FICHE_KEY = 'hw_fiche_open';
+function getFicheOpen(){
+  try { const v = localStorage.getItem(FICHE_KEY); return v === '1'; }
+  catch(e){ return false; }
+}
+function setFicheOpen(v){
+  try { localStorage.setItem(FICHE_KEY, v ? '1' : '0'); } catch(e){}
+}
+// Délégation sur #stage (nœud stable, jamais remplacé) : pas besoin de re-brancher l'écouteur
+// à chaque appel de renderHUD() depuis les différents écrans qui l'incluent.
+if(typeof stage !== 'undefined' && stage && !stage.__ficheWired){
+  stage.__ficheWired = true;
+  stage.addEventListener('click', (e)=>{
+    const btn = e.target.closest && e.target.closest('#ficheToggle');
+    if(!btn) return;
+    const open = !getFicheOpen();
+    setFicheOpen(open);
+    const body = document.getElementById('ficheBody');
+    const chevron = document.getElementById('ficheChevron');
+    if(body) body.classList.toggle('open', open);
+    if(chevron) chevron.classList.toggle('open', open);
+    btn.setAttribute('aria-expanded', String(open));
+  });
+}
+
 export function renderHUD(){
   const p=G, o=ovr(p), pos=POSITIONS.find(x=>x.id===p.pos), lg=LEAGUES[p.league];
   const cc=clubColor(p.league);
+  const ficheOpen = getFicheOpen();
   const attrsHtml = ATTRS.map(a=>`
     <div class="attr"><div class="arow"><span class="an">${a.name}</span>
       <span class="av" id="av-${a.id}">${p.attrs[a.id]}</span></div>
@@ -39,20 +68,26 @@ export function renderHUD(){
       </div>
     </div>
     <div class="card">
-      <div class="eyebrow" style="margin-bottom:12px">Fiche technique</div>
-      <div class="attrs">${attrsHtml}</div>
-      <div style="display:flex;gap:18px;margin-top:16px;flex-wrap:wrap">
-        ${miniStat('Coach',p.coach)} ${miniStat('Médias',p.media)} ${miniStat('Popularité',p.popularity)}
-        <div><div class="an" style="font-size:11px;color:var(--chalk-dim);text-transform:uppercase;letter-spacing:.06em;font-family:'Big Shoulders Text'">Salaire/an</div>
-          <div class="av" style="font-family:'Big Shoulders Text';font-weight:700;font-size:15px;color:var(--up)">${p.salary?money(p.salary):'—'}</div></div>
-        <div style="margin-left:auto"><div class="an" style="font-size:11px;color:var(--chalk-dim);text-transform:uppercase;letter-spacing:.06em;font-family:'Big Shoulders Text'">Fortune</div>
-          <div class="av" style="font-family:'Big Shoulders Text';font-weight:700;font-size:15px;color:var(--mint)">${money(p.money)}</div></div>
+      <button type="button" id="ficheToggle" class="eyebrow fiche-toggle" aria-expanded="${ficheOpen}" aria-controls="ficheBody">
+        <span>Fiche technique</span><span class="fiche-chevron${ficheOpen?' open':''}" id="ficheChevron">▾</span>
+      </button>
+      <div class="fiche-body${ficheOpen?' open':''}" id="ficheBody">
+        <div class="fiche-inner">
+          <div class="attrs" style="margin-top:12px">${attrsHtml}</div>
+          <div style="display:flex;gap:18px;margin-top:16px;flex-wrap:wrap">
+            ${miniStat('Coach',p.coach)} ${miniStat('Médias',p.media)} ${miniStat('Popularité',p.popularity)}
+            <div><div class="an" style="font-size:11px;color:var(--chalk-dim);text-transform:uppercase;letter-spacing:.06em;font-family:'Bricolage Grotesque'">Salaire/an</div>
+              <div class="av" style="font-family:'Bricolage Grotesque';font-weight:700;font-size:15px;color:var(--up)">${p.salary?money(p.salary):'—'}</div></div>
+            <div style="margin-left:auto"><div class="an" style="font-size:11px;color:var(--chalk-dim);text-transform:uppercase;letter-spacing:.06em;font-family:'Bricolage Grotesque'">Fortune</div>
+              <div class="av" style="font-family:'Bricolage Grotesque';font-weight:700;font-size:15px;color:var(--mint)">${money(p.money)}</div></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>`;
 }
-function miniStat(l,v){return `<div><div style="font-size:11px;color:var(--chalk-dim);text-transform:uppercase;letter-spacing:.06em;font-family:'Big Shoulders Text'">${l}</div>
-  <div style="font-family:'Big Shoulders Text';font-weight:700;font-size:15px">${Math.round(v)}</div></div>`;}
+function miniStat(l,v){return `<div><div style="font-size:11px;color:var(--chalk-dim);text-transform:uppercase;letter-spacing:.06em;font-family:'Bricolage Grotesque'">${l}</div>
+  <div style="font-family:'Bricolage Grotesque';font-weight:700;font-size:15px">${Math.round(v)}</div></div>`;}
 
 export function animateStats(){
   if(reducedMotion() || !window.requestAnimationFrame) return;

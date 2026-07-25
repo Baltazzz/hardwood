@@ -57,6 +57,9 @@ function miniStat(l,v){return `<div><div style="font-size:11px;color:var(--chalk
 export function animateStats(){
   if(reducedMotion() || !window.requestAnimationFrame) return;
   stage.querySelectorAll('.stat-cell .sv').forEach(el=>{
+    // Cellules composées (ex. "27/82" pour les matchs joués) : pas un nombre pur, on ne les
+    // anime pas — sinon parseFloat ne garde que la partie avant "/" et l'écrase.
+    if(!/^-?\d+(\.\d+)?$/.test(el.textContent.trim())) return;
     const target=parseFloat(el.textContent); if(isNaN(target)) return;
     const dec = el.textContent.indexOf('.')>=0 ? 1 : 0;
     const now=()=> (window.performance&&performance.now)?performance.now():Date.now();

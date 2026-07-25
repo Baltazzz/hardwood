@@ -21,7 +21,8 @@ export function newPlayer(){
     flags:{}, clutch:0,
     // Anti-répétition des événements : evStats[id] = {count, lastYear, streak}. eventHistory
     // sert uniquement à l'audit de diversité (liste plate des ids tirés, dans l'ordre).
-    evStats:{}, eventHistory:[], clubTenure:0
+    evStats:{}, eventHistory:[], clubTenure:0,
+    tripleDoubles:0
   };
 }
 

@@ -20,7 +20,6 @@ import { stage } from './dom.js';
 export function screenTitle(){
   const best=hofBest();
   stage.innerHTML = `<div class="title-screen">
-    <img class="brand-mark" src="/logo-mark.png" alt="" width="84" height="84">
     <div class="eyebrow">Carrière · saison après saison</div>
     <h1>HARD<span class="o">W</span>OOD</h1>
     <p class="tag">De 16 à 38 ans, écris ta légende du basket. Chaque choix pèse : le talent ouvre des portes, les décisions décident du reste. La NBA est le sommet — encore faut-il y arriver.</p>
@@ -152,8 +151,9 @@ export function showDeltaFlash(outcome, deltas){
 
 export function renderSeasonResult(s, natLine, champion){
   const p=G, lg=LEAGUES[p.league];
+  const gpLabel = (s.leagueGames!=null) ? `${s.gamesPlayed}/${s.leagueGames}` : '—';
   const cells=[
-    ['PTS',s.pts],['REB',s.reb],['PAS',s.ast],['MIN',s.minutes],['VIC',s.wins],['OVR',s.ovr]
+    ['PTS',s.pts],['REB',s.reb],['PAS',s.ast],['CTR',s.blk??0],['INT',s.stl??0],['MIN',s.minutes],['MJ',gpLabel],['VIC',s.wins]
   ];
   let verdict = seasonVerdict(s,lg);
   const prev = p.seasons.length>=2 ? p.seasons[p.seasons.length-2].ovr : null;
@@ -161,7 +161,9 @@ export function renderSeasonResult(s, natLine, champion){
   const deltaHtml = delta!==null && delta!==0
     ? `<span class="chip" style="background:${delta>0?'rgba(63,208,122,.14)':'rgba(255,82,98,.14)'};border-color:${delta>0?'var(--up)':'var(--down)'};color:${delta>0?'var(--up)':'var(--down)'}">${delta>0?'▲':'▼'} ${Math.abs(delta)} OVR vs saison passée</span>`
     : '';
-  const accHtml = s.acc.length? `<div class="accolades">${s.acc.map(a=>`<span class="badge ${a.includes('MVP')||a.includes('Champion')?'title':''}">${a}</span>`).join('')}</div>`:'';
+  const accList = s.acc.slice();
+  if(s.td) accList.push(`🎯 ${s.td} triple-double${s.td>1?'s':''}`);
+  const accHtml = accList.length? `<div class="accolades">${accList.map(a=>`<span class="badge ${a.includes('MVP')||a.includes('Champion')?'title':''}">${a}</span>`).join('')}</div>`:'';
   const natHtml = natLine? `<div class="verdict" style="border-left-color:var(--mint)">Sélection ${p.nation.flag} — ${natLine.tourn}${natLine.medal?` : <b style="color:var(--mint)">${natLine.medal}</b>`:' : éliminé en phase finale'}${natLine.mvp?' · <b>MVP du tournoi</b>':''}.</div>`:'';
   stage.innerHTML = renderHUD() + `<div class="card scoreboard">
     <div class="sb-head"><h2>Saison ${p.year} — bilan</h2>
@@ -418,6 +420,7 @@ export function endCareer(reason){
       styleName:(STYLES.find(x=>x.id===p.style)||{}).name||'', styleEmoji:(STYLES.find(x=>x.id===p.style)||{}).emoji||'',
       tier, score:legend, champs, mvps, allstars, peak:p.peakOvr, seasons:p.seasons.length,
       bestPts:Math.round(bestPts*10)/10, nba:reachedNBA, clutch:p.clutch||0, ovrSeries,
+      tripleDoubles:p.tripleDoubles||0,
       headline:(quotes[0]?quotes[0][1]:''), nation:p.nation.name, hof:p.hof, date:Date.now() };
   p.cardRec=rec; p.endReason=reason;
   if(!p.savedHOF){ p.savedHOF=true; hofAdd(rec); }
@@ -443,6 +446,7 @@ export function endCareer(reason){
       <div class="lg"><div class="v">${mvps}</div><div class="l">MVP</div></div>
       <div class="lg"><div class="v">${allstars}</div><div class="l">All-Star</div></div>
       <div class="lg"><div class="v">${p.clutch||0}</div><div class="l">Moments clutch</div></div>
+      ${p.tripleDoubles?`<div class="lg"><div class="v">${p.tripleDoubles}</div><div class="l">Triple-doubles</div></div>`:''}
     </div>
 
     <div class="recap-block">
@@ -499,7 +503,7 @@ function renderFullSheet(){
   const p=G;
   const rows = p.seasons.map(s=>`<div class="tl-row">
     <span class="yr">S${s.year} · ${s.age}a</span>
-    <span class="ev"><b>${s.club}</b> <span style="color:var(--chalk-dim)">(${LEAGUES[s.league].short})</span> — ${s.pts} pts, ${s.reb} reb, ${s.ast} pas · OVR ${s.ovr}${s.acc.length?` · <span style="color:var(--mint)">${s.acc.join(', ')}</span>`:''}</span></div>`).join('');
+    <span class="ev"><b>${s.club}</b> <span style="color:var(--chalk-dim)">(${LEAGUES[s.league].short})</span> — ${s.pts} pts, ${s.reb} reb, ${s.ast} pas${s.blk?`, ${s.blk} ctr`:''}${s.stl?`, ${s.stl} int`:''} · OVR ${s.ovr}${s.gamesPlayed!=null?` · ${s.gamesPlayed}/${s.leagueGames} matchs`:''}${s.acc.length?` · <span style="color:var(--mint)">${s.acc.join(', ')}</span>`:''}</span></div>`).join('');
   stage.innerHTML = `<div class="end" style="text-align:left">
     <div class="eyebrow" style="text-align:center">Feuille de match — carrière complète</div>
     <h2 style="text-align:center;font-size:28px;margin:6px 0 18px">${p.name}</h2>

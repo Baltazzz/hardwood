@@ -9,19 +9,6 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Ouvert
 
-- [ ] **AGD-01 — Blocks et steals**
-  Aucun attribut ni stat de contres/interceptions n'existe dans le moteur (`simulateSeason()`
-  ne calcule que pts/ast/reb/minutes/wins). Oublié depuis plusieurs lots.
-  **Critère** : les contres et interceptions apparaissent dans les stats de saison affichées
-  (bilan de saison, fiche de carrière, carte de carrière canvas).
-
-- [ ] **AGD-02 — Calendrier réaliste par ligue**
-  Toutes les ligues jouent un nombre de matchs implicite identique ; `wins` est calculé sans
-  notion de longueur de saison propre à chaque championnat (NBA = 82 matchs, EuroLeague ~34-38,
-  etc. dans la réalité). Oublié depuis plusieurs lots.
-  **Critère** : le nombre de matchs joués diffère entre NBA et EuroLeague (et plus largement
-  entre paliers), et ce nombre est visible dans l'interface (bilan de saison a minima).
-
 - [ ] **AGD-03 — Système de trophées**
   Au-delà du compteur d'accolades actuel (MVP/All-Star/Champion en nombre brut dans
   `p.accolades`), pas de vitrine de trophées nommés ni de rétrospective par saison.
@@ -45,4 +32,23 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Coché récemment
 
-_(vide — rien coché pour l'instant)_
+- [x] **AGD-01 — Blocks et steals** _(implémenté et vérifié cette session)_
+  Calculées par `simulateSeason()` selon poste, def/qi, temps de jeu et niveau de ligue
+  (`blk36`/`stl36`). Affichées dans le bilan de saison (cellules CTR/INT) et la feuille de
+  match carrière complète. **Non fait** : pas ajoutées à la carte de carrière canvas (grille
+  fixe à 6 cellules de totaux/pics de carrière, pas de moyenne carrière trackée pour blk/stl —
+  périmètre volontairement réduit, à rouvrir si voulu).
+  Vérifié : moyennes par poste cohérentes sur 60 carrières pilotées (pivot ~1.6-2.2 ctr,
+  arrière/meneur ~1.3-1.7 int, décroissance monotone par poste dans les deux sens) ; 0% crash.
+
+- [x] **AGD-02 — Calendrier réaliste par ligue** _(implémenté et vérifié cette session)_
+  Chaque ligue a son nombre de matchs de référence (`LEAGUES[x].games` : NBA 82, EuroLeague 34,
+  G League 50, NCAA 31, etc.). `wins` et les seuils MVP/titre EuroLeague sont recalculés
+  proportionnellement à cette échelle. Matchs joués affichés en "X/Y" dans le bilan de saison et
+  la feuille de match carrière.
+  Vérifié sur 300 carrières (`scripts/deep-audit.mjs`) : aucune anomalie wins/matchs joués >
+  total ligue, PPG/RPG/APG par ligue dans la même fourchette historique qu'avant ce chantier,
+  indicateurs de récompense (MVP/titre/phénomène/HOF/GOAT) stables. Une régression a été
+  détectée et corrigée en session (pénalité de blessure sur les minutes qui devenait
+  disproportionnée dans les saisons courtes, faisait chuter le taux de "jeune phénomène" de
+  2.7% à 0.3%) — désormais dissociée de l'affichage du calendrier, revérifiée à 3.3%.

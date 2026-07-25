@@ -127,6 +127,28 @@ export function applyChoice(choice, ctx){
   p.evIndex++;
 }
 
+// Estimation légère (pas une simulation de match) du nombre de triple-doubles de la saison :
+// pour chaque match réellement joué, tire une variance réaliste autour des moyennes de saison
+// pour chacune des 5 statistiques, et compte les soirs où 3 d'entre elles franchissent 10.
+function estimateTripleDoubles(avgs, games){
+  // Filtre de plausibilité : sans au moins 3 statistiques déjà proches de 10 en moyenne de
+  // saison, aucune variance raisonnable ne justifie un triple-double — évite de faire
+  // apparaître des triple-doubles chez des profils qui n'ont statistiquement rien à y faire.
+  const near = [avgs.pts,avgs.reb,avgs.ast,avgs.stl,avgs.blk].filter(v=>v>=7).length;
+  if(near<3) return 0;
+  let count=0;
+  for(let i=0;i<games;i++){
+    const p = Math.max(0, avgs.pts + rnd(-avgs.pts*0.28-1.5, avgs.pts*0.28+1.5));
+    const r = Math.max(0, avgs.reb + rnd(-avgs.reb*0.32-1, avgs.reb*0.32+1));
+    const a = Math.max(0, avgs.ast + rnd(-avgs.ast*0.32-1, avgs.ast*0.32+1));
+    const s = Math.max(0, avgs.stl + rnd(-avgs.stl*0.5-0.6, avgs.stl*0.5+0.6));
+    const b = Math.max(0, avgs.blk + rnd(-avgs.blk*0.5-0.6, avgs.blk*0.5+0.6));
+    const doubleDigits = [p,r,a,s,b].filter(v=>v>=10).length;
+    if(doubleDigits>=3) count++;
+  }
+  return count;
+}
+
 /* ============================================================
    SIMULATION DE SAISON
 ============================================================ */
@@ -156,6 +178,12 @@ export function simulateSeason(){
   // L'argent accumulé finance un meilleur suivi médical : réduit (dans une mesure raisonnable)
   // le temps perdu à cause des blessures de la saison.
   const medicalCare = clamp(1 - Math.min(p.money,3000)/3000*0.25, 0.75, 1);
+  const leagueGames = lg.games || 82;
+  // injuryGames (posé par les événements) est calibré sur une saison de référence à 82 matchs
+  // (échelle NBA) : la pénalité de minutes qu'il inflige reste donc sur cette échelle fixe, quel
+  // que soit le calendrier réel de la ligue jouée — une entorse ne devient pas plus grave parce
+  // que la saison est plus courte. Seul l'affichage "matchs joués" (plus bas) convertit cette
+  // même absence, proportionnellement, vers le nombre de matchs réel de la ligue.
   const injuryPenalty = clamp(p.seasonMods.injuryGames/82, 0, .6) * medicalCare;
   minutes = minutes*(1-injuryPenalty);
   const perf = clamp(form + p.seasonMods.perfBonus/100, .6, 1.25);
@@ -168,15 +196,36 @@ export function simulateSeason(){
   const pts36 = clamp((5.5 + skill + outclass*0.36) * scoreUse, 3, 33);
   const ast36 = clamp(p.attrs.passe*0.085*({PG:1.6,SG:1.0,SF:0.8,PF:0.6,C:0.5}[p.pos]) + ({PG:2.6,SG:1.2,SF:1.0,PF:0.7,C:0.6}[p.pos]), 0.4, 11.5);
   const reb36 = clamp(p.attrs.reb*0.095*({C:1.5,PF:1.25,SF:0.9,SG:0.6,PG:0.5}[p.pos]) + ({C:2.6,PF:2.0,SF:1.2,SG:0.8,PG:0.6}[p.pos]), 0.4, 14);
+  // Contres/interceptions : def (+QI pour les interceptions, anticipation) pondéré par poste —
+  // les pivots contrent, les meneurs/arrières interceptent. Le niveau de ligue (outclass) donne
+  // un léger bonus/malus, comme pour le scoring. Réaliste : pivot dominant ~2 ctr/match, joueur
+  // de périmètre harceleur ~2 int/match, la plupart nettement en dessous.
+  const levelFactor = clamp(1 + outclass*0.012, 0.8, 1.3);
+  const blk36 = clamp((p.attrs.def*0.024*({C:1.0,PF:0.62,SF:0.30,SG:0.14,PG:0.10}[p.pos]) + ({C:0.15,PF:0.08,SF:0.03,SG:0.01,PG:0.01}[p.pos])) * levelFactor, 0.03, 3.2);
+  const stl36 = clamp((p.attrs.def*0.013*({PG:1.05,SG:0.95,SF:0.80,PF:0.55,C:0.40}[p.pos]) + p.attrs.qi*0.0035 + ({PG:0.15,SG:0.12,SF:0.09,PF:0.06,C:0.05}[p.pos])) * levelFactor, 0.03, 3.0);
   const mFactor = minutes/36;
   let pts = clamp(pts36*mFactor*perf + rnd(-1.3,1.3), 0, 34);
   let ast = clamp(ast36*mFactor*perf + rnd(-0.7,0.7), 0, 13);
   let reb = clamp(reb36*mFactor*perf + rnd(-0.8,0.8), 0, 17);
-  pts=round(pts,1); ast=round(ast,1); reb=round(reb,1);
+  let blk = clamp(blk36*mFactor*perf + rnd(-0.25,0.25), 0, 4.5);
+  let stl = clamp(stl36*mFactor*perf + rnd(-0.25,0.25), 0, 4.5);
+  pts=round(pts,1); ast=round(ast,1); reb=round(reb,1); blk=round(blk,1); stl=round(stl,1);
 
-  // succès collectif : prestige club + ton niveau + hasard
+  // succès collectif : prestige club + ton niveau + hasard. Le total de victoires est désormais
+  // un pourcentage de victoires (comme en vrai) ramené au nombre de matchs réels de la ligue —
+  // une saison EuroLeague (~34 matchs) ne peut plus afficher un total de victoires de saison NBA.
   const teamRating = clamp(lg.prestige*3 + (o-lg.starter)*1.2 + rnd(-14,14), 5, 100);
-  const wins = clamp(Math.round(teamRating*0.62), 6, 64);
+  const winPct = clamp(teamRating*0.0076, 0.073, 0.78);
+  const wins = Math.max(1, Math.round(winPct*leagueGames));
+
+  // ----- MATCHS JOUÉS : la saison n'est pas toujours jouée en entier (blessures, temps de jeu
+  // réduit qui vaut parfois une mise à l'écart côté coach) -----
+  // injuryGames est sur l'échelle de référence 82 matchs (voir injuryPenalty ci-dessus) : on le
+  // convertit ici, proportionnellement, vers le nombre de matchs réel de la ligue jouée — c'est
+  // uniquement l'affichage "matchs joués" qui reflète le vrai calendrier, pas la pénalité de jeu.
+  const missedInjury = Math.min(Math.round(p.seasonMods.injuryGames * leagueGames/82), leagueGames);
+  const dnp = minutes<10 ? ri(0, Math.max(0, Math.round(leagueGames*0.08))) : 0;
+  const gamesPlayed = clamp(leagueGames - missedInjury - dnp, 0, leagueGames);
 
   // accolades
   const acc=[]; const A=(k)=>{acc.push(k); p.accolades[k]=(p.accolades[k]||0)+1;};
@@ -199,17 +248,26 @@ export function simulateSeason(){
   // reconnu incline légèrement la balance en sa faveur.
   const clutchVoteBoost = clamp((p.clutch||0)*0.012, 0, 0.08);
   if(isNBA && o>=lg.star && wins>=38 && Math.random()>(.67-clutchVoteBoost)){ A('MVP'); }
-  if(isEuro && o>=lg.star && wins>=28 && Math.random()>(.67-clutchVoteBoost)){ A('MVP EuroLeague'); }
+  // seuil EuroLeague ramené à l'échelle réelle de sa saison (34 matchs, pas 82)
+  if(isEuro && o>=lg.star && wins>=Math.round(28*leagueGames/82) && Math.random()>(.67-clutchVoteBoost)){ A('MVP EuroLeague'); }
   if(p.attrs.def>=88 && (p.pos==='C'||p.pos==='PF'||p.pos==='SF') && Math.random()>.6 && minutes>26 && (isNBA||isEuro)){ A('Meilleur défenseur'); }
-  // titre
+  // titre — seuil de victoires ramené à l'échelle réelle du nombre de matchs de la ligue
   const championOdds = clamp((teamRating-58)/60,0,.7) + clamp((p.clutch||0)*0.006,0,.04);
   let champion=false;
-  if(wins>=Math.round(lg.prestige*3.3) && Math.random()<championOdds+ (o>=lg.star?.12:0)){ champion=true; A(isNBA?'Champion NBA':isEuro?'Champion EuroLeague':'Champion '+lg.short); }
+  if(wins>=Math.round(lg.prestige*3.3*leagueGames/82) && Math.random()<championOdds+ (o>=lg.star?.12:0)){ champion=true; A(isNBA?'Champion NBA':isEuro?'Champion EuroLeague':'Champion '+lg.short); }
   // rookie award
   if(rookie && (isNBA||isEuro) && o>=lg.star-3 && pts>14){ A(isNBA?'Rookie de l\'année':'Meilleur jeune'); }
 
+  // Triple-doubles : pas de simulation match par match (le moteur ne modélise que des moyennes
+  // de saison), mais une estimation légère et honnête — un tirage de variance réaliste autour
+  // des moyennes déjà connues (pts/reb/ast/blk/stl), répété une fois par match réellement joué,
+  // pour compter combien de fois 3 des 5 statistiques auraient dépassé 10 ce soir-là.
+  const td = estimateTripleDoubles({pts,reb,ast,blk,stl}, gamesPlayed);
+  p.tripleDoubles = (p.tripleDoubles||0) + td;
+
   // rangement saison
-  const season={year:p.year,age:p.age,league:p.league,club:p.club,pts,ast,reb,wins,ovr:o,minutes:round(minutes,0),acc:acc.slice(),champion,injured:p.seasonMods.injuryGames>0};
+  const season={year:p.year,age:p.age,league:p.league,club:p.club,pts,ast,reb,blk,stl,wins,
+    gamesPlayed,leagueGames,td,ovr:o,minutes:round(minutes,0),acc:acc.slice(),champion,injured:p.seasonMods.injuryGames>0};
   p.seasons.push(season);
   p.peakOvr=Math.max(p.peakOvr,o);
 
@@ -300,7 +358,10 @@ function applyAging(){
     const prodIndex = lastSeason.pts + lastSeason.ast*1.1 + lastSeason.reb*0.9;
     const expected = clamp((lastSeason.ovr-40)*0.65, 4, 32);
     const overperf = clamp((prodIndex-expected)/expected, -0.4, 0.5);
-    const winFactor = clamp((lastSeason.wins-30)/220, -0.05, 0.05);
+    // pourcentage de victoires plutôt que total brut : reste valable quel que soit le nombre
+    // de matchs réels de la ligue jouée la saison passée (NBA 82, EuroLeague ~34, etc.)
+    const lastGames = lastSeason.leagueGames || 82;
+    const winFactor = clamp((lastSeason.wins/lastGames - 0.366)/2.68, -0.05, 0.05);
     growthFactor *= clamp(1 + overperf*0.14 + winFactor, 0.9, 1.1);
   }
   growthFactor = clamp(growthFactor, 0.6, 1.6);

@@ -45,6 +45,7 @@ export function renderCareerDetail(r){
       <div class="lg"><div class="v">${r.mvps}</div><div class="l">MVP</div></div>
       <div class="lg"><div class="v">${r.allstars}</div><div class="l">All-Star</div></div>
       <div class="lg"><div class="v">${r.clutch||0}</div><div class="l">Clutch</div></div>
+      ${r.tripleDoubles?`<div class="lg"><div class="v">${r.tripleDoubles}</div><div class="l">Triple-doubles</div></div>`:''}
     </div>
     ${r.headline?`<div class="recap-block"><div class="press"><div class="press-txt">${r.headline}</div></div></div>`:''}
     ${r.ovrSeries&&r.ovrSeries.length>1?`<div class="recap-block" style="text-align:center">${sparkline(r.ovrSeries)}</div>`:''}

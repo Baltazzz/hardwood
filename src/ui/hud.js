@@ -1,8 +1,9 @@
 import { G } from '../engine/state.js';
 import { ATTRS, POSITIONS } from '../data/positions.js';
-import { LEAGUES, clubColor } from '../data/leagues.js';
+import { LEAGUES } from '../data/leagues.js';
 import { ovr, roleOf } from '../engine/player.js';
 import { clamp, money, reducedMotion, easeOut } from '../engine/utils.js';
+import { applyAccent, pickTextColor } from '../engine/accent.js';
 import { stage } from './dom.js';
 
 /* ============================================================
@@ -40,9 +41,13 @@ if(typeof stage !== 'undefined' && stage && !stage.__ficheWired){
   });
 }
 
-export function renderHUD(){
+export function renderHUD(mode='club'){
   const p=G, o=ovr(p), pos=POSITIONS.find(x=>x.id===p.pos), lg=LEAGUES[p.league];
-  const cc=clubColor(p.league);
+  // Couleur d'accent dynamique : indexée sur le club (ou la nation en fenêtre de sélection),
+  // ajustée pour rester lisible sur --court quelle que soit la couleur source. Posée sur
+  // documentElement (--accent) : la stripe et l'anneau OVR ci-dessous la consomment via CSS.
+  const accentHex = applyAccent(p, mode);
+  const accentText = pickTextColor(accentHex);
   const ficheOpen = getFicheOpen();
   const attrsHtml = ATTRS.map(a=>`
     <div class="attr"><div class="arow"><span class="an">${a.name}</span>
@@ -50,14 +55,14 @@ export function renderHUD(){
       <div class="abar"><i style="width:${p.attrs[a.id]}%"></i></div></div>`).join('');
   return `<div class="hud">
     <div class="card player-card">
-      <div class="club-stripe" style="background:${cc}"></div>
+      <div class="club-stripe"></div>
       <div class="pc-top">
         <div><div class="pc-name">${p.name}</div>
           <div class="pc-meta">${p.nation.flag} ${pos.emoji} ${pos.name} · ${p.age} ans</div></div>
         <div class="ovr-badge" style="--pct:${o}"><div class="n" id="ovrN">${o}</div><div class="l">OVR</div></div>
       </div>
       <div class="pc-club">
-        <div class="club-dot" style="background:${cc}">${(p.club||'?').slice(0,2).toUpperCase()}</div>
+        <div class="club-dot" style="color:${accentText}">${(p.club||'?').slice(0,2).toUpperCase()}</div>
         <div><div class="cn">${p.club||'Sans club'}</div>
           <div class="cl">${lg?lg.short:''}${p.club&&p.seasons.length?` · <span style="color:var(--mint)">${roleOf(p).label}</span>`:''}</div></div>
       </div>
@@ -79,7 +84,7 @@ export function renderHUD(){
           <div style="display:flex;gap:18px;margin-top:16px;flex-wrap:wrap">
             ${miniStat('Coach',p.coach)} ${miniStat('Médias',p.media)} ${miniStat('Popularité',p.popularity)}
             <div><div class="an" style="font-size:11px;color:var(--chalk-dim);text-transform:uppercase;letter-spacing:.06em;font-family:'Bricolage Grotesque'">Salaire/an</div>
-              <div class="av" style="font-family:'Bricolage Grotesque';font-weight:700;font-size:15px;color:var(--up)">${p.salary?money(p.salary):'—'}</div></div>
+              <div class="av" style="font-family:'Bricolage Grotesque';font-weight:700;font-size:15px;color:var(--up)">${p.salary?money(p.salary):'·'}</div></div>
             <div style="margin-left:auto"><div class="an" style="font-size:11px;color:var(--chalk-dim);text-transform:uppercase;letter-spacing:.06em;font-family:'Bricolage Grotesque'">Fortune</div>
               <div class="av" style="font-family:'Bricolage Grotesque';font-weight:700;font-size:15px;color:var(--mint)">${money(p.money)}</div></div>
           </div>

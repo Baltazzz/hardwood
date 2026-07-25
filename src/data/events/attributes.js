@@ -42,7 +42,7 @@ export const ATTRIBUTE_EVENTS = [
   {id:'shooter_slump', cat:'form', phase:null, cooldown:3,
     when:(p,lg)=>attrOf(p,'adr3')>=78 && p.reputation>=30,
     title:'La disette du shooteur',
-    body:()=>`Ta marque de fabrique, c'est le tir. Sauf que depuis deux matchs, rien ne rentre — même les tirs ouverts. Le doute s'installe sur le geste qui te définit.`,
+    body:()=>`Ta marque de fabrique, c'est le tir. Sauf que depuis deux matchs, rien ne rentre, même les tirs ouverts. Le doute s'installe sur le geste qui te définit.`,
     weight:()=>0.75,
     choices:()=>[
       {label:'Continuer à tirer, envers et contre tout', hint:'La confiance dans le geste, coûte que coûte',
@@ -151,7 +151,7 @@ export const ATTRIBUTE_EVENTS = [
   {id:'poster_dunk_moment', cat:'clutch', phase:null, cooldown:2,
     when:(p,lg)=>attrOf(p,'ath')>=80 && p.reputation>=28,
     title:'L\'appel d\'air pour le poster',
-    body:()=>`<i>(Contre-attaque, un seul défenseur entre toi et le cercle.)</i> L'espace est là pour un dunk spectaculaire — ou tu peux jouer plus simple et sûr.`,
+    body:()=>`<i>(Contre-attaque, un seul défenseur entre toi et le cercle.)</i> L'espace est là pour un dunk spectaculaire, ou tu peux jouer plus simple et sûr.`,
     weight:clutchWeight(0.9),
     choices:({p})=>[
       {label:'Tenter le poster monumental', hint:'Le geste spectaculaire, à tes risques',

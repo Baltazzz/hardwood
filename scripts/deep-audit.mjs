@@ -81,11 +81,14 @@ function ageBracket(age) {
   return '31+';
 }
 const BRACKET_ORDER = ['≤20', '21-22', '23-24', '25-26', '27-28', '29-30', '31+'];
-const TIER_ORDER = ['Parcours de combattant', 'Joueur de rotation', 'All-Star', 'Superstar', 'Légende — Hall of Fame', 'G.O.A.T.'];
+const TIER_ORDER = ['Parcours de combattant', 'Joueur de rotation', 'All-Star', 'Superstar', 'Légende · Hall of Fame', 'G.O.A.T.'];
 const PATH_LABELS = { draft: 'Draft', nbaWindow: 'Fenêtre continentale', callup: 'Call-up G-League', nbaSwan: "Baroud d'honneur" };
 
 async function main() {
   const { document, errors } = setupEnvironment();
+  // L'audit teste la simulation de carrière, pas l'onboarding : on marque la tuile de
+  // bienvenue comme déjà vue pour que screenTitle() affiche directement l'écran titre.
+  localStorage.setItem('hw_welcome_seen', '1');
   const screens = await import('../src/ui/screens.js');
   const state = await import('../src/engine/state.js');
   const player = await import('../src/engine/player.js');

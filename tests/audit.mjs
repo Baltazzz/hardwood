@@ -20,6 +20,9 @@ function median(nums) {
 
 async function main() {
   const { document, errors } = setupEnvironment();
+  // L'audit teste la simulation de carrière, pas l'onboarding : on marque la tuile de
+  // bienvenue comme déjà vue pour que screenTitle() affiche directement l'écran titre.
+  localStorage.setItem('hw_welcome_seen', '1');
 
   // Import des modules du jeu APRÈS la mise en place de l'environnement DOM,
   // car certains modules (ex. ui/dom.js) capturent `document` à l'évaluation.

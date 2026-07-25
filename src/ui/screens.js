@@ -10,6 +10,7 @@ import { applyChoice, postSeason, doMove, beginSeasonKeep, draftProjection, seas
 import { catTag } from '../engine/events.js';
 import { pickClub, pickClubName, pickClubs, clubInfo } from '../engine/clubs.js';
 import { renderHUD, animateStats } from './hud.js';
+import { resetAccent } from '../engine/accent.js';
 import { renderHallOfFame, renderCareerCard } from './card.js';
 import { pick, clamp, money, ordinal, ri } from '../engine/utils.js';
 import { stage } from './dom.js';
@@ -21,25 +22,95 @@ const WELCOME_KEY = 'hw_welcome_seen';
 function welcomeSeen(){ try{ return localStorage.getItem(WELCOME_KEY)==='1'; } catch(e){ return true; } }
 function setWelcomeSeen(){ try{ localStorage.setItem(WELCOME_KEY,'1'); }catch(e){} }
 
-function welcomeCard(){
-  return `<div class="welcome-card" id="welcomeCard">
-    <button class="welcome-close" id="welcomeClose" aria-label="Fermer">✕</button>
-    <div class="eyebrow" style="text-align:left;color:var(--mint)">Le topo, vite fait</div>
-    <p class="welcome-line">Réputation, moral, forme, confiance du coach : ça pèse vraiment sur tes minutes et tes choix — pas des jauges qui dorment dans un coin.</p>
-    <p class="welcome-line">Chaque saison, deux décisions te façonnent : un tir tenté, une interview assumée, une nuit de trop. Rien n'est neutre, tout s'accumule.</p>
-    <p class="welcome-line">Certains finissent oubliés en deuxième division. D'autres entrent au Panthéon. La plupart sont entre les deux — à toi d'écrire laquelle.</p>
-    <button class="btn sm" id="welcomeGotIt" style="margin-top:6px">Compris, on y va</button>
-  </div>`;
+// Icônes SVG faites maison (même logique que le reste de l'appli : pas de glyphe unicode,
+// couleur fixée dans le path plutôt qu'héritée d'une police).
+const WELCOME_ICONS = {
+  rep:'M12 2 14.9 8.6 22 9.3 16.8 14.1 18.2 21.2 12 17.6 5.8 21.2 7.2 14.1 2 9.3 9.1 8.6Z',
+  morale:'M12 21s-7.5-4.6-10-9.3C.4 8.1 2.4 4 6.4 4c2 0 3.6 1.1 4.6 2.7C12 5.1 13.6 4 15.6 4c4 0 6 4.1 4.4 7.7C19.5 16.4 12 21 12 21Z',
+  fitness:'M4 12h3l2-6 4 12 2-6h5',
+  coach:'M12 3 3 7l9 4 9-4-9-4Z M3 7v6l9 4 9-4V7 M12 11v9',
+};
+function welcomeIcon(key){
+  return `<svg viewBox="0 0 24 24" width="18" height="18" style="flex:none">
+    <path d="${WELCOME_ICONS[key]}" fill="none" stroke="var(--mint)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+function welcomeStatRow(iconKey,label,text){
+  return `<div class="ws-stat">${welcomeIcon(iconKey)}
+    <div><div class="ws-stat-l">${label}</div><div class="ws-stat-t">${text}</div></div></div>`;
+}
+const TRAJ_STEPS = [
+  ['Parcours de combattant','Le sommet t\'échappe, mais tu as vécu du basket : ce que peu réussissent.'],
+  ['Joueur de rotation','Un vrai pro respecté, sans jamais percer tout en haut.'],
+  ['All-Star','Tu brilles parmi l\'élite, une vraie carrière de haut niveau.'],
+  ['Superstar','Des sommets touchés, un nom qui compte au plus haut niveau.'],
+  ['Légende · Hall of Fame','Ton maillot est retiré, ton héritage est écrit.'],
+];
+function trajectoryStrip(){
+  return `<div class="ws-traj">${TRAJ_STEPS.map((t,i)=>`
+    <div class="ws-traj-step"><div class="ws-traj-n">${i+1}</div>
+      <div><div class="ws-traj-l">${t[0]}</div><div class="ws-traj-d">${t[1]}</div></div></div>`).join('')}</div>`;
 }
 
+// Écran de bienvenue plein écran (1re carrière uniquement, rouvrable depuis le titre) :
+// un vrai écran (comme screenTitle/screenCreate), pas une tuile, pour pouvoir structurer le
+// propos en sections qu'on parcourt plutôt qu'un pavé de texte compressé dans un coin.
+export function screenWelcome(){
+  stage.innerHTML = `<div class="welcome-screen">
+    <button class="welcome-skip" id="wSkip">Passer →</button>
+    <div class="eyebrow" style="text-align:left">Avant de te lancer</div>
+    <h2 class="ws-h1">Ta carrière commence maintenant.<br>Voici ce qui va vraiment compter.</h2>
+
+    <section class="ws-section">
+      <div class="ws-kicker">01 · Ta fiche</div>
+      <p class="ws-lead">Sous l'OVR, une poignée de jauges pilotent tout : minutes accordées, contrats, sélection nationale. Elles bougent à chaque saison, à chaque choix.</p>
+      <div class="ws-grid">
+        ${welcomeStatRow('rep','Réputation','Ta cote aux yeux de la ligue : ouvre les gros clubs, la sélection nationale, les MVP.')}
+        ${welcomeStatRow('morale','Moral','Un joueur heureux progresse mieux. Un joueur cassé s\'effondre en silence.')}
+        ${welcomeStatRow('fitness','Forme','Ton capital physique. Le fatiguer sans compter, c\'est emprunter sur les saisons d\'après.')}
+        ${welcomeStatRow('coach','Confiance du coach','Elle décide qui reste sur le banc et qui joue le money-time. Elle se regagne plus vite qu\'elle ne se perd, mais pas d\'un coup.')}
+      </div>
+    </section>
+
+    <section class="ws-section">
+      <div class="ws-kicker">02 · Les choix</div>
+      <p class="ws-lead">Deux décisions par saison, jamais neutres. Un tir tenté dans le money-time, une interview trop franche, une nuit de trop avant un match clé : certaines conséquences se voient tout de suite, d'autres se referment sur toi bien plus tard dans la carrière, sans prévenir.</p>
+    </section>
+
+    <section class="ws-section">
+      <div class="ws-kicker">03 · Ta trajectoire</div>
+      <p class="ws-lead">De 16 à 38 ans. Personne ne connaît la sienne à l'avance.</p>
+      ${trajectoryStrip()}
+    </section>
+
+    <div style="margin-top:8px;text-align:center">
+      <button class="btn" id="wGo">Compris, on commence</button>
+    </div>
+  </div>`;
+  const skip=document.getElementById('wSkip'); if(skip) skip.onclick=()=>{ setWelcomeSeen(); screenTitle(); };
+  document.getElementById('wGo').onclick=()=>{ setWelcomeSeen(); screenTitle(); };
+}
+
+// Effet "double courbe" du wordmark : chaque lettre est décalée verticalement (parabole)
+// et légèrement tournée pour dessiner un arc qui remonte vers le centre, façon logo sportif
+// gravé/arqué plutôt qu'un texte plat.
+function curvedWordmark(text){
+  const n = text.length, mid=(n-1)/2, amp=13, rotMax=7;
+  return text.split('').map((ch,i)=>{
+    const t = mid ? (i-mid)/mid : 0; // -1..1
+    const dy = (-amp*(1-t*t)).toFixed(1);
+    const rot = (t*rotMax).toFixed(1);
+    const cls = ch==='W' ? ' o' : '';
+    return `<span class="hw-letter${cls}" style="transform:translateY(${dy}px) rotate(${rot}deg)">${ch}</span>`;
+  }).join('');
+}
 export function screenTitle(){
+  resetAccent(); // pas d'accent de club/nation hérité de la carrière précédente sur le titre
+  if(!welcomeSeen()){ screenWelcome(); return; }
   const best=hofBest();
-  const showWelcome = !welcomeSeen();
   stage.innerHTML = `<div class="title-screen">
     <div class="eyebrow">Carrière · saison après saison</div>
-    <h1>HARD<span class="o">W</span>OOD</h1>
-    <p class="tag">De 16 à 38 ans, écris ta légende du basket. Chaque choix pèse : le talent ouvre des portes, les décisions décident du reste. La NBA est le sommet — encore faut-il y arriver.</p>
-    ${showWelcome?welcomeCard():''}
+    <h1>${curvedWordmark('HARDWOOD')}</h1>
+    <p class="tag">De 16 à 38 ans, écris ta légende du basket. Chaque choix pèse : le talent ouvre des portes, les décisions décident du reste. La NBA est le sommet, encore faut-il y arriver.</p>
     <div style="margin-top:28px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
       <button class="btn" id="go">Commencer ma carrière</button>
       <button class="btn ghost" id="hof">🏆 Panthéon</button>
@@ -49,17 +120,7 @@ export function screenTitle(){
   </div>`;
   document.getElementById('go').onclick=()=>{ setWelcomeSeen(); setG(newPlayer()); screenCreate(); };
   document.getElementById('hof').onclick=()=>renderHallOfFame();
-  const wc=document.getElementById('welcomeClose'); if(wc) wc.onclick=()=>{ setWelcomeSeen(); screenTitle(); };
-  const wg=document.getElementById('welcomeGotIt'); if(wg) wg.onclick=()=>{ setWelcomeSeen(); screenTitle(); };
-  document.getElementById('welcomeReopen').onclick=(e)=>{ e.preventDefault();
-    try{ localStorage.removeItem(WELCOME_KEY); }catch(err){}
-    screenTitle();
-    const wcEl = document.getElementById('welcomeCard');
-    if(wcEl && typeof wcEl.scrollIntoView==='function'){
-      const reduced = typeof matchMedia==='function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-      wcEl.scrollIntoView({block:'center', behavior: reduced?'auto':'smooth'});
-    }
-  };
+  document.getElementById('welcomeReopen').onclick=(e)=>{ e.preventDefault(); screenWelcome(); };
 }
 
 export function screenCreate(){
@@ -155,10 +216,12 @@ export function renderEvent(ev){
   const body = typeof ev.body==='function'?ev.body(ctx):ev.body;
   const title= typeof ev.title==='function'?ev.title(ctx):ev.title;
   const choices = ev.choices(ctx);
-  stage.innerHTML = renderHUD() + `<div class="card event" style="margin-top:2px">
+  // Fenêtre sélection nationale : l'accent bascule sur les couleurs du pays, en cohérence
+  // avec le changement d'ambiance déjà en place pour ces événements.
+  stage.innerHTML = renderHUD(ev.cat==='nation'?'nation':'club') + `<div class="card event" style="margin-top:2px">
     <div class="season-tag">
       <span class="chip">📅 Saison ${p.year} · ${p.age} ans</span>
-      <span class="chip n">${LEAGUES[p.league].emoji||'🏀'} ${lg.short} — ${p.club}</span>
+      <span class="chip n">${LEAGUES[p.league].emoji||'🏀'} ${lg.short} · ${p.club}</span>
       <span class="chip n">${catTag(ev)}</span>
     </div>
     <h2>${title}</h2>
@@ -188,7 +251,7 @@ export function showDeltaFlash(outcome, deltas){
 
 export function renderSeasonResult(s, natLine, champion){
   const p=G, lg=LEAGUES[p.league];
-  const gpLabel = (s.leagueGames!=null) ? `${s.gamesPlayed}/${s.leagueGames}` : '—';
+  const gpLabel = (s.leagueGames!=null) ? `${s.gamesPlayed}/${s.leagueGames}` : '·';
   const cells=[
     ['PTS',s.pts],['REB',s.reb],['PAS',s.ast],['CTR',s.blk??0],['INT',s.stl??0],['MIN',s.minutes],['MJ',gpLabel],['VIC',s.wins]
   ];
@@ -204,9 +267,10 @@ export function renderSeasonResult(s, natLine, champion){
   const accList = s.acc.slice();
   if(s.td) accList.push(`🎯 ${s.td} triple-double${s.td>1?'s':''}`);
   const accHtml = accList.length? `<div class="accolades">${accList.map(a=>`<span class="badge ${a.includes('MVP')||a.includes('Champion')?'title':''}">${a}</span>`).join('')}</div>`:'';
-  const natHtml = natLine? `<div class="verdict" style="border-left-color:var(--mint)">Sélection ${p.nation.flag} — ${natLine.tourn}${natLine.medal?` : <b style="color:var(--mint)">${natLine.medal}</b>`:' : éliminé en phase finale'}${natLine.mvp?' · <b>MVP du tournoi</b>':''}.</div>`:'';
-  stage.innerHTML = renderHUD() + `<div class="card scoreboard">
-    <div class="sb-head"><h2>Saison ${p.year} — bilan</h2>
+  const natHtml = natLine? `<div class="verdict" style="border-left-color:var(--mint)">Sélection ${p.nation.flag} · ${natLine.tourn}${natLine.medal?` : <b style="color:var(--mint)">${natLine.medal}</b>`:' : éliminé en phase finale'}${natLine.mvp?' · <b>MVP du tournoi</b>':''}.</div>`:'';
+  // Une saison avec tournoi national garde l'accent "pays" jusqu'au bilan inclus.
+  stage.innerHTML = renderHUD(natLine?'nation':'club') + `<div class="card scoreboard">
+    <div class="sb-head"><h2>Saison ${p.year} · bilan</h2>
       <div style="display:flex;gap:6px;flex-wrap:wrap">${deltaHtml}<span class="chip n">${lg.short} · ${p.club}</span></div></div>
     <div class="statline">${cells.map((c,i)=>`<div class="stat-cell${i===0?' hot':''}"><div class="sv">${c[1]}</div><div class="sl">${c[0]}</div></div>`).join('')}</div>
     <div class="verdict">${verdict}</div>
@@ -224,7 +288,7 @@ export function renderSeasonResult(s, natLine, champion){
 // Texte de couleur (category/comment) d'un vrai club, pour enrichir le hint d'un choix.
 function flavor(clubInfoObj){
   if(!clubInfoObj || !clubInfoObj.category) return null;
-  return `${clubInfoObj.category}${clubInfoObj.comment ? ' — '+clubInfoObj.comment : ''}`;
+  return `${clubInfoObj.category}${clubInfoObj.comment ? ' · '+clubInfoObj.comment : ''}`;
 }
 
 /* Écran de transfert / promotion / draft avec choix */
@@ -250,8 +314,8 @@ export function renderMoveScreen(move){
     } else {
       title = intl ? `Te déclarer à la draft NBA ?` : `L'heure de la draft`;
       body = intl
-        ? `Tu perces vite à l'international et les recruteurs NBA rôdent. Tu peux te déclarer à la draft dès maintenant — un pari sur ton potentiel, une seule vraie tentative dans ta carrière — ou continuer à bâtir ton nom avant de tenter le grand saut.`
-        : `Ta carrière universitaire t'ouvre les portes de la draft. Te déclarer maintenant, c'est saisir ta chance mais aussi la jouer d'un coup — tu n'auras qu'une vraie entrée dans ta carrière. D'autres attendent une saison de plus pour grimper dans les projections.`;
+        ? `Tu perces vite à l'international et les recruteurs NBA rôdent. Tu peux te déclarer à la draft dès maintenant (un pari sur ton potentiel, une seule vraie tentative dans ta carrière), ou continuer à bâtir ton nom avant de tenter le grand saut.`
+        : `Ta carrière universitaire t'ouvre les portes de la draft. Te déclarer maintenant, c'est saisir ta chance mais aussi la jouer d'un coup : tu n'auras qu'une vraie entrée dans ta carrière. D'autres attendent une saison de plus pour grimper dans les projections.`;
       choices=[
         {label:`Me déclarer à la draft`, hint:'Tenter la NBA (une seule vraie entrée possible)', apply:declare},
         intl
@@ -263,10 +327,10 @@ export function renderMoveScreen(move){
   else if(move.type==='draft'){
     const rnd1 = move.pos<=30;
     const late = move.pos>30; // fin de 1er tour / 2e tour : peu d'attentes, temps de jeu à mériter
-    title = `Draft NBA — appelé en position ${move.pos}`;
+    title = `Draft NBA · appelé en position ${move.pos}`;
     body = `Ton nom résonne dans la salle. <b>${move.club}</b> te sélectionne au ${ordinal(move.pos)} rang${rnd1?' du premier tour':' (second tour)'}. Le rêve devient contrat${late?', mais rien n\'est garanti : à toi de forcer la main du coach.':'.'}`;
     choices=[
-      {label:`Signer avec ${move.club}`, hint: late?'Direction la NBA — un rôle à conquérir':'Direction la NBA',
+      {label:`Signer avec ${move.club}`, hint: late?'Direction la NBA, un rôle à conquérir':'Direction la NBA',
         apply:()=>{ p.draftPos=move.pos; doMove(move, late?{reputation:+2,morale:+4,popularity:+2}:{reputation:+8,morale:+10,popularity:+10}, 'draft'); }},
       {label:'Refuser et rester une saison de plus', hint: move.origin==='college'?'Prendre le temps de mûrir à la fac':'Prendre le temps de progresser',
         apply:()=>{ p.morale=clamp(p.morale-3,0,100); beginSeasonKeep(); }}
@@ -276,8 +340,8 @@ export function renderMoveScreen(move){
     const intl = move.origin==='intl';
     title = `Non drafté`;
     body = intl
-      ? `Ton nom n'est pas appelé à la draft. C'était ta seule vraie tentative — désormais agent libre, c'est par le circuit international ou la G League que tu devras te faire remarquer pour espérer un jour rejoindre la NBA.`
-      : `Aucune équipe n'appelle ton nom. C'était ta seule vraie tentative — la porte de la draft est refermée pour de bon. Agent libre, tu devras te frayer un chemin par la G League ou l'international.`;
+      ? `Ton nom n'est pas appelé à la draft. C'était ta seule vraie tentative : désormais agent libre, c'est par le circuit international ou la G League que tu devras te faire remarquer pour espérer un jour rejoindre la NBA.`
+      : `Aucune équipe n'appelle ton nom. C'était ta seule vraie tentative : la porte de la draft est refermée pour de bon. Agent libre, tu devras te frayer un chemin par la G League ou l'international.`;
     choices = intl ? [
       {label:`Continuer à t'imposer à l'international`, hint:'Ta chance NBA viendra par un autre chemin', apply:()=>{ p.morale=clamp(p.morale-2,0,100); beginSeasonKeep(); }},
       {label:`Rejoindre la G League pour viser un call-up`, hint:'La petite porte US', apply:()=>doMove({type:'promo',to:'gleague',club:pickClubName('gleague', p.nation.id)},{morale:-3,salary:ri(40,90)},'promo')}
@@ -288,7 +352,7 @@ export function renderMoveScreen(move){
   }
   else if(move.type==='nbaJump'){
     title = `La NBA t'appelle`;
-    body = `Après avoir marqué l'EuroLeague, une franchise NBA — <b>${move.club}</b> — pose une offre sur la table. Le grand saut, avec tout ce qu'il implique : plus d'argent, plus de lumière, mais un rôle à reconquérir.`;
+    body = `Après avoir marqué l'EuroLeague, une franchise NBA, <b>${move.club}</b>, pose une offre sur la table. Le grand saut, avec tout ce qu'il implique : plus d'argent, plus de lumière, mais un rôle à reconquérir.`;
     choices=[
       {label:`Tenter l'aventure NBA à ${move.club}`, hint:'Le sommet mondial', apply:()=>doMove(move,{morale:+6,popularity:+12,reputation:+5,salary:ri(500,2500)},'nbaWindow')},
       {label:'Rester roi en Europe', hint:'Statut de franchise player garanti', apply:()=>{ p.morale=clamp(p.morale+4,0,100); p.reputation=clamp(p.reputation+3,0,100); beginSeasonKeep(); }}
@@ -296,7 +360,7 @@ export function renderMoveScreen(move){
   }
   else if(move.type==='nbaWindow'){
     title = `Une fenêtre s'ouvre en NBA`;
-    body = `Après tes performances en ${LEAGUES[p.league].name}, <b>${move.club}</b> te propose un contrat NBA. Le grand saut : plus d'argent et la lumière mondiale, mais un rôle à conquérir — et rien ne garantit que ça marche.`;
+    body = `Après tes performances en ${LEAGUES[p.league].name}, <b>${move.club}</b> te propose un contrat NBA. Le grand saut : plus d'argent et la lumière mondiale, mais un rôle à conquérir, et rien ne garantit que ça marche.`;
     choices=[
       {label:`Tenter la NBA à ${move.club}`, hint:'Le pari du sommet', apply:()=>doMove(move,{morale:+5,popularity:+10,reputation:+4},'nbaWindow')},
       {label:`Rester une référence en ${LEAGUES[p.league].short}`, hint:'Franchise player garanti', apply:()=>{ p.declined.nbaYear=p.year; p.morale=clamp(p.morale+4,0,100); p.reputation=clamp(p.reputation+3,0,100); beginSeasonKeep(); }}
@@ -319,7 +383,7 @@ export function renderMoveScreen(move){
     const curInfo = clubInfo(p.league, p.nation.id, p.club);
     const salStay=Math.round(salaryFor(p.league,o,p.reputation)*1.05*clubSalaryMod(curInfo?.prestige));
     title = `🖊️ Free agency ouverte`;
-    body = `Tu as refusé de prolonger : te voilà libre sur le marché. Plusieurs offres concrètes sont sur la table — à toi de choisir ton avenir.`;
+    body = `Tu as refusé de prolonger : te voilà libre sur le marché. Plusieurs offres concrètes sont sur la table : à toi de choisir ton avenir.`;
     choices=[
       {label:`Re-signer à ${p.club}`, hint:`Stabilité, tu connais la maison · 💰 ${money(salStay)}/an`,
         apply:()=>{ p.contractY=ri(2,4); p.salary=salStay; p.morale=clamp(p.morale+4,0,100); p.coach=clamp(p.coach+3,0,100); pushTL(`Prolonge à <b>${p.club}</b> · 💰 ${money(salStay)}/an.`); beginSeason(); }}
@@ -333,7 +397,7 @@ export function renderMoveScreen(move){
   }
   else if(move.type==='nbaSwan'){
     title = `🌟 La NBA t'appelle, pour l'histoire`;
-    body = `Tu as tout gagné en ${LEAGUES[p.league].name}. Sur le tard, <b>${move.club}</b> t'offre un contrat court — un an ou deux — pour vivre enfin le rêve NBA et finir en beauté. Un dernier grand frisson.`;
+    body = `Tu as tout gagné en ${LEAGUES[p.league].name}. Sur le tard, <b>${move.club}</b> t'offre un contrat court (un an ou deux) pour vivre enfin le rêve NBA et finir en beauté. Un dernier grand frisson.`;
     choices=[
       {label:`Vivre le rêve à ${move.club}`, hint:'Baroud d\'honneur au sommet',
         apply:()=>doMove(move,{morale:+8,popularity:+12,reputation:+3},'nbaSwan')},
@@ -347,7 +411,7 @@ export function renderMoveScreen(move){
     choices=[{label:`Signer avec ${move.club}`, hint:'Enfin la NBA', apply:()=>doMove(move,{morale:+9,popularity:+8,reputation:+5},'callup')}];
   }
   else if(move.type==='promo'){
-    title = `Palier franchi — ${toLg.name}`;
+    title = `Palier franchi · ${toLg.name}`;
     body = `Ton niveau ne passe plus inaperçu. <b>${move.club}</b> (${toLg.short}) t'offre un contrat pour monter d'un cran. Plus fort, plus exposé.`;
     choices=[
       {label:`Signer à ${move.club}`, hint:`Monter en ${toLg.short}`, apply:()=>doMove(move,{morale:+5,reputation:+3},'promo')},
@@ -360,7 +424,7 @@ export function renderMoveScreen(move){
     const extra = pickClubs(move.to, p.nation.id, 2-offered.length, {exclude:[p.club, ...offered.map(c=>c.name)], popularity:p.popularity});
     const opts = [...offered, ...extra];
     title = `Le marché s'agite autour de toi`;
-    body = `Ta cote grimpe : plusieurs clubs de ${tl.short} veulent te recruter. Changer de maillot, c'est de l'ambition — et la pression qui va avec.`;
+    body = `Ta cote grimpe : plusieurs clubs de ${tl.short} veulent te recruter. Changer de maillot, c'est de l'ambition, et la pression qui va avec.`;
     choices = opts.map((c,i)=>{ const sal=Math.round(salaryFor(move.to,o,p.reputation)*1.1*clubSalaryMod(c.prestige));
       return {label:`Rejoindre ${c.name}`, hint:`${flavor(c)||(i===0?'Le favori pour ta signature':'Offre alléchante')} · 💰 ${money(sal)}/an`,
         apply:()=>doMove({type:'transfer',to:move.to,club:c.name},{morale:+3,reputation:+2,salary:sal},'freeAgent')}; });
@@ -369,7 +433,7 @@ export function renderMoveScreen(move){
   }
   else if(move.type==='demote'){
     title = `Rétrogradé en ${toLg.short}`;
-    body = `Le niveau ne suit plus. Faute de temps de jeu, tu redescends à <b>${move.club}</b> pour te relancer. Le basket ne pardonne pas — mais les retours existent.`;
+    body = `Le niveau ne suit plus. Faute de temps de jeu, tu redescends à <b>${move.club}</b> pour te relancer. Le basket ne pardonne pas, mais les retours existent.`;
     choices=[{label:'Rebondir plus bas', hint:'Se relancer', apply:()=>doMove(move,{morale:-8,reputation:-4},'demote')}];
   }
 
@@ -442,7 +506,7 @@ export function endCareer(reason){
 
   let tier, blurb;
   if(legend>=365){ tier='G.O.A.T.'; blurb='On ne parlera plus du basket sans prononcer ton nom. Une ère porte ta signature.'; }
-  else if(legend>=280){ tier='Légende — Hall of Fame'; blurb='Tu entres au Panthéon. Ton maillot est retiré, ton héritage est écrit.'; }
+  else if(legend>=280){ tier='Légende · Hall of Fame'; blurb='Tu entres au Panthéon. Ton maillot est retiré, ton héritage est écrit.'; }
   else if(legend>=215){ tier='Superstar'; blurb='Une carrière énorme, des sommets touchés, un nom qui a compté au plus haut niveau.'; }
   else if(legend>=155){ tier='All-Star'; blurb='Tu as brillé parmi l\'élite. Une belle et solide carrière de haut niveau.'; }
   else if(legend>=92){ tier='Joueur de rotation'; blurb='Un vrai pro, respecté dans les vestiaires. Tu as vécu du basket, ce que peu réussissent.'; }
@@ -469,7 +533,7 @@ export function endCareer(reason){
   const tl = p.timeline.slice(-14);
 
   p.endSummary =
-    `🏀 HARDWOOD — ${p.name} ${p.nation.flag}\n`+
+    `🏀 HARDWOOD · ${p.name} ${p.nation.flag}\n`+
     `${tier} · ${p.seasons.length} saisons · pic ${p.peakOvr} OVR\n`+
     `Titres ${champs} · MVP ${mvps} · All-Star ${allstars} · Score légende ${legend}\n`+
     `À toi de faire mieux.`;
@@ -491,7 +555,7 @@ export function endCareer(reason){
 
     <div class="recap-block">
       <div class="eyebrow" style="text-align:center;margin-bottom:10px">🗞️ Ce que la presse retient</div>
-      ${quotes.map(q=>`<div class="press"><div class="press-txt">${q[1]}</div><div class="press-src">— ${q[0]}</div></div>`).join('')}
+      ${quotes.map(q=>`<div class="press"><div class="press-txt">${q[1]}</div><div class="press-src">${q[0]}</div></div>`).join('')}
     </div>
 
     ${ovrSeries.length>1?`<div class="recap-block" style="text-align:center">${sparkline(ovrSeries)}</div>`:''}
@@ -543,9 +607,9 @@ function renderFullSheet(){
   const p=G;
   const rows = p.seasons.map(s=>`<div class="tl-row">
     <span class="yr">S${s.year} · ${s.age}a</span>
-    <span class="ev"><b>${s.club}</b> <span style="color:var(--chalk-dim)">(${LEAGUES[s.league].short})</span> — ${s.pts} pts, ${s.reb} reb, ${s.ast} pas${s.blk?`, ${s.blk} ctr`:''}${s.stl?`, ${s.stl} int`:''} · OVR ${s.ovr}${s.gamesPlayed!=null?` · ${s.gamesPlayed}/${s.leagueGames} matchs`:''}${s.acc.length?` · <span style="color:var(--mint)">${s.acc.join(', ')}</span>`:''}</span></div>`).join('');
+    <span class="ev"><b>${s.club}</b> <span style="color:var(--chalk-dim)">(${LEAGUES[s.league].short})</span> · ${s.pts} pts, ${s.reb} reb, ${s.ast} pas${s.blk?`, ${s.blk} ctr`:''}${s.stl?`, ${s.stl} int`:''} · OVR ${s.ovr}${s.gamesPlayed!=null?` · ${s.gamesPlayed}/${s.leagueGames} matchs`:''}${s.acc.length?` · <span style="color:var(--mint)">${s.acc.join(', ')}</span>`:''}</span></div>`).join('');
   stage.innerHTML = `<div class="end" style="text-align:left">
-    <div class="eyebrow" style="text-align:center">Feuille de match — carrière complète</div>
+    <div class="eyebrow" style="text-align:center">Feuille de match · carrière complète</div>
     <h2 style="text-align:center;font-size:28px;margin:6px 0 18px">${p.name}</h2>
     <div class="timeline" style="max-width:640px">${rows}</div>
     <div style="margin-top:26px;text-align:center"><button class="btn" id="back2">Retour au bilan</button></div>

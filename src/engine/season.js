@@ -215,11 +215,16 @@ export function simulateSeason(){
   let stl = clamp(stl36*mFactor*perf + rnd(-0.25,0.25), 0, 4.5);
   pts=round(pts,1); ast=round(ast,1); reb=round(reb,1); blk=round(blk,1); stl=round(stl,1);
 
-  // succès collectif : prestige club + ton niveau + hasard. Le total de victoires est désormais
-  // un pourcentage de victoires (comme en vrai) ramené au nombre de matchs réels de la ligue —
+  // succès collectif : prestige club + ton niveau + hasard. Le total de victoires est un
+  // pourcentage de victoires (comme en vrai) ramené au nombre de matchs réels de la ligue —
   // une saison EuroLeague (~34 matchs) ne peut plus afficher un total de victoires de saison NBA.
+  // teamRating reste la même échelle qu'avant (les seuils MVP/titre plus bas s'y réfèrent
+  // directement, inchangés) : seule la conversion teamRating -> % de victoires a été recalée
+  // ci-dessous, qui sous-évaluait nettement un titulaire ou une star (ex. star NBA ~38% de
+  // victoires en moyenne avant correctif, jamais crédible au niveau du "vrai" basket où une
+  // équipe avec une star tourne plutôt autour de 55-65%).
   const teamRating = clamp(lg.prestige*3 + (o-lg.starter)*1.2 + rnd(-14,14), 5, 100);
-  const winPct = clamp(teamRating*0.0076, 0.073, 0.78);
+  const winPct = clamp(0.30 + teamRating*0.005, 0.15, 0.80);
   const wins = Math.max(1, Math.round(winPct*leagueGames));
 
   // ----- MATCHS JOUÉS : la saison n'est pas toujours jouée en entier (blessures, temps de jeu
@@ -251,9 +256,13 @@ export function simulateSeason(){
   // Le clutch pèse dans les votes de fin de saison (MVP/titre) : un joueur au sang-froid
   // reconnu incline légèrement la balance en sa faveur.
   const clutchVoteBoost = clamp((p.clutch||0)*0.012, 0, 0.08);
-  if(isNBA && o>=lg.star && wins>=38 && Math.random()>(.67-clutchVoteBoost)){ A('MVP'); }
+  // Seuils de victoires recalés au même niveau de sélectivité qu'avant la correction du
+  // pourcentage de victoires ci-dessus (même équivalent en teamRating, juste reconverti via
+  // la nouvelle courbe teamRating -> % victoires) : la rareté du MVP/titre ne change pas,
+  // seul l'affichage "victoires" redevient réaliste.
+  if(isNBA && o>=lg.star && wins>=50 && Math.random()>(.67-clutchVoteBoost)){ A('MVP'); }
   // seuil EuroLeague ramené à l'échelle réelle de sa saison (34 matchs, pas 82)
-  if(isEuro && o>=lg.star && wins>=Math.round(28*leagueGames/82) && Math.random()>(.67-clutchVoteBoost)){ A('MVP EuroLeague'); }
+  if(isEuro && o>=lg.star && wins>=Math.round(43*leagueGames/82) && Math.random()>(.67-clutchVoteBoost)){ A('MVP EuroLeague'); }
   if(p.attrs.def>=88 && (p.pos==='C'||p.pos==='PF'||p.pos==='SF') && Math.random()>.6 && minutes>26 && (isNBA||isEuro)){ A('Meilleur défenseur'); }
   // titre — seuil de victoires ramené à l'échelle réelle du nombre de matchs de la ligue
   const championOdds = clamp((teamRating-58)/60,0,.7) + clamp((p.clutch||0)*0.006,0,.04);
@@ -264,7 +273,7 @@ export function simulateSeason(){
   if(p.seasonMods.forceFinals!=null){
     champion = p.seasonMods.forceFinals;
     if(champion) A(isNBA?'Champion NBA':isEuro?'Champion EuroLeague':'Champion '+lg.short);
-  } else if(wins>=Math.round(lg.prestige*3.3*leagueGames/82) && Math.random()<championOdds+ (o>=lg.star?.12:0)){
+  } else if(wins>=Math.round((0.30+0.02648*lg.prestige)*leagueGames) && Math.random()<championOdds+ (o>=lg.star?.12:0)){
     champion=true; A(isNBA?'Champion NBA':isEuro?'Champion EuroLeague':'Champion '+lg.short);
   }
   // rookie award
@@ -322,7 +331,7 @@ function medalEmoji(m){return m==='Or'?'🥇':m==='Argent'?'🥈':'🥉';}
 export function seasonVerdict(s,lg){
   const gap=s.ovr-lg.starter;
   if(s.minutes<10) return `Saison compliquée : peu de temps de jeu, tu tournes surtout au bout du banc. Il faut hausser le ton ou changer d'air.`;
-  if(s.ovr>=lg.star) return `Saison référence. Tu es l'un des tout meilleurs de ${lg.name} — les projecteurs sont braqués sur toi.`;
+  if(s.ovr>=lg.star) return `Saison référence. Tu es l'un des tout meilleurs de ${lg.name} : les projecteurs sont braqués sur toi.`;
   if(gap>=4) return `Bonne saison de titulaire à ${s.club}. Tu tiens ton rang et tu attires le regard.`;
   return `Saison correcte, tu grappilles ta place dans la rotation. Le vrai palier reste à franchir.`;
 }
@@ -373,7 +382,7 @@ function applyAging(){
     // pourcentage de victoires plutôt que total brut : reste valable quel que soit le nombre
     // de matchs réels de la ligue jouée la saison passée (NBA 82, EuroLeague ~34, etc.)
     const lastGames = lastSeason.leagueGames || 82;
-    const winFactor = clamp((lastSeason.wins/lastGames - 0.366)/2.68, -0.05, 0.05);
+    const winFactor = clamp((lastSeason.wins/lastGames - 0.50)/2.68, -0.05, 0.05);
     growthFactor *= clamp(1 + overperf*0.14 + winFactor, 0.9, 1.1);
   }
   growthFactor = clamp(growthFactor, 0.6, 1.6);

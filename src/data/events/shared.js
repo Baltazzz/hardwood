@@ -37,7 +37,7 @@ export const SHARED_EVENTS = [
   {id:'sneaker_deal', cat:'business', once:true,
     when:(p,lg)=>p.popularity>=25 || lg.tier<=2,
     title:'Un équipementier pose un contrat',
-    body:({p})=>`Une marque de sneakers veut t'habiller. Gros chèque, séances photo, obligations marketing. C'est de l'argent et de la lumière — mais aussi du temps volé à l'entraînement.`,
+    body:({p})=>`Une marque de sneakers veut t'habiller. Gros chèque, séances photo, obligations marketing. C'est de l'argent et de la lumière, mais aussi du temps volé à l'entraînement.`,
     choices:()=>[
       {label:'Signer le gros contrat', hint:'Le chèque le plus haut, au prix d\'un peu de focus',
         effect:{money:+220, popularity:+9, tir:-1}, outcome:'Ton visage s\'affiche en ville. Le compte en banque respire.'},
@@ -89,13 +89,13 @@ export const SHARED_EVENTS = [
     when:(p,lg)=>p.reputation>=42 && !p.natCap,
     title:'Le coup de fil qui change tout',
     weight:()=>1.4,
-    body:({p})=>`<i>(Un numéro inconnu s'affiche. Tu hésites une seconde — puis tu reconnais la voix.)</i> Le sélectionneur de ${p.nation.name} ${p.nation.flag} est en ligne. Il ne tourne pas autour du pot : il te veut pour la prochaine trêve internationale. Le maillot floqué à ton nom, l'hymne, les caméras braquées sur le banc — tout ça devient réel, là, maintenant.`,
+    body:({p})=>`<i>(Un numéro inconnu s'affiche. Tu hésites une seconde, puis tu reconnais la voix.)</i> Le sélectionneur de ${p.nation.name} ${p.nation.flag} est en ligne. Il ne tourne pas autour du pot : il te veut pour la prochaine trêve internationale. Le maillot floqué à ton nom, l'hymne, les caméras braquées sur le banc : tout ça devient réel, là, maintenant.`,
     choices:({p})=>[
       {label:'Répondre présent, la voix qui tremble un peu', hint:'Le moment que tu attends depuis gamin',
-        effect:{reputation:+7, popularity:+7, morale:+7}, tl:()=>`📞 Le sélectionneur de ${p.nation.name} ${p.nation.flag} appelle en personne — première sélection. Un jour qu'on n'oublie pas.`,
+        effect:{reputation:+7, popularity:+7, morale:+7}, tl:()=>`📞 Le sélectionneur de ${p.nation.name} ${p.nation.flag} appelle en personne : première sélection. Un jour qu'on n'oublie pas.`,
         outcome:'Tu raccroches, le cœur qui bat encore. Tu appelles tes proches avant même d\'avoir reposé le téléphone : "J\'y suis."'},
       {label:'Rester concentré, savourer plus tard', hint:'Le pro avant l\'émotion',
-        effect:{reputation:+6, coach:+4, morale:+6}, tl:()=>`📞 Le sélectionneur de ${p.nation.name} ${p.nation.flag} appelle en personne — première sélection.`,
+        effect:{reputation:+6, coach:+4, morale:+6}, tl:()=>`📞 Le sélectionneur de ${p.nation.name} ${p.nation.flag} appelle en personne : première sélection.`,
         outcome:'Tu remercies, tu raccroches, tu retournes t\'entraîner comme si de rien n\'était. Mais ce soir-là, seul, le sourire ne te quitte pas.'}
     ]},
 
@@ -108,7 +108,7 @@ export const SHARED_EVENTS = [
       {label:'Prolonger et sécuriser', hint:'La sécurité, tout de suite',
         effect:{money:+120, coach:+4, morale:+3}, outcome:'Tu signes. Le club et toi, c\'est reparti pour un tour.'},
       {label:'Parier sur toi, tester la free agency', hint:'Un pari sur ta propre saison',
-        effect:{pendingFA:true, reputation:+2, perfBonus:+4, coach:-2}, outcome:'Tu refuses la première offre. En fin de saison, tu écouteras le marché — à toi de le mériter d\'ici là.'}
+        effect:{pendingFA:true, reputation:+2, perfBonus:+4, coach:-2}, outcome:'Tu refuses la première offre. En fin de saison, tu écouteras le marché : à toi de le mériter d\'ici là.'}
     ]},
 
   {id:'training_focus', cat:'training', cooldown:2,
@@ -213,7 +213,7 @@ export const SHARED_EVENTS = [
             if(r>0.88){ ctx.night='good'; return {popularity:+8, reputation:+4, morale:+5, qi:+1, flag:'nightOwl'}; }
             ctx.night='ok'; return {popularity:+6, fitness:-3, morale:+3, riskUp:+0.15, flag:'nightOwl'}; },
           outcome:(ctx)=> ctx.night==='bad'?'La soirée dérape un peu... réveil difficile et petit pépin à la clé.'
-                        : ctx.night==='good'?'Belle soirée — tu y fais une rencontre qui va compter (contacts, image, énergie). Parfois ça sourit.'
+                        : ctx.night==='good'?'Belle soirée : tu y fais une rencontre qui va compter (contacts, image, énergie). Parfois ça sourit.'
                         : 'Bonne soirée, sans excès. On verra demain à l\'entraînement.'},
         {label:'Rester au calme et récupérer', hint:'Repos et sérieux',
           effect:{fitness:+7, qi:+1, riskUp:-0.2}, outcome:'Repos, sommeil, glace. Le corps te remerciera.'}
@@ -277,7 +277,7 @@ export const SHARED_EVENTS = [
   {id:'coach_trust_low', cat:'locker', cooldown:1,
     when:(p,lg)=>p.coach<45 && (p.clubTenure||0)<=1,
     title:'Un nouveau staff, pas encore convaincu',
-    body:()=>`Le coach ne te connaît pas encore vraiment. Tu sens qu'il te regarde avec circonspection, comme le reste du staff — la confiance, ici, se mérite.`,
+    body:()=>`Le coach ne te connaît pas encore vraiment. Tu sens qu'il te regarde avec circonspection, comme le reste du staff : la confiance, ici, se mérite.`,
     weight:()=>1.15,
     choices:()=>[
       {label:'Bosser deux fois plus à l\'entraînement pour prouver ta valeur', hint:'Le travail comme seule réponse',

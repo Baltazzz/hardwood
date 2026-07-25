@@ -47,7 +47,7 @@ export const EARLY_EVENTS = [
   {id:'mentor', cat:'locker', phase:'early', once:true,
     when:(p,lg)=>p.age<=24 && lg.tier<=3,
     title:'Un vétéran te prend sous son aile',
-    body:`Un ancien du vestiaire, en fin de carrière, voit quelque chose en toi. Il te propose de te transmettre ce qu'il sait — à condition que tu sois assidu.`,
+    body:`Un ancien du vestiaire, en fin de carrière, voit quelque chose en toi. Il te propose de te transmettre ce qu'il sait, à condition que tu sois assidu.`,
     weight:()=>0.9,
     choices:()=>[
       {label:'Boire ses conseils, arriver plus tôt chaque jour', hint:'Se mettre à l\'école d\'un ancien',

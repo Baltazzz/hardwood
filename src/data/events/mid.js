@@ -35,7 +35,7 @@ export const MID_EVENTS = [
   {id:'leadership', cat:'leadership', phase:'mid', cooldown:4,
     when:(p,lg)=>ovr(p)>=76 && (p.clubTenure||0)>=1,
     title:'Le vestiaire se tourne vers toi',
-    body:`Les jeunes du groupe cherchent un repère, et ton nom revient. Endosser ce rôle, c'est du poids — et de l'influence.`,
+    body:`Les jeunes du groupe cherchent un repère, et ton nom revient. Endosser ce rôle, c'est du poids et de l'influence.`,
     weight:()=>0.6,
     choices:()=>[
       {label:'Devenir le leader du vestiaire', hint:'Endosser le rôle et son poids',
@@ -47,7 +47,7 @@ export const MID_EVENTS = [
   {id:'coach_change', cat:'system', phase:'mid', cooldown:4,
     when:(p,lg)=>lg.tier<=3,
     title:'Nouveau coach, nouveau système',
-    body:`Le club change d'entraîneur. Sa philosophie ne ressemble pas à celle de son prédécesseur — à toi de t'y adapter.`,
+    body:`Le club change d'entraîneur. Sa philosophie ne ressemble pas à celle de son prédécesseur : à toi de t'y adapter.`,
     weight:()=>0.7,
     choices:()=>[
       {label:'Épouser son système à fond', hint:'S\'aligner complètement sur le nouveau projet',
@@ -76,7 +76,7 @@ export const MID_EVENTS = [
     choices:({p})=>[
       {label:'Je prends le tir de la gagne', hint:'Un pari sur ta touche',
         effect:(ctx)=>{ const shot=Math.round((attrOf(p,'tir')+attrOf(p,'adr3'))/2); const ok=actionRoll(shot,70); ctx.ok=ok; return ok?{reputation:+7,morale:+8,popularity:+6,clutch:+1,flag:'clutchHero'}:{reputation:-3,morale:-5,popularity:+1}; },
-          outcome:(ctx)=> ctx.ok?'Splash au buzzer ! Tu délivres tout un peuple. Le genre de tir qui fait les légendes.':'Le tir s\'écrase sur le cercle, la sirène retentit. Rageant — mais tu as pris tes responsabilités.'},
+          outcome:(ctx)=> ctx.ok?'Splash au buzzer ! Tu délivres tout un peuple. Le genre de tir qui fait les légendes.':'Le tir s\'écrase sur le cercle, la sirène retentit. Rageant, mais tu as pris tes responsabilités.'},
       {label:'Je sers le coéquipier démarqué', hint:'Un pari sur ta vision de jeu',
         effect:(ctx)=>{ const ok=actionRoll(attrOf(p,'qi'),58); ctx.ok=ok; return ok?{reputation:+4,coach:+5,morale:+4}:{coach:+1,morale:-2}; },
         outcome:(ctx)=> ctx.ok?'Passe parfaite, panier de la gagne ! Le coach adore ta lucidité.':'Ta passe est interceptée. Le banc grimace.'},
@@ -101,13 +101,13 @@ export const MID_EVENTS = [
 
   {id:'finals_moment', cat:'finals', phase:'mid', cooldown:2,
     when:(p,lg)=>lg.tier<=2 && p.reputation>=48,
-    title:({lg})=>`Match décisif — titre ${lg.short} en jeu`,
+    title:({lg})=>`Match décisif · titre ${lg.short} en jeu`,
     body:({lg})=>`Money-time du match qui donne le titre ${lg.short}. Le genre de soirée dont on parle vingt ans après. Comment abordes-tu ces dernières minutes ?`,
     weight:clutchWeight(1.1),
     choices:({p})=>[
       {label:'Je prends le match sur mes épaules', hint:'Porter l\'équipe, quitte à tout miser',
         effect:(ctx)=>{ const scorer=Math.round((attrOf(p,'tir')+attrOf(p,'adr3')+attrOf(p,'dribble'))/3); const ok=actionRoll(scorer,74); ctx.ok=ok; return ok?{reputation:+9,morale:+10,popularity:+8,clutch:+2,flag:'finalsHero',forceFinals:true}:{reputation:-2,morale:-6,popularity:+2,forceFinals:false}; },
-        outcome:(ctx)=> ctx.ok?'Récital dans le money-time ! Tu portes ton équipe vers le titre — une prestation pour l\'histoire.':'Tu forces, la réussite n\'est pas là ce soir. La marche était haute.'},
+        outcome:(ctx)=> ctx.ok?'Récital dans le money-time ! Tu portes ton équipe vers le titre : une prestation pour l\'histoire.':'Tu forces, la réussite n\'est pas là ce soir. La marche était haute.'},
       {label:'Je joue collectif et je fais confiance au groupe', hint:'Faire confiance au collectif jusqu\'au bout',
         effect:(ctx)=>{ const ok=actionRoll(attrOf(p,'qi'),66); ctx.ok=ok; return ok?{reputation:+6,coach:+6,morale:+7,clutch:+1,forceFinals:true}:{coach:+2,morale:-3,forceFinals:false}; },
         outcome:(ctx)=> ctx.ok?'Tu orchestres à la perfection, tout le monde touche le ballon. Le titre au bout, en patron discret.':'Le collectif se grippe dans le money-time. Ça passe à côté.'}
@@ -121,7 +121,7 @@ export const MID_EVENTS = [
     choices:({p})=>[
       {label:'Je le défie et je prends feu', hint:'Le duel de scoreurs, frontalement',
         effect:(ctx)=>{ const scorer=Math.round((attrOf(p,'tir')+attrOf(p,'dribble'))/2); const ok=actionRoll(scorer,72); ctx.ok=ok; return ok?{reputation:+7,morale:+6,popularity:+6,flag:'rival'}:{reputation:-2,morale:-3,flag:'rival'}; },
-        outcome:(ctx)=> ctx.ok?'Tu le domines de la tête et des épaules. Le duel tourne à ta démonstration.':'Il prend le dessus ce soir. Ça pique l\'orgueil — la revanche viendra.'},
+        outcome:(ctx)=> ctx.ok?'Tu le domines de la tête et des épaules. Le duel tourne à ta démonstration.':'Il prend le dessus ce soir. Ça pique l\'orgueil, la revanche viendra.'},
       {label:'Je le musèle en défense', hint:'Étouffer l\'adversaire plutôt que le défier au score',
         effect:(ctx)=>{ const ok=actionRoll(attrOf(p,'def'),68); ctx.ok=ok; return ok?{reputation:+5,coach:+4,flag:'rival'}:{morale:-2,flag:'rival'}; },
         outcome:(ctx)=> ctx.ok?'Tu l\'étouffes toute la soirée. Les défenseurs aussi font des statements.':'Il trouve des solutions. Soirée frustrante face à lui.'}
@@ -130,7 +130,7 @@ export const MID_EVENTS = [
   {id:'role_leader', cat:'locker', phase:'mid', cooldown:3,
     when:(p,lg)=>['starter','star','franchise'].includes(roleOf(p).key) && (p.clubTenure||0)>=1,
     title:'Le coach veut faire de toi un cadre',
-    body:()=>`<i>(Réunion tactique, tableau blanc noirci de schémas.)</i> Le staff veut bâtir le collectif autour de toi. Endosser ce statut, c'est du poids — et de l'influence.`,
+    body:()=>`<i>(Réunion tactique, tableau blanc noirci de schémas.)</i> Le staff veut bâtir le collectif autour de toi. Endosser ce statut, c'est du poids et de l'influence.`,
     weight:()=>1.0,
     choices:()=>[
       {label:'Accepter d\'être le patron sur le terrain', hint:'Prendre les commandes',
@@ -219,7 +219,7 @@ export const MID_EVENTS = [
   {id:'holdout', cat:'contract', phase:'mid', once:true,
     when:(p,lg)=>p.contractY<=1 && ovr(p)>=lg.star-4 && (p.clubTenure||0)>=2,
     title:'Bras de fer contractuel',
-    body:()=>`<i>(Négociations qui traînent, ton agent hausse le ton en coulisses.)</i> Le club sous-évalue ta prochaine prolongation à tes yeux. Certains joueurs, dans ta situation, ont boudé les entraînements pour forcer la main du club — un vrai risque d'image.`,
+    body:()=>`<i>(Négociations qui traînent, ton agent hausse le ton en coulisses.)</i> Le club sous-évalue ta prochaine prolongation à tes yeux. Certains joueurs, dans ta situation, ont boudé les entraînements pour forcer la main du club : un vrai risque d'image.`,
     weight:()=>0.6,
     choices:()=>[
       {label:'Faire monter la pression publiquement', hint:'Le rapport de force ouvert, au risque de l\'image',

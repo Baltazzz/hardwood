@@ -340,6 +340,30 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
   border:1px solid var(--mint);color:var(--mint-soft)}
 .badge.title{background:linear-gradient(135deg,rgba(224,86,45,.14),var(--court2));color:var(--orange-soft);border-color:var(--orange)}
 
+/* Bilan de saison avec sélection nationale : vrai basculement d'ambiance, pas juste une ligne
+   de texte -- liseré haut + motif de fond recolorés --mint (couleur déjà réservée au mode
+   d'accent "nation" côté HUD), en écho au traitement .grand-moment (liseré prune) des
+   événements narratifs marquants. */
+.scoreboard.nat-mode::before{
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%23A1821F' stroke-width='1.6'%3E%3Ccircle cx='100' cy='100' r='96'/%3E%3Cpath d='M100,4 V196'/%3E%3Cpath d='M4,100 H196'/%3E%3Cpath d='M30,30 Q100,100 30,170'/%3E%3Cpath d='M170,30 Q100,100 170,170'/%3E%3C/g%3E%3C/svg%3E") no-repeat;
+  opacity:.08;
+}
+.scoreboard.nat-mode::after{
+  content:"";position:absolute;inset:0 0 auto 0;height:3px;border-radius:16px 16px 0 0;
+  background:linear-gradient(90deg,var(--mint),var(--orange));z-index:1;pointer-events:none;
+}
+.nat-cartouche{
+  display:flex;align-items:center;gap:14px;margin:2px 0 14px;padding:14px 16px;border-radius:12px;
+  background:linear-gradient(135deg,rgba(161,130,31,.14),var(--court2));border:1px solid var(--mint);
+}
+.nat-flag{font-size:34px;line-height:1;flex:none}
+.nat-body{flex:1;min-width:0}
+.nat-eyebrow{font-family:'Bricolage Grotesque';font-weight:700;font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--mint-soft)}
+.nat-tourn{font-family:'Big Shoulders Display';font-weight:700;font-size:20px;color:var(--chalk);line-height:1.15;margin-top:2px}
+.nat-outcome{font-family:'Bricolage Grotesque';font-size:13.5px;color:var(--body-txt);margin-top:2px}
+.nat-medal{flex:none}
+
 /* palmarès / fin */
 .end{padding:34px 26px 40px;text-align:center;position:relative}
 /* Motif d'ambiance : marquage de terrain (raquette, cercle de lancers francs, arc à 3pts) fait

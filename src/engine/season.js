@@ -4,7 +4,8 @@ import { STYLES } from '../data/styles.js';
 import { LIFESTYLES } from '../data/lifestyles.js';
 import { ARCHETYPES } from '../data/archetypes.js';
 import { LEAGUES } from '../data/leagues.js';
-import { ovr, salaryFor, arrivalCoachTrust } from './player.js';
+import { NATIONS } from '../data/nations.js';
+import { ovr, salaryFor, arrivalCoachTrust, playCountry } from './player.js';
 import { EVENTS, careerPhase } from './events.js';
 import { pickClubName, clubInfo } from './clubs.js';
 import { rnd, ri, pick, clamp, round, jit, capitalize, money } from './utils.js';
@@ -17,8 +18,9 @@ import { renderEvent, showDeltaFlash, renderSeasonResult, renderMoveScreen, endC
 ============================================================ */
 export function startCareer(){
   const p=G;
+  p.playNation = p.nation.id; // pays de formation par défaut ; changera seulement si expatriation
   p.league = p.nation.path==='us' ? 'college' : 'academy';
-  p.club = pickClubName(p.league, p.nation.id);
+  p.club = pickClubName(p.league, playCountry(p));
   p.contractY = 2; p.salary = p.league==='college'?0:ri(20,60);
   p.age=16; p.year=1;
   pushTL(`Débuts à <b>${p.club}</b> (${LEAGUES[p.league].short}).`);
@@ -474,7 +476,7 @@ function resolveMovement(){
   // --- NBA : le pari a échoué (pas de temps de jeu) → renvoyé se relancer, en G-League côté US, sinon au rung continental ---
   if(p.league==='nba' && p.nbaStruggle>=2 && o<LEAGUES.nba.starter){
     const sendTo = p.nation.path==='us' ? 'gleague' : continental;
-    return {type:'nbaReturn', to:sendTo, club:pickClubName(sendTo, p.nation.id)};
+    return {type:'nbaReturn', to:sendTo, club:pickClubName(sendTo, playCountry(p))};
   }
 
   // --- SCÉNARIO SPÉCIAL : légende continentale en fin de carrière, jamais passée par la NBA ---
@@ -482,7 +484,7 @@ function resolveMovement(){
   if((p.league==='euro'||p.league==='nbl') && p.age>=31 && p.age<=34 && p.firstNbaAge===null && !p.swanOffered
      && o>=LEAGUES[p.league].star-1 && p.reputation>=70 && Math.random()<0.5){
     p.swanOffered=true;
-    return {type:'nbaSwan', to:'nba', club:pickClubName('nba', p.nation.id)};
+    return {type:'nbaSwan', to:'nba', club:pickClubName('nba', playCountry(p))};
   }
 
   // ================= VOIE US =================
@@ -495,7 +497,7 @@ function resolveMovement(){
     return null;
   }
   if(p.league==='gleague' && o>=LEAGUES.gleague.starter+2 && p.age<=28){
-    return {type:'callup', to:'nba', club:pickClubName('nba', p.nation.id)};
+    return {type:'callup', to:'nba', club:pickClubName('nba', playCountry(p))};
   }
 
   // --- DÉCLARATION À LA DRAFT — fenêtre 19-22 ans, une seule vraie entrée par carrière ---
@@ -514,36 +516,55 @@ function resolveMovement(){
   }
 
   // ================= VOIE EUROPE (3 paliers domestiques) =================
+  // La toute première signature pro (formation -> 3e division) reste dans le pays de formation :
+  // ce n'est qu'un premier contrat, pas encore une expatriation (voir CLAUDE.md du lot). Les
+  // promotions SUIVANTES, en revanche, sont l'occasion réaliste d'une offre venue d'un autre
+  // pays : le joueur a déjà fait ses preuves en pro, le marché européen s'intéresse à lui au-delà
+  // de ses frontières. Quitter son pays, découvrir un nouveau championnat -- un vrai tournant.
   if(p.league==='academy' && p.nation.path==='eu' && (o>=LEAGUES.third.starter-2 || p.age>=19)){
-    return {type:'promo', to:'third', club:pickClubName('third', p.nation.id)};
+    return {type:'promo', to:'third', club:pickClubName('third', playCountry(p))};
   }
   if(p.league==='third' && o>=LEAGUES.second.starter-3){
-    return {type:'promo', to:'second', club:pickClubName('second', p.nation.id)};
+    if(p.nation.path==='eu' && Math.random()<0.3){
+      const destId = pickExpatNation(p);
+      if(destId){
+        const nc = pickClubName('second', destId, {exclude:p.club});
+        if(nc) return {type:'expatriate', to:'second', club:nc, destNation:destId, fromNation:playCountry(p)};
+      }
+    }
+    return {type:'promo', to:'second', club:pickClubName('second', playCountry(p))};
   }
   if(p.league==='second' && o>=LEAGUES.national.starter-3){
-    return {type:'promo', to:'national', club:pickClubName('national', p.nation.id)};
+    if(p.nation.path==='eu' && Math.random()<0.3){
+      const destId = pickExpatNation(p);
+      if(destId){
+        const nc = pickClubName('national', destId, {exclude:p.club});
+        if(nc) return {type:'expatriate', to:'national', club:nc, destNation:destId, fromNation:playCountry(p)};
+      }
+    }
+    return {type:'promo', to:'national', club:pickClubName('national', playCountry(p))};
   }
 
   // ================= VOIE AUSTRALIE (formation -> NBL1 -> NBL) =================
   if(p.league==='academy' && p.nation.path==='au' && (o>=LEAGUES.nbl1.starter-2 || p.age>=19)){
-    return {type:'promo', to:'nbl1', club:pickClubName('nbl1', p.nation.id)};
+    return {type:'promo', to:'nbl1', club:pickClubName('nbl1', playCountry(p))};
   }
   if(p.league==='nbl1' && o>=LEAGUES.nbl.starter-3){
-    return {type:'promo', to:'nbl', club:pickClubName('nbl', p.nation.id)};
+    return {type:'promo', to:'nbl', club:pickClubName('nbl', playCountry(p))};
   }
 
   if(p.league==='national' && o>=LEAGUES.euro.starter-3){
-    return {type:'promo', to:'euro', club:pickClubName('euro', p.nation.id)};
+    return {type:'promo', to:'euro', club:pickClubName('euro', playCountry(p))};
   }
   // Star continentale confirmée : fenêtre NBA à un seuil atteignable, seulement dans la fenêtre de prime (≤29 ans)
   const declinedRecently = p.declined.nbaYear && (p.year - p.declined.nbaYear) < 3;
   if((p.league==='euro'||p.league==='nbl') && p.age<=29 && o>=LEAGUES[p.league].starter+1 && p.reputation>=52 && !declinedRecently && Math.random()<0.55){
-    return {type:'nbaWindow', to:'nba', club:pickClubName('nba', p.nation.id)};
+    return {type:'nbaWindow', to:'nba', club:pickClubName('nba', playCountry(p))};
   }
 
   // Transferts latéraux une fois installé (varier les clubs)
   if(last && o>=lg.star-3 && p.contractY<=0 && Math.random()>0.45){
-    const nc = pickClubName(p.league, p.nation.id, {exclude:p.club});
+    const nc = pickClubName(p.league, playCountry(p), {exclude:p.club});
     if(nc && nc!==p.club) return {type:'transfer', to:p.league, club:nc};
   }
 
@@ -562,14 +583,22 @@ function resolveMovement(){
       ? (p.nation.path==='eu' ? 'national' : 'gleague')
       : { nba:continental, nbl:'nbl1', national:'second',
           second:'third', third:'academy', nbl1:'academy' }[p.league];
-    if(down) return {type:'demote', to:down, club:pickClubName(down, p.nation.id)};
+    if(down) return {type:'demote', to:down, club:pickClubName(down, playCountry(p))};
   }
   return null;
 }
 function buildMove(fm){
   const to = fm.to || G.league;
-  const club = fm.club || pickClubName(to, G.nation.id, {exclude:G.club});
+  const club = fm.club || pickClubName(to, playCountry(G), {exclude:G.club});
   return {type:fm.type||'transfer', to, club};
+}
+
+// Tire un pays étranger candidat pour une offre d'expatriation : une autre nation de voie
+// Europe que le pays où le joueur évolue actuellement (jamais son propre pays de jeu).
+export function pickExpatNation(p){
+  const cur = playCountry(p);
+  const pool = NATIONS.filter(n=>n.path==='eu' && n.id!==cur);
+  return pool.length ? pick(pool).id : null;
 }
 
 export function draftProjection(o,rep){
@@ -585,6 +614,9 @@ export function draftProjection(o,rep){
 
 export function doMove(move,eff,kind){
   const p=G;
+  // Expatriation : bascule le pays de JEU (bassin de clubs), jamais le pays d'ORIGINE (p.nation,
+  // fixe, réservé à l'éligibilité en sélection nationale — voir playCountry() dans player.js).
+  if(move.type==='expatriate' && move.destNation) p.playNation = move.destNation;
   p.league=move.to; p.club=move.club;
   p.contractY = ri(2,4);
   let explicitSal=null;
@@ -594,10 +626,16 @@ export function doMove(move,eff,kind){
   // Nouveau club, nouveau staff qui ne te connaît pas encore : la confiance du coach est
   // recalculée à partir de zéro selon ton statut d'arrivée et l'exigence réelle du club —
   // elle ne se transporte plus telle quelle depuis l'ancien club.
-  const info = clubInfo(p.league, p.nation.id, p.club);
+  const info = clubInfo(p.league, playCountry(p), p.club);
   p.coach = arrivalCoachTrust(p, ovr(p), lg, info?.prestige ?? null, info?.category ?? null, kind);
   p.clubTenure = 0; // nouveau club, nouveau staff : l'ancienneté repart de zéro (cf. cohérence contextuelle)
-  pushTL(`Signe à <b>${p.club}</b> (${lg.short}) · 💰 ${money(p.salary)}/an.`);
+  if(move.type==='expatriate' && move.destNation){
+    const fromName = NATIONS.find(n=>n.id===move.fromNation)?.name || p.nation.name;
+    const destName = NATIONS.find(n=>n.id===move.destNation)?.name || '';
+    pushTL(`✈️ Quitte ${fromName} pour <b>${p.club}</b> (${destName}, ${lg.short}) · 💰 ${money(p.salary)}/an.`);
+  } else {
+    pushTL(`Signe à <b>${p.club}</b> (${lg.short}) · 💰 ${money(p.salary)}/an.`);
+  }
   beginSeason();
 }
 export function beginSeasonKeep(){ // reste dans le club, mais renouvelle le contexte

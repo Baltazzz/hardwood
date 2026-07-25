@@ -4,15 +4,15 @@ import { POSITIONS, ATTRS } from '../data/positions.js';
 import { STYLES } from '../data/styles.js';
 import { LIFESTYLES } from '../data/lifestyles.js';
 import { LEAGUES } from '../data/leagues.js';
-import { newPlayer, rollTalent, ovr, salaryFor, clubSalaryMod } from '../engine/player.js';
+import { newPlayer, rollTalent, ovr, salaryFor, clubSalaryMod, playCountry } from '../engine/player.js';
 import { hofBest, hofAdd } from '../engine/hof.js';
-import { applyChoice, postSeason, doMove, beginSeasonKeep, draftProjection, seasonVerdict, startCareer, nextEventOrSim, beginSeason, pushTL } from '../engine/season.js';
+import { applyChoice, postSeason, doMove, beginSeasonKeep, draftProjection, seasonVerdict, startCareer, nextEventOrSim, beginSeason, pushTL, pickExpatNation } from '../engine/season.js';
 import { catTag } from '../engine/events.js';
 import { pickClub, pickClubName, pickClubs, clubInfo } from '../engine/clubs.js';
 import { renderHUD, animateStats } from './hud.js';
 import { resetAccent } from '../engine/accent.js';
 import { renderHallOfFame, renderCareerCard } from './card.js';
-import { renderTrophyCabinet } from './trophies.js';
+import { renderTrophyCabinet, medalIcon } from './trophies.js';
 import { activeTags, renderTagChips } from '../engine/tags.js';
 import { pick, clamp, money, ordinal, ri } from '../engine/utils.js';
 import { stage } from './dom.js';
@@ -259,15 +259,28 @@ export function renderSeasonResult(s, natLine, champion){
   const accList = s.acc.slice();
   if(s.td) accList.push(`🎯 ${s.td} triple-double${s.td>1?'s':''}`);
   const accHtml = accList.length? `<div class="accolades">${accList.map(a=>`<span class="badge ${a.includes('MVP')||a.includes('Champion')?'title':''}">${a}</span>`).join('')}</div>`:'';
-  const natHtml = natLine? `<div class="verdict" style="border-left-color:var(--mint)">Sélection ${p.nation.flag} · ${natLine.tourn}${natLine.medal?` : <b style="color:var(--mint)">${natLine.medal}</b>`:' : éliminé en phase finale'}${natLine.mvp?' · <b>MVP du tournoi</b>':''}.</div>`:'';
+  // Cartouche dédiée à la sélection nationale : bascule d'ambiance nette (liseré + fond teintés
+  // --mint, la couleur déjà utilisée pour le mode d'accent "nation"), médaille en vraie icône
+  // (même dessin que l'armoire à trophées) plutôt qu'un simple mot dans une ligne de verdict —
+  // un grand tournoi doit se voir avant même d'être lu.
+  const natHtml = natLine? `<div class="nat-cartouche">
+    <div class="nat-flag">${p.nation.flag}</div>
+    <div class="nat-body">
+      <div class="nat-eyebrow">Sélection nationale · ${p.nation.name}</div>
+      <div class="nat-tourn">${natLine.tourn}</div>
+      <div class="nat-outcome">${natLine.medal?`<b>Médaille ${natLine.medal.toLowerCase()}</b>`:'Éliminé en phase finale'}${natLine.mvp?' · <b>MVP du tournoi</b>':''}</div>
+    </div>
+    ${natLine.medal?`<div class="nat-medal">${medalIcon(natLine.medal,44)}</div>`:''}
+  </div>`:'';
   const compHtml = renderCompetitionContext(s, lg, p);
   // Une saison avec tournoi national garde l'accent "pays" jusqu'au bilan inclus.
-  stage.innerHTML = renderHUD(natLine?'nation':'club') + `<div class="card scoreboard">
+  stage.innerHTML = renderHUD(natLine?'nation':'club') + `<div class="card scoreboard${natLine?' nat-mode':''}">
     <div class="sb-head"><h2>Saison ${p.year} · bilan</h2>
       <div style="display:flex;gap:6px;flex-wrap:wrap">${deltaHtml}<span class="chip n">${lg.short} · ${p.club}</span></div></div>
     <div class="statline">${cells.map((c,i)=>`<div class="stat-cell${i===0?' hot':''}"><div class="sv">${c[1]}</div><div class="sl">${c[0]}</div></div>`).join('')}</div>
+    ${natHtml}
     <div class="verdict">${verdict}</div>
-    ${compHtml}${natHtml}${accHtml}
+    ${compHtml}${accHtml}
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:18px">
       <div>${p.age>=33?`<button class="btn ghost sm" id="retireBtn">Raccrocher les crampons</button>`:''}</div>
       <button class="btn" id="afterSeason">Intersaison →</button>
@@ -324,7 +337,7 @@ export function renderMoveScreen(move){
     const declare = ()=>{
       p.draftEntered = true; // la vraie entrée à la draft, une seule fois par carrière
       const pos=draftProjection(o,p.reputation);
-      if(pos<=60) renderMoveScreen({type:'draft', pos, to:'nba', club:pickClubName('nba', p.nation.id), origin:move.origin});
+      if(pos<=60) renderMoveScreen({type:'draft', pos, to:'nba', club:pickClubName('nba', playCountry(p)), origin:move.origin});
       else renderMoveScreen({type:'undrafted', origin:move.origin});
     };
     if(move.forced){
@@ -364,10 +377,10 @@ export function renderMoveScreen(move){
       : `Aucune équipe n'appelle ton nom. C'était ta seule vraie tentative : la porte de la draft est refermée pour de bon. Agent libre, tu devras te frayer un chemin par la G League ou l'international.`;
     choices = intl ? [
       {label:`Continuer à t'imposer à l'international`, hint:'Ta chance NBA viendra par un autre chemin', apply:()=>{ p.morale=clamp(p.morale-2,0,100); beginSeasonKeep(); }},
-      {label:`Rejoindre la G League pour viser un call-up`, hint:'La petite porte US', apply:()=>doMove({type:'promo',to:'gleague',club:pickClubName('gleague', p.nation.id)},{morale:-3,salary:ri(40,90)},'promo')}
+      {label:`Rejoindre la G League pour viser un call-up`, hint:'La petite porte US', apply:()=>doMove({type:'promo',to:'gleague',club:pickClubName('gleague', playCountry(p))},{morale:-3,salary:ri(40,90)},'promo')}
     ] : [
-      {label:'Rejoindre la G League et se battre pour un call-up', hint:'La voie difficile vers la NBA', apply:()=>doMove({type:'promo',to:'gleague',club:pickClubName('gleague', p.nation.id)},{morale:-4,salary:ri(40,90)},'promo')},
-      {label:`Signer un gros contrat en ${LEAGUES[continental].name}`, hint:'Devenir une star à l\'international', apply:()=>doMove({type:'promo',to:continental,club:pickClubName(continental, p.nation.id)},{morale:+3,salary:ri(300,900),reputation:+4},'promo')}
+      {label:'Rejoindre la G League et se battre pour un call-up', hint:'La voie difficile vers la NBA', apply:()=>doMove({type:'promo',to:'gleague',club:pickClubName('gleague', playCountry(p))},{morale:-4,salary:ri(40,90)},'promo')},
+      {label:`Signer un gros contrat en ${LEAGUES[continental].name}`, hint:'Devenir une star à l\'international', apply:()=>doMove({type:'promo',to:continental,club:pickClubName(continental, playCountry(p))},{morale:+3,salary:ri(300,900),reputation:+4},'promo')}
     ];
   }
   else if(move.type==='nbaJump'){
@@ -395,12 +408,12 @@ export function renderMoveScreen(move){
     ];
   }
   else if(move.type==='freeAgency'){
-    const rivals = pickClubs(p.league, p.nation.id, 2, {exclude:p.club, popularity:p.popularity});
+    const rivals = pickClubs(p.league, playCountry(p), 2, {exclude:p.club, popularity:p.popularity});
     const upMap = { academy: p.nation.path==='au'?'nbl1':'third', third:'second', second:'national', national:'euro',
                     nbl1:'nbl', nbl:'nba', gleague:'nba', euro:'nba' };
     const upKey=upMap[p.league];
     const canUp = upKey && o>=LEAGUES[upKey].starter-2 && p.age<=30;
-    const curInfo = clubInfo(p.league, p.nation.id, p.club);
+    const curInfo = clubInfo(p.league, playCountry(p), p.club);
     const salStay=Math.round(salaryFor(p.league,o,p.reputation)*1.05*clubSalaryMod(curInfo?.prestige));
     title = `🖊️ Free agency ouverte`;
     body = `Tu as refusé de prolonger : te voilà libre sur le marché. Plusieurs offres concrètes sont sur la table : à toi de choisir ton avenir.`;
@@ -411,9 +424,22 @@ export function renderMoveScreen(move){
     rivals.forEach((rc,i)=>{ const sal=Math.round(salaryFor(p.league,o,p.reputation)*1.1*clubSalaryMod(rc.prestige));
       choices.push({label:`Signer à ${rc.name}`, hint:`${flavor(rc)||(i===0?'Projet ambitieux':'Gros chèque, nouveau vestiaire')} · 💰 ${money(sal)}/an`,
         apply:()=>doMove({type:'transfer',to:p.league,club:rc.name},{morale:+2,reputation:+2,salary:sal},'freeAgent')}); });
-    if(canUp){ const uc=pickClub(upKey, p.nation.id, {popularity:p.popularity}); const sal=Math.round(salaryFor(upKey,o,p.reputation)*clubSalaryMod(uc.prestige));
+    if(canUp){ const uc=pickClub(upKey, playCountry(p), {popularity:p.popularity}); const sal=Math.round(salaryFor(upKey,o,p.reputation)*clubSalaryMod(uc.prestige));
       choices.push({label:`Viser plus haut : ${uc.name} (${LEAGUES[upKey].short})`, hint:`${flavor(uc)||'Monter d\'un cran, tout à prouver'} · 💰 ${money(sal)}/an`,
         apply:()=>doMove({type:'promo',to:upKey,club:uc.name},{morale:+4,reputation:+3,salary:sal},'promo')}); }
+    // Marché ouvert = aussi l'occasion d'une offre venue de l'étranger, une fois le premier
+    // contrat pro déjà signé (donc hors formation) : une vraie option d'expatriation, pas
+    // seulement un changement de club dans le même pays.
+    if(p.nation.path==='eu' && ['third','second','national'].includes(p.league)){
+      const expatId = pickExpatNation(p);
+      if(expatId){
+        const destName = NATIONS.find(n=>n.id===expatId)?.name || '';
+        const ec = pickClub(p.league, expatId, {popularity:p.popularity});
+        const esal = Math.round(salaryFor(p.league,o,p.reputation)*1.08*clubSalaryMod(ec.prestige));
+        choices.push({label:`✈️ Tenter l'étranger : ${ec.name} (${destName})`, hint:`${flavor(ec)||'Découvrir un nouveau championnat'} · 💰 ${money(esal)}/an`,
+          apply:()=>doMove({type:'expatriate',to:p.league,club:ec.name,destNation:expatId,fromNation:playCountry(p)},{morale:+3,reputation:+3,salary:esal},'expatriate')});
+      }
+    }
   }
   else if(move.type==='nbaSwan'){
     title = `🌟 La NBA t'appelle, pour l'histoire`;
@@ -440,8 +466,8 @@ export function renderMoveScreen(move){
   }
   else if(move.type==='transfer'){
     const tl=LEAGUES[move.to];
-    const offered = move.club && move.club!==p.club ? [clubInfo(move.to, p.nation.id, move.club)].filter(Boolean) : [];
-    const extra = pickClubs(move.to, p.nation.id, 2-offered.length, {exclude:[p.club, ...offered.map(c=>c.name)], popularity:p.popularity});
+    const offered = move.club && move.club!==p.club ? [clubInfo(move.to, playCountry(p), move.club)].filter(Boolean) : [];
+    const extra = pickClubs(move.to, playCountry(p), 2-offered.length, {exclude:[p.club, ...offered.map(c=>c.name)], popularity:p.popularity});
     const opts = [...offered, ...extra];
     title = `Le marché s'agite autour de toi`;
     body = `Ta cote grimpe : plusieurs clubs de ${tl.short} veulent te recruter. Changer de maillot, c'est de l'ambition, et la pression qui va avec.`;
@@ -450,6 +476,16 @@ export function renderMoveScreen(move){
         apply:()=>doMove({type:'transfer',to:move.to,club:c.name},{morale:+3,reputation:+2,salary:sal},'freeAgent')}; });
     choices.push({label:`Rester fidèle à ${p.club}`, hint:'La loyauté paie aussi (+moral, +vestiaire)',
       apply:()=>{ p.morale=clamp(p.morale+4,0,100); p.reputation=clamp(p.reputation+2,0,100); p.coach=clamp(p.coach+3,0,100); beginSeasonKeep(); }});
+  }
+  else if(move.type==='expatriate'){
+    const fromName = NATIONS.find(n=>n.id===move.fromNation)?.name || p.nation.name;
+    const destName = NATIONS.find(n=>n.id===move.destNation)?.name || '';
+    title = `✈️ Une offre venue d'ailleurs`;
+    body = `<b>${move.club}</b> (${toLg.short}, ${destName}) veut t'arracher à ${fromName}. Nouveau championnat, nouvelle langue, nouveau vestiaire à conquérir loin de chez toi : une expatriation, un vrai tournant de carrière — pas un simple changement de maillot.`;
+    choices=[
+      {label:`Partir à ${move.club}`, hint:`Direction ${destName}`, apply:()=>doMove(move,{morale:+4,reputation:+4},'expatriate')},
+      {label:`Rester fidèle à ${fromName}`, hint:'Le confort du pays connu', apply:()=>{ p.morale=clamp(p.morale+3,0,100); p.coach=clamp(p.coach+2,0,100); beginSeasonKeep(); }}
+    ];
   }
   else if(move.type==='demote'){
     title = `Rétrogradé en ${toLg.short}`;

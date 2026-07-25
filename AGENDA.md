@@ -34,6 +34,42 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Coché récemment
 
+- [x] **AGD-08 — Nationalités et immersion nationale** _(implémenté et vérifié le 2026-07-26)_
+  Trois volets, tous vérifiés :
+  1. *Choix de nationalité enrichi* : liste de nations (`src/data/nations.js`) passée de 9 à 14
+     (ajout Lituanie, Italie, Turquie — voie eu — et Nigeria, Porto Rico — voie us). Le choix du
+     championnat de départ reste indépendant (piloté par `nation.path`, inchangé) : la nationalité
+     ne joue que sur l'identité et l'éligibilité en sélection.
+  2. *Changement de pays après le premier contrat pro* : nouveau champ `p.playNation`
+     (`engine/player.js`), distinct et indépendant de `p.nation` (origine, fixe, réservé à la
+     sélection nationale). Nouvel helper `playCountry(p)` remplace `p.nation.id` à tous les points
+     de tirage de club domestique (23 sites dans `season.js`/`screens.js`/`competition.js`).
+     Nouveau type de mouvement `expatriate` : offre venue d'un autre pays de voie Europe aux
+     promotions 3e div → pro 2 → élite nationale (30% de chance) et sur l'écran de free agency,
+     jamais à la toute première signature pro (formation → 3e div, qui reste domestique). Texte
+     dédié ("une expatriation, un vrai tournant de carrière").
+     Repli de club (`clubs.js` `getClubPool()`) rendu path-aware (`PATH_FALLBACK_NATION`,
+     repli par voie eu/au/us plutôt qu'un repli unique vers les données US, qui cassait les
+     paliers third/second/national — 0 club côté US sur ces paliers) : condition nécessaire pour
+     ajouter des nations sans données de club propres sans faire réapparaître le bug "Club libre".
+  3. *Immersion sélection nationale* : cartouche dédiée (`.nat-cartouche` dans `styles.css`) sur le
+     bilan de saison, distincte de la simple ligne de verdict précédente — fond et liseré teintés
+     `--mint` (couleur déjà réservée au mode d'accent "nation"), drapeau en grand, médaille en vraie
+     icône SVG (réutilise `medalSvg()` de `trophies.js`, nouvel export `medalIcon()`). Enjeux
+     (grandes compétitions, médailles) et palmarès national distinct déjà en place avant ce lot,
+     non retouchés.
+  Vérifié : 0% crash et 0% repli "Club libre" sur 300+300+300+60+60 carrières (plusieurs runs,
+  avant/après). Mécanique d'expatriation confirmée déclenchée et cohérente sur 120 carrières
+  forcées en voie Europe (41 offres observées sur 34 carrières, `p.nation` jamais muté, `p.playNation`
+  correctement divergent). Bug trouvé et corrigé en session : `simulateStandings()`
+  (`engine/competition.js`) utilisait encore `p.nation.id` pour le vivier de clubs adverses du
+  classement, resté incohérent avec le club réellement joué après une expatriation — corrigé en
+  `playCountry(p)`. Comparatif de calibration à 300 carrières (plusieurs runs) : titre élite
+  12.3-18.7% (bande de bruit déjà établie 7.7-21.7%), All-Star 19.3-29.3% (retombé à 25.7% au run
+  final, proche de la référence pré-lot 25.3%), HOF 7.7-13.7% — écarts entre runs confirmés comme
+  du bruit d'échantillonnage normal (non causé par ce lot : un run de contrôle restreint aux 9
+  nations d'origine reproduit la même bande).
+
 - [x] **AGD-04 — Contexte de compétition par saison** _(implémenté et vérifié le 2026-07-30)_
   Classement de fin de saison léger (`simulateStandings()` dans `src/engine/competition.js`) :
   une note par club dérivée de sa force réelle (`clubData.js` quand elle existe, estimation

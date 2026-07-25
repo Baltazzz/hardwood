@@ -1,9 +1,16 @@
 import { CLUB_DATA } from '../data/clubData.js';
 import { LEAGUES } from '../data/leagues.js';
+import { NATIONS } from '../data/nations.js';
 
 // euro/nba restent des paliers globaux, non liés à une nation (déjà de vrais
 // clubs dans leagues.js) — tous les autres paliers sont nation-aware via CLUB_DATA.
 const GLOBAL_TIERS = new Set(['euro', 'nba']);
+
+// Nation de référence par voie (path), utilisée comme repli quand une nation n'a pas ses
+// propres données de club pour un palier donné (ex. nations ajoutées sans clubData dédié) :
+// le repli US pur cassait les paliers third/second/national (0 club côté US, uniquement
+// gleague/college), d'où un repli par voie plutôt qu'un repli unique et aveugle.
+const PATH_FALLBACK_NATION = { eu: 'DE', au: 'AU', us: 'US' };
 
 export function getClubPool(tierKey, nationId) {
   if (GLOBAL_TIERS.has(tierKey)) {
@@ -11,8 +18,12 @@ export function getClubPool(tierKey, nationId) {
   }
   const own = CLUB_DATA[nationId]?.[tierKey];
   if (own?.length) return own;
-  const fallback = CLUB_DATA.US?.[tierKey]; // nation sans données propres (ex. Canada) : repli sur les pools US
+  const nation = NATIONS.find(n => n.id === nationId);
+  const fallbackId = (nation && PATH_FALLBACK_NATION[nation.path]) || 'US';
+  const fallback = CLUB_DATA[fallbackId]?.[tierKey];
   if (fallback?.length) return fallback;
+  const usFallback = CLUB_DATA.US?.[tierKey];
+  if (usFallback?.length) return usFallback;
   return [{ name: 'Club libre', strength: 50, potential: 50, prestige: 50, category: null, comment: null }];
 }
 

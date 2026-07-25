@@ -6,7 +6,7 @@ import { clamp, ri, pick } from './utils.js';
 
 export function newPlayer(){
   return {
-    step:0, nation:null, pos:null, style:null, life:null, name:'',
+    step:0, nation:null, playNation:null, pos:null, style:null, life:null, name:'',
     age:16, year:1,
     attrs:{}, potential:0, hype:0, devArchetype:null,
     league:null, club:null, contractY:0, salary:0,
@@ -25,6 +25,12 @@ export function newPlayer(){
     tripleDoubles:0
   };
 }
+
+// Pays où le joueur évolue actuellement (bassin de clubs consulté pour les paliers domestiques
+// third/second/national/nbl1/nbl) -- distinct de p.nation (origine, fixe, sélection nationale).
+// Change uniquement via une expatriation choisie (voir engine/season.js) ; p.nation ne change
+// jamais. Repli sur p.nation.id tant qu'aucune expatriation n'a eu lieu.
+export function playCountry(p){ return p.playNation || (p.nation && p.nation.id); }
 
 /* OVR pondéré par le poste */
 export function ovr(p){

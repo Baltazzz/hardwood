@@ -7,6 +7,7 @@
 // (pas une statistique réelle précise) ; à défaut, une teinte de force stable dérivée du nom,
 // même logique que pour l'accent de couleur (voir engine/accent.js).
 import { getClubPool } from './clubs.js';
+import { playCountry } from './player.js';
 import { clamp, rnd } from './utils.js';
 
 // Estimation grossière de niveau relatif (0-100), PAS une donnée officielle : sert uniquement à
@@ -40,7 +41,7 @@ function clubStrength(tierKey, clubName, clubDataEntry) {
 // bruit) : la comparaison redevient cohérente quel que soit le palier.
 export function simulateStandings(p, lg, teamRating) {
   const tierKey = p.league;
-  const pool = getClubPool(tierKey, p.nation.id);
+  const pool = getClubPool(tierKey, playCountry(p));
   const others = pool.filter(c => c.name !== p.club)
     .map(c => ({ name: c.name, strength: clubStrength(tierKey, c.name, c) }))
     .sort((a, b) => b.strength - a.strength);

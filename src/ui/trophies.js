@@ -62,6 +62,14 @@ function medalSvg(color, size) {
   </svg>`;
 }
 
+const MEDAL_COLORS = { Or: 'var(--mint)', Argent: SILVER, Bronze: BRONZE };
+// Icône de médaille isolée (même dessin que dans l'armoire à trophées), pour la cartouche de
+// résultat de tournoi national sur le bilan de saison -- réutilise medalSvg() sans exiger une
+// clé d'accolade complète (juste le libellé 'Or'/'Argent'/'Bronze').
+export function medalIcon(medal, size = 40) {
+  return medalSvg(MEDAL_COLORS[medal] || 'var(--mint)', size);
+}
+
 function trophyFor(key, size) {
   if (key === 'Champion NBA') return { svg: ringSvg(size), label: 'Titre NBA', family: 'ring' };
   if (key.startsWith('Champion ')) return { svg: trophyShell('var(--mint)', CUP_EMBLEM, size), label: key, family: 'cup' };

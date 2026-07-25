@@ -66,6 +66,7 @@ function driveOneCareer(document, errors, state) {
     arrivalPath,
     phenom: youngMVP || youngElite,
     eventHistory: (G.eventHistory || []).slice(),
+    freeClubSeasons: G.seasons.filter(s => s.club === 'Club libre').length,
   };
   clickId(document, 'again');
   return result;
@@ -147,8 +148,15 @@ async function main() {
   nbaResults.forEach(r => { const p = r.arrivalPath || 'inconnu'; pathTotals[p] = (pathTotals[p] || 0) + 1; });
   const pathPct = (n) => nbaResults.length ? Math.round((n / nbaResults.length) * 1000) / 10 : 0;
 
+  // a) repli "Club libre" (pool de clubs vide -> nom générique de secours) : doit être à zéro.
+  const freeClubCareers = results.filter(r => r.freeClubSeasons > 0).length;
+  const freeClubSeasonsTotal = results.reduce((s, r) => s + r.freeClubSeasons, 0);
+
   console.log('=== Audit approfondi HARDWOOD ===');
   console.log(`Carrières jouées : ${N} (crashs : ${crashed})`);
+  console.log(`\n-- a) Repli "Club libre" (objectif : zéro) --`);
+  console.log(`Carrières touchées : ${pct(freeClubCareers)}% (${freeClubCareers}/${completed})`);
+  console.log(`Saisons "Club libre" au total : ${freeClubSeasonsTotal}`);
   console.log(`\n-- b) Récompenses (sur ${completed} carrières complètes) --`);
   console.log(`Au moins un titre (toute ligue) : ${pct(withTitle)}% (${withTitle})`);
   console.log(`  dont au moins un titre élite (NBA/EuroLeague/NBL) : ${pct(withEliteTitle)}% (${withEliteTitle})`);
@@ -200,7 +208,7 @@ async function main() {
   bottom10.forEach(e => console.log(`  ${e.id.padEnd(28)} : ${e.pct}%`));
 
   console.log('\nRÉSULTATS BRUTS (JSON) :');
-  console.log(JSON.stringify({ N, crashed, completed, withTitle, withEliteTitle, withMVP, withAllStar, withHOF, withPhenom, tierCounts, nbaCount: nbaResults.length, median, pathTotals, byBracket,
+  console.log(JSON.stringify({ N, crashed, completed, freeClubCareers, freeClubSeasonsTotal, withTitle, withEliteTitle, withMVP, withAllStar, withHOF, withPhenom, tierCounts, nbaCount: nbaResults.length, median, pathTotals, byBracket,
     diversity: { totalDefined, avgDistinct, avgTotal, neverSeenPct, neverSeenCount, top10, bottom10 } }, null, 0));
 }
 

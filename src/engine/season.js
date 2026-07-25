@@ -502,10 +502,21 @@ function resolveMovement(){
     if(nc && nc!==p.club) return {type:'transfer', to:p.league, club:nc};
   }
 
-  // Relégation si trop faible
+  // Relégation si trop faible. La G League et l'EuroLeague sont accessibles par des joueurs de
+  // n'importe quel chemin (G League nativement en voie us, ou en voie eu/au via la case
+  // "rejoindre la G League" après un échec à la draft ; EuroLeague nativement en voie eu, ou en
+  // voie us via la case "signer un gros contrat en EuroLeague" après un échec à la draft
+  // universitaire) : seul un profil venu d'Europe a une 2e division / élite nationale domestique
+  // où redescendre depuis ces deux paliers. Pour un profil us/au sans équivalent domestique
+  // modélisé sous ce palier, la relégation retombe en G League plutôt que vers une cible
+  // nation-incompatible.
   if(o < lg.starter-9 && lg.tier<5){
-    const down={ nba:continental, euro:'national', nbl:'nbl1', national:'second',
-                 gleague:'second', second:'third', third:'academy', nbl1:'academy' }[p.league];
+    const down = p.league==='gleague'
+      ? (p.nation.path==='eu' ? 'second' : null)
+      : p.league==='euro'
+      ? (p.nation.path==='eu' ? 'national' : 'gleague')
+      : { nba:continental, nbl:'nbl1', national:'second',
+          second:'third', third:'academy', nbl1:'academy' }[p.league];
     if(down) return {type:'demote', to:down, club:pickClubName(down, p.nation.id)};
   }
   return null;

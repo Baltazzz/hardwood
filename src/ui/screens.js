@@ -90,26 +90,13 @@ export function screenWelcome(){
   document.getElementById('wGo').onclick=()=>{ setWelcomeSeen(); screenTitle(); };
 }
 
-// Effet "double courbe" du wordmark : chaque lettre est décalée verticalement (parabole)
-// et légèrement tournée pour dessiner un arc qui remonte vers le centre, façon logo sportif
-// gravé/arqué plutôt qu'un texte plat.
-function curvedWordmark(text){
-  const n = text.length, mid=(n-1)/2, amp=13, rotMax=7;
-  return text.split('').map((ch,i)=>{
-    const t = mid ? (i-mid)/mid : 0; // -1..1
-    const dy = (-amp*(1-t*t)).toFixed(1);
-    const rot = (t*rotMax).toFixed(1);
-    const cls = ch==='W' ? ' o' : '';
-    return `<span class="hw-letter${cls}" style="transform:translateY(${dy}px) rotate(${rot}deg)">${ch}</span>`;
-  }).join('');
-}
 export function screenTitle(){
   resetAccent(); // pas d'accent de club/nation hérité de la carrière précédente sur le titre
   if(!welcomeSeen()){ screenWelcome(); return; }
   const best=hofBest();
   stage.innerHTML = `<div class="title-screen">
     <div class="eyebrow">Carrière · saison après saison</div>
-    <h1>${curvedWordmark('HARDWOOD')}</h1>
+    <h1>HARD<span class="o">W</span>OOD</h1>
     <p class="tag">De 16 à 38 ans, écris ta légende du basket. Chaque choix pèse : le talent ouvre des portes, les décisions décident du reste. La NBA est le sommet, encore faut-il y arriver.</p>
     <div style="margin-top:28px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
       <button class="btn" id="go">Commencer ma carrière</button>
@@ -218,7 +205,10 @@ export function renderEvent(ev){
   const choices = ev.choices(ctx);
   // Fenêtre sélection nationale : l'accent bascule sur les couleurs du pays, en cohérence
   // avec le changement d'ambiance déjà en place pour ces événements.
-  stage.innerHTML = renderHUD(ev.cat==='nation'?'nation':'club') + `<div class="card event" style="margin-top:2px">
+  // "Grand moment" (jet réel à la clé, cf. CAT_ICON dans events.js) : cartouche dédiée pour que
+  // ces événements se distinguent visuellement avant même la lecture du titre.
+  const grandMoment = ['clutch','defense','duel','finals'].includes(ev.cat);
+  stage.innerHTML = renderHUD(ev.cat==='nation'?'nation':'club') + `<div class="card event${grandMoment?' grand-moment':''}" style="margin-top:2px">
     <div class="season-tag">
       <span class="chip">📅 Saison ${p.year} · ${p.age} ans</span>
       <span class="chip n">${LEAGUES[p.league].emoji||'🏀'} ${lg.short} · ${p.club}</span>

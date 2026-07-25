@@ -43,12 +43,12 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
   Ajouté au registre le 2026-07-26 (item signalé comme possiblement oublié par l'utilisateur —
   provenance non retrouvée dans l'historique git accessible ni dans `AGENDA.md` avant cette
   date ; peut-être demandé lors d'une session antérieure non couverte par l'historique
-  consulté, à confirmer). Progrès adjacent le 2026-07-26 : les catégories "grand moment"
-  (clutch/défense/duel/finale) ont désormais un pictogramme SVG fait maison dans le chip
-  d'événement (`CAT_ICON` dans `events.js`) à la place de l'emoji générique — mais ça reste
-  une icône statique, pas une animation/mise en scène du moment lui-même. Toujours aucune
-  animation spécifique à un moment fort (tir décisif, dunk, titre remporté...) au-delà des
-  2 animations génériques déjà en place (`@keyframes enter`, flash `fu`/`fd`).
+  consulté, à confirmer). Progrès adjacent le 2026-07-26 : pictogramme SVG dans le chip
+  d'événement (`CAT_ICON` dans `events.js`). Nouveau progrès adjacent le 2026-07-27 : ces mêmes
+  événements ("grand moment" — clutch/défense/duel/finale) ont désormais une cartouche visuelle
+  dédiée (`.grand-moment` dans `styles.css` : liseré doré + motif ballon agrandi), pour se
+  distinguer visuellement des événements courants. Ça reste une mise en forme statique, pas une
+  animation/mise en scène du moment lui-même au moment de la résolution du choix.
   **Critère** : à définir avec l'utilisateur (quels moments ? quel type d'animation ? respect
   de `prefers-reduced-motion`, déjà en place globalement).
 

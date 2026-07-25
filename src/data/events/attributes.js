@@ -1,4 +1,4 @@
-import { attrOf } from '../../engine/player.js';
+import { attrOf, roleOf } from '../../engine/player.js';
 import { actionRoll } from '../../engine/utils.js';
 import { clutchWeight } from './_helpers.js';
 
@@ -171,5 +171,169 @@ export const ATTRIBUTE_EVENTS = [
         effect:{popularity:+7, media:+2}, outcome:'Ton profil physique devient une vraie carte à jouer médiatiquement.'},
       {label:'Laisser parler le jeu, rester discret', hint:'Rester discret, laisser parler le terrain',
         effect:{qi:+1, coach:+2}, outcome:'Tu restes concentré sur le jeu. Discret, mais respecté.'}
+    ]},
+
+  {id:'heat_check', cat:'clutch', phase:null, cooldown:2,
+    when:(p,lg)=>attrOf(p,'adr3')>=76 && lg.tier<=3,
+    title:'La main chaude',
+    body:()=>`<i>(Trois tirs de suite dans le fond du filet, la salle commence à retenir son souffle à chaque prise.)</i> Ce soir, tout rentre. La question, c'est jusqu'où pousser la série.`,
+    weight:clutchWeight(0.8),
+    choices:({p})=>[
+      {label:'Continuer à chercher le tir, quelle que soit la position', hint:'Suivre la série tant qu\'elle dure',
+        effect:(ctx)=>{ const ok=actionRoll(attrOf(p,'adr3'),72); ctx.ok=ok; return ok?{reputation:+6,popularity:+6,morale:+5}:{coach:-2,morale:-2}; },
+        outcome:(ctx)=> ctx.ok?'La série continue, complètement improbable. La salle n\'en revient pas.':'La série s\'arrête sec. Le coach fronce les sourcils sur les derniers tirs forcés.'},
+      {label:'Revenir au jeu normal, ne pas forcer la chance', hint:'La sagesse plutôt que la série',
+        effect:{coach:+4, qi:+1}, outcome:'Tu reviens à un jeu plus posé. Sage, même si la salle en redemandait.'}
+    ]},
+
+  {id:'corner_three_role', cat:'system', phase:null, cooldown:3,
+    when:(p,lg)=>attrOf(p,'adr3')>=75 && ['bench','rotation','starter'].includes(roleOf(p).key),
+    title:'Le rôle de spécialiste du corner',
+    body:()=>`Le système du coach te cantonne à un rôle précis : attendre dans le corner, prendre le tir quand il se présente, rien de plus. Efficace, mais frustrant pour qui rêve de plus grand.`,
+    weight:()=>0.55,
+    choices:()=>[
+      {label:'Exceller pleinement dans ce rôle', hint:'Devenir la meilleure version de ce rôle précis',
+        effect:{coach:+5, reputation:+2}, outcome:'Tu deviens une référence à ce poste précis. Le système tourne grâce à des joueurs comme toi.'},
+      {label:'Réclamer plus de liberté offensive', hint:'Vouloir élargir ton registre, quitte à froisser',
+        effect:()=>(Math.random()<0.45)?{perfBonus:+3, reputation:+2}:{coach:-3},
+        outcome:'Tu demandes plus de liberté. Le coach ajuste, ou pas, selon ce qu\'il voit à l\'entraînement.'}
+    ]},
+
+  {id:'assist_record_chase', cat:'clutch', phase:null, cooldown:3,
+    when:(p,lg)=>attrOf(p,'passe')>=80 && (p.pos==='PG') && p.reputation>=38,
+    title:'En chasse du record de passes du club',
+    body:()=>`<i>(Le speaker rappelle le chiffre à battre à chaque temps mort.)</i> Tu approches d'un record de passes décisives sur une saison au sein du club. Chaque possession devient un peu plus symbolique.`,
+    weight:()=>0.6,
+    choices:({p})=>[
+      {label:'Jouer pour le record, assumé', hint:'Chercher activement la statistique historique',
+        effect:(ctx)=>{ const ok=actionRoll(attrOf(p,'passe'),74); ctx.ok=ok; return ok?{reputation:+6,popularity:+5,media:+2}:{coach:-1}; },
+        outcome:(ctx)=> ctx.ok?'Le record tombe sous les applaudissements de la salle entière.':'Le record attendra. Une passe manquée d\'un rien, ce soir n\'était pas le bon soir.'},
+      {label:'Ignorer le chiffre, jouer le match normalement', hint:'Le match avant la statistique',
+        effect:{coach:+4, qi:+1}, outcome:'Tu ignores volontairement le chiffre. Le coach apprécie que tu restes concentré sur l\'essentiel.'}
+    ]},
+
+  {id:'turnover_crisis', cat:'form', phase:null, cooldown:3,
+    when:(p,lg)=>attrOf(p,'passe')>=70 && (p.pos==='PG'||p.pos==='SG') && p.reputation>=30,
+    title:'Les ballons perdus s\'accumulent',
+    body:()=>`Les pertes de balle se multiplient ces derniers matchs. Chaque relance hasardeuse fait grincer des dents sur le banc.`,
+    weight:()=>0.65,
+    choices:()=>[
+      {label:'Simplifier radicalement ton jeu', hint:'Réduire le risque, quitte à moins créer',
+        effect:{qi:+3, coach:+3, perfBonus:-1}, outcome:'Tu simplifies drastiquement tes choix. Moins spectaculaire, beaucoup plus sûr.'},
+      {label:'Continuer à prendre des risques dans le jeu', hint:'Garder ton style, malgré les pertes de balle',
+        effect:()=>(Math.random()<0.4)?{reputation:+2}:{coach:-3, morale:-1},
+        outcome:'Tu ne changes rien à ta prise de risque. Le style reste le même, pour le meilleur et pour le pire.'}
+    ]},
+
+  {id:'hustle_stats', cat:'defense', phase:null, cooldown:3,
+    when:(p,lg)=>attrOf(p,'def')>=74 && attrOf(p,'qi')>=70,
+    title:'Le travail de l\'ombre récompensé',
+    body:()=>`<i>(Rapport d'analyste : déflexions, ballons plongés, rotations défensives.)</i> Un analyste sort des statistiques avancées qui montrent ton impact défensif réel, invisible sur une feuille de stats classique.`,
+    weight:()=>0.5,
+    choices:()=>[
+      {label:'Mettre ces chiffres en avant toi-même', hint:'Revendiquer ce travail de l\'ombre',
+        effect:{reputation:+4, media:+2}, outcome:'Tu mets en lumière ce travail invisible. Les connaisseurs apprécient particulièrement.'},
+      {label:'Continuer sans chercher la reconnaissance', hint:'Le travail de l\'ombre, sans besoin de le crier',
+        effect:{coach:+4, qi:+1}, outcome:'Tu continues sans rien réclamer. Le coach, lui, sait très bien ce que tu apportes.'}
+    ]},
+
+  {id:'charge_taking', cat:'defense', phase:null, cooldown:2,
+    when:(p,lg)=>attrOf(p,'def')>=72 && attrOf(p,'qi')>=68,
+    title:'Le sacrifice du corps pour une faute offensive',
+    body:()=>`<i>(Position prise à l'avance, les pieds ancrés au sol, l'attaquant qui déboule à pleine vitesse.)</i> L'occasion se présente de prendre une faute offensive, au prix d'un vrai choc physique.`,
+    weight:()=>0.6,
+    choices:()=>[
+      {label:'Prendre le charge, sans hésiter', hint:'Le sacrifice physique assumé',
+        effect:(ctx)=>{ const ok=Math.random()<0.6; ctx.ok=ok; return ok?{reputation:+4, coach:+5, clutch:+1}:{fitness:-3}; },
+        outcome:(ctx)=> ctx.ok?'Le sifflet tombe de ton côté. Le banc explose, ce genre de geste se remarque.':'Le contact ne convainc pas l\'arbitre. Douloureux pour rien.'},
+      {label:'Se contenter de gêner sans prendre le choc', hint:'La prudence, pour préserver le corps',
+        effect:{qi:+1, fitness:+1}, outcome:'Tu préfères gêner sans t\'exposer au choc frontal. Prudent, mais moins spectaculaire.'}
+    ]},
+
+  {id:'post_footwork_clinic', cat:'training', phase:null, cooldown:3,
+    when:(p,lg)=>p.pos==='C' && attrOf(p,'qi')>=60,
+    title:'Un ancien pivot vient t\'enseigner ses gammes',
+    body:()=>`<i>(Salle vide, un ancien grand nom du poste vient personnellement affiner ton jeu dos au panier.)</i> Un consultant du club, ancien pivot respecté, te propose des séances individuelles sur les fondamentaux du jeu bas.`,
+    weight:()=>0.55,
+    choices:()=>[
+      {label:'Absorber chaque conseil avec sérieux', hint:'S\'imprégner à fond de son enseignement',
+        effect:{tir:+2, qi:+2, coach:+2}, outcome:'Tu absorbes ses gammes avec sérieux. Ton jeu au poste gagne en subtilité.'},
+      {label:'Rester sur ta propre technique', hint:'Garder ton propre style, malgré les conseils',
+        effect:{morale:+1, reb:+1}, outcome:'Tu remercies poliment mais gardes ta propre patte. Question de confort.'}
+    ]},
+
+  {id:'screen_setting_pride', cat:'locker', phase:null, cooldown:3,
+    when:(p,lg)=>p.pos==='C' || p.pos==='PF',
+    title:'La fierté du travail sale',
+    body:()=>`Tes écrans libèrent les shooteurs de l'équipe match après match, sans jamais figurer sur la feuille de stats. Un rôle ingrat mais décisif.`,
+    weight:()=>0.5,
+    choices:()=>[
+      {label:'En faire ta marque de fabrique', hint:'Assumer pleinement ce rôle de l\'ombre',
+        effect:{coach:+5, reputation:+2}, outcome:'Tu deviens une référence discrète mais précieuse. Les coéquipiers le savent, même si les stats l\'ignorent.'},
+      {label:'Réclamer plus d\'opportunités offensives', hint:'Vouloir sortir un peu de l\'ombre',
+        effect:{morale:+2, tir:+1}, outcome:'Tu demandes un peu plus de ballons pour toi-même. Compréhensible, à petite dose.'}
+    ]},
+
+  {id:'fast_break_finisher', cat:'clutch', phase:null, cooldown:2,
+    when:(p,lg)=>attrOf(p,'ath')>=76,
+    title:'Le sprint de la contre-attaque',
+    body:()=>`<i>(Interception, le terrain grand ouvert devant toi, un seul défenseur en retard.)</i> La contre-attaque est lancée, et c'est à toi de la conclure.`,
+    weight:clutchWeight(0.75),
+    choices:({p})=>[
+      {label:'Foncer et conclure fort', hint:'Le geste spectaculaire, en pleine vitesse',
+        effect:(ctx)=>{ const ok=actionRoll(attrOf(p,'ath'),70); ctx.ok=ok; return ok?{popularity:+6,reputation:+3,morale:+3}:{morale:-1}; },
+        outcome:(ctx)=> ctx.ok?'Conclusion explosive en pleine vitesse. Le banc se lève d\'un bond.':'La finition manque de précision malgré la vitesse. Occasion manquée.'},
+      {label:'Ralentir et assurer le point', hint:'La sécurité plutôt que le spectacle',
+        effect:{qi:+1, tir:+1}, outcome:'Tu ralentis pour assurer les deux points. Efficace, sans prise de risque.'}
+    ]},
+
+  {id:'ironman_streak', cat:'form', phase:null, cooldown:3,
+    when:(p,lg)=>p.seasons.length>=3 && p.seasons.slice(-3).every(s=>!s.injured),
+    title:'La fierté de ne jamais manquer un match',
+    body:()=>`<i>(Le staff médical note, presque étonné, l'absence totale de pépin ces dernières saisons.)</i> Pendant que d'autres enchaînent les blessures, ton corps tient bon saison après saison. Une vraie force silencieuse.`,
+    weight:()=>0.55,
+    choices:()=>[
+      {label:'En faire un point d\'honneur, jouer sans jamais souffler', hint:'La fiabilité comme identité',
+        effect:{reputation:+3, coach:+4, fitness:-2}, outcome:'Tu en fais un point d\'honneur. Le staff sait qu\'il peut compter sur toi, toujours.'},
+      {label:'Accepter enfin quelques matchs de repos préventif', hint:'La prudence, pour préserver cette régularité',
+        effect:{fitness:+6, coach:+1}, outcome:'Tu acceptes de souffler de temps en temps. La régularité se construit aussi comme ça.'}
+    ]},
+
+  {id:'two_way_wing_ceiling', cat:'system', phase:null, cooldown:3,
+    when:(p,lg)=>(p.pos==='SF'||p.pos==='SG') && attrOf(p,'tir')>=70 && attrOf(p,'def')>=70,
+    title:'Attaque ou défense : où mettre le curseur ?',
+    body:()=>`Le coach a besoin de toi des deux côtés du terrain, mais l'énergie n'est pas infinie. Certains soirs, il faut choisir où porter l'effort.`,
+    weight:()=>0.55,
+    choices:()=>[
+      {label:'Prioriser la mission défensive ce soir', hint:'Faire pencher la balance vers la défense',
+        effect:{def:+1, coach:+4}, outcome:'Tu fais pencher la balance vers la défense. Le coach apprécie la polyvalence assumée.'},
+      {label:'Prioriser ton apport offensif ce soir', hint:'Faire pencher la balance vers l\'attaque',
+        effect:{tir:+1, reputation:+2}, outcome:'Tu fais pencher la balance vers l\'attaque. Le double rôle a ses limites, un soir sur deux.'}
+    ]},
+
+  {id:'defensive_versatility', cat:'defense', phase:null, cooldown:3,
+    when:(p,lg)=>attrOf(p,'def')>=70 && attrOf(p,'qi')>=70 && lg.tier<=2,
+    title:'Le couteau suisse défensif',
+    body:()=>`<i>(Tableau tactique couvert de flèches, cinq postes adverses différents à couvrir sur la possession.)</i> Le coach te fait switcher sur tous les postes ce soir, du meneur au pivot adverse. Le basket moderne demande cette polyvalence.`,
+    weight:clutchWeight(0.75),
+    choices:({p})=>[
+      {label:'Accepter tous les switches sans broncher', hint:'La polyvalence totale, assumée',
+        effect:(ctx)=>{ const ok=actionRoll(attrOf(p,'qi'),64); ctx.ok=ok; return ok?{reputation:+5, coach:+5, def:+1}:{coach:+1, fitness:-2}; },
+        outcome:(ctx)=> ctx.ok?'Tu suis chaque switch avec brio, du meneur au pivot. Une masterclass de polyvalence.':'Les changements incessants finissent par te fatiguer. Soirée exigeante.'},
+      {label:'Rester sur ton poste habituel', hint:'La spécialisation plutôt que la polyvalence',
+        effect:{def:+1, qi:+1}, outcome:'Tu préfères rester sur un rôle plus défini. Moins spectaculaire, plus sûr.'}
+    ]},
+
+  {id:'microwave_scorer', cat:'clutch', phase:null, cooldown:2,
+    when:(p,lg)=>attrOf(p,'tir')>=75 && ['bench','rotation'].includes(roleOf(p).key),
+    title:'Le shooteur qui chauffe en dix secondes',
+    body:()=>`<i>(Le coach te lance un regard depuis le banc : "vas-y, réchauffe-nous ça".)</i> L'équipe traverse un passage à vide offensif. Ton entrée est pensée pour une seule chose : marquer, vite et beaucoup.`,
+    weight:clutchWeight(0.8),
+    choices:({p})=>[
+      {label:'Prendre chaque tir qui se présente', hint:'Le rôle du pur scoreur d\'impact, assumé',
+        effect:(ctx)=>{ const ok=actionRoll(attrOf(p,'tir'),70); ctx.ok=ok; return ok?{reputation:+5, popularity:+4, morale:+3}:{coach:-1}; },
+        outcome:(ctx)=> ctx.ok?'Une avalanche de points en quelques minutes. Exactement ce que le coach demandait.':'Les tirs ne rentrent pas ce soir. Le passage à vide continue.'},
+      {label:'Rester sélectif, viser les tirs les plus sûrs', hint:'La sélection plutôt que le volume',
+        effect:{qi:+2, coach:+3}, outcome:'Tu restes sélectif malgré la consigne. Efficace, même si moins spectaculaire.'}
     ]},
 ];

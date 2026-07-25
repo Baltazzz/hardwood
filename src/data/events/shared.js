@@ -286,4 +286,224 @@ export const SHARED_EVENTS = [
         effect:()=>(Math.random()<0.55)?{coach:+8, morale:+2}:{coach:-3, morale:-2},
         outcome:'Tu mets les choses à plat. Ça passe... ou ça casse un peu plus.'}
     ]},
+
+  {id:'video_game_cover', cat:'business', once:true,
+    when:(p,lg)=>p.popularity>=55,
+    title:'Une jaquette de jeu vidéo à ton effigie',
+    body:()=>`<i>(Séance photo en studio, capteurs de mouvement collés sur tout le corps.)</i> Un grand éditeur de jeu vidéo de basket te propose la couverture de sa prochaine édition. Une reconnaissance qui dépasse largement le terrain.`,
+    weight:()=>0.5,
+    choices:()=>[
+      {label:'Accepter avec fierté', hint:'Un symbole de statut, assumé pleinement',
+        effect:{popularity:+9, media:+3, money:+60}, outcome:'Ton visage s\'affiche dans les vitrines du monde entier. Un symbole fort de ton statut.'},
+      {label:'Décliner, préférer rester discret', hint:'La discrétion plutôt que l\'exposition maximale',
+        effect:{coach:+3, morale:+2}, outcome:'Tu préfères rester en dehors des projecteurs cette fois. Ton entourage respecte le choix.'}
+    ]},
+
+  {id:'charity_foundation', cat:'community', once:true,
+    when:(p,lg)=>p.money>=250 && p.popularity>=35,
+    title:'Lancer ta propre fondation',
+    body:()=>`Tu as désormais les moyens de structurer ton engagement caritatif au-delà des apparitions ponctuelles. Une fondation à ton nom, c'est un vrai projet à porter dans la durée.`,
+    weight:()=>0.5,
+    choices:()=>[
+      {label:'Se lancer et s\'impliquer personnellement', hint:'Un engagement de long terme, assumé',
+        effect:{money:-80, popularity:+8, reputation:+3, morale:+3}, outcome:'La fondation voit le jour. Un projet qui te dépasse déjà le simple terrain.'},
+      {label:'Continuer les dons ponctuels, plus simples', hint:'Rester sur un engagement plus léger',
+        effect:{popularity:+3, money:-20}, outcome:'Tu préfères une implication plus légère, sans structure lourde à gérer.'}
+    ]},
+
+  {id:'first_home_purchase', cat:'personal', once:true,
+    when:(p,lg)=>p.money>=180,
+    title:'Acheter une maison pour les tiens',
+    body:()=>`Les premiers vrais salaires arrivent, et une idée te trotte en tête depuis longtemps : offrir un vrai toit à ta famille, loin des soucis d'argent d'avant.`,
+    weight:()=>0.5,
+    choices:()=>[
+      {label:'Investir dans une grande maison familiale', hint:'Le geste fort pour la famille, quitte à dépenser gros',
+        effect:{money:-120, morale:+8}, outcome:'Tu poses les clés dans la main de tes proches. Un des plus beaux moments de ta jeune carrière.'},
+      {label:'Rester raisonnable, épargner le reste', hint:'La prudence financière avant le geste symbolique',
+        effect:{money:-40, morale:+4}, outcome:'Tu trouves un compromis raisonnable. Le geste compte autant que le montant.'}
+    ]},
+
+  {id:'paparazzi_incident', cat:'media', cooldown:4,
+    when:(p,lg)=>p.popularity>=50,
+    weight:mediaWeight,
+    title:'Traqué jusque devant chez toi',
+    body:()=>`<i>(Flashs à travers la vitre de la voiture, un objectif collé à la fenêtre de ton salon.)</i> Des photographes s'installent régulièrement près de chez toi. Ta vie privée devient un produit à part entière.`,
+    choices:()=>[
+      {label:'Réagir fermement, faire intervenir la sécurité', hint:'Poser une limite claire, quitte à faire du bruit',
+        effect:{morale:+3, media:-2, popularity:+2}, outcome:'Tu poses une limite claire. Ça calme le jeu, pour un temps.'},
+      {label:'Faire avec, partie du jeu', hint:'Accepter cette part du métier, à contrecœur',
+        effect:{morale:-3, media:+2}, outcome:'Tu fais avec, sans plus rien dire. Le prix de la notoriété, en silence.'}
+    ]},
+
+  {id:'referee_controversy', cat:'presser', cooldown:3,
+    when:(p,lg)=>p.reputation>=32,
+    weight:(p)=>mediaWeight(p)*0.6,
+    title:'Une décision arbitrale qui fait polémique',
+    body:()=>`Une faute sifflée contre toi en fin de match a changé l'issue de la rencontre. Les ralentis passent en boucle, et les journalistes veulent ta réaction à chaud.`,
+    choices:()=>[
+      {label:'Critiquer ouvertement l\'arbitrage', hint:'Le coup de gueule public, au risque d\'une sanction',
+        effect:()=>(Math.random()<0.5)?{popularity:+5, reputation:-3}:{popularity:+2, coach:-2},
+        outcome:'Tu ne mâches pas tes mots sur l\'arbitrage. Les instances pourraient ne pas apprécier.'},
+      {label:'Rester diplomate malgré la frustration', hint:'Ravaler la frustration, publiquement au moins',
+        effect:{coach:+3, media:+1}, outcome:'Tu restes mesuré face aux caméras. La frustration reste, mais pour toi seul.'}
+    ]},
+
+  {id:'locker_prank', cat:'locker', cooldown:3,
+    when:(p,lg)=>(p.clubTenure||0)>=1,
+    title:'La blague du vestiaire',
+    body:()=>`<i>(Rires étouffés derrière les casiers, quelqu'un filme discrètement avec son téléphone.)</i> Une bonne blague circule dans le vestiaire ce soir, et tu es soit la cible, soit l'occasion parfaite d'en lancer une toi-même.`,
+    weight:()=>0.45,
+    choices:()=>[
+      {label:'Lancer la prochaine farce toi-même', hint:'Prendre les devants, pour l\'ambiance du groupe',
+        effect:{morale:+4, popularity:+2}, outcome:'Ta farce fait un carton. L\'ambiance du vestiaire n\'en est que meilleure.'},
+      {label:'Rester spectateur, en profiter sans participer', hint:'Apprécier l\'ambiance sans s\'exposer',
+        effect:{morale:+2}, outcome:'Tu profites du moment sans t\'exposer. L\'ambiance reste bonne, discrètement.'}
+    ]},
+
+  {id:'heckler_incident', cat:'presser', cooldown:3,
+    when:(p,lg)=>p.popularity>=30,
+    title:'Un supporter adverse s\'en prend à toi',
+    body:()=>`<i>(Une voix qui porte, juste au-dessus du tunnel des vestiaires, des mots qui dépassent la simple provocation sportive.)</i> Un spectateur multiplie les remarques personnelles à ton égard depuis le début du match.`,
+    weight:()=>0.5,
+    choices:()=>[
+      {label:'L\'ignorer complètement', hint:'Ne rien laisser transparaître',
+        effect:{qi:+2, coach:+2}, outcome:'Tu n\'accordes aucune réaction. La meilleure des réponses, parfois.'},
+      {label:'Répondre par un geste ou une réplique', hint:'Répondre du tac au tac, en public',
+        effect:()=>(Math.random()<0.4)?{popularity:+4}:{reputation:-3, coach:-2, flag:'controversial'},
+        outcome:'Tu réponds directement. Le clip fait le tour des réseaux, pour le meilleur ou pour le pire.'}
+    ]},
+
+  {id:'nutritionist_upgrade', cat:'training', cooldown:4,
+    when:(p,lg)=>p.money>=150,
+    title:'S\'entourer d\'une équipe de sciences du sport',
+    body:()=>`Nutritionniste personnel, préparateur physique dédié, suivi de sommeil : tu as désormais les moyens de professionnaliser chaque détail autour de ton corps.`,
+    weight:()=>0.5,
+    choices:()=>[
+      {label:'Investir massivement dans cette équipe', hint:'Le détail qui peut tout changer, à prix fort',
+        effect:{money:-70, fitness:+8, ath:+1}, outcome:'Chaque détail est désormais optimisé. Le corps répond, nettement.'},
+      {label:'Garder une approche plus simple', hint:'Faire confiance aux méthodes classiques',
+        effect:{money:-10, fitness:+2}, outcome:'Tu restes sur des méthodes plus classiques. Simple, mais suffisant pour l\'instant.'}
+    ]},
+
+  {id:'equipment_switch', cat:'business', cooldown:4,
+    when:(p,lg)=>p.popularity>=30,
+    title:'Changer d\'équipementier en pleine carrière',
+    body:()=>`Une marque concurrente vient chercher ta signature avec une offre nettement supérieure. Changer de chaussures en cours de carrière n'est jamais anodin pour les sensations de jeu.`,
+    weight:()=>0.45,
+    choices:()=>[
+      {label:'Accepter le changement pour le chèque', hint:'L\'argent, malgré la période d\'adaptation',
+        effect:{money:+90, tir:-1, popularity:+3}, outcome:'Le chèque est trop bon pour refuser. Les premières semaines dans les nouvelles paires demandent un temps d\'adaptation.'},
+      {label:'Rester fidèle à ta marque actuelle', hint:'Le confort et la fidélité avant tout',
+        effect:{coach:+2, morale:+2}, outcome:'Tu restes fidèle à ce qui fonctionne. La continuité a aussi sa valeur.'}
+    ]},
+
+  {id:'podcast_candor', cat:'media', cooldown:4,
+    when:(p,lg)=>p.reputation>=38,
+    weight:mediaWeight,
+    title:'Une interview podcast sans filtre',
+    body:()=>`<i>(Format long, casque sur les oreilles, aucune question interdite à l'avance.)</i> Un podcast réputé du milieu te propose un entretien fleuve, loin du format aseptisé des interviews d'après-match.`,
+    choices:()=>[
+      {label:'Te livrer vraiment, sujets sensibles compris', hint:'L\'authenticité totale, avec ses risques',
+        effect:()=>(Math.random()<0.55)?{popularity:+8, media:+3}:{reputation:-2, coach:-2},
+        outcome:'Tu te livres sans filtre. Selon ce qui ressort, l\'accueil varie fortement.'},
+      {label:'Rester intéressant mais mesuré', hint:'Le contrôle, sans fermer la porte à l\'authenticité',
+        effect:{media:+3, popularity:+3}, outcome:'Tu trouves le bon dosage entre authenticité et prudence. Bel accueil général.'}
+    ]},
+
+  {id:'family_emergency', cat:'personal', cooldown:3,
+    when:(p,lg)=>true,
+    title:'Un appel qui change les priorités',
+    body:()=>`<i>(Téléphone qui vibre en pleine nuit, un proche à l'autre bout du fil.)</i> Une urgence familiale te pousse à choisir entre rester concentré sur la saison ou t'absenter pour être auprès des tiens.`,
+    weight:()=>0.4,
+    choices:()=>[
+      {label:'Partir immédiatement, sans hésiter', hint:'La famille avant tout, sans une seconde d\'hésitation',
+        effect:{morale:+4, fitness:-2, coach:+2}, outcome:'Tu pars sans une seconde d\'hésitation. Le club comprend et te soutient pleinement.'},
+      {label:'Gérer à distance, rester avec l\'équipe', hint:'Gérer du mieux possible, sans quitter le groupe',
+        effect:{morale:-4, coach:+1}, outcome:'Tu restes avec le groupe, le cœur ailleurs. Pas simple, mais tu tiens ta place.'}
+    ]},
+
+  {id:'analytics_pushback', cat:'system', cooldown:3,
+    when:(p,lg)=>lg.tier<=2,
+    title:'Le staff analytics veut changer ton jeu',
+    body:()=>`<i>(Graphiques de zones de tir affichés en réunion, le responsable data très sûr de lui.)</i> Le département analytique du club a des chiffres précis sur les tirs les plus rentables statistiquement, et voudrait que tu ajustes ta sélection de tirs en conséquence.`,
+    weight:()=>0.45,
+    choices:()=>[
+      {label:'Adopter pleinement les recommandations', hint:'Faire confiance aux chiffres, contre tes habitudes',
+        effect:{qi:+2, coach:+3, tir:-1, adr3:+2}, outcome:'Tu ajustes ta sélection de tirs selon les chiffres. Un temps d\'adaptation, puis l\'efficacité suit.'},
+      {label:'Garder ton instinct de jeu', hint:'Faire confiance au ressenti plutôt qu\'aux chiffres',
+        effect:{morale:+2, coach:-2}, outcome:'Tu préfères ton propre instinct aux tableurs. Le staff data n\'est pas ravi, tu assumes.'}
+    ]},
+
+  {id:'fan_meme', cat:'social', cooldown:4,
+    when:(p,lg)=>p.popularity>=20,
+    title:'Une image de toi devient un mème',
+    body:()=>`Une photo prise à un moment maladroit du match circule partout, détournée dans tous les sens sur les réseaux. Tu deviens malgré toi une petite célébrité d'internet.`,
+    weight:()=>0.5,
+    choices:()=>[
+      {label:'En rire publiquement et surfer dessus', hint:'Prendre l\'autodérision comme meilleure arme',
+        effect:{popularity:+7, media:+2, morale:+2}, outcome:'Tu en ris le premier et republies les meilleurs détournements. Le public adore l\'autodérision.'},
+      {label:'Ignorer et laisser passer', hint:'Laisser le buzz retomber de lui-même',
+        effect:{morale:-1}, outcome:'Tu laisses passer sans réagir. Le buzz finit par retomber, comme toujours.'}
+    ]},
+
+  {id:'offseason_workout_group', cat:'training', cooldown:3,
+    when:(p,lg)=>p.reputation>=35,
+    title:'Rejoindre un groupe d\'entraînement de pros l\'été',
+    body:()=>`Un groupe fermé de joueurs confirmés s'entraîne ensemble chaque été, loin des regards. Une invitation à les rejoindre te parvient par un ancien coéquipier.`,
+    weight:()=>0.5,
+    choices:()=>[
+      {label:'Rejoindre le groupe, se mesurer aux meilleurs', hint:'Se tester face à plus fort que soi',
+        effect:{qi:+2, tir:+1, def:+1, fitness:-2}, outcome:'Te mesurer à ce niveau chaque jour élève ton propre plafond, sans ménagement.'},
+      {label:'Continuer ta préparation personnelle habituelle', hint:'Rester sur tes repères, en solo',
+        effect:{fitness:+4}, outcome:'Tu préfères tes repères habituels. Prévisible, mais confortable.'}
+    ]},
+
+  {id:'hometown_discount', cat:'contract', cooldown:4,
+    when:(p,lg)=>p.contractY<=1 && p.reputation>=42,
+    title:'Le rabais du cœur',
+    body:()=>`Ton club de toujours te propose de rester, mais nettement moins payé qu'ailleurs sur le marché. Un choix entre l'attachement et la valeur de marché.`,
+    weight:()=>0.5,
+    choices:()=>[
+      {label:'Accepter, l\'attachement avant l\'argent', hint:'Le cœur avant le compte en banque',
+        effect:{money:-40, popularity:+6, coach:+4, morale:+3, flag:'loyalOne'}, outcome:'Tu acceptes le rabais du cœur. Le public n\'oublie jamais ce genre de geste.'},
+      {label:'Refuser, exiger ta pleine valeur', hint:'La valeur de marché, sans concession',
+        effect:{money:+60, coach:-3}, outcome:'Tu refuses de brader ta valeur. Business avant sentiment, cette fois.'}
+    ]},
+
+  {id:'public_apology', cat:'media', cooldown:4,
+    when:(p,lg)=>((p.flags&&p.flags.controversial)||0)>=1,
+    weight:mediaWeight,
+    title:'Le moment de recoller les morceaux',
+    body:()=>`Après une sortie médiatique qui a fait grincer des dents, ton entourage te pousse à calmer le jeu publiquement. La façon dont tu le fais compte autant que le geste lui-même.`,
+    choices:()=>[
+      {label:'Des excuses publiques sincères', hint:'Reconnaître ouvertement, sans détour',
+        effect:{coach:+5, reputation:+2, popularity:-2}, outcome:'Tes excuses sonnent sincères. Le vestiaire et le club apprécient le geste.'},
+      {label:'Minimiser, tourner la page rapidement', hint:'Ne pas s\'attarder sur l\'épisode',
+        effect:{media:+1, coach:-1}, outcome:'Tu minimises et passes vite à autre chose. L\'épisode reste dans un coin des mémoires.'}
+    ]},
+
+  {id:'offseason_pickup_scare', cat:'injury', cooldown:4,
+    when:(p,lg)=>p.age<=30,
+    title:'Une frayeur hors saison',
+    body:()=>`<i>(Un simple match improvisé entre amis, sans enjeu apparent.)</i> Une entorse te guette même loin des projecteurs, dans un match sans importance officielle. Le corps ne fait pas la différence entre saison et hors-saison.`,
+    weight:()=>0.35,
+    choices:()=>[
+      {label:'Continuer à jouer dans ces matchs informels', hint:'Garder tes habitudes, malgré le risque',
+        effect:()=>(Math.random()<0.25)?{injuryGames:ri(4,10), fitness:-6}:{morale:+3, ath:+1},
+        outcome:'Tu continues à jouer pour le plaisir, comme toujours. Le risque existe, mais le plaisir aussi.'},
+      {label:'Renoncer à ces matchs informels par prudence', hint:'La prudence, même loin des enjeux officiels',
+        effect:{fitness:+3, morale:-1}, outcome:'Tu renonces à ces matchs entre amis, par prudence. Un peu de frustration, mais le corps est protégé.'}
+    ]},
+
+  {id:'reality_tv_offer', cat:'media', once:true,
+    when:(p,lg)=>p.popularity>=48,
+    title:'Une émission de télé-réalité te sollicite',
+    body:()=>`<i>(Un producteur insiste, promettant une exposition inédite auprès d'un public qui ne suit pas forcément le basket.)</i> Une émission grand public te propose d'y apparaître. Une exposition énorme, mais loin de l'image de sportif sérieux.`,
+    weight:()=>0.4,
+    choices:()=>[
+      {label:'Accepter, toucher un public plus large', hint:'L\'exposition avant l\'image de sérieux',
+        effect:{popularity:+8, money:+40, coach:-3}, outcome:'Ton visage touche un public qui ignorait tout de toi. Le milieu du basket grince un peu des dents.'},
+      {label:'Décliner, préserver ton image de sportif', hint:'Le sérieux sportif avant l\'exposition grand public',
+        effect:{coach:+3, reputation:+1}, outcome:'Tu déclines poliment. Ton image reste centrée sur le terrain, rien d\'autre.'}
+    ]},
 ];

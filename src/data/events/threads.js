@@ -125,4 +125,52 @@ export const THREAD_EVENTS = [
       {label:'Rester dans la compétition jusqu\'au bout, sans sentiment', hint:'La rivalité jusqu\'au bout, sans concession',
         effect:{perfBonus:+4, clutch:+1}, outcome:'Tu ne lâches rien jusqu\'à la dernière seconde. La rivalité reste entière.'}
     ]},
+
+  {id:'lockdown_legacy', cat:'payoff', phase:'mid', once:true,
+    when:(p,lg)=>((p.flags&&p.flags.lockdown)||0)>=2 && lg.tier<=2,
+    title:'Ta réputation de verrou défensif',
+    body:()=>`Les attaquants adverses préparent désormais des plans spécifiques rien que pour contourner ta défense. Ce genre de réputation ne se construit pas en un match.`,
+    weight:()=>1.1,
+    choices:()=>[
+      {label:'En faire ton identité de carrière', hint:'Embrasser durablement ce statut de référence défensive',
+        effect:{reputation:+5, coach:+4, def:+1}, outcome:'Tu deviens la référence défensive de la ligue. Les gameplans adverses te citent nommément.'},
+      {label:'Rappeler que tu sais aussi scorer', hint:'Refuser d\'être réduit à un seul registre',
+        effect:{tir:+1, popularity:+3}, outcome:'Tu rappelles que ton jeu ne se limite pas à la défense. Un registre plus complet, assumé.'}
+    ]},
+
+  {id:'finals_pedigree', cat:'interview', phase:'late', once:true,
+    when:(p,lg)=>((p.flags&&p.flags.finalsHero)||0)>=1,
+    title:'Le joueur des grands soirs',
+    body:()=>`Ton nom revient systématiquement dès qu'on évoque les joueurs qui répondent présent quand le titre est en jeu. Une réputation forgée dans les moments qui comptent le plus.`,
+    weight:()=>0.85,
+    choices:()=>[
+      {label:'Revendiquer fièrement ce statut', hint:'Assumer pleinement l\'étiquette de joueur des grands soirs',
+        effect:{reputation:+5, popularity:+4, morale:+3}, outcome:'Tu revendiques ce statut sans fausse modestie. Les faits te donnent raison.'},
+      {label:'Rappeler que ce sont des victoires collectives', hint:'Partager le mérite avec le collectif',
+        effect:{coach:+4, qi:+2}, outcome:'Tu renvoies systématiquement vers le collectif. L\'humilité, même au sommet.'}
+    ]},
+
+  {id:'reformed_confirmed', cat:'wakeup', phase:'mid', once:true,
+    when:(p,lg)=>((p.flags&&p.flags.reformed)||0)>=1 && (p.clubTenure||0)>=1,
+    title:'La page tournée, pour de bon',
+    body:()=>`Depuis ton sursaut d'il y a quelques saisons, plus le moindre écart. Le staff et les médias le remarquent : le virage pris ce jour-là a tenu dans la durée.`,
+    weight:()=>0.9,
+    choices:()=>[
+      {label:'En parler ouvertement comme un tournant de carrière', hint:'Assumer publiquement ce chapitre de ton histoire',
+        effect:{reputation:+4, popularity:+3, media:+2}, outcome:'Tu assumes ce chapitre de ton histoire sans le cacher. Ça résonne chez d\'autres joueurs.'},
+      {label:'Préférer laisser cette période derrière toi, sans en reparler', hint:'Tourner la page sans revenir dessus',
+        effect:{coach:+3, morale:+2}, outcome:'Tu préfères ne pas rouvrir ce chapitre. Les actes, depuis, parlent assez d\'eux-mêmes.'}
+    ]},
+
+  {id:'clutch_legend_status', cat:'payoff', phase:'late', once:true,
+    when:(p,lg)=>((p.flags&&p.flags.clutchHero)||0)>=4,
+    title:'Le statut de légende du money-time',
+    body:()=>`Au fil des saisons, ton nom est devenu synonyme de fin de match décisive. Ce n'est plus une réputation naissante : c'est désormais gravé dans ton histoire.`,
+    weight:()=>0.9,
+    choices:()=>[
+      {label:'Savourer pleinement ce statut construit sur des années', hint:'Reconnaître le chemin parcouru vers ce statut',
+        effect:{reputation:+6, popularity:+5, morale:+4}, outcome:'Tu savoures un statut construit sur des années de sang-froid. Peu de joueurs peuvent en dire autant.'},
+      {label:'Continuer comme si de rien n\'était', hint:'Rester le même, malgré le statut acquis',
+        effect:{coach:+4, perfBonus:+3}, outcome:'Tu ne changes rien à ton approche. Le statut est là, mais l\'humilité aussi.'}
+    ]},
 ];

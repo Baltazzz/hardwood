@@ -67,6 +67,7 @@ function driveOneCareer(document, errors, state) {
     phenom: youngMVP || youngElite,
     eventHistory: (G.eventHistory || []).slice(),
     freeClubSeasons: G.seasons.filter(s => s.club === 'Club libre').length,
+    tags: rec.tags || [],
   };
   clickId(document, 'again');
   return result;
@@ -207,8 +208,28 @@ async function main() {
   console.log('Top 10 événements les plus rares (parmi ceux vus au moins une fois) :');
   bottom10.forEach(e => console.log(`  ${e.id.padEnd(28)} : ${e.pct}%`));
 
+  // e) étiquettes de joueur (voir engine/tags.js) : combien actives en fin de carrière, et
+  // fréquence de chacune -- sert à vérifier qu'aucune étiquette ne devient omniprésente et que
+  // le nombre actif reste sobre (conçu pour quelques-unes à la fois, jamais une collection).
+  const tagFreq = new Map();
+  let sumTagCount = 0;
+  results.forEach(r => {
+    const tags = r.tags || [];
+    sumTagCount += tags.length;
+    tags.forEach(id => tagFreq.set(id, (tagFreq.get(id) || 0) + 1));
+  });
+  const avgTagCount = completed ? round1(sumTagCount / completed) : 0;
+  const tagFreqSorted = [...tagFreq.entries()].map(([id, n]) => ({ id, pct: round1((n / completed) * 100) })).sort((a, b) => b.pct - a.pct);
+  console.log(`\n-- e) Étiquettes de joueur actives en fin de carrière --`);
+  console.log(`Nombre moyen d'étiquettes actives à la retraite : ${avgTagCount}`);
+  if (tagFreqSorted.length) {
+    console.log('Fréquence par étiquette (% de carrières où elle est active à la fin) :');
+    tagFreqSorted.forEach(t => console.log(`  ${t.id.padEnd(16)} : ${t.pct}%`));
+  }
+
   console.log('\nRÉSULTATS BRUTS (JSON) :');
   console.log(JSON.stringify({ N, crashed, completed, freeClubCareers, freeClubSeasonsTotal, withTitle, withEliteTitle, withMVP, withAllStar, withHOF, withPhenom, tierCounts, nbaCount: nbaResults.length, median, pathTotals, byBracket,
+    tags: { avgTagCount, tagFreq: tagFreqSorted },
     diversity: { totalDefined, avgDistinct, avgTotal, neverSeenPct, neverSeenCount, top10, bottom10 } }, null, 0));
 }
 

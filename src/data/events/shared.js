@@ -40,11 +40,11 @@ export const SHARED_EVENTS = [
     body:({p})=>`Une marque de sneakers veut t'habiller. Gros chèque, séances photo, obligations marketing. C'est de l'argent et de la lumière, mais aussi du temps volé à l'entraînement.`,
     choices:()=>[
       {label:'Signer le gros contrat', hint:'Le chèque le plus haut, au prix d\'un peu de focus',
-        effect:{money:+220, popularity:+9, tir:-1}, outcome:'Ton visage s\'affiche en ville. Le compte en banque respire.'},
+        effect:{money:+220, popularity:+9, tir:-1, flag:'spender'}, outcome:'Ton visage s\'affiche en ville. Le compte en banque respire.'},
       {label:'Négocier un deal léger, garder le focus basket', hint:'L\'équilibre entre image et travail',
         effect:{money:+70, popularity:+4}, outcome:'Deal raisonnable. Tu gardes la tête au jeu.'},
       {label:'Refuser, tout pour le terrain', hint:'Tu paries sur le travail plutôt que sur l\'image',
-        effect:{tir:+2, adr3:+2, coach:+2}, outcome:'Tu déclines. Tes séances supplémentaires parlent pour toi.'}
+        effect:{tir:+2, adr3:+2, coach:+2, flag:'saver'}, outcome:'Tu déclines. Tes séances supplémentaires parlent pour toi.'}
     ]},
 
   {id:'invest', cat:'business', cooldown:4,
@@ -53,12 +53,12 @@ export const SHARED_EVENTS = [
     body:({p})=>`Un proche te propose de placer une partie de tes gains dans un projet. Ça peut rapporter gros… ou partir en fumée.`,
     choices:()=>[
       {label:'Investir une grosse somme', hint:'Un vrai pari, à double tranchant',
-        effect:({p})=>{ const win=Math.random()>.5; return win?{money:+Math.round(p.money*0.6)}:{money:-Math.round(p.money*0.4)}; },
+        effect:({p})=>{ const win=Math.random()>.5; return win?{money:+Math.round(p.money*0.6), flag:'spender'}:{money:-Math.round(p.money*0.4), flag:'spender'}; },
         outcome:({p})=>'Les marchés décident… le résultat est tombé sur ton compte.'},
       {label:'Placer prudemment', hint:'Le compromis raisonnable',
         effect:({p})=>({money:+Math.round(p.money*0.08+20)}), outcome:'Rendement modeste mais tranquille.'},
       {label:'Ne pas toucher à ton argent', hint:'La sécurité avant tout',
-        effect:{morale:+1}, outcome:'Tu gardes ton magot au chaud.'}
+        effect:{morale:+1, flag:'saver'}, outcome:'Tu gardes ton magot au chaud.'}
     ]},
 
   {id:'ankle', cat:'injury', cooldown:2,
@@ -226,9 +226,9 @@ export const SHARED_EVENTS = [
     weight:(p)=>mediaWeight(p)*0.55,
     choices:()=>[
       {label:'Assumer et clarifier posément', hint:'Désamorcer avec sang-froid',
-        effect:{reputation:+4, coach:+2, media:+2}, outcome:'Tu désamorces avec classe. Ton image en sort grandie.'},
+        effect:{reputation:+4, coach:+2, media:+2, flag:'mediaFriend'}, outcome:'Tu désamorces avec classe. Ton image en sort grandie.'},
       {label:'Répondre cash, du tac au tac', hint:'Le clash assumé, quitte à diviser',
-        effect:{popularity:+6, reputation:-5, coach:-2, flag:'controversial'}, outcome:'Ça fait le buzz, mais certains n\'ont pas apprécié le ton.'}
+        effect:{popularity:+6, reputation:-5, coach:-2, flag:['controversial','hothead']}, outcome:'Ça fait le buzz, mais certains n\'ont pas apprécié le ton.'}
     ]},
 
   {id:'overwork', cat:'training', cooldown:3,
@@ -256,7 +256,7 @@ export const SHARED_EVENTS = [
         effect:(ctx)=>{ const ok=actionRoll(attrOf(p,'qi'),58); ctx.ok=ok; return ok?{reputation:+5,popularity:+5,media:+3}:{reputation:-2,media:+1}; },
         outcome:(ctx)=> ctx.ok?'Réponse classe et maîtrisée, la punchline fait le tour des réseaux. Respect.':'Ta réponse tombe à plat, le clip tourne en boucle pour de mauvaises raisons.'},
       {label:'Je reste factuel et je coupe court', hint:'Sûr, sans éclat',
-        effect:{coach:+2, media:+1}, outcome:'Tu bottes en touche proprement. Rien à signaler.'}
+        effect:{coach:+2, media:+1, flag:'mediaFriend'}, outcome:'Tu bottes en touche proprement. Rien à signaler.'}
     ]},
 
   {id:'benched', cat:'locker', cooldown:2,
@@ -318,9 +318,9 @@ export const SHARED_EVENTS = [
     weight:()=>0.5,
     choices:()=>[
       {label:'Investir dans une grande maison familiale', hint:'Le geste fort pour la famille, quitte à dépenser gros',
-        effect:{money:-120, morale:+8}, outcome:'Tu poses les clés dans la main de tes proches. Un des plus beaux moments de ta jeune carrière.'},
+        effect:{money:-120, morale:+8, flag:'spender'}, outcome:'Tu poses les clés dans la main de tes proches. Un des plus beaux moments de ta jeune carrière.'},
       {label:'Rester raisonnable, épargner le reste', hint:'La prudence financière avant le geste symbolique',
-        effect:{money:-40, morale:+4}, outcome:'Tu trouves un compromis raisonnable. Le geste compte autant que le montant.'}
+        effect:{money:-40, morale:+4, flag:'saver'}, outcome:'Tu trouves un compromis raisonnable. Le geste compte autant que le montant.'}
     ]},
 
   {id:'paparazzi_incident', cat:'media', cooldown:4,
@@ -369,7 +369,7 @@ export const SHARED_EVENTS = [
       {label:'L\'ignorer complètement', hint:'Ne rien laisser transparaître',
         effect:{qi:+2, coach:+2}, outcome:'Tu n\'accordes aucune réaction. La meilleure des réponses, parfois.'},
       {label:'Répondre par un geste ou une réplique', hint:'Répondre du tac au tac, en public',
-        effect:()=>(Math.random()<0.4)?{popularity:+4}:{reputation:-3, coach:-2, flag:'controversial'},
+        effect:()=>(Math.random()<0.4)?{popularity:+4, flag:'hothead'}:{reputation:-3, coach:-2, flag:['controversial','hothead']},
         outcome:'Tu réponds directement. Le clip fait le tour des réseaux, pour le meilleur ou pour le pire.'}
     ]},
 
@@ -380,9 +380,9 @@ export const SHARED_EVENTS = [
     weight:()=>0.5,
     choices:()=>[
       {label:'Investir massivement dans cette équipe', hint:'Le détail qui peut tout changer, à prix fort',
-        effect:{money:-70, fitness:+8, ath:+1}, outcome:'Chaque détail est désormais optimisé. Le corps répond, nettement.'},
+        effect:{money:-70, fitness:+8, ath:+1, flag:'spender'}, outcome:'Chaque détail est désormais optimisé. Le corps répond, nettement.'},
       {label:'Garder une approche plus simple', hint:'Faire confiance aux méthodes classiques',
-        effect:{money:-10, fitness:+2}, outcome:'Tu restes sur des méthodes plus classiques. Simple, mais suffisant pour l\'instant.'}
+        effect:{money:-10, fitness:+2, flag:'saver'}, outcome:'Tu restes sur des méthodes plus classiques. Simple, mais suffisant pour l\'instant.'}
     ]},
 
   {id:'equipment_switch', cat:'business', cooldown:4,
@@ -407,7 +407,7 @@ export const SHARED_EVENTS = [
         effect:()=>(Math.random()<0.55)?{popularity:+8, media:+3}:{reputation:-2, coach:-2},
         outcome:'Tu te livres sans filtre. Selon ce qui ressort, l\'accueil varie fortement.'},
       {label:'Rester intéressant mais mesuré', hint:'Le contrôle, sans fermer la porte à l\'authenticité',
-        effect:{media:+3, popularity:+3}, outcome:'Tu trouves le bon dosage entre authenticité et prudence. Bel accueil général.'}
+        effect:{media:+3, popularity:+3, flag:'mediaFriend'}, outcome:'Tu trouves le bon dosage entre authenticité et prudence. Bel accueil général.'}
     ]},
 
   {id:'family_emergency', cat:'personal', cooldown:3,
@@ -477,7 +477,7 @@ export const SHARED_EVENTS = [
     body:()=>`Après une sortie médiatique qui a fait grincer des dents, ton entourage te pousse à calmer le jeu publiquement. La façon dont tu le fais compte autant que le geste lui-même.`,
     choices:()=>[
       {label:'Des excuses publiques sincères', hint:'Reconnaître ouvertement, sans détour',
-        effect:{coach:+5, reputation:+2, popularity:-2}, outcome:'Tes excuses sonnent sincères. Le vestiaire et le club apprécient le geste.'},
+        effect:{coach:+5, reputation:+2, popularity:-2, flag:'mediaFriend'}, outcome:'Tes excuses sonnent sincères. Le vestiaire et le club apprécient le geste.'},
       {label:'Minimiser, tourner la page rapidement', hint:'Ne pas s\'attarder sur l\'épisode',
         effect:{media:+1, coach:-1}, outcome:'Tu minimises et passes vite à autre chose. L\'épisode reste dans un coin des mémoires.'}
     ]},

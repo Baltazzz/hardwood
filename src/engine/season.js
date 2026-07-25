@@ -8,6 +8,7 @@ import { ovr, salaryFor, arrivalCoachTrust } from './player.js';
 import { EVENTS, careerPhase } from './events.js';
 import { pickClubName, clubInfo } from './clubs.js';
 import { rnd, ri, pick, clamp, round, jit, capitalize, money } from './utils.js';
+import { applyTagEffects } from './tags.js';
 import { renderEvent, showDeltaFlash, renderSeasonResult, renderMoveScreen, endCareer } from '../ui/screens.js';
 
 /* ============================================================
@@ -115,7 +116,16 @@ export function applyChoice(choice, ctx){
     // ("tir de la gagne pour le titre"), son issue doit déterminer le vrai résultat de la
     // saison — pas une simple couleur narrative découplée du palmarès (voir simulateSeason).
     if(k==='forceFinals'){ p.seasonMods.forceFinals=eff[k]; continue; }
-    if(k==='flag'){ p.flags[eff[k]]=(p.flags[eff[k]]||0)+1; continue; }
+    // p.flagYear alimente le système d'étiquettes de joueur (voir engine/tags.js) : une
+    // étiquette s'estompe si son flag n'a plus été nourri depuis plusieurs saisons. flag accepte
+    // une chaîne (cas courant) ou un tableau, pour les choix qui nourrissent deux récits à la fois
+    // (ex. devenir leader du vestiaire = à la fois mentorLegacy et leaderRep).
+    if(k==='flag'){
+      const names = Array.isArray(eff[k]) ? eff[k] : [eff[k]];
+      p.flagYear=p.flagYear||{};
+      names.forEach(name=>{ p.flags[name]=(p.flags[name]||0)+1; p.flagYear[name]=p.year; });
+      continue;
+    }
     if(k==='clutch'){ p.clutch=(p.clutch||0)+eff[k]; continue; }
     if(k==='riskUp'){ p.riskMod=clamp((p.riskMod||1)+eff[k],0.8,1.9); continue; }
     if(k==='pendingFA'){ p.pendingFA=true; continue; }
@@ -272,7 +282,10 @@ export function simulateSeason(){
   // pourrait contredire le récit ("tir raté mais titre quand même", ou l'inverse).
   if(p.seasonMods.forceFinals!=null){
     champion = p.seasonMods.forceFinals;
-    if(champion) A(isNBA?'Champion NBA':isEuro?'Champion EuroLeague':'Champion '+lg.short);
+    // Le titre décidé par l'événement "match décisif" (et non par le tirage indépendant plus bas)
+    // vient toujours d'une prestation personnelle décisive dans ce money-time précis : c'est
+    // exactement la définition d'un MVP des finales, distinct du titre collectif lui-même.
+    if(champion){ A(isNBA?'Champion NBA':isEuro?'Champion EuroLeague':'Champion '+lg.short); A('MVP des finales'); }
   } else if(wins>=Math.round((0.30+0.02648*lg.prestige)*leagueGames) && Math.random()<championOdds+ (o>=lg.star?.12:0)){
     champion=true; A(isNBA?'Champion NBA':isEuro?'Champion EuroLeague':'Champion '+lg.short);
   }
@@ -345,6 +358,9 @@ export function postSeason(){
   // transfert suit dans la foulée) — sert de garde-fou de cohérence pour les événements de statut
   // "acquis" (leader du vestiaire, etc.) qui ne doivent pas sortir dès la signature.
   p.clubTenure = (p.clubTenure||0) + 1;
+  // Effets mesurés des étiquettes de joueur actives (voir engine/tags.js) : volontairement
+  // petits, jamais sur les attributs ni les probabilités de récompense.
+  applyTagEffects(p);
   // --- progression / déclin ---
   applyAging();
   // --- retraite ? ---

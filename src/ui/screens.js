@@ -12,6 +12,8 @@ import { pickClub, pickClubName, pickClubs, clubInfo } from '../engine/clubs.js'
 import { renderHUD, animateStats } from './hud.js';
 import { resetAccent } from '../engine/accent.js';
 import { renderHallOfFame, renderCareerCard } from './card.js';
+import { renderTrophyCabinet } from './trophies.js';
+import { activeTags, renderTagChips } from '../engine/tags.js';
 import { pick, clamp, money, ordinal, ri } from '../engine/utils.js';
 import { stage } from './dom.js';
 
@@ -514,12 +516,11 @@ export function endCareer(reason){
       styleName:(STYLES.find(x=>x.id===p.style)||{}).name||'', styleEmoji:(STYLES.find(x=>x.id===p.style)||{}).emoji||'',
       tier, score:legend, champs, mvps, allstars, peak:p.peakOvr, seasons:p.seasons.length,
       bestPts:Math.round(bestPts*10)/10, nba:reachedNBA, clutch:p.clutch||0, ovrSeries,
-      tripleDoubles:p.tripleDoubles||0,
+      tripleDoubles:p.tripleDoubles||0, accolades:{...A}, tags:activeTags(p).map(t=>t.id),
       headline:(quotes[0]?quotes[0][1]:''), nation:p.nation.name, hof:p.hof, date:Date.now() };
   p.cardRec=rec; p.endReason=reason;
   if(!p.savedHOF){ p.savedHOF=true; hofAdd(rec); }
 
-  const allAcc = Object.entries(A).sort((a,b)=>b[1]-a[1]);
   const tl = p.timeline.slice(-14);
 
   p.endSummary =
@@ -533,6 +534,7 @@ export function endCareer(reason){
     <div class="legend-title">${tier}</div>
     <p class="subline">${p.nation.flag} ${POSITIONS.find(x=>x.id===p.pos).emoji} ${POSITIONS.find(x=>x.id===p.pos).name} · ${p.seasons.length} saisons · pic à ${p.peakOvr} OVR${p.hof?' · <b style="color:var(--mint)">Hall of Fame</b>':''}</p>
     <p class="body" style="max-width:520px;margin:14px auto 0;text-align:center">${blurb}</p>
+    ${renderTagChips(activeTags(p), 'center')}
 
     <div class="legend-grid">
       <div class="lg"><div class="v">${legend}</div><div class="l">Score légende</div></div>
@@ -556,8 +558,10 @@ export function endCareer(reason){
       <div class="bs-stats"><span>🏀 ${bestSeason.pts} pts</span><span>💪 ${bestSeason.reb} reb</span><span>🎯 ${bestSeason.ast} pas</span><span>📊 OVR ${bestSeason.ovr}</span></div>
     </div>`:''}
 
-    ${allAcc.length?`<div class="accolades" style="justify-content:center;max-width:640px;margin:14px auto 6px">
-      ${allAcc.map(([k,v])=>`<span class="badge ${k.includes('MVP')||k.includes('Champion')||k.includes('🥇')?'title':''}">${k}${v>1?` ×${v}`:''}</span>`).join('')}</div>`:''}
+    <div class="recap-block" style="max-width:640px">
+      <div class="eyebrow" style="text-align:center;margin-bottom:14px">🏆 Armoire à trophées</div>
+      ${renderTrophyCabinet(A)}
+    </div>
 
     <div class="timeline">
       <div class="eyebrow" style="margin:24px 0 8px">Moments de carrière</div>

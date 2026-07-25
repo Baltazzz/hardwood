@@ -4,6 +4,7 @@ import { LEAGUES } from '../data/leagues.js';
 import { ovr, roleOf } from '../engine/player.js';
 import { clamp, money, reducedMotion, easeOut } from '../engine/utils.js';
 import { applyAccent, emblemColors } from '../engine/accent.js';
+import { activeTags, renderTagChips } from '../engine/tags.js';
 import { stage } from './dom.js';
 
 /* ============================================================
@@ -83,6 +84,7 @@ export function renderHUD(mode='club'){
         <div><div class="cn">${p.club||'Sans club'}</div>
           <div class="cl">${lg?lg.short:''}${p.club&&p.seasons.length?` · <span style="color:var(--mint)">${roleOf(p).label}</span>`:''}</div></div>
       </div>
+      ${renderTagChips(activeTags(p))}
       <div class="meters">
         ${meter('Réputation',p.reputation,'linear-gradient(90deg,var(--orange-soft),var(--orange))')}
         ${meter('Moral',p.morale,'linear-gradient(90deg,var(--mint-soft),var(--mint))')}

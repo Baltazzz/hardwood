@@ -9,35 +9,24 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Ouvert
 
-- [ ] **AGD-03 — Système de trophées**
-  Au-delà du compteur d'accolades actuel (MVP/All-Star/Champion en nombre brut dans
-  `p.accolades`), pas de vitrine de trophées nommés ni de rétrospective par saison.
-  **Critère** : provisoire — portée exacte (trophées nommés ? vitrine dédiée ? cérémonie de
-  fin de saison ?) à préciser avec l'utilisateur avant implémentation. Ne pas coder sur la
-  base de cette seule ligne sans validation du périmètre en session.
-
-- [ ] **AGD-04 — Contexte de compétition par saison**
-  Partiellement fait, précisé par l'audit du 2026-07-26 : le titre (champion) et le MVP sont
-  déjà déterminés et affichés par saison (`simulateSeason()` dans `season.js`, accolades
-  visibles dans le bilan de saison et la feuille de match carrière). Manque : classement/
-  position finale du club dans sa ligue (aucune notion de standings — `wins` existe mais
-  n'est comparé à personne d'autre) ; playoffs (aucun bracket réel, seulement 2 événements
-  avec du texte d'ambiance sans mécanique — `playoff_push` dans `mid.js`, `load_mgmt` dans
-  `late.js`) ; montée/descente au niveau du **club** (ce qui existe est la progression
-  individuelle du joueur entre paliers de ligue selon sa propre performance —
-  `resolveMovement()` / moves `promo` / `demote` dans `season.js` — un concept différent d'un
-  classement d'équipe qui monterait ou descendrait collectivement, indépendamment du joueur).
+- [ ] **AGD-04 — Contexte de compétition par saison** _(avancé le 2026-07-29 : voir ci-dessous)_
+  Avancée cette session : le palmarès de fin de carrière et la fiche Panthéon séparent
+  désormais nettement les récompenses de club/ligue (titre, MVP, trophées individuels) de
+  celles de sélection nationale (médailles, MVP de tournoi), dans deux sections hiérarchisées
+  de l'armoire à trophées (`renderTrophyCabinet()` dans `src/ui/trophies.js`, classification
+  par `classifyAccolade()`). Prépare l'affichage du contexte de compétition mais ne le
+  complète pas : reste manquant le classement/position finale du club dans sa ligue (aucune
+  notion de standings — `wins` existe mais n'est comparé à personne d'autre) ; playoffs (aucun bracket
+  réel, seulement 2 événements avec du texte d'ambiance sans mécanique — `playoff_push` dans
+  `mid.js`, `load_mgmt` dans `late.js`) ; montée/descente au niveau du **club** (ce qui existe
+  est la progression individuelle du joueur entre paliers de ligue selon sa propre
+  performance — `resolveMovement()` / moves `promo`/`demote` dans `season.js` — un concept
+  différent d'un classement d'équipe qui monterait ou descendrait collectivement,
+  indépendamment du joueur).
   **Critère** : provisoire — portée exacte (classement de conférence ? bracket de playoffs ?
   simple ligne de classement ? montée/descente de club distincte de la progression du joueur ?)
   à préciser avec l'utilisateur avant implémentation. Ne pas coder sur la base de cette seule
   ligne sans validation du périmètre en session.
-
-- [ ] **AGD-05 — Étiquettes de joueur**
-  Le moteur d'événements pose déjà des flags internes (`bust`, `clutchHero`, `rival`,
-  `loyalOne`, etc. — voir `src/data/events/threads.js` et `applyChoice()` dans `season.js`)
-  mais rien n'est visible pour le joueur : aucune étiquette/badge affiché sur la fiche ou le HUD.
-  **Critère** : au moins une étiquette de joueur (ex. « Clutch », « Bust », « Fidèle au club »)
-  est visible dans l'interface une fois le seuil de flag correspondant atteint.
 
 - [ ] **AGD-06 — Animations des moments forts**
   Ajouté au registre le 2026-07-26 (item signalé comme possiblement oublié par l'utilisateur —
@@ -63,6 +52,37 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
   **Critère** : à définir avec l'utilisateur une fois le manque précisé.
 
 ## Coché récemment
+
+- [x] **AGD-03 — Système de trophées** _(implémenté et vérifié le 2026-07-29)_
+  Armoire à trophées (`src/ui/trophies.js`), chaque famille de récompense avec sa vraie forme :
+  bague de champion (titre NBA uniquement), coupe collective (tous les autres titres de ligue),
+  trophées individuels distincts par forme/couleur (MVP = étoile dorée, MVP des finales = coupe
+  + sash prune, Meilleur défenseur = bouclier terracotta, Rookie de l'année/Meilleur jeune =
+  chevron prune), distinctions (rosette à rubans, All-Star/meilleur marqueur — pas un trophée),
+  médailles or/argent/bronze pour la sélection nationale. Nouvelle accolade "MVP des finales"
+  ajoutée (`simulateSeason()`), déclenchée uniquement quand le titre est décidé par l'événement
+  narratif "match décisif" (`forceFinals`), jamais par le tirage indépendant. Accessible depuis
+  l'écran de fin de carrière et la fiche Panthéon (`renderCareerDetail()`).
+  Vérifié : rendu synthétique testé avec les 14 types de récompense simultanément (0 valeur
+  `undefined`/`NaN`, 17 SVG bien formés), 0% crash sur 100+300 carrières après intégration.
+
+- [x] **AGD-05 — Étiquettes de joueur** _(implémenté et vérifié le 2026-07-29)_
+  8 étiquettes sur 4 registres (`src/engine/tags.js`) : jeu (Clutch, Verrou défensif, Fragile),
+  mental/vestiaire (Leader, Tête brûlée), médiatique (Chouchou des médias, Sulfureux), finance
+  (Bling, Économe). Dérivées des flags narratifs existants (`clutchHero`, `lockdown`,
+  `injuryProne`, `controversial`) + 5 nouveaux flags câblés sur des choix existants (`leaderRep`,
+  `hothead`, `mediaFriend`, `spender`, `saver`). Une étiquette s'active à partir d'un seuil et
+  s'estompe si son flag n'est plus nourri pendant 5 saisons (`p.flagYear`, voir `applyChoice()`)
+  — peut donc bien se perdre, pas seulement s'accumuler. Effet mesuré mais volontairement
+  modeste par saison (`applyTagEffects()` dans `postSeason()`), jamais sur les attributs ni les
+  probabilités de récompense. Affichées sur la fiche HUD en cours de carrière, l'écran de fin,
+  et la fiche Panthéon.
+  Vérifié par audit comparatif à 300 carrières avant/après : titre 29.3%→29.7%, MVP 4.7%→5.7%,
+  phénomène 1.3%→2.3%, All-Star 25.3%→28.7%, HOF 9.3%→10.7% — toutes les variations dans la
+  marge de bruit d'échantillonnage déjà observée cette semaine sur ce protocole (le titre élite
+  seul a varié de 6.7% à 14.7% selon les runs sans aucun changement de code entre certains
+  d'entre eux). Nombre moyen d'étiquettes actives en fin de carrière : 0.8 (sobre, conforme à
+  l'objectif "quelques-unes à la fois").
 
 - [x] **AGD-01 — Blocks et steals** _(implémenté et vérifié cette session)_
   Calculées par `simulateSeason()` selon poste, def/qi, temps de jeu et niveau de ligue

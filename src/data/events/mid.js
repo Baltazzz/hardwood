@@ -39,7 +39,7 @@ export const MID_EVENTS = [
     weight:()=>0.6,
     choices:()=>[
       {label:'Devenir le leader du vestiaire', hint:'Endosser le rôle et son poids',
-        effect:{reputation:+4, coach:+3, morale:+2, flag:'mentorLegacy'}, outcome:'Tu prends la parole, tu montres l\'exemple. Le groupe te suit.'},
+        effect:{reputation:+4, coach:+3, morale:+2, flag:['mentorLegacy','leaderRep']}, outcome:'Tu prends la parole, tu montres l\'exemple. Le groupe te suit.'},
       {label:'Mener par l\'exemple, sans le rôle', hint:'Les actes plutôt que les discours',
         effect:{qi:+2}, outcome:'Tu préfères les actes aux discours.'}
     ]},
@@ -134,7 +134,7 @@ export const MID_EVENTS = [
     weight:()=>1.0,
     choices:()=>[
       {label:'Accepter d\'être le patron sur le terrain', hint:'Prendre les commandes',
-        effect:{reputation:+5, coach:+4, morale:+3}, outcome:'Tu prends les commandes. Le vestiaire se range derrière toi.'},
+        effect:{reputation:+5, coach:+4, morale:+3, flag:'leaderRep'}, outcome:'Tu prends les commandes. Le vestiaire se range derrière toi.'},
       {label:'Rester focalisé sur ton jeu, sans les galons', hint:'Le terrain plutôt que le costume de leader',
         effect:{morale:+3, perfBonus:+3}, outcome:'Tu préfères parler sur le parquet. Ça te va très bien.'}
     ]},
@@ -186,7 +186,7 @@ export const MID_EVENTS = [
     weight:()=>0.8,
     choices:()=>[
       {label:'Accepter le brassard', hint:'Endosser le rôle, avec la pression qui vient',
-        effect:{reputation:+7, morale:+3, popularity:+4}, outcome:'Tu deviens le visage de ta sélection. Les attentes montent d\'un cran.'},
+        effect:{reputation:+7, morale:+3, popularity:+4, flag:'leaderRep'}, outcome:'Tu deviens le visage de ta sélection. Les attentes montent d\'un cran.'},
       {label:'Laisser le rôle à un plus ancien', hint:'Rester concentré, sans le brassard',
         effect:{coach:+2, morale:+2}, outcome:'Tu préfères montrer l\'exemple sans le brassard.'}
     ]},
@@ -262,7 +262,7 @@ export const MID_EVENTS = [
     weight:()=>0.7,
     choices:()=>[
       {label:'Te porter candidat ouvertement', hint:'Assumer de vouloir le rôle',
-        effect:()=>(Math.random()<0.55)?{reputation:+5, coach:+3, morale:+3}:{morale:-2, coach:+1},
+        effect:()=>(Math.random()<0.55)?{reputation:+5, coach:+3, morale:+3, flag:'leaderRep'}:{morale:-2, coach:+1},
         outcome:'Tu assumes vouloir le rôle. Le vestiaire tranche, dans un sens ou dans l\'autre.'},
       {label:'Laisser le groupe décider sans t\'imposer', hint:'Ne rien réclamer, laisser venir',
         effect:{coach:+2, qi:+1}, outcome:'Tu ne réclames rien. Si le brassard vient, il viendra de lui-même.'}

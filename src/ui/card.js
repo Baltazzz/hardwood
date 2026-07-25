@@ -1,6 +1,8 @@
 import { hofLoad, hofClear } from '../engine/hof.js';
 import { stage } from './dom.js';
 import { screenTitle, sparkline } from './screens.js';
+import { renderTrophyCabinet } from './trophies.js';
+import { tagsByIds, renderTagChips } from '../engine/tags.js';
 
 /* ============================================================
    PANTHÉON (rendu)
@@ -39,6 +41,7 @@ export function renderCareerDetail(r){
     <div class="eyebrow">Carrière au Panthéon</div>
     <div class="legend-title" style="font-size:30px">${r.tier}</div>
     <p class="subline">${r.flag||'🏀'} ${r.posEmoji||''} ${r.posName||''} · ${r.seasons} saisons · pic ${r.peak} OVR${r.nba?' · 🏀 passé par la NBA':''}</p>
+    ${renderTagChips(tagsByIds(r.tags), 'center')}
     <div class="legend-grid">
       <div class="lg"><div class="v">${r.score}</div><div class="l">Score légende</div></div>
       <div class="lg"><div class="v">${r.champs}</div><div class="l">Titres</div></div>
@@ -50,6 +53,10 @@ export function renderCareerDetail(r){
     ${r.headline?`<div class="recap-block"><div class="press"><div class="press-txt">${r.headline}</div></div></div>`:''}
     ${r.ovrSeries&&r.ovrSeries.length>1?`<div class="recap-block" style="text-align:center">${sparkline(r.ovrSeries)}</div>`:''}
     <div class="recap-block" style="text-align:center"><span class="hof-sub">🎯 Record de points sur une saison : <b style="color:var(--orange)">${r.bestPts}</b></span></div>
+    <div class="recap-block" style="max-width:640px">
+      <div class="eyebrow" style="text-align:center;margin-bottom:14px">🏆 Armoire à trophées</div>
+      ${renderTrophyCabinet(r.accolades)}
+    </div>
     <div style="margin-top:26px;text-align:center;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
       <button class="btn ghost" id="cardBtn2">🖼️ Ma carte</button>
       <button class="btn" id="detBack">Retour au Panthéon</button>

@@ -167,7 +167,7 @@ export const EARLY_EVENTS = [
       {label:'Encaisser et faire parler le jeu', hint:'Ravaler la colère, laisser le terrain répondre',
         effect:{qi:+3, coach:+2}, outcome:'Tu ravales ta colère. Le coach salue le sang-froid retrouvé.'},
       {label:'Laisser sortir la frustration', hint:'Craquer, quitte à en payer le prix',
-        effect:()=>(Math.random()<0.4)?{reputation:-4, coach:-3}:{morale:+2, popularity:+2},
+        effect:()=>(Math.random()<0.4)?{reputation:-4, coach:-3, flag:'hothead'}:{morale:+2, popularity:+2, flag:'hothead'},
         outcome:'Tu craques. La salle retient son souffle en attendant la décision de l\'arbitre.'}
     ]},
 

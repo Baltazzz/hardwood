@@ -44,11 +44,12 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
   provenance non retrouvée dans l'historique git accessible ni dans `AGENDA.md` avant cette
   date ; peut-être demandé lors d'une session antérieure non couverte par l'historique
   consulté, à confirmer). Progrès adjacent le 2026-07-26 : pictogramme SVG dans le chip
-  d'événement (`CAT_ICON` dans `events.js`). Nouveau progrès adjacent le 2026-07-27 : ces mêmes
+  d'événement (`CAT_ICON` dans `events.js`). Progrès adjacent le 2026-07-27 : ces mêmes
   événements ("grand moment" — clutch/défense/duel/finale) ont désormais une cartouche visuelle
-  dédiée (`.grand-moment` dans `styles.css` : liseré doré + motif ballon agrandi), pour se
-  distinguer visuellement des événements courants. Ça reste une mise en forme statique, pas une
-  animation/mise en scène du moment lui-même au moment de la résolution du choix.
+  dédiée (`.grand-moment` dans `styles.css` : liseré + motif ballon agrandi, recoloré en prune
+  le 2026-07-28 avec la bascule de palette), pour se distinguer visuellement des événements
+  courants. Ça reste une mise en forme statique, pas une animation/mise en scène du moment
+  lui-même au moment de la résolution du choix.
   **Critère** : à définir avec l'utilisateur (quels moments ? quel type d'animation ? respect
   de `prefers-reduced-motion`, déjà en place globalement).
 

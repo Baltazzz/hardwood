@@ -1,7 +1,7 @@
 // Couleur d'accent dynamique par carrière : indexée sur le club actuel (ou la nation, pendant
 // une fenêtre de sélection nationale), avec garde-fou de contraste automatique. L'objectif est
 // que deux carrières se ressentent visuellement différentes, jamais qu'une couleur de club
-// improbable rende l'interface illisible sur le fond aubergine City Edition.
+// improbable rende l'interface illisible sur le fond crème Terre battue.
 
 // Vraies couleurs de marque, réservées aux clubs globaux de src/data/leagues.js (NBA/EuroLeague :
 // noms de vrais clubs, peu nombreux, faciles à vérifier). Les centaines de clubs de
@@ -24,8 +24,8 @@ const NATION_ACCENT = {
   GR:'#0D5EAF', AU:'#00843D', CA:'#FF0000', SI:'#0057B7',
 };
 
-const FALLBACK_ACCENT = '#FF6B2C'; // = --orange : repli si aucune donnée de club/nation exploitable
-const BG = '#2A1B3D'; // = --court : fond sur lequel le contraste est garanti
+const FALLBACK_ACCENT = '#E0562D'; // = --orange : repli si aucune donnée de club/nation exploitable
+const BG = '#F4EDE1'; // = --court : fond clair sur lequel le contraste est garanti
 
 function hashHue(str){
   let h = 0;
@@ -68,28 +68,22 @@ function contrastRatio(hexA,hexB){
   return a>b ? a/b : b/a;
 }
 
-// Garde-fou de sécurité : quelle que soit la couleur source, on relève la luminosité (et la
-// saturation si elle est trop fade, pour rester dans l'esprit "flashy" de la City Edition)
-// jusqu'à un contraste suffisant sur --court. Ne redescend jamais sous minRatio : c'est la
-// seule garantie de lisibilité, pas une simple recommandation.
+// Garde-fou de sécurité : le fond est désormais clair (crème), donc c'est l'inverse de l'ancienne
+// City Edition -- on ASSOMBRIT la couleur source (et on relève un peu la saturation si elle est
+// trop fade, pour rester vivant sur la palette Terre battue) jusqu'à un contraste suffisant sur
+// --court. Ne redescend jamais sous minRatio : c'est la seule garantie de lisibilité, pas une
+// simple recommandation.
 export function ensureContrast(hex, minRatio=3.5){
   let [h,s,l] = rgbToHsl(...hexToRgb(hex));
-  s = Math.max(s, 0.55);
+  s = Math.max(s, 0.45);
   let candidate = hslToHex(h,s,l);
   let iter=0;
-  while(contrastRatio(candidate,BG) < minRatio && l<0.94 && iter<40){
-    l = Math.min(1, l+0.025);
+  while(contrastRatio(candidate,BG) < minRatio && l>0.06 && iter<40){
+    l = Math.max(0, l-0.025);
     candidate = hslToHex(h,s,l);
     iter++;
   }
   return candidate;
-}
-
-// Couleur de texte à poser SUR l'accent lui-même (ex. initiales du club sur son pastille) :
-// contraste séparé, contre l'accent et non contre --court.
-export function pickTextColor(accentHex){
-  const chalk='#F5E9DC', ink='#2A1B3D';
-  return contrastRatio(accentHex, ink) >= contrastRatio(accentHex, chalk) ? ink : chalk;
 }
 
 function clubAccentRaw(clubName){
@@ -99,6 +93,37 @@ function clubAccentRaw(clubName){
 }
 function nationAccentRaw(nationId){
   return (nationId && NATION_ACCENT[nationId]) || null;
+}
+
+// Couleur "secondaire" pour la pastille bicolore (voir emblemColors ci-dessous) : dérivée
+// algorithmiquement de la primaire plutôt que curatée, pour ne jamais présenter une seconde
+// couleur de marque inventée comme authentique. Teinte voisine (+32°), plus claire et un peu
+// moins saturée : lit comme un vrai "second ton" d'écusson plutôt qu'une couleur au hasard.
+function deriveSecondary(primaryHex){
+  let [h,s,l] = rgbToHsl(...hexToRgb(primaryHex));
+  const h2 = (h+32) % 360;
+  return hslToHex(h2, Math.max(0.35, s*0.7), Math.min(0.84, l+0.22));
+}
+// La secondaire n'est qu'un aplat décoratif (jamais du texte) : contraste minimal juste pour
+// qu'elle reste visible sur crème, bien moins strict que pour l'accent principal.
+function ensureVisible(hex, minRatio=1.6){
+  let [h,s,l] = rgbToHsl(...hexToRgb(hex));
+  let candidate = hslToHex(h,s,l);
+  let iter=0;
+  while(contrastRatio(candidate,BG) < minRatio && l>0.06 && iter<40){
+    l = Math.max(0, l-0.03);
+    candidate = hslToHex(h,s,l);
+    iter++;
+  }
+  return candidate;
+}
+
+// Couleurs primaire + secondaire de l'écusson de club, toutes deux garanties lisibles/visibles
+// sur --court. Même mode 'club'/'nation' que getAccent().
+export function emblemColors(p, mode='club'){
+  const primary = getAccent(p, mode);
+  const secondary = ensureVisible(deriveSecondary(primary));
+  return { primary, secondary };
 }
 
 // mode 'club' (défaut, indexé sur p.club) ou 'nation' (fenêtre sélection nationale : événements

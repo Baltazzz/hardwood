@@ -84,14 +84,14 @@ export function renderCareerCard(r, back){
 function drawCard(canvas, r){
   const W=1080, H=1350, x=canvas.getContext('2d');
   canvas.width=W; canvas.height=H;
-  const C={chalk:'#F5E9DC',dim:'#BCAFAF',orange:'#FF6B2C',orangeSoft:'#FC8E5D',mint:'#3FD9A4',mintSoft:'#72DDB4',panel:'#5B4C63',line:'#A37772'};
-  // fond dégradé — aubergine profond
-  const g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,'#3E304D'); g.addColorStop(0.55,'#2A1B3D'); g.addColorStop(1,'#16101F');
+  const C={chalk:'#241813',dim:'#5C4A3E',orange:'#E0562D',orangeSoft:'#B34524',mint:'#A1821F',mintSoft:'#836919',panel:'#FFFFFF',line:'#DCC9AF'};
+  // fond dégradé — crème chaud Terre battue
+  const g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,'#FFFFFF'); g.addColorStop(0.55,'#F8F1E4'); g.addColorStop(1,'#EEE2CC');
   x.fillStyle=g; x.fillRect(0,0,W,H);
-  // halo chaud en haut
-  const rg=x.createRadialGradient(W/2,-120,60,W/2,-120,760); rg.addColorStop(0,'rgba(255,107,44,0.22)'); rg.addColorStop(1,'rgba(255,107,44,0)');
+  // halo chaud en haut, très léger (un halo aussi marqué que sur fond sombre écraserait le blanc)
+  const rg=x.createRadialGradient(W/2,-120,60,W/2,-120,760); rg.addColorStop(0,'rgba(224,86,45,0.10)'); rg.addColorStop(1,'rgba(224,86,45,0)');
   x.fillStyle=rg; x.fillRect(0,0,W,700);
-  // bande signature orange -> menthe
+  // bande signature terracotta -> or
   x.fillStyle=x.createLinearGradient(0,0,W,0); x.fillStyle.addColorStop(0,C.orange); x.fillStyle.addColorStop(1,C.mint);
   x.fillRect(0,0,W,6);
   // cadre
@@ -111,7 +111,7 @@ function drawCard(canvas, r){
   // badge tier
   x.font='700 52px "Bricolage Grotesque", Arial, sans-serif';
   const tw=x.measureText(r.tier||'').width; const bw=Math.min(Math.max(tw+90,360),W-140);
-  x.fillStyle='rgba(63,217,164,0.12)'; x.strokeStyle=C.mint; x.lineWidth=2.5;
+  x.fillStyle='rgba(161,130,31,0.10)'; x.strokeStyle=C.mint; x.lineWidth=2.5;
   roundRect(x,(W-bw)/2,326,bw,88,44); x.fill(); x.stroke();
   x.fillStyle=C.mint; x.fillText(r.tier||'', W/2, 386);
   if(r.hof){
@@ -124,7 +124,7 @@ function drawCard(canvas, r){
   const cells=[['Score',r.score],['Titres',r.champs],['MVP',r.mvps],['All-Star',r.allstars],['Pic OVR',r.peak],['Clutch',r.clutch||0]];
   const gx0=90, gy0=494, gw=(W-180), cwid=gw/3, chei=150;
   for(let i=0;i<cells.length;i++){ const cx=gx0+(i%3)*cwid, cy=gy0+Math.floor(i/3)*(chei+22);
-    x.fillStyle='rgba(245,233,220,0.045)'; x.strokeStyle=C.line; x.lineWidth=1.5; roundRect(x,cx+10,cy,cwid-20,chei,18); x.fill(); x.stroke();
+    x.fillStyle='rgba(36,24,19,0.035)'; x.strokeStyle=C.line; x.lineWidth=1.5; roundRect(x,cx+10,cy,cwid-20,chei,18); x.fill(); x.stroke();
     x.fillStyle=C.chalk; x.font='700 68px "Bricolage Grotesque", Arial, sans-serif'; x.fillText(String(cells[i][1]), cx+cwid/2, cy+82);
     x.fillStyle=C.dim; x.font='600 25px "Bricolage Grotesque", Arial, sans-serif'; spacedText(x,String(cells[i][0]).toUpperCase(),cx+cwid/2,cy+122,1.5);
   }
@@ -157,4 +157,4 @@ function roundRect(x,rx,ry,w,h,r){ x.beginPath(); x.moveTo(rx+r,ry); x.arcTo(rx+
 function spacedText(x,str,cx,cy,sp){ x.save(); const chs=[...str]; let tot=0; const ws=chs.map(c=>{const w=x.measureText(c).width;tot+=w+sp;return w;}); tot-=sp; let px=cx-tot/2; x.textAlign='left'; chs.forEach((c,i)=>{ x.fillText(c,px,cy); px+=ws[i]+sp; }); x.restore(); }
 function truncate(s,n){ s=String(s); return s.length>n?s.slice(0,n-1)+'…':s; }
 function wrapText(x,text,cx,cy,maxW,lh){ const words=String(text).split(' '); let line='',yy=cy,lines=[]; words.forEach(w=>{ const t=line?line+' '+w:w; if(x.measureText(t).width>maxW && line){ lines.push(line); line=w; } else line=t; }); if(line)lines.push(line); lines.slice(0,4).forEach((ln,i)=>x.fillText(ln,cx,yy+i*lh)); }
-function drawSpark(x,series,ox,oy,w,h,C){ const mn=Math.min(...series),mx=Math.max(...series),rng=Math.max(1,mx-mn); const n=series.length; const bw=Math.min(w/n*0.66,26); const gap=(w-bw*n)/(n+1); series.forEach((v,i)=>{ const bh=14+((v-mn)/rng)*(h-14); const bx=ox+gap+i*(bw+gap); const isPk=v===mx; x.fillStyle=isPk?C.mint:'rgba(252,142,93,0.75)'; roundRect(x,bx,oy+h-bh,bw,bh,4); x.fill(); }); }
+function drawSpark(x,series,ox,oy,w,h,C){ const mn=Math.min(...series),mx=Math.max(...series),rng=Math.max(1,mx-mn); const n=series.length; const bw=Math.min(w/n*0.66,26); const gap=(w-bw*n)/(n+1); series.forEach((v,i)=>{ const bh=14+((v-mn)/rng)*(h-14); const bx=ox+gap+i*(bw+gap); const isPk=v===mx; x.fillStyle=isPk?C.mint:'rgba(224,86,45,0.7)'; roundRect(x,bx,oy+h-bh,bw,bh,4); x.fill(); }); }

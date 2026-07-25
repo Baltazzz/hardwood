@@ -1,43 +1,49 @@
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap');
 
 /* ============================================================
-   HARDWOOD — City Edition
-   Palette : aubergine profond + orange flash + menthe, sur fond
-   crème pour le texte. Les surfaces (panel/panel2/line), le texte
-   atténué et les états (hover/focus) sont tous dérivés de ces cinq
-   teintes de base — pas de couleur ajoutée hors de cette famille,
-   à l'exception d'un rouge pragmatique pour les deltas négatifs
-   (--down), nécessaire à la lisibilité gains/pertes.
+   HARDWOOD — Terre battue
+   Palette claire : crème chaud + terracotta + prune + or, texte encre
+   chaude. Bascule complète depuis l'ancienne City Edition (aubergine
+   sombre) — les noms de variables sont conservés pour ne pas rouvrir
+   les ~200 points d'usage à travers CSS/JS, mais portent maintenant
+   des valeurs de thème clair. Chaque teinte d'accent a une variante
+   dérivée assombrie dédiée au petit texte (orange-soft, mint-soft) et
+   une pour les fonds de bouton pleins (orange-deep) : la teinte brute
+   terracotta/or ne passe le contraste AA qu'en grand texte/icônes,
+   jamais en texte courant sur fond crème (vérifié : voir commentaires
+   inline). --down reste une exception pragmatique (delta négatif),
+   --plum est la seule vraie teinte ajoutée hors de la famille de base,
+   réservée aux libellés forts et moments d'enjeu (money-time).
 ============================================================ */
 :root{
   /* Fonds */
-  --court:#2A1B3D;        /* aubergine profond — fond principal */
-  --court2:#16101F;       /* fond secondaire, plus sombre */
-  --panel:#483A55;        /* éclaircie : plus de séparation, moins écrasé de sombre */
-  --panel2:#5B4C63;
-  --line:#A37772;         /* réchauffée : plus de contraste et de vie que le gris-mauve neutre d'origine */
-  --track:#1C1328;        /* fond des jauges/anneaux vides */
+  --court:#F4EDE1;        /* crème chaud — fond principal */
+  --court2:#EEE2CC;       /* fond secondaire, un ton plus soutenu */
+  --panel:#FFFFFF;        /* surfaces de carte */
+  --panel2:#FBF6EC;
+  --line:#DCC9AF;         /* bordures crème discrètes (contraste volontairement faible) */
+  --track:#EFE3D0;        /* fond des jauges/anneaux vides */
 
-  /* Texte — jamais de texte sombre sur fond sombre : uniquement des tons clairs ici */
-  --chalk:#F5E9DC;        /* crème — texte principal */
-  --body-txt:#D5C8C3;     /* corps de texte, un cran sous chalk */
-  --chalk-dim:#BCAFAF;    /* texte atténué / labels, éclairci pour rester net */
-  --ink:#2A1B3D;          /* texte sombre — réservé aux surfaces CLAIRES (ex. carte scouting) */
+  /* Texte — encre chaude sur fond clair partout */
+  --chalk:#241813;        /* encre chaude — texte principal (14.9:1 sur --court) */
+  --body-txt:#5C4A3E;     /* corps de texte atténué (7.2:1 sur --court) */
+  --chalk-dim:#7A6353;    /* texte très atténué / labels (4.8:1 sur --court) */
+  --ink:#241813;          /* alias historique de --chalk, conservé pour .scout */
 
   /* Accents */
-  --orange:#FF6B2C;       /* primaire — bordures, icônes, texte d'accent */
-  --orange-deep:#A24727;  /* fond des boutons pleins : assez profond pour porter du texte crème lisible */
-  --orange-deep-hover:#B95028;
-  --orange-soft:#FC8E5D;
-  --mint:#3FD9A4;         /* secondaire — réussites, mises en avant */
-  --mint-soft:#72DDB4;
-  --up:var(--mint);
-  --down:#FF5A72;         /* exception pragmatique : deltas négatifs, illisibles autrement */
-  --star-gold:#AA7C1D;    /* exception pragmatique : étoiles de potentiel — le doré est un code
-                             universel de notation, sans équivalent honnête dans les 5 teintes ;
-                             contraste vérifié (3.4:1) sur la carte scouting claire */
+  --orange:#E0562D;       /* terracotta primaire — bordures, icônes, grands nombres (3.3:1, non pour le petit texte) */
+  --orange-deep:#A84022;  /* fond des boutons pleins : porte du texte blanc à 5.3:1 */
+  --orange-deep-hover:#BE4926;
+  --orange-soft:#B34524;  /* terracotta assombrie : sûre en petit texte sur crème (4.8:1) */
+  --mint:#A1821F;         /* or secondaire — icônes/grands nombres (3.2:1) */
+  --mint-soft:#836919;    /* or assombri : sûr en petit texte (4.5:1) */
+  --up:var(--mint-soft);
+  --down:#B5342E;         /* exception pragmatique : deltas négatifs, illisibles autrement (5.2:1) */
+  --star-gold:#A1821F;    /* aligné sur le nouvel or secondaire (usage graphique, pas texte) */
+  --plum:#B23A6E;         /* libellés forts, moments d'enjeu type money-time (4.9:1, sûr même en texte) */
+  --on-accent:#FFF8EE;    /* texte posé SUR un fond d'accent saturé (bouton plein...), jamais --chalk ici */
 
-  --shadow: 0 14px 34px rgba(8,3,16,.45);
+  --shadow: 0 14px 34px rgba(36,24,19,.14);
 }
 
 *{box-sizing:border-box;margin:0;padding:0}
@@ -57,19 +63,19 @@ html,body{background:var(--court);min-height:100%}
 .stage{
   position:relative;border-radius:20px;overflow:hidden;
   background:
-    radial-gradient(120% 80% at 50% -10%, rgba(255,107,44,.10), transparent 55%),
-    radial-gradient(90% 60% at 50% 120%, rgba(63,217,164,.06), transparent 60%),
-    linear-gradient(180deg,var(--court2),var(--court));
+    radial-gradient(120% 80% at 50% -10%, rgba(224,86,45,.07), transparent 55%),
+    radial-gradient(90% 60% at 50% 120%, rgba(201,162,39,.05), transparent 60%),
+    linear-gradient(180deg,var(--court),var(--court2));
   border:1px solid var(--line);
   box-shadow:var(--shadow);
 }
-.stage::after{ /* bande signature City Edition, orange -> menthe */
+.stage::after{ /* bande signature Terre battue, terracotta -> or */
   content:"";position:absolute;inset:0 0 auto 0;height:4px;
   background:linear-gradient(90deg,var(--orange),var(--mint));
   pointer-events:none;
 }
 .stage::before{ /* marquage de terrain, très sobre, en pied d'écran */
-  content:"";position:absolute;inset:auto 0 0 0;height:120px;opacity:.08;
+  content:"";position:absolute;inset:auto 0 0 0;height:120px;opacity:.07;
   background:repeating-linear-gradient(90deg,transparent 0 46px,var(--orange) 46px 47px);
   pointer-events:none;
 }
@@ -94,16 +100,20 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
    du texte. Fait main, aucune image tierce. */
 .title-screen::before{
   content:"";position:absolute;inset:-18px -6px auto auto;width:min(280px,68vw);height:min(280px,68vw);
-  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%23FF6B2C' stroke-width='1.6'%3E%3Ccircle cx='100' cy='100' r='96'/%3E%3Cpath d='M100,4 V196'/%3E%3Cpath d='M4,100 H196'/%3E%3Cpath d='M30,30 Q100,100 30,170'/%3E%3Cpath d='M170,30 Q100,100 170,170'/%3E%3C/g%3E%3C/svg%3E") no-repeat;
-  background-size:contain;opacity:.07;z-index:0;pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%23E0562D' stroke-width='1.6'%3E%3Ccircle cx='100' cy='100' r='96'/%3E%3Cpath d='M100,4 V196'/%3E%3Cpath d='M4,100 H196'/%3E%3Cpath d='M30,30 Q100,100 30,170'/%3E%3Cpath d='M170,30 Q100,100 170,170'/%3E%3C/g%3E%3C/svg%3E") no-repeat;
+  background-size:contain;opacity:.06;z-index:0;pointer-events:none;
 }
 .title-screen>*{position:relative;z-index:1}
+/* Wordmark sur fond clair : encre chaude pour la lisibilité de masse ; le "W" garde la
+   terracotta brute -- à cette taille (58-116px) il relève du "grand texte" au sens du contraste
+   (seuil 3:1, largement tenu à 3.3:1 sur --court), donc la teinte la plus vive et la plus fidèle
+   au terracotta demandé reste sûre ici, contrairement au petit texte ailleurs dans l'appli. */
 .title-screen h1{font-size:clamp(58px,15vw,116px);font-weight:800;line-height:.88;margin-bottom:8px;color:var(--chalk)}
 .title-screen h1 .o{color:var(--orange)}
 .title-screen .tag{color:var(--chalk-dim);font-family:'Bricolage Grotesque';font-size:15px;max-width:440px;margin:14px auto 0}
 .kbd{font-family:'Bricolage Grotesque';font-weight:600;font-size:12px;color:var(--chalk-dim);margin-top:26px;letter-spacing:.06em}
-.welcome-link{color:var(--mint);text-decoration:none;border-bottom:1px dashed rgba(63,217,164,.5)}
-.welcome-link:hover{color:var(--mint-soft)}
+.welcome-link{color:var(--mint-soft);text-decoration:none;border-bottom:1px dashed rgba(161,130,31,.5)}
+.welcome-link:hover{color:var(--orange-soft)}
 
 /* ---------- Écran de bienvenue plein écran (1re carrière) ---------- */
 .welcome-screen{padding:54px 30px 50px;max-width:640px;margin:0 auto;position:relative;text-align:left;overflow:hidden}
@@ -111,8 +121,8 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
    même tracé -- ici un ballon vu de haut, très bas en opacité, ancré hors du flux de lecture. */
 .welcome-screen::before{
   content:"";position:absolute;inset:-30px -40px auto auto;width:min(240px,55vw);height:min(240px,55vw);
-  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%233FD9A4' stroke-width='1.6'%3E%3Ccircle cx='100' cy='100' r='96'/%3E%3Ccircle cx='100' cy='100' r='60'/%3E%3Ccircle cx='100' cy='100' r='26'/%3E%3C/g%3E%3C/svg%3E") no-repeat;
-  background-size:contain;opacity:.05;z-index:0;pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%23C9A227' stroke-width='1.6'%3E%3Ccircle cx='100' cy='100' r='96'/%3E%3Ccircle cx='100' cy='100' r='60'/%3E%3Ccircle cx='100' cy='100' r='26'/%3E%3C/g%3E%3C/svg%3E") no-repeat;
+  background-size:contain;opacity:.06;z-index:0;pointer-events:none;
 }
 .welcome-screen>*{position:relative;z-index:1}
 .welcome-skip{position:absolute;top:22px;right:22px;background:none;border:none;cursor:pointer;
@@ -123,7 +133,7 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
 /* Séparateur "cousu" fait maison (petit pointillé + suture centrale, esprit couture de ballon)
    plutôt qu'un simple trait plat -- répété en bande, jamais assez appuyé pour distraire. */
 .ws-section{margin-top:30px;padding-top:22px;border-top:none;
-  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 6'%3E%3Cline x1='0' y1='3' x2='24' y2='3' stroke='%23A37772' stroke-width='1' stroke-dasharray='1 3'/%3E%3Ccircle cx='12' cy='3' r='1.1' fill='%23A37772'/%3E%3C/svg%3E") repeat-x top left;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 6'%3E%3Cline x1='0' y1='3' x2='24' y2='3' stroke='%23C9B79A' stroke-width='1' stroke-dasharray='1 3'/%3E%3Ccircle cx='12' cy='3' r='1.1' fill='%23C9B79A'/%3E%3C/svg%3E") repeat-x top left;
   background-size:24px 6px;}
 .ws-section:first-of-type{margin-top:0;padding-top:0;background:none}
 .ws-kicker{font-family:'Bricolage Grotesque';font-weight:700;letter-spacing:.14em;text-transform:uppercase;
@@ -145,14 +155,14 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
 /* ---------- Boutons ---------- */
 .btn{
   font-family:'Bricolage Grotesque',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
-  background:var(--orange-deep);color:var(--chalk);border:none;border-radius:11px;
+  background:var(--orange-deep);color:var(--on-accent);border:none;border-radius:11px;
   padding:14px 30px;font-size:17px;cursor:pointer;transition:transform .12s ease, box-shadow .2s ease, background .2s;
-  box-shadow:0 8px 22px rgba(255,107,44,.28);
+  box-shadow:0 8px 22px rgba(224,86,45,.24);
 }
 .btn:hover{transform:translateY(-2px);background:var(--orange-deep-hover)}
 .btn:active{transform:translateY(0)}
 .btn.ghost{background:transparent;color:var(--chalk);border:1px solid var(--line);box-shadow:none}
-.btn.ghost:hover{border-color:var(--orange);color:var(--orange-soft);background:rgba(255,107,44,.08)}
+.btn.ghost:hover{border-color:var(--orange);color:var(--orange-soft);background:rgba(224,86,45,.06)}
 .btn.sm{padding:9px 16px;font-size:14px;border-radius:9px}
 .btn:focus-visible{outline:3px solid var(--mint);outline-offset:2px}
 
@@ -162,8 +172,8 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
    sur le terrain lui-même. Discret, jamais au-dessus des tuiles de choix. */
 .create::before{
   content:"";position:absolute;inset:auto -8% -12% auto;width:min(320px,55vw);height:min(320px,55vw);
-  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'%3E%3Cg fill='none' stroke='%23FF6B2C' stroke-width='1.6'%3E%3Ccircle cx='200' cy='200' r='120'/%3E%3Ccircle cx='200' cy='200' r='190'/%3E%3C/g%3E%3C/svg%3E") no-repeat;
-  background-size:contain;opacity:.05;z-index:0;pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'%3E%3Cg fill='none' stroke='%23E0562D' stroke-width='1.6'%3E%3Ccircle cx='200' cy='200' r='120'/%3E%3Ccircle cx='200' cy='200' r='190'/%3E%3C/g%3E%3C/svg%3E") no-repeat;
+  background-size:contain;opacity:.045;z-index:0;pointer-events:none;
 }
 .create>*{position:relative;z-index:1}
 .create .step-h{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
@@ -177,7 +187,7 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
   cursor:pointer;transition:.16s;text-align:left;position:relative;overflow:hidden;color:var(--chalk);
 }
 .opt:hover{border-color:var(--orange);transform:translateY(-2px)}
-.opt.pick{border-color:var(--orange);background:rgba(255,107,44,.10)}
+.opt.pick{border-color:var(--orange);background:rgba(224,86,45,.07)}
 .opt .flag{font-size:24px;line-height:1}
 .opt .ttl{font-family:'Bricolage Grotesque';font-weight:700;font-size:18px;margin-top:8px}
 .opt .desc{font-family:'Bricolage Grotesque';font-size:12.5px;color:var(--chalk-dim);margin-top:3px;line-height:1.35}
@@ -191,18 +201,20 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
 .field input:focus{outline:none;border-color:var(--orange)}
 .nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:26px;gap:12px}
 
-/* scouting reveal — traité comme un rapport papier : la seule carte claire de l'appli,
-   texte sombre volontaire ici (lisible sur fond clair, à l'inverse du reste de l'UI) */
-.scout{background:linear-gradient(165deg,#FBF3E9,var(--chalk));border:1px solid rgba(42,27,61,.14);
-  border-radius:14px;padding:20px;margin-top:6px;box-shadow:0 10px 26px rgba(8,3,16,.28)}
+/* scouting reveal — traité comme un rapport papier : léger dégradé blanc -> crème pour se
+   détacher subtilement du fond, plutôt qu'une simple carte plate comme les autres écrans.
+   L'ancienne exception "seule carte claire d'une appli sombre" n'a plus lieu d'être : tout
+   le thème est clair désormais, ces règles reprennent simplement les tokens standards. */
+.scout{background:linear-gradient(165deg,#FFFFFF,var(--court));border:1px solid var(--line);
+  border-radius:14px;padding:20px;margin-top:6px;box-shadow:0 10px 26px rgba(36,24,19,.10)}
 .scout .hype{display:flex;align-items:center;gap:10px;margin-bottom:16px}
-.scout .hype span{color:var(--ink);opacity:.62;font-family:'Bricolage Grotesque'}
+.scout .hype span{color:var(--chalk-dim);font-family:'Bricolage Grotesque'}
 .stars{display:inline-flex;align-items:center}
-.scout .attr .an{color:var(--ink);opacity:.6}
-.scout .attr .av{color:var(--ink)}
-.scout .attr .abar{background:rgba(42,27,61,.14)}
-.scout .field label{color:var(--ink);opacity:.7}
-.scout .field input{background:rgba(42,27,61,.06);border-color:rgba(42,27,61,.22);color:var(--ink)}
+.scout .attr .an{color:var(--chalk-dim)}
+.scout .attr .av{color:var(--chalk)}
+.scout .attr .abar{background:var(--track)}
+.scout .field label{color:var(--chalk-dim)}
+.scout .field input{background:rgba(36,24,19,.04);border-color:var(--line);color:var(--chalk)}
 .scout .field input:focus{border-color:var(--orange-deep)}
 
 /* ---------- HUD joueur ---------- */
@@ -223,11 +235,10 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
 .ovr-badge::before{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--panel2)}
 .ovr-badge .n{position:relative;font-family:'Bricolage Grotesque';font-weight:700;font-size:31px;color:var(--chalk)}
 .ovr-badge .l{position:relative;font-family:'Bricolage Grotesque';font-weight:600;font-size:9px;letter-spacing:.16em;color:var(--chalk-dim);margin-top:1px}
-.pc-club{padding-left:8px;margin-top:14px;display:flex;align-items:center;gap:9px}
-.club-dot{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;
-  background:var(--accent, var(--orange));transition:background .3s ease;
-  font-family:'Bricolage Grotesque';font-weight:700;font-size:12px;text-shadow:0 1px 3px rgba(0,0,0,.25)}
-.pc-club .cn{font-family:'Bricolage Grotesque';font-weight:700;font-size:15px}
+/* L'écusson de club (voir clubEmblemSvg() dans hud.js) est le point focal du HUD : plus de
+   place que l'ancienne pastille à initiale, gap un peu plus généreux pour respirer. */
+.pc-club{padding-left:8px;margin-top:16px;display:flex;align-items:center;gap:12px}
+.pc-club .cn{font-family:'Bricolage Grotesque';font-weight:700;font-size:16px}
 .pc-club .cl{font-size:11px;color:var(--chalk-dim);font-family:'Bricolage Grotesque';font-weight:500;letter-spacing:.08em}
 .meters{margin-top:15px;padding-left:8px;display:grid;gap:9px}
 .meter .mrow{display:flex;justify-content:space-between;font-size:11px;color:var(--chalk-dim);
@@ -254,26 +265,26 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
    lasser sur la durée d'une carrière). */
 .event::before{
   content:"";position:absolute;inset:-10px -10px auto auto;width:120px;height:120px;
-  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%233FD9A4' stroke-width='1.6'%3E%3Ccircle cx='100' cy='100' r='96'/%3E%3Cpath d='M100,4 V196'/%3E%3Cpath d='M4,100 H196'/%3E%3Cpath d='M30,30 Q100,100 30,170'/%3E%3Cpath d='M170,30 Q100,100 170,170'/%3E%3C/g%3E%3C/svg%3E") no-repeat;
-  background-size:contain;opacity:.035;z-index:0;pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%23C9A227' stroke-width='1.6'%3E%3Ccircle cx='100' cy='100' r='96'/%3E%3Cpath d='M100,4 V196'/%3E%3Cpath d='M4,100 H196'/%3E%3Cpath d='M30,30 Q100,100 30,170'/%3E%3Cpath d='M170,30 Q100,100 170,170'/%3E%3C/g%3E%3C/svg%3E") no-repeat;
+  background-size:contain;opacity:.045;z-index:0;pointer-events:none;
 }
 .event>*{position:relative;z-index:1}
 /* Cartouche des "grands moments" (clutch/défense/duel/finale, jet réel à la clé) : classe posée
-   en JS (voir renderEvent() dans screens.js) quand CAT_ICON reconnaît la catégorie. Liseré doré
-   en tête de carte + motif ballon agrandi, pour que ces événements se distinguent visuellement
-   des événements courants avant même de lire le titre — sans jamais devenir tape-à-l'œil. */
-.event.grand-moment{border-color:rgba(170,124,29,.5)}
-.event.grand-moment::before{width:170px;height:170px;opacity:.06;
-  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%23AA7C1D' stroke-width='1.6'%3E%3Ccircle cx='100' cy='100' r='96'/%3E%3Cpath d='M100,4 V196'/%3E%3Cpath d='M4,100 H196'/%3E%3Cpath d='M30,30 Q100,100 30,170'/%3E%3Cpath d='M170,30 Q100,100 170,170'/%3E%3C/g%3E%3C/svg%3E") no-repeat;
+   en JS (voir renderEvent() dans screens.js) quand CAT_ICON reconnaît la catégorie. Liseré prune
+   en tête de carte + motif ballon agrandi -- la prune est la teinte "libellés forts / enjeu"
+   de la palette Terre battue, cohérente avec le rôle money-time de ces événements. */
+.event.grand-moment{border-color:rgba(178,58,110,.4)}
+.event.grand-moment::before{width:170px;height:170px;opacity:.07;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%23B23A6E' stroke-width='1.6'%3E%3Ccircle cx='100' cy='100' r='96'/%3E%3Cpath d='M100,4 V196'/%3E%3Cpath d='M4,100 H196'/%3E%3Cpath d='M30,30 Q100,100 30,170'/%3E%3Cpath d='M170,30 Q100,100 170,170'/%3E%3C/g%3E%3C/svg%3E") no-repeat;
   background-size:contain;}
 .event.grand-moment::after{
   content:"";position:absolute;inset:0 0 auto 0;height:3px;border-radius:16px 16px 0 0;
-  background:linear-gradient(90deg,var(--star-gold),var(--orange));z-index:1;pointer-events:none;
+  background:linear-gradient(90deg,var(--plum),var(--orange));z-index:1;pointer-events:none;
 }
 .event .season-tag{display:flex;align-items:center;gap:10px;margin-bottom:14px}
 .chip{font-family:'Bricolage Grotesque';font-weight:700;letter-spacing:.12em;text-transform:uppercase;
-  font-size:11px;padding:4px 11px;border-radius:20px;background:rgba(255,107,44,.20);color:var(--orange-soft);
-  border:1px solid rgba(255,107,44,.32)}
+  font-size:11px;padding:4px 11px;border-radius:20px;background:rgba(224,86,45,.12);color:var(--orange-soft);
+  border:1px solid rgba(224,86,45,.28)}
 .chip.n{background:var(--panel2);color:var(--chalk-dim);border-color:var(--line)}
 .event h2{font-size:25px;font-weight:700;line-height:1.08;margin-bottom:10px}
 .event .body{color:var(--body-txt);font-family:'Bricolage Grotesque';font-size:15.5px;line-height:1.55;max-width:640px}
@@ -282,8 +293,8 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
   text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:12px;
   padding:15px 16px;cursor:pointer;transition:.16s;display:flex;gap:13px;align-items:flex-start;color:var(--chalk);
 }
-.choice:hover{border-color:var(--orange);transform:translateX(3px);background:rgba(255,107,44,.06)}
-.choice .pip{width:9px;height:9px;border-radius:50%;background:var(--orange);margin-top:7px;flex:none;box-shadow:0 0 10px rgba(255,107,44,.6)}
+.choice:hover{border-color:var(--orange);transform:translateX(3px);background:rgba(224,86,45,.05)}
+.choice .pip{width:9px;height:9px;border-radius:50%;background:var(--orange);margin-top:7px;flex:none;box-shadow:0 0 10px rgba(224,86,45,.45)}
 .choice .ct{font-family:'Bricolage Grotesque';font-weight:600;font-size:16.5px;line-height:1.25}
 .choice .cd{font-family:'Bricolage Grotesque';font-size:12.5px;color:var(--chalk-dim);margin-top:2px}
 .choice:focus-visible{outline:3px solid var(--mint);outline-offset:2px}
@@ -292,8 +303,8 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
 .scoreboard{padding:24px 22px 24px;position:relative}
 .scoreboard::before{
   content:"";position:absolute;inset:auto auto -14px -14px;width:130px;height:130px;
-  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%23FF6B2C' stroke-width='1.6'%3E%3Ccircle cx='100' cy='100' r='96'/%3E%3Cpath d='M100,4 V196'/%3E%3Cpath d='M4,100 H196'/%3E%3Cpath d='M30,30 Q100,100 30,170'/%3E%3Cpath d='M170,30 Q100,100 170,170'/%3E%3C/g%3E%3C/svg%3E") no-repeat;
-  background-size:contain;opacity:.035;z-index:0;pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%23E0562D' stroke-width='1.6'%3E%3Ccircle cx='100' cy='100' r='96'/%3E%3Cpath d='M100,4 V196'/%3E%3Cpath d='M4,100 H196'/%3E%3Cpath d='M30,30 Q100,100 30,170'/%3E%3Cpath d='M170,30 Q100,100 170,170'/%3E%3C/g%3E%3C/svg%3E") no-repeat;
+  background-size:contain;opacity:.045;z-index:0;pointer-events:none;
 }
 .scoreboard>*{position:relative;z-index:1}
 .sb-head{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px}
@@ -302,16 +313,16 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
 @media(min-width:560px){.statline{grid-template-columns:repeat(4,1fr)}}
 .stat-cell{background:var(--court);border:1px solid var(--line);border-radius:11px;padding:12px 8px;text-align:center}
 .stat-cell .sv{font-family:'Bricolage Grotesque';font-weight:700;font-size:clamp(17px,5.6vw,26px);color:var(--chalk);white-space:nowrap}
-.stat-cell.hot{border-color:var(--orange);background:linear-gradient(180deg,rgba(255,107,44,.20),var(--court))}
-.stat-cell.hot .sv{color:var(--orange)}
+.stat-cell.hot{border-color:var(--orange);background:linear-gradient(180deg,rgba(224,86,45,.14),var(--court))}
+.stat-cell.hot .sv{color:var(--orange-soft)}
 .stat-cell .sl{font-family:'Bricolage Grotesque';font-weight:600;font-size:10px;letter-spacing:.14em;color:var(--chalk-dim);text-transform:uppercase;margin-top:2px}
 .verdict{background:var(--court);border:1px solid var(--line);border-left:3px solid var(--orange);
   border-radius:10px;padding:13px 15px;font-family:'Bricolage Grotesque';font-size:14.5px;color:var(--body-txt);margin-bottom:14px}
 .accolades{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}
 .badge{font-family:'Bricolage Grotesque';font-weight:700;font-size:12px;letter-spacing:.05em;
-  padding:6px 12px;border-radius:8px;background:linear-gradient(135deg,rgba(63,217,164,.24),var(--court2));
+  padding:6px 12px;border-radius:8px;background:linear-gradient(135deg,rgba(161,130,31,.16),var(--court2));
   border:1px solid var(--mint);color:var(--mint-soft)}
-.badge.title{background:linear-gradient(135deg,rgba(255,107,44,.20),var(--court2));color:var(--orange-soft);border-color:var(--orange)}
+.badge.title{background:linear-gradient(135deg,rgba(224,86,45,.14),var(--court2));color:var(--orange-soft);border-color:var(--orange)}
 
 /* palmarès / fin */
 .end{padding:34px 26px 40px;text-align:center;position:relative}
@@ -319,8 +330,8 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
    maison en SVG, ancré en pied d'écran — évoque une sortie de terrain sans jamais gêner le texte. */
 .end::before{
   content:"";position:absolute;inset:auto 0 0 0;height:min(220px,42vw);
-  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 400'%3E%3Cg fill='none' stroke='%233FD9A4' stroke-width='1.6'%3E%3Cline x1='40' y1='380' x2='760' y2='380'/%3E%3Crect x='320' y='260' width='160' height='120'/%3E%3Ccircle cx='400' cy='260' r='60'/%3E%3Cpath d='M60,380 A420,420 0 0,1 740,380'/%3E%3C/g%3E%3C/svg%3E") no-repeat center bottom;
-  background-size:contain;opacity:.08;z-index:0;pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 400'%3E%3Cg fill='none' stroke='%23C9A227' stroke-width='1.6'%3E%3Cline x1='40' y1='380' x2='760' y2='380'/%3E%3Crect x='320' y='260' width='160' height='120'/%3E%3Ccircle cx='400' cy='260' r='60'/%3E%3Cpath d='M60,380 A420,420 0 0,1 740,380'/%3E%3C/g%3E%3C/svg%3E") no-repeat center bottom;
+  background-size:contain;opacity:.07;z-index:0;pointer-events:none;
 }
 .end>*{position:relative;z-index:1}
 .end .legend-title{font-family:'Bricolage Grotesque';font-weight:800;font-size:clamp(34px,7vw,56px);
@@ -335,7 +346,7 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
 /* Même séparateur "cousu" que l'écran de bienvenue (cohérence entre les longues listes lues
    verticalement), posé en bas de ligne plutôt qu'en haut ici. */
 .tl-row{display:flex;gap:12px;padding:9px 0;font-family:'Bricolage Grotesque';font-size:13.5px;
-  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 6'%3E%3Cline x1='0' y1='3' x2='24' y2='3' stroke='%23A37772' stroke-width='1' stroke-dasharray='1 3'/%3E%3Ccircle cx='12' cy='3' r='1.1' fill='%23A37772'/%3E%3C/svg%3E") repeat-x bottom left;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 6'%3E%3Cline x1='0' y1='3' x2='24' y2='3' stroke='%23C9B79A' stroke-width='1' stroke-dasharray='1 3'/%3E%3Ccircle cx='12' cy='3' r='1.1' fill='%23C9B79A'/%3E%3C/svg%3E") repeat-x bottom left;
   background-size:24px 6px;}
 .tl-row .yr{font-family:'Bricolage Grotesque';font-weight:700;color:var(--chalk-dim);min-width:64px}
 .tl-row .ev{color:var(--body-txt)}
@@ -353,7 +364,7 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
 .hof-list{display:flex;flex-direction:column;gap:10px}
 .hof-row{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;transition:.16s}
 .hof-row:hover{border-color:var(--orange);transform:translateY(-1px)}
-.hof-row.top{border-color:var(--mint);box-shadow:0 0 0 1px rgba(63,217,164,.28)}
+.hof-row.top{border-color:var(--mint);box-shadow:0 0 0 1px rgba(161,130,31,.28)}
 .hof-row .rk{font-family:'Bricolage Grotesque';font-weight:700;font-size:21px;color:var(--mint);width:26px;text-align:center;flex:none}
 .hof-main{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
 .hof-name{font-family:'Bricolage Grotesque';font-weight:700;font-size:16px;color:var(--chalk)}
@@ -363,7 +374,7 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
 .hof-score small{font-family:'Bricolage Grotesque';font-size:10px;color:var(--chalk-dim);letter-spacing:.08em;text-transform:uppercase}
 .best-chip{display:inline-flex;align-items:center;gap:6px;margin-top:16px;padding:6px 14px;border:1px solid var(--line);
   border-radius:999px;font-family:'Bricolage Grotesque';font-weight:500;font-size:12.5px;color:var(--chalk-dim);letter-spacing:.04em}
-.best-chip b{color:var(--mint)}
+.best-chip b{color:var(--mint-soft)}
 
 /* ---------- Récap fin de carrière ---------- */
 .recap-block{max-width:620px;margin:22px auto 0}
@@ -371,7 +382,7 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
 .press-txt{font-family:'Bricolage Grotesque';font-size:14px;color:var(--chalk);font-style:italic;line-height:1.4}
 .press-src{font-family:'Bricolage Grotesque';font-size:11.5px;color:var(--chalk-dim);text-align:right;margin-top:4px;letter-spacing:.04em}
 .spark{display:flex;align-items:flex-end;gap:3px;justify-content:center;height:56px;margin:6px 0}
-.spark-bar{width:8px;background:linear-gradient(180deg,var(--orange-soft),rgba(255,107,44,.35));border-radius:3px 3px 0 0;opacity:.85}
+.spark-bar{width:8px;background:linear-gradient(180deg,var(--orange-soft),rgba(224,86,45,.3));border-radius:3px 3px 0 0;opacity:.85}
 .spark-bar.pk{background:linear-gradient(180deg,var(--mint),var(--mint-soft));opacity:1}
 .spark-cap{font-family:'Bricolage Grotesque';font-size:11.5px;color:var(--chalk-dim);letter-spacing:.04em}
 .best-season{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;text-align:center}

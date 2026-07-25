@@ -190,7 +190,7 @@ function wireNav(){
 const STAR_PATH = 'M12 2 14.9 8.6 22 9.3 16.8 14.1 18.2 21.2 12 17.6 5.8 21.2 7.2 14.1 2 9.3 9.1 8.6Z';
 function starSvg(filled){
   return `<svg viewBox="0 0 24 24" width="22" height="22" style="margin:0 1px">
-    <path d="${STAR_PATH}" fill="${filled?'var(--star-gold)':'rgba(42,27,61,.18)'}"/></svg>`;
+    <path d="${STAR_PATH}" fill="${filled?'var(--star-gold)':'rgba(36,24,19,.16)'}"/></svg>`;
 }
 function starStr(n){ // n 1..5
   let s=''; for(let i=1;i<=5;i++){ s+= starSvg(i<=n); } return s;
@@ -252,7 +252,7 @@ export function renderSeasonResult(s, natLine, champion){
     ? `<svg viewBox="0 0 24 24" width="9" height="9" style="vertical-align:1px"><path d="M12 5L20 18H4Z" fill="currentColor"/></svg>`
     : `<svg viewBox="0 0 24 24" width="9" height="9" style="vertical-align:1px"><path d="M12 19L4 6H20Z" fill="currentColor"/></svg>`;
   const deltaHtml = delta!==null && delta!==0
-    ? `<span class="chip" style="background:${delta>0?'rgba(63,217,164,.14)':'rgba(255,90,114,.14)'};border-color:${delta>0?'var(--up)':'var(--down)'};color:${delta>0?'var(--up)':'var(--down)'}">${deltaTri} ${Math.abs(delta)} OVR vs saison passée</span>`
+    ? `<span class="chip" style="background:${delta>0?'rgba(161,130,31,.12)':'rgba(181,52,46,.10)'};border-color:${delta>0?'var(--up)':'var(--down)'};color:${delta>0?'var(--up)':'var(--down)'}">${deltaTri} ${Math.abs(delta)} OVR vs saison passée</span>`
     : '';
   const accList = s.acc.slice();
   if(s.td) accList.push(`🎯 ${s.td} triple-double${s.td>1?'s':''}`);

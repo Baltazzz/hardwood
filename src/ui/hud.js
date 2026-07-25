@@ -3,7 +3,7 @@ import { ATTRS, POSITIONS } from '../data/positions.js';
 import { LEAGUES } from '../data/leagues.js';
 import { ovr, roleOf } from '../engine/player.js';
 import { clamp, money, reducedMotion, easeOut } from '../engine/utils.js';
-import { applyAccent, pickTextColor } from '../engine/accent.js';
+import { applyAccent, emblemColors } from '../engine/accent.js';
 import { stage } from './dom.js';
 
 /* ============================================================
@@ -12,6 +12,23 @@ import { stage } from './dom.js';
 function meter(label,val,color){
   return `<div class="meter"><div class="mrow"><span>${label}</span><span>${Math.round(val)}</span></div>
     <div class="bar"><i style="width:${clamp(val,0,100)}%;background:${color}"></i></div></div>`;
+}
+
+// Écusson de club fait maison en SVG : silhouette de blason classique, coupée en deux teintes
+// (primaire/secondaire dérivée -- voir emblemColors() dans accent.js), liseré crème pour se
+// détacher proprement quelle que soit la combinaison de couleurs. Remplace l'ancienne pastille
+// carrée à initiale : plus grand, sans lettre, point focal du HUD plutôt qu'un simple repère.
+let emblemUid = 0;
+const SHIELD_PATH = 'M12 2.4 L19.6 5.4 V11.6 C19.6 17 15.6 20.5 12 21.6 C8.4 20.5 4.4 17 4.4 11.6 V5.4 Z';
+function clubEmblemSvg(primary, secondary){
+  const id = 'em' + (emblemUid++);
+  return `<svg viewBox="0 0 24 24" width="44" height="44" style="flex:none;filter:drop-shadow(0 2px 4px rgba(36,24,19,.16))">
+    <defs><clipPath id="${id}"><rect x="12" y="0" width="12" height="24"/></clipPath></defs>
+    <path d="${SHIELD_PATH}" fill="${primary}"/>
+    <path d="${SHIELD_PATH}" fill="${secondary}" clip-path="url(#${id})"/>
+    <path d="M12 2.4 V21.6" stroke="rgba(255,248,238,.55)" stroke-width="1"/>
+    <path d="${SHIELD_PATH}" fill="none" stroke="var(--panel)" stroke-width="1.4"/>
+  </svg>`;
 }
 
 // Tuile "Fiche technique" repliable : repliée par défaut, mémorise ensuite le dernier choix
@@ -47,7 +64,7 @@ export function renderHUD(mode='club'){
   // ajustée pour rester lisible sur --court quelle que soit la couleur source. Posée sur
   // documentElement (--accent) : la stripe et l'anneau OVR ci-dessous la consomment via CSS.
   const accentHex = applyAccent(p, mode);
-  const accentText = pickTextColor(accentHex);
+  const { primary: emblemPrimary, secondary: emblemSecondary } = emblemColors(p, mode);
   const ficheOpen = getFicheOpen();
   const attrsHtml = ATTRS.map(a=>`
     <div class="attr"><div class="arow"><span class="an">${a.name}</span>
@@ -62,7 +79,7 @@ export function renderHUD(mode='club'){
         <div class="ovr-badge" style="--pct:${o}"><div class="n" id="ovrN">${o}</div><div class="l">OVR</div></div>
       </div>
       <div class="pc-club">
-        <div class="club-dot" style="color:${accentText}">${(p.club||'?').slice(0,2).toUpperCase()}</div>
+        ${clubEmblemSvg(emblemPrimary, emblemSecondary)}
         <div><div class="cn">${p.club||'Sans club'}</div>
           <div class="cl">${lg?lg.short:''}${p.club&&p.seasons.length?` · <span style="color:var(--mint)">${roleOf(p).label}</span>`:''}</div></div>
       </div>

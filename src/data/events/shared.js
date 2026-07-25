@@ -87,12 +87,16 @@ export const SHARED_EVENTS = [
 
   {id:'first_call', cat:'nation', once:true,
     when:(p,lg)=>p.reputation>=42 && !p.natCap,
-    title:'Première convocation en sélection',
-    body:({p})=>`Le sélectionneur de ${p.nation.name} ${p.nation.flag} t'appelle pour la première fois. Endosser le maillot national, c'est un honneur — et une exposition nouvelle.`,
+    title:'Le coup de fil qui change tout',
+    weight:()=>1.4,
+    body:({p})=>`<i>(Un numéro inconnu s'affiche. Tu hésites une seconde — puis tu reconnais la voix.)</i> Le sélectionneur de ${p.nation.name} ${p.nation.flag} est en ligne. Il ne tourne pas autour du pot : il te veut pour la prochaine trêve internationale. Le maillot floqué à ton nom, l'hymne, les caméras braquées sur le banc — tout ça devient réel, là, maintenant.`,
     choices:({p})=>[
-      {label:'Répondre présent avec fierté', hint:'Un nouvel honneur, une nouvelle pression',
-        effect:{reputation:+6, popularity:+6, morale:+5}, tl:()=>`Première sélection avec ${p.nation.name}.`,
-        outcome:'Hymne, maillot, frissons. Une nouvelle dimension à ta carrière.'}
+      {label:'Répondre présent, la voix qui tremble un peu', hint:'Le moment que tu attends depuis gamin',
+        effect:{reputation:+7, popularity:+7, morale:+7}, tl:()=>`📞 Le sélectionneur de ${p.nation.name} ${p.nation.flag} appelle en personne — première sélection. Un jour qu'on n'oublie pas.`,
+        outcome:'Tu raccroches, le cœur qui bat encore. Tu appelles tes proches avant même d\'avoir reposé le téléphone : "J\'y suis."'},
+      {label:'Rester concentré, savourer plus tard', hint:'Le pro avant l\'émotion',
+        effect:{reputation:+6, coach:+4, morale:+6}, tl:()=>`📞 Le sélectionneur de ${p.nation.name} ${p.nation.flag} appelle en personne — première sélection.`,
+        outcome:'Tu remercies, tu raccroches, tu retournes t\'entraîner comme si de rien n\'était. Mais ce soir-là, seul, le sourire ne te quitte pas.'}
     ]},
 
   {id:'extension', cat:'contract', cooldown:3,

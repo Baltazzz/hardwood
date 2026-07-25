@@ -17,21 +17,49 @@ import { stage } from './dom.js';
 /* ============================================================
    ÉCRANS : TITRE + CRÉATION
 ============================================================ */
+const WELCOME_KEY = 'hw_welcome_seen';
+function welcomeSeen(){ try{ return localStorage.getItem(WELCOME_KEY)==='1'; } catch(e){ return true; } }
+function setWelcomeSeen(){ try{ localStorage.setItem(WELCOME_KEY,'1'); }catch(e){} }
+
+function welcomeCard(){
+  return `<div class="welcome-card" id="welcomeCard">
+    <button class="welcome-close" id="welcomeClose" aria-label="Fermer">✕</button>
+    <div class="eyebrow" style="text-align:left;color:var(--mint)">Le topo, vite fait</div>
+    <p class="welcome-line">Réputation, moral, forme, confiance du coach : ça pèse vraiment sur tes minutes et tes choix — pas des jauges qui dorment dans un coin.</p>
+    <p class="welcome-line">Chaque saison, deux décisions te façonnent : un tir tenté, une interview assumée, une nuit de trop. Rien n'est neutre, tout s'accumule.</p>
+    <p class="welcome-line">Certains finissent oubliés en deuxième division. D'autres entrent au Panthéon. La plupart sont entre les deux — à toi d'écrire laquelle.</p>
+    <button class="btn sm" id="welcomeGotIt" style="margin-top:6px">Compris, on y va</button>
+  </div>`;
+}
+
 export function screenTitle(){
   const best=hofBest();
+  const showWelcome = !welcomeSeen();
   stage.innerHTML = `<div class="title-screen">
     <div class="eyebrow">Carrière · saison après saison</div>
     <h1>HARD<span class="o">W</span>OOD</h1>
     <p class="tag">De 16 à 38 ans, écris ta légende du basket. Chaque choix pèse : le talent ouvre des portes, les décisions décident du reste. La NBA est le sommet — encore faut-il y arriver.</p>
+    ${showWelcome?welcomeCard():''}
     <div style="margin-top:28px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
       <button class="btn" id="go">Commencer ma carrière</button>
       <button class="btn ghost" id="hof">🏆 Panthéon</button>
     </div>
     ${best?`<div class="best-chip">🏆 Meilleur score légende : <b>${best}</b></div>`:''}
-    <div class="kbd">Écris ta légende, saison après saison</div>
+    <div class="kbd">Écris ta légende, saison après saison · <a href="#" id="welcomeReopen" class="welcome-link">comment jouer ?</a></div>
   </div>`;
-  document.getElementById('go').onclick=()=>{ setG(newPlayer()); screenCreate(); };
+  document.getElementById('go').onclick=()=>{ setWelcomeSeen(); setG(newPlayer()); screenCreate(); };
   document.getElementById('hof').onclick=()=>renderHallOfFame();
+  const wc=document.getElementById('welcomeClose'); if(wc) wc.onclick=()=>{ setWelcomeSeen(); screenTitle(); };
+  const wg=document.getElementById('welcomeGotIt'); if(wg) wg.onclick=()=>{ setWelcomeSeen(); screenTitle(); };
+  document.getElementById('welcomeReopen').onclick=(e)=>{ e.preventDefault();
+    try{ localStorage.removeItem(WELCOME_KEY); }catch(err){}
+    screenTitle();
+    const wcEl = document.getElementById('welcomeCard');
+    if(wcEl && typeof wcEl.scrollIntoView==='function'){
+      const reduced = typeof matchMedia==='function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+      wcEl.scrollIntoView({block:'center', behavior: reduced?'auto':'smooth'});
+    }
+  };
 }
 
 export function screenCreate(){
@@ -107,8 +135,17 @@ function wireNav(){
     G.step++; screenCreate();
   };
 }
+// Étoile en SVG fait maison plutôt qu'un glyphe unicode ★ : Bricolage Grotesque ne couvre pas
+// ce caractère, qui basculait silencieusement sur une police système différente (incohérence
+// visuelle) en plus d'hériter d'une couleur mal choisie. Ici la couleur est fixée dans le SVG,
+// indépendante de toute police.
+const STAR_PATH = 'M12 2 14.9 8.6 22 9.3 16.8 14.1 18.2 21.2 12 17.6 5.8 21.2 7.2 14.1 2 9.3 9.1 8.6Z';
+function starSvg(filled){
+  return `<svg viewBox="0 0 24 24" width="22" height="22" style="margin:0 1px">
+    <path d="${STAR_PATH}" fill="${filled?'var(--star-gold)':'rgba(42,27,61,.18)'}"/></svg>`;
+}
 function starStr(n){ // n 1..5
-  let s=''; for(let i=1;i<=5;i++){ s+= i<=n?'★':'<span class="off">★</span>'; } return s;
+  let s=''; for(let i=1;i<=5;i++){ s+= starSvg(i<=n); } return s;
 }
 
 /* ---- Rendu d'un événement ---- */
@@ -158,8 +195,11 @@ export function renderSeasonResult(s, natLine, champion){
   let verdict = seasonVerdict(s,lg);
   const prev = p.seasons.length>=2 ? p.seasons[p.seasons.length-2].ovr : null;
   const delta = prev!==null ? s.ovr - prev : null;
+  const deltaTri = delta>0
+    ? `<svg viewBox="0 0 24 24" width="9" height="9" style="vertical-align:1px"><path d="M12 5L20 18H4Z" fill="currentColor"/></svg>`
+    : `<svg viewBox="0 0 24 24" width="9" height="9" style="vertical-align:1px"><path d="M12 19L4 6H20Z" fill="currentColor"/></svg>`;
   const deltaHtml = delta!==null && delta!==0
-    ? `<span class="chip" style="background:${delta>0?'rgba(63,208,122,.14)':'rgba(255,82,98,.14)'};border-color:${delta>0?'var(--up)':'var(--down)'};color:${delta>0?'var(--up)':'var(--down)'}">${delta>0?'▲':'▼'} ${Math.abs(delta)} OVR vs saison passée</span>`
+    ? `<span class="chip" style="background:${delta>0?'rgba(63,217,164,.14)':'rgba(255,90,114,.14)'};border-color:${delta>0?'var(--up)':'var(--down)'};color:${delta>0?'var(--up)':'var(--down)'}">${deltaTri} ${Math.abs(delta)} OVR vs saison passée</span>`
     : '';
   const accList = s.acc.slice();
   if(s.td) accList.push(`🎯 ${s.td} triple-double${s.td>1?'s':''}`);

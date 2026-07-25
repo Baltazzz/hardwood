@@ -62,14 +62,16 @@ export function renderHUD(){
           <div class="cl">${lg?lg.short:''}${p.club&&p.seasons.length?` · <span style="color:var(--mint)">${roleOf(p).label}</span>`:''}</div></div>
       </div>
       <div class="meters">
-        ${meter('Réputation',p.reputation,'linear-gradient(90deg,#B23F14,var(--orange))')}
-        ${meter('Moral',p.morale,'linear-gradient(90deg,#1E8C68,var(--mint))')}
+        ${meter('Réputation',p.reputation,'linear-gradient(90deg,var(--orange-soft),var(--orange))')}
+        ${meter('Moral',p.morale,'linear-gradient(90deg,var(--mint-soft),var(--mint))')}
         ${meter('Forme',p.fitness,'linear-gradient(90deg,var(--chalk-dim),var(--chalk))')}
       </div>
     </div>
     <div class="card">
       <button type="button" id="ficheToggle" class="eyebrow fiche-toggle" aria-expanded="${ficheOpen}" aria-controls="ficheBody">
-        <span>Fiche technique</span><span class="fiche-chevron${ficheOpen?' open':''}" id="ficheChevron">▾</span>
+        <span>Fiche technique</span><span class="fiche-chevron${ficheOpen?' open':''}" id="ficheChevron">
+          <svg viewBox="0 0 24 24" width="12" height="12"><path d="M5 9L12 16L19 9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
       </button>
       <div class="fiche-body${ficheOpen?' open':''}" id="ficheBody">
         <div class="fiche-inner">

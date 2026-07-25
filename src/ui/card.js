@@ -84,7 +84,7 @@ export function renderCareerCard(r, back){
 function drawCard(canvas, r){
   const W=1080, H=1350, x=canvas.getContext('2d');
   canvas.width=W; canvas.height=H;
-  const C={chalk:'#F5E9DC',dim:'#BCAFAF',orange:'#FF6B2C',orangeSoft:'#FC8E5D',mint:'#3FD9A4',mintSoft:'#72DDB4',panel:'#5B4C63',line:'#7B6D7D'};
+  const C={chalk:'#F5E9DC',dim:'#BCAFAF',orange:'#FF6B2C',orangeSoft:'#FC8E5D',mint:'#3FD9A4',mintSoft:'#72DDB4',panel:'#5B4C63',line:'#A37772'};
   // fond dégradé — aubergine profond
   const g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,'#3E304D'); g.addColorStop(0.55,'#2A1B3D'); g.addColorStop(1,'#16101F');
   x.fillStyle=g; x.fillRect(0,0,W,H);
@@ -114,7 +114,12 @@ function drawCard(canvas, r){
   x.fillStyle='rgba(63,217,164,0.12)'; x.strokeStyle=C.mint; x.lineWidth=2.5;
   roundRect(x,(W-bw)/2,326,bw,88,44); x.fill(); x.stroke();
   x.fillStyle=C.mint; x.fillText(r.tier||'', W/2, 386);
-  if(r.hof){ x.font='700 24px "Bricolage Grotesque", Arial, sans-serif'; x.fillStyle=C.mint; x.fillText('★ HALL OF FAME ★', W/2, 444); }
+  if(r.hof){
+    x.font='700 24px "Bricolage Grotesque", Arial, sans-serif'; x.fillStyle=C.mint;
+    const label='HALL OF FAME', lw=x.measureText(label).width;
+    x.fillText(label, W/2, 444);
+    drawStar(x, W/2-lw/2-18, 439, 9, C.mint); drawStar(x, W/2+lw/2+18, 439, 9, C.mint);
+  }
   // grille de stats 3x2
   const cells=[['Score',r.score],['Titres',r.champs],['MVP',r.mvps],['All-Star',r.allstars],['Pic OVR',r.peak],['Clutch',r.clutch||0]];
   const gx0=90, gy0=494, gw=(W-180), cwid=gw/3, chei=150;
@@ -135,6 +140,18 @@ function drawCard(canvas, r){
   // footer
   x.fillStyle=C.dim; x.font='600 26px "Bricolage Grotesque", Arial, sans-serif';
   spacedText(x,'🏀 HARDWOOD',W/2,H-70,2);
+}
+// Étoile dessinée (pas le glyphe unicode ★, absent de Bricolage Grotesque et sujet à un
+// repli de police imprévisible sur canvas selon le navigateur).
+function drawStar(x,cx,cy,r,fill){
+  x.save(); x.fillStyle=fill; x.beginPath();
+  for(let i=0;i<10;i++){
+    const rad = i%2===0 ? r : r*0.42;
+    const ang = -Math.PI/2 + i*Math.PI/5;
+    const px = cx+Math.cos(ang)*rad, py = cy+Math.sin(ang)*rad;
+    i===0 ? x.moveTo(px,py) : x.lineTo(px,py);
+  }
+  x.closePath(); x.fill(); x.restore();
 }
 function roundRect(x,rx,ry,w,h,r){ x.beginPath(); x.moveTo(rx+r,ry); x.arcTo(rx+w,ry,rx+w,ry+h,r); x.arcTo(rx+w,ry+h,rx,ry+h,r); x.arcTo(rx,ry+h,rx,ry,r); x.arcTo(rx,ry,rx+w,ry,r); x.closePath(); }
 function spacedText(x,str,cx,cy,sp){ x.save(); const chs=[...str]; let tot=0; const ws=chs.map(c=>{const w=x.measureText(c).width;tot+=w+sp;return w;}); tot-=sp; let px=cx-tot/2; x.textAlign='left'; chs.forEach((c,i)=>{ x.fillText(c,px,cy); px+=ws[i]+sp; }); x.restore(); }

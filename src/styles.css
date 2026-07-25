@@ -13,19 +13,21 @@
   /* Fonds */
   --court:#2A1B3D;        /* aubergine profond — fond principal */
   --court2:#16101F;       /* fond secondaire, plus sombre */
-  --panel:#3E304D;
-  --panel2:#4D3E58;
-  --line:#776979;
+  --panel:#483A55;        /* éclaircie : plus de séparation, moins écrasé de sombre */
+  --panel2:#5B4C63;
+  --line:#7B6D7D;
   --track:#1C1328;        /* fond des jauges/anneaux vides */
 
-  /* Texte */
+  /* Texte — jamais de texte sombre sur fond sombre : uniquement des tons clairs ici */
   --chalk:#F5E9DC;        /* crème — texte principal */
   --body-txt:#D5C8C3;     /* corps de texte, un cran sous chalk */
-  --chalk-dim:#B0A3A6;    /* texte atténué / labels */
-  --ink:#16101F;          /* texte sombre sur aplats orange/menthe pleins */
+  --chalk-dim:#BCAFAF;    /* texte atténué / labels, éclairci pour rester net */
+  --ink:#2A1B3D;          /* texte sombre — réservé aux surfaces CLAIRES (ex. carte scouting) */
 
   /* Accents */
-  --orange:#FF6B2C;       /* primaire — accents, actions */
+  --orange:#FF6B2C;       /* primaire — bordures, icônes, texte d'accent */
+  --orange-deep:#A24727;  /* fond des boutons pleins : assez profond pour porter du texte crème lisible */
+  --orange-deep-hover:#B95028;
   --orange-soft:#FC8E5D;
   --mint:#3FD9A4;         /* secondaire — réussites, mises en avant */
   --mint-soft:#72DDB4;
@@ -69,7 +71,7 @@ html,body{background:var(--court);min-height:100%}
   pointer-events:none;
 }
 
-h1,h2,h3,.disp{font-family:'Big Shoulders Display',sans-serif;font-weight:700;letter-spacing:.01em;text-transform:uppercase}
+h1,h2,h3,.disp{font-family:'Big Shoulders Display',sans-serif;font-weight:700;letter-spacing:.01em;text-transform:uppercase;color:var(--chalk)}
 .eyebrow{font-family:'Big Shoulders Text',sans-serif;font-weight:700;letter-spacing:.22em;
   text-transform:uppercase;font-size:11px;color:var(--orange-soft)}
 
@@ -79,7 +81,7 @@ h1,h2,h3,.disp{font-family:'Big Shoulders Display',sans-serif;font-weight:700;le
   width:84px;height:84px;border-radius:19px;margin:0 auto 20px;display:block;
   box-shadow:0 10px 30px rgba(255,107,44,.32), 0 0 0 1px rgba(245,233,220,.06);
 }
-.title-screen h1{font-size:clamp(46px,10vw,80px);font-weight:800;line-height:.9;margin-bottom:6px}
+.title-screen h1{font-size:clamp(46px,10vw,80px);font-weight:800;line-height:.9;margin-bottom:6px;color:var(--chalk)}
 .title-screen h1 .o{color:var(--orange)}
 .title-screen .tag{color:var(--chalk-dim);font-family:'Manrope';font-size:15px;max-width:440px;margin:14px auto 0}
 .kbd{font-family:'Big Shoulders Text';font-weight:600;font-size:12px;color:var(--chalk-dim);margin-top:26px;letter-spacing:.06em}
@@ -87,11 +89,11 @@ h1,h2,h3,.disp{font-family:'Big Shoulders Display',sans-serif;font-weight:700;le
 /* ---------- Boutons ---------- */
 .btn{
   font-family:'Big Shoulders Text',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
-  background:var(--orange);color:var(--ink);border:none;border-radius:11px;
+  background:var(--orange-deep);color:var(--chalk);border:none;border-radius:11px;
   padding:14px 30px;font-size:17px;cursor:pointer;transition:transform .12s ease, box-shadow .2s ease, background .2s;
-  box-shadow:0 8px 22px rgba(255,107,44,.34);
+  box-shadow:0 8px 22px rgba(255,107,44,.28);
 }
-.btn:hover{transform:translateY(-2px);background:var(--orange-soft)}
+.btn:hover{transform:translateY(-2px);background:var(--orange-deep-hover)}
 .btn:active{transform:translateY(0)}
 .btn.ghost{background:transparent;color:var(--chalk);border:1px solid var(--line);box-shadow:none}
 .btn.ghost:hover{border-color:var(--orange);color:var(--orange-soft);background:rgba(255,107,44,.08)}
@@ -125,11 +127,20 @@ h1,h2,h3,.disp{font-family:'Big Shoulders Display',sans-serif;font-weight:700;le
 .field input:focus{outline:none;border-color:var(--orange)}
 .nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:26px;gap:12px}
 
-/* scouting reveal */
-.scout{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin-top:6px}
+/* scouting reveal — traité comme un rapport papier : la seule carte claire de l'appli,
+   texte sombre volontaire ici (lisible sur fond clair, à l'inverse du reste de l'UI) */
+.scout{background:linear-gradient(165deg,#FBF3E9,var(--chalk));border:1px solid rgba(42,27,61,.14);
+  border-radius:14px;padding:20px;margin-top:6px;box-shadow:0 10px 26px rgba(8,3,16,.28)}
 .scout .hype{display:flex;align-items:center;gap:10px;margin-bottom:16px}
-.stars{font-size:22px;letter-spacing:2px;color:var(--mint)}
-.stars .off{color:var(--panel2)}
+.scout .hype span{color:var(--ink);opacity:.62;font-family:'Manrope'}
+.stars{font-size:22px;letter-spacing:2px;color:var(--orange-deep)}
+.stars .off{color:rgba(42,27,61,.18)}
+.scout .attr .an{color:var(--ink);opacity:.6}
+.scout .attr .av{color:var(--ink)}
+.scout .attr .abar{background:rgba(42,27,61,.14)}
+.scout .field label{color:var(--ink);opacity:.7}
+.scout .field input{background:rgba(42,27,61,.06);border-color:rgba(42,27,61,.22);color:var(--ink)}
+.scout .field input:focus{border-color:var(--orange-deep)}
 
 /* ---------- HUD joueur ---------- */
 .hud{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:16px}
@@ -150,7 +161,7 @@ h1,h2,h3,.disp{font-family:'Big Shoulders Display',sans-serif;font-weight:700;le
 .ovr-badge .l{position:relative;font-family:'Big Shoulders Text';font-weight:600;font-size:9px;letter-spacing:.16em;color:var(--chalk-dim);margin-top:1px}
 .pc-club{padding-left:8px;margin-top:14px;display:flex;align-items:center;gap:9px}
 .club-dot{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;
-  font-family:'Big Shoulders Text';font-weight:700;font-size:12px;color:var(--ink)}
+  font-family:'Big Shoulders Text';font-weight:700;font-size:12px;color:var(--chalk);text-shadow:0 1px 3px rgba(0,0,0,.5)}
 .pc-club .cn{font-family:'Big Shoulders Text';font-weight:700;font-size:15px}
 .pc-club .cl{font-size:11px;color:var(--chalk-dim);font-family:'Big Shoulders Text';font-weight:500;letter-spacing:.08em}
 .meters{margin-top:15px;padding-left:8px;display:grid;gap:9px}

@@ -83,7 +83,7 @@ export function renderCareerCard(r, back){
 function drawCard(canvas, r){
   const W=1080, H=1350, x=canvas.getContext('2d');
   canvas.width=W; canvas.height=H;
-  const C={chalk:'#F5E9DC',dim:'#B0A3A6',orange:'#FF6B2C',orangeSoft:'#FC8E5D',mint:'#3FD9A4',mintSoft:'#72DDB4',panel:'#4D3E58',line:'#776979'};
+  const C={chalk:'#F5E9DC',dim:'#BCAFAF',orange:'#FF6B2C',orangeSoft:'#FC8E5D',mint:'#3FD9A4',mintSoft:'#72DDB4',panel:'#5B4C63',line:'#7B6D7D'};
   // fond dégradé — aubergine profond
   const g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,'#3E304D'); g.addColorStop(0.55,'#2A1B3D'); g.addColorStop(1,'#16101F');
   x.fillStyle=g; x.fillRect(0,0,W,H);

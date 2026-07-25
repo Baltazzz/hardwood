@@ -9,25 +9,6 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Ouvert
 
-- [ ] **AGD-04 — Contexte de compétition par saison** _(avancé le 2026-07-29 : voir ci-dessous)_
-  Avancée cette session : le palmarès de fin de carrière et la fiche Panthéon séparent
-  désormais nettement les récompenses de club/ligue (titre, MVP, trophées individuels) de
-  celles de sélection nationale (médailles, MVP de tournoi), dans deux sections hiérarchisées
-  de l'armoire à trophées (`renderTrophyCabinet()` dans `src/ui/trophies.js`, classification
-  par `classifyAccolade()`). Prépare l'affichage du contexte de compétition mais ne le
-  complète pas : reste manquant le classement/position finale du club dans sa ligue (aucune
-  notion de standings — `wins` existe mais n'est comparé à personne d'autre) ; playoffs (aucun bracket
-  réel, seulement 2 événements avec du texte d'ambiance sans mécanique — `playoff_push` dans
-  `mid.js`, `load_mgmt` dans `late.js`) ; montée/descente au niveau du **club** (ce qui existe
-  est la progression individuelle du joueur entre paliers de ligue selon sa propre
-  performance — `resolveMovement()` / moves `promo`/`demote` dans `season.js` — un concept
-  différent d'un classement d'équipe qui monterait ou descendrait collectivement,
-  indépendamment du joueur).
-  **Critère** : provisoire — portée exacte (classement de conférence ? bracket de playoffs ?
-  simple ligne de classement ? montée/descente de club distincte de la progression du joueur ?)
-  à préciser avec l'utilisateur avant implémentation. Ne pas coder sur la base de cette seule
-  ligne sans validation du périmètre en session.
-
 - [ ] **AGD-06 — Animations des moments forts**
   Ajouté au registre le 2026-07-26 (item signalé comme possiblement oublié par l'utilisateur —
   provenance non retrouvée dans l'historique git accessible ni dans `AGENDA.md` avant cette
@@ -52,6 +33,35 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
   **Critère** : à définir avec l'utilisateur une fois le manque précisé.
 
 ## Coché récemment
+
+- [x] **AGD-04 — Contexte de compétition par saison** _(implémenté et vérifié le 2026-07-30)_
+  Classement de fin de saison léger (`simulateStandings()` dans `src/engine/competition.js`) :
+  une note par club dérivée de sa force réelle (`clubData.js` quand elle existe, estimation
+  assumée pour NBA/EuroLeague qui n'ont pas de force par club dans les données sources, sinon
+  teinte stable dérivée du nom), le club du joueur reprenant `teamRating` déjà calculé dans
+  `simulateSeason()` — jamais de simulation match par match. Phase finale résumée en 2-3 tours
+  probabilistes (`simulatePlayoffs()`), en cohérence stricte avec le mécanisme clutch déjà en
+  place : si l'événement narratif "match décisif" a tranché la saison, son issue EST la finale,
+  sans second tirage contradictoire. Montée/descente du **club** (distincte de la progression
+  individuelle du joueur, inchangée) pour les pyramides domestiques européennes et
+  australiennes (`checkClubMovement()`), y compris le club du joueur, avec deux nouveaux écrans
+  dédiés (relégation/promotion) qui ajustent la ligue jouée et le salaire. Classement + parcours
+  affichés en quelques lignes sur le bilan de saison existant, sans nouvel écran obligatoire.
+  Vérifié : 0% crash sur 100+300 carrières (deux runs), 0 "Club libre". Bug de calibration
+  détecté et corrigé en session : une première version comparait la force brute des clubs
+  (échelle propre à `clubData.js`) à `teamRating` (échelle différente, centrée sur
+  `prestige*3`), écrasant presque toujours le joueur au classement — corrigé en convertissant
+  la force de chaque club en rang relatif au sein de son vivier avant de la reconvertir sur la
+  même échelle que `teamRating`. Après correction, audit comparatif à 300 carrières (×2) :
+  titre élite 12-12.7% (bande 7.7-14.7% déjà établie cette semaine), MVP 6.7-8%, HOF 10.7-12.3%
+  — stable. Vérification de cohérence dédiée sur 1763 saisons pilotées (80 carrières) : 0
+  incohérence entre classement/qualification aux playoffs/champion affiché/accolade au
+  palmarès (5 contrôles croisés différents). Écrans de relégation/promotion de club vérifiés
+  déclenchés sans erreur sur 100 carrières pilotées (13 relégations, 69 promotions observées).
+  **Reste non couvert** (hors périmètre annoncé pour ce lot) : classement affiché limité à
+  quelques lignes de contexte plutôt qu'un tableau complet consultable à tout moment ; pas de
+  bracket de playoffs visuel (texte uniquement) ; montée/descente non modélisée pour les paliers
+  hors pyramides EU/AU explicitement listées (academy/college/gleague/euro/nba).
 
 - [x] **AGD-03 — Système de trophées** _(implémenté et vérifié le 2026-07-29)_
   Armoire à trophées (`src/ui/trophies.js`), chaque famille de récompense avec sa vraie forme :

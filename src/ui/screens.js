@@ -260,13 +260,14 @@ export function renderSeasonResult(s, natLine, champion){
   if(s.td) accList.push(`🎯 ${s.td} triple-double${s.td>1?'s':''}`);
   const accHtml = accList.length? `<div class="accolades">${accList.map(a=>`<span class="badge ${a.includes('MVP')||a.includes('Champion')?'title':''}">${a}</span>`).join('')}</div>`:'';
   const natHtml = natLine? `<div class="verdict" style="border-left-color:var(--mint)">Sélection ${p.nation.flag} · ${natLine.tourn}${natLine.medal?` : <b style="color:var(--mint)">${natLine.medal}</b>`:' : éliminé en phase finale'}${natLine.mvp?' · <b>MVP du tournoi</b>':''}.</div>`:'';
+  const compHtml = renderCompetitionContext(s, lg, p);
   // Une saison avec tournoi national garde l'accent "pays" jusqu'au bilan inclus.
   stage.innerHTML = renderHUD(natLine?'nation':'club') + `<div class="card scoreboard">
     <div class="sb-head"><h2>Saison ${p.year} · bilan</h2>
       <div style="display:flex;gap:6px;flex-wrap:wrap">${deltaHtml}<span class="chip n">${lg.short} · ${p.club}</span></div></div>
     <div class="statline">${cells.map((c,i)=>`<div class="stat-cell${i===0?' hot':''}"><div class="sv">${c[1]}</div><div class="sl">${c[0]}</div></div>`).join('')}</div>
     <div class="verdict">${verdict}</div>
-    ${natHtml}${accHtml}
+    ${compHtml}${natHtml}${accHtml}
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:18px">
       <div>${p.age>=33?`<button class="btn ghost sm" id="retireBtn">Raccrocher les crampons</button>`:''}</div>
       <button class="btn" id="afterSeason">Intersaison →</button>
@@ -275,6 +276,33 @@ export function renderSeasonResult(s, natLine, champion){
   document.getElementById('afterSeason').onclick=()=>postSeason();
   const rb=document.getElementById('retireBtn'); if(rb) rb.onclick=()=>endCareer('choice');
   animateStats();
+}
+
+// Contexte de compétition condensé : classement (leader + voisins directs + le joueur) et
+// parcours de phase finale résumé en quelques mots. Données déjà calculées dans
+// simulateSeason() (voir engine/competition.js) — ici uniquement de la mise en forme.
+function renderCompetitionContext(s, lg, p){
+  const st = s.standings, po = s.playoffs;
+  if(!st) return '';
+  const row=(rank,name,me)=>`<div class="standings-row${me?' me':''}"><span class="sr-rk">#${rank}</span><span class="sr-nm">${me?`<b>${name}</b>`:name}</span></div>`;
+  const rows = [
+    st.playerRank>1 ? row(1, st.leader.name, false) : null,
+    (st.playerRank>2 && st.above) ? row(st.playerRank-1, st.above.name, false) : null,
+    row(st.playerRank, p.club, true),
+    st.below ? row(st.playerRank+1, st.below.name, false) : null,
+  ].filter(Boolean).join('');
+  const playoffLine = !po ? '' : !po.qualified
+    ? `Playoffs : pas de qualification cette saison.`
+    : po.champion
+      ? `Playoffs : ${po.rounds.map(r=>r.label).join(' → ')} · <b style="color:var(--mint)">titre remporté</b> !`
+      : po.reachedFinals
+        ? `Playoffs : finale perdue, après ${po.rounds.length-1} tour${po.rounds.length-1>1?'s':''} franchi${po.rounds.length-1>1?'s':''}.`
+        : `Playoffs : élimination en ${po.rounds[po.rounds.length-1].label.toLowerCase()}.`;
+  return `<div class="verdict standings-box">
+    <div class="standings-title">${lg.short} · classement (${st.poolSize} clubs)</div>
+    <div class="standings-rows">${rows}</div>
+    ${playoffLine?`<div class="standings-playoff">${playoffLine}</div>`:''}
+  </div>`;
 }
 
 // Texte de couleur (category/comment) d'un vrai club, pour enrichir le hint d'un choix.
@@ -427,6 +455,29 @@ export function renderMoveScreen(move){
     title = `Rétrogradé en ${toLg.short}`;
     body = `Le niveau ne suit plus. Faute de temps de jeu, tu redescends à <b>${move.club}</b> pour te relancer. Le basket ne pardonne pas, mais les retours existent.`;
     choices=[{label:'Rebondir plus bas', hint:'Se relancer', apply:()=>doMove(move,{morale:-8,reputation:-4},'demote')}];
+  }
+  // Montée/descente du CLUB (distincte de move.type==='demote' ci-dessus, qui concerne le
+  // niveau du JOUEUR) : le club garde son nom et son ancienneté, seul le palier change — pas de
+  // "nouveau club" au sens de doMove(), donc pas de reset de confiance du coach ni d'ancienneté.
+  else if(move.type==='clubRelegated'){
+    title = `Relégation`;
+    body = `Une saison compliquée pour l'équipe : <b>${move.club}</b> termine dans la zone rouge du classement et redescend en ${toLg.name}. Le club garde son identité, mais le niveau de la compétition change du tout au tout.`;
+    choices=[{label:`Continuer avec ${move.club}`, hint:'Rebondir un cran plus bas', apply:()=>{
+      p.league=move.to; p.morale=clamp(p.morale-4,0,100); p.coach=clamp(p.coach-2,0,100);
+      p.salary=salaryFor(p.league,o,p.reputation);
+      pushTL(`📉 <b>${move.club}</b> relégué en ${toLg.short}.`);
+      beginSeason();
+    }}];
+  }
+  else if(move.type==='clubPromoted'){
+    title = `Promotion !`;
+    body = `Grâce à une saison pleine, <b>${move.club}</b> termine en tête de son groupe et monte en ${toLg.name}. Un vrai bond pour le club, et pour toi.`;
+    choices=[{label:`Continuer avec ${move.club}`, hint:'Découvrir un cran plus haut', apply:()=>{
+      p.league=move.to; p.morale=clamp(p.morale+5,0,100); p.popularity=clamp(p.popularity+3,0,100);
+      p.salary=salaryFor(p.league,o,p.reputation);
+      pushTL(`📈 <b>${move.club}</b> promu en ${toLg.short} !`);
+      beginSeason();
+    }}];
   }
 
   const singleDest = move.to && !['freeAgency','transfer','draftDecl'].includes(move.type);

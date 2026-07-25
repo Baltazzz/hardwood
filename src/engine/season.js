@@ -9,6 +9,7 @@ import { EVENTS, careerPhase } from './events.js';
 import { pickClubName, clubInfo } from './clubs.js';
 import { rnd, ri, pick, clamp, round, jit, capitalize, money } from './utils.js';
 import { applyTagEffects } from './tags.js';
+import { simulateStandings, simulatePlayoffs, checkClubMovement } from './competition.js';
 import { renderEvent, showDeltaFlash, renderSeasonResult, renderMoveScreen, endCareer } from '../ui/screens.js';
 
 /* ============================================================
@@ -32,7 +33,7 @@ export function beginSeason(){
   const p=G;
   p.seasonMods={ tir:0,adr3:0,dribble:0,passe:0,def:0,reb:0,ath:0,qi:0,
                  reputation:0,morale:0,coach:0,media:0,popularity:0,money:0,fitness:0,
-                 perfBonus:0, injuryGames:0, forceMove:null, forceFinals:null };
+                 perfBonus:0, injuryGames:0, forceMove:null, forceFinals:null, clubMovement:null };
   // recharge de forme en intersaison : de moins en moins efficace avec l'âge, la forme
   // s'use sur la durée d'une carrière plutôt que de repartir à l'identique chaque année
   const ageWear = clamp((p.age-27)*0.6, 0, 10);
@@ -274,21 +275,28 @@ export function simulateSeason(){
   // seuil EuroLeague ramené à l'échelle réelle de sa saison (34 matchs, pas 82)
   if(isEuro && o>=lg.star && wins>=Math.round(43*leagueGames/82) && Math.random()>(.67-clutchVoteBoost)){ A('MVP EuroLeague'); }
   if(p.attrs.def>=88 && (p.pos==='C'||p.pos==='PF'||p.pos==='SF') && Math.random()>.6 && minutes>26 && (isNBA||isEuro)){ A('Meilleur défenseur'); }
-  // titre — seuil de victoires ramené à l'échelle réelle du nombre de matchs de la ligue
-  const championOdds = clamp((teamRating-58)/60,0,.7) + clamp((p.clutch||0)*0.006,0,.04);
-  let champion=false;
-  // Cohérence enjeu -> résultat : si l'événement "match décisif, titre en jeu" a été résolu
-  // cette saison (finals_moment), son issue DÉCIDE le titre — plus de tirage indépendant qui
-  // pourrait contredire le récit ("tir raté mais titre quand même", ou l'inverse).
-  if(p.seasonMods.forceFinals!=null){
-    champion = p.seasonMods.forceFinals;
-    // Le titre décidé par l'événement "match décisif" (et non par le tirage indépendant plus bas)
-    // vient toujours d'une prestation personnelle décisive dans ce money-time précis : c'est
-    // exactement la définition d'un MVP des finales, distinct du titre collectif lui-même.
-    if(champion){ A(isNBA?'Champion NBA':isEuro?'Champion EuroLeague':'Champion '+lg.short); A('MVP des finales'); }
-  } else if(wins>=Math.round((0.30+0.02648*lg.prestige)*leagueGames) && Math.random()<championOdds+ (o>=lg.star?.12:0)){
-    champion=true; A(isNBA?'Champion NBA':isEuro?'Champion EuroLeague':'Champion '+lg.short);
+
+  // ----- Contexte de compétition : classement léger + phase finale résumée -----
+  // Une note de saison par club (force réelle des données + bruit), le club du joueur reprenant
+  // teamRating (déjà calculé plus haut, cohérent avec le reste de sa saison). Cohérence
+  // enjeu -> résultat conservée : si l'événement narratif "match décisif" a tranché cette saison
+  // (forceFinals), son issue EST la finale, jamais un second tirage qui pourrait la contredire.
+  const standings = simulateStandings(p, lg, teamRating);
+  const playoffs = simulatePlayoffs(teamRating, standings.playerRank, standings.poolSize, p.seasonMods.forceFinals);
+  const champion = playoffs.champion;
+  if(champion){
+    A(isNBA?'Champion NBA':isEuro?'Champion EuroLeague':'Champion '+lg.short);
+    // Un titre décidé par l'événement "match décisif" vient toujours d'une prestation
+    // personnelle décisive dans ce money-time précis : c'est la définition d'un MVP des
+    // finales, distinct du titre collectif lui-même. Un titre remporté par la seule force du
+    // classement/phase finale (sans que l'événement narratif se soit présenté cette saison)
+    // n'attribue pas ce trophée individuel spécifique.
+    if(p.seasonMods.forceFinals!=null) A('MVP des finales');
   }
+  // Montée/descente du CLUB (distincte de la progression individuelle du joueur, gérée plus
+  // loin dans resolveMovement()) : uniquement pertinente pour les pyramides à divisions
+  // domestiques/australiennes. Mémorisée pour être appliquée à l'intersaison.
+  p.seasonMods.clubMovement = checkClubMovement(p.league, standings.playerRank, standings.poolSize);
   // rookie award
   if(rookie && (isNBA||isEuro) && o>=lg.star-3 && pts>14){ A(isNBA?'Rookie de l\'année':'Meilleur jeune'); }
 
@@ -299,9 +307,20 @@ export function simulateSeason(){
   const td = estimateTripleDoubles({pts,reb,ast,blk,stl}, gamesPlayed);
   p.tripleDoubles = (p.tripleDoubles||0) + td;
 
+  // Contexte de classement condensé pour l'affichage (voir renderSeasonResult()) : le leader,
+  // le joueur et 1 club juste au-dessus/en-dessous — pas le vivier complet, inutile à l'écran.
+  const rank = standings.playerRank, rows = standings.rows;
+  const standingsCtx = {
+    poolSize: standings.poolSize, playerRank: rank,
+    leader: rows[0],
+    above: rank>=2 ? rows[rank-2] : null,
+    below: rank<rows.length ? rows[rank] : null,
+  };
+
   // rangement saison
   const season={year:p.year,age:p.age,league:p.league,club:p.club,pts,ast,reb,blk,stl,wins,
-    gamesPlayed,leagueGames,td,ovr:o,minutes:round(minutes,0),acc:acc.slice(),champion,injured:p.seasonMods.injuryGames>0};
+    gamesPlayed,leagueGames,td,ovr:o,minutes:round(minutes,0),acc:acc.slice(),champion,injured:p.seasonMods.injuryGames>0,
+    standings:standingsCtx, playoffs};
   p.seasons.push(season);
   p.peakOvr=Math.max(p.peakOvr,o);
 
@@ -438,6 +457,16 @@ function resolveMovement(){
 
   // forceMove imposé par un choix d'événement
   if(p.seasonMods.forceMove){ return buildMove(p.seasonMods.forceMove); }
+
+  // --- Montée/descente du CLUB (distincte de la progression individuelle ci-dessous) : le
+  // classement de fin de saison a placé l'équipe en zone de relégation ou de promotion dans sa
+  // pyramide domestique/australienne. Le club garde son nom, seul le palier change. ---
+  if(p.seasonMods.clubMovement){
+    const { direction, newLeague } = p.seasonMods.clubMovement;
+    const club = p.club;
+    if(direction==='relegated') return { type:'clubRelegated', to:newLeague, club };
+    return { type:'clubPromoted', to:newLeague, club };
+  }
 
   // --- Free agency : le joueur a refusé de prolonger → de vraies offres arrivent ---
   if(p.pendingFA){ p.pendingFA=false; return {type:'freeAgency'}; }

@@ -83,45 +83,48 @@ export function renderCareerCard(r, back){
 function drawCard(canvas, r){
   const W=1080, H=1350, x=canvas.getContext('2d');
   canvas.width=W; canvas.height=H;
-  const C={chalk:'#f4f0e8',dim:'#b4b6ad',orange:'#f07a4e',gold:'#ecc873',sky:'#79b3c9',up:'#63d091',panel:'#333a47',line:'#4a5266'};
-  // fond dégradé
-  const g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,'#2b3140'); g.addColorStop(0.55,'#20242e'); g.addColorStop(1,'#171a21');
+  const C={chalk:'#F5E9DC',dim:'#B0A3A6',orange:'#FF6B2C',orangeSoft:'#FC8E5D',mint:'#3FD9A4',mintSoft:'#72DDB4',panel:'#4D3E58',line:'#776979'};
+  // fond dégradé — aubergine profond
+  const g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,'#3E304D'); g.addColorStop(0.55,'#2A1B3D'); g.addColorStop(1,'#16101F');
   x.fillStyle=g; x.fillRect(0,0,W,H);
   // halo chaud en haut
-  const rg=x.createRadialGradient(W/2,-120,60,W/2,-120,760); rg.addColorStop(0,'rgba(240,122,78,0.20)'); rg.addColorStop(1,'rgba(240,122,78,0)');
+  const rg=x.createRadialGradient(W/2,-120,60,W/2,-120,760); rg.addColorStop(0,'rgba(255,107,44,0.22)'); rg.addColorStop(1,'rgba(255,107,44,0)');
   x.fillStyle=rg; x.fillRect(0,0,W,700);
+  // bande signature orange -> menthe
+  x.fillStyle=x.createLinearGradient(0,0,W,0); x.fillStyle.addColorStop(0,C.orange); x.fillStyle.addColorStop(1,C.mint);
+  x.fillRect(0,0,W,6);
   // cadre
-  x.strokeStyle=C.line; x.lineWidth=3; roundRect(x,28,28,W-56,H-56,26); x.stroke();
+  x.strokeStyle=C.line; x.lineWidth=3; roundRect(x,28,34,W-56,H-62,26); x.stroke();
   x.textAlign='center'; x.textBaseline='alphabetic';
   // titre HARDWOOD
-  x.font='800 46px Oswald, Arial, sans-serif'; x.fillStyle=C.chalk;
-  spacedText(x,'HARDWOOD',W/2,118,8);
-  x.fillStyle=C.orange; x.fillRect(W/2-70,138,140,5);
+  x.font='700 46px "Big Shoulders Display", Arial, sans-serif'; x.fillStyle=C.chalk;
+  spacedText(x,'HARDWOOD',W/2,124,8);
+  x.fillStyle=C.orange; x.fillRect(W/2-70,144,140,5);
   // nom + drapeau
-  x.font='700 76px Oswald, Arial, sans-serif'; x.fillStyle=C.chalk;
-  x.fillText(`${r.flag||'🏀'} ${truncate(r.name||'Joueur',16)}`, W/2, 232);
+  x.font='700 76px "Big Shoulders Display", Arial, sans-serif'; x.fillStyle=C.chalk;
+  x.fillText(`${r.flag||'🏀'} ${truncate(r.name||'Joueur',16)}`, W/2, 238);
   // poste / style / nation
-  x.font='500 30px "Barlow Semi Condensed", Arial, sans-serif'; x.fillStyle=C.dim;
+  x.font='600 30px "Big Shoulders Text", Arial, sans-serif'; x.fillStyle=C.dim;
   const sub=[`${r.posEmoji||''} ${r.posName||''}`.trim(), r.styleName?`${r.styleEmoji||''} ${r.styleName}`.trim():'', r.nation||''].filter(Boolean).join('   ·   ');
-  x.fillText(sub, W/2, 280);
+  x.fillText(sub, W/2, 286);
   // badge tier
-  x.font='800 52px Oswald, Arial, sans-serif';
+  x.font='700 52px "Big Shoulders Display", Arial, sans-serif';
   const tw=x.measureText(r.tier||'').width; const bw=Math.min(Math.max(tw+90,360),W-140);
-  x.fillStyle='rgba(236,200,115,0.10)'; x.strokeStyle=C.gold; x.lineWidth=2.5;
-  roundRect(x,(W-bw)/2,320,bw,88,44); x.fill(); x.stroke();
-  x.fillStyle=C.gold; x.fillText(r.tier||'', W/2, 380);
-  if(r.hof){ x.font='600 24px "Barlow Semi Condensed", Arial, sans-serif'; x.fillStyle=C.gold; x.fillText('★ HALL OF FAME ★', W/2, 438); }
+  x.fillStyle='rgba(63,217,164,0.12)'; x.strokeStyle=C.mint; x.lineWidth=2.5;
+  roundRect(x,(W-bw)/2,326,bw,88,44); x.fill(); x.stroke();
+  x.fillStyle=C.mint; x.fillText(r.tier||'', W/2, 386);
+  if(r.hof){ x.font='700 24px "Big Shoulders Text", Arial, sans-serif'; x.fillStyle=C.mint; x.fillText('★ HALL OF FAME ★', W/2, 444); }
   // grille de stats 3x2
   const cells=[['Score',r.score],['Titres',r.champs],['MVP',r.mvps],['All-Star',r.allstars],['Pic OVR',r.peak],['Clutch',r.clutch||0]];
-  const gx0=90, gy0=488, gw=(W-180), cwid=gw/3, chei=150;
+  const gx0=90, gy0=494, gw=(W-180), cwid=gw/3, chei=150;
   for(let i=0;i<cells.length;i++){ const cx=gx0+(i%3)*cwid, cy=gy0+Math.floor(i/3)*(chei+22);
-    x.fillStyle='rgba(255,255,255,0.035)'; x.strokeStyle=C.line; x.lineWidth=1.5; roundRect(x,cx+10,cy,cwid-20,chei,18); x.fill(); x.stroke();
-    x.fillStyle=C.chalk; x.font='700 68px Oswald, Arial, sans-serif'; x.fillText(String(cells[i][1]), cx+cwid/2, cy+82);
-    x.fillStyle=C.dim; x.font='600 25px "Barlow Semi Condensed", Arial, sans-serif'; spacedText(x,String(cells[i][0]).toUpperCase(),cx+cwid/2,cy+122,1.5);
+    x.fillStyle='rgba(245,233,220,0.045)'; x.strokeStyle=C.line; x.lineWidth=1.5; roundRect(x,cx+10,cy,cwid-20,chei,18); x.fill(); x.stroke();
+    x.fillStyle=C.chalk; x.font='700 68px "Big Shoulders Display", Arial, sans-serif'; x.fillText(String(cells[i][1]), cx+cwid/2, cy+82);
+    x.fillStyle=C.dim; x.font='600 25px "Big Shoulders Text", Arial, sans-serif'; spacedText(x,String(cells[i][0]).toUpperCase(),cx+cwid/2,cy+122,1.5);
   }
   // ligne saisons / record / nba
   let yy=gy0+2*(chei+22)+40;
-  x.fillStyle=C.sky; x.font='600 30px "Barlow Semi Condensed", Arial, sans-serif';
+  x.fillStyle=C.mint; x.font='600 30px "Big Shoulders Text", Arial, sans-serif';
   x.fillText(`${r.seasons} saisons   ·   record ${r.bestPts} pts/match${r.nba?'   ·   🏀 NBA':''}`, W/2, yy);
   // sparkline OVR
   if(r.ovrSeries && r.ovrSeries.length>1){ drawSpark(x, r.ovrSeries, W/2-300, yy+34, 600, 90, C); yy+=150; } else yy+=40;
@@ -129,11 +132,11 @@ function drawCard(canvas, r){
   if(r.headline){ x.fillStyle=C.dim; x.font='italic 500 30px Georgia, serif';
     wrapText(x, r.headline, W/2, yy+50, W-200, 42); }
   // footer
-  x.fillStyle=C.dim; x.font='600 26px "Barlow Semi Condensed", Arial, sans-serif';
+  x.fillStyle=C.dim; x.font='600 26px "Big Shoulders Text", Arial, sans-serif';
   spacedText(x,'🏀 HARDWOOD',W/2,H-70,2);
 }
 function roundRect(x,rx,ry,w,h,r){ x.beginPath(); x.moveTo(rx+r,ry); x.arcTo(rx+w,ry,rx+w,ry+h,r); x.arcTo(rx+w,ry+h,rx,ry+h,r); x.arcTo(rx,ry+h,rx,ry,r); x.arcTo(rx,ry,rx+w,ry,r); x.closePath(); }
 function spacedText(x,str,cx,cy,sp){ x.save(); const chs=[...str]; let tot=0; const ws=chs.map(c=>{const w=x.measureText(c).width;tot+=w+sp;return w;}); tot-=sp; let px=cx-tot/2; x.textAlign='left'; chs.forEach((c,i)=>{ x.fillText(c,px,cy); px+=ws[i]+sp; }); x.restore(); }
 function truncate(s,n){ s=String(s); return s.length>n?s.slice(0,n-1)+'…':s; }
 function wrapText(x,text,cx,cy,maxW,lh){ const words=String(text).split(' '); let line='',yy=cy,lines=[]; words.forEach(w=>{ const t=line?line+' '+w:w; if(x.measureText(t).width>maxW && line){ lines.push(line); line=w; } else line=t; }); if(line)lines.push(line); lines.slice(0,4).forEach((ln,i)=>x.fillText(ln,cx,yy+i*lh)); }
-function drawSpark(x,series,ox,oy,w,h,C){ const mn=Math.min(...series),mx=Math.max(...series),rng=Math.max(1,mx-mn); const n=series.length; const bw=Math.min(w/n*0.66,26); const gap=(w-bw*n)/(n+1); series.forEach((v,i)=>{ const bh=14+((v-mn)/rng)*(h-14); const bx=ox+gap+i*(bw+gap); const isPk=v===mx; x.fillStyle=isPk?C.gold:'rgba(121,179,201,0.85)'; roundRect(x,bx,oy+h-bh,bw,bh,4); x.fill(); }); }
+function drawSpark(x,series,ox,oy,w,h,C){ const mn=Math.min(...series),mx=Math.max(...series),rng=Math.max(1,mx-mn); const n=series.length; const bw=Math.min(w/n*0.66,26); const gap=(w-bw*n)/(n+1); series.forEach((v,i)=>{ const bh=14+((v-mn)/rng)*(h-14); const bx=ox+gap+i*(bw+gap); const isPk=v===mx; x.fillStyle=isPk?C.mint:'rgba(252,142,93,0.75)'; roundRect(x,bx,oy+h-bh,bw,bh,4); x.fill(); }); }

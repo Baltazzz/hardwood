@@ -162,7 +162,7 @@ export function renderSeasonResult(s, natLine, champion){
     ? `<span class="chip" style="background:${delta>0?'rgba(63,208,122,.14)':'rgba(255,82,98,.14)'};border-color:${delta>0?'var(--up)':'var(--down)'};color:${delta>0?'var(--up)':'var(--down)'}">${delta>0?'▲':'▼'} ${Math.abs(delta)} OVR vs saison passée</span>`
     : '';
   const accHtml = s.acc.length? `<div class="accolades">${s.acc.map(a=>`<span class="badge ${a.includes('MVP')||a.includes('Champion')?'title':''}">${a}</span>`).join('')}</div>`:'';
-  const natHtml = natLine? `<div class="verdict" style="border-left-color:var(--gold)">Sélection ${p.nation.flag} — ${natLine.tourn}${natLine.medal?` : <b style="color:var(--gold)">${natLine.medal}</b>`:' : éliminé en phase finale'}${natLine.mvp?' · <b>MVP du tournoi</b>':''}.</div>`:'';
+  const natHtml = natLine? `<div class="verdict" style="border-left-color:var(--mint)">Sélection ${p.nation.flag} — ${natLine.tourn}${natLine.medal?` : <b style="color:var(--mint)">${natLine.medal}</b>`:' : éliminé en phase finale'}${natLine.mvp?' · <b>MVP du tournoi</b>':''}.</div>`:'';
   stage.innerHTML = renderHUD() + `<div class="card scoreboard">
     <div class="sb-head"><h2>Saison ${p.year} — bilan</h2>
       <div style="display:flex;gap:6px;flex-wrap:wrap">${deltaHtml}<span class="chip n">${lg.short} · ${p.club}</span></div></div>
@@ -332,7 +332,7 @@ export function renderMoveScreen(move){
   }
 
   const singleDest = move.to && !['freeAgency','transfer','draftDecl'].includes(move.type);
-  const salaryLine = singleDest ? `<div class="body" style="margin-top:2px;color:var(--up);font-family:'Barlow Semi Condensed';letter-spacing:.03em">💰 Salaire annuel estimé : <b>${money(salaryFor(move.to,o,p.reputation))}</b></div>` : '';
+  const salaryLine = singleDest ? `<div class="body" style="margin-top:2px;color:var(--up);font-family:'Big Shoulders Text';font-weight:600;letter-spacing:.03em">💰 Salaire annuel estimé : <b>${money(salaryFor(move.to,o,p.reputation))}</b></div>` : '';
   stage.innerHTML = renderHUD() + `<div class="card event">
     <div class="season-tag"><span class="chip">📅 Intersaison · ${p.age} ans</span>
       <span class="chip n">💼 Marché des transferts</span></div>
@@ -434,7 +434,7 @@ export function endCareer(reason){
   stage.innerHTML = `<div class="end">
     <div class="eyebrow">Fin de carrière · ${p.name}</div>
     <div class="legend-title">${tier}</div>
-    <p class="subline">${p.nation.flag} ${POSITIONS.find(x=>x.id===p.pos).emoji} ${POSITIONS.find(x=>x.id===p.pos).name} · ${p.seasons.length} saisons · pic à ${p.peakOvr} OVR${p.hof?' · <b style="color:var(--gold)">Hall of Fame</b>':''}</p>
+    <p class="subline">${p.nation.flag} ${POSITIONS.find(x=>x.id===p.pos).emoji} ${POSITIONS.find(x=>x.id===p.pos).name} · ${p.seasons.length} saisons · pic à ${p.peakOvr} OVR${p.hof?' · <b style="color:var(--mint)">Hall of Fame</b>':''}</p>
     <p class="body" style="max-width:520px;margin:14px auto 0;text-align:center">${blurb}</p>
 
     <div class="legend-grid">
@@ -499,7 +499,7 @@ function renderFullSheet(){
   const p=G;
   const rows = p.seasons.map(s=>`<div class="tl-row">
     <span class="yr">S${s.year} · ${s.age}a</span>
-    <span class="ev"><b>${s.club}</b> <span style="color:var(--chalk-dim)">(${LEAGUES[s.league].short})</span> — ${s.pts} pts, ${s.reb} reb, ${s.ast} pas · OVR ${s.ovr}${s.acc.length?` · <span style="color:var(--gold)">${s.acc.join(', ')}</span>`:''}</span></div>`).join('');
+    <span class="ev"><b>${s.club}</b> <span style="color:var(--chalk-dim)">(${LEAGUES[s.league].short})</span> — ${s.pts} pts, ${s.reb} reb, ${s.ast} pas · OVR ${s.ovr}${s.acc.length?` · <span style="color:var(--mint)">${s.acc.join(', ')}</span>`:''}</span></div>`).join('');
   stage.innerHTML = `<div class="end" style="text-align:left">
     <div class="eyebrow" style="text-align:center">Feuille de match — carrière complète</div>
     <h2 style="text-align:center;font-size:28px;margin:6px 0 18px">${p.name}</h2>

@@ -30,12 +30,12 @@ export function renderHUD(){
       <div class="pc-club">
         <div class="club-dot" style="background:${cc}">${(p.club||'?').slice(0,2).toUpperCase()}</div>
         <div><div class="cn">${p.club||'Sans club'}</div>
-          <div class="cl">${lg?lg.short:''}${p.club&&p.seasons.length?` · <span style="color:var(--sky)">${roleOf(p).label}</span>`:''}</div></div>
+          <div class="cl">${lg?lg.short:''}${p.club&&p.seasons.length?` · <span style="color:var(--mint)">${roleOf(p).label}</span>`:''}</div></div>
       </div>
       <div class="meters">
-        ${meter('Réputation',p.reputation,'linear-gradient(90deg,#a86a2e,#ec6a43)')}
-        ${meter('Moral',p.morale,'linear-gradient(90deg,#3a7a58,#5ec98a)')}
-        ${meter('Forme',p.fitness,'linear-gradient(90deg,#3f6f86,#6fa8bf)')}
+        ${meter('Réputation',p.reputation,'linear-gradient(90deg,#B23F14,var(--orange))')}
+        ${meter('Moral',p.morale,'linear-gradient(90deg,#1E8C68,var(--mint))')}
+        ${meter('Forme',p.fitness,'linear-gradient(90deg,var(--chalk-dim),var(--chalk))')}
       </div>
     </div>
     <div class="card">
@@ -43,16 +43,16 @@ export function renderHUD(){
       <div class="attrs">${attrsHtml}</div>
       <div style="display:flex;gap:18px;margin-top:16px;flex-wrap:wrap">
         ${miniStat('Coach',p.coach)} ${miniStat('Médias',p.media)} ${miniStat('Popularité',p.popularity)}
-        <div><div class="an" style="font-size:11px;color:var(--chalk-dim);text-transform:uppercase;letter-spacing:.06em;font-family:'Barlow Semi Condensed'">Salaire/an</div>
-          <div class="av" style="font-family:'Oswald';font-weight:600;font-size:15px;color:var(--up)">${p.salary?money(p.salary):'—'}</div></div>
-        <div style="margin-left:auto"><div class="an" style="font-size:11px;color:var(--chalk-dim);text-transform:uppercase;letter-spacing:.06em;font-family:'Barlow Semi Condensed'">Fortune</div>
-          <div class="av" style="font-family:'Oswald';font-weight:600;font-size:15px;color:var(--gold)">${money(p.money)}</div></div>
+        <div><div class="an" style="font-size:11px;color:var(--chalk-dim);text-transform:uppercase;letter-spacing:.06em;font-family:'Big Shoulders Text'">Salaire/an</div>
+          <div class="av" style="font-family:'Big Shoulders Text';font-weight:700;font-size:15px;color:var(--up)">${p.salary?money(p.salary):'—'}</div></div>
+        <div style="margin-left:auto"><div class="an" style="font-size:11px;color:var(--chalk-dim);text-transform:uppercase;letter-spacing:.06em;font-family:'Big Shoulders Text'">Fortune</div>
+          <div class="av" style="font-family:'Big Shoulders Text';font-weight:700;font-size:15px;color:var(--mint)">${money(p.money)}</div></div>
       </div>
     </div>
   </div>`;
 }
-function miniStat(l,v){return `<div><div style="font-size:11px;color:var(--chalk-dim);text-transform:uppercase;letter-spacing:.06em;font-family:'Barlow Semi Condensed'">${l}</div>
-  <div style="font-family:'Oswald';font-weight:600;font-size:15px">${Math.round(v)}</div></div>`;}
+function miniStat(l,v){return `<div><div style="font-size:11px;color:var(--chalk-dim);text-transform:uppercase;letter-spacing:.06em;font-family:'Big Shoulders Text'">${l}</div>
+  <div style="font-family:'Big Shoulders Text';font-weight:700;font-size:15px">${Math.round(v)}</div></div>`;}
 
 export function animateStats(){
   if(reducedMotion() || !window.requestAnimationFrame) return;

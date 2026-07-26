@@ -37,6 +37,17 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Coché récemment
 
+- [x] **AGD-14 — Tuto : installer le lien comme une app sur téléphone** _(implémenté et vérifié le 2026-07-26)_
+  Micro-ajout demandé en session : nouvelle 4e section ("04 · Sur ton téléphone") sur l'écran de
+  bienvenue/tuto (`screenWelcome()` dans `screens.js`), qui explique en 3 étapes génériques
+  (partager → ajouter à l'écran d'accueil → lancer comme une app) comment transformer le lien
+  internet en icône d'application sur le téléphone -- réutilise le style "étapes numérotées" déjà
+  en place pour la bande de trajectoire (`.ws-traj`), pas de nouveau CSS. Aucun manifest/PWA
+  ajouté : juste l'explication du geste navigateur, qui fonctionne déjà tel quel (iOS/Android).
+  Vérifié : rendu contrôlé directement (le HTML de `screenWelcome()` contient bien la nouvelle
+  section et ses 3 étapes), montré à l'utilisateur via le showcase. Audit de non-régression à 100
+  carrières : 0% crash (changement purement textuel, sans risque de régression gameplay).
+
 - [x] **AGD-13 — Identité de club (vraies couleurs officielles, tuile "maillot", pastille d'initiales)** _(implémenté et vérifié le 2026-07-26)_
   Trois volets liés, maintenant que les couleurs réelles de marque sont disponibles :
   1. *Ingestion de `data-source/clubcolor.xlsx`*. `scripts/gen-club-data.mjs` étendu pour lire ce

@@ -53,6 +53,20 @@ function trajectoryStrip(){
       <div><div class="ws-traj-l">${t[0]}</div><div class="ws-traj-d">${t[1]}</div></div></div>`).join('')}</div>`;
 }
 
+// Étapes génériques (le libellé exact du menu de partage diffère selon iOS/Android/navigateur,
+// mais les trois gestes sont les mêmes partout) pour installer le lien comme une app sur l'écran
+// d'accueil du téléphone -- pas de PWA/manifest, juste un raccourci vers cette page.
+const HOME_SCREEN_STEPS = [
+  ['Partager', 'Dans ton navigateur, ouvre le menu de partage (l\'icône carrée avec une flèche, ou les trois points en haut/en bas selon le téléphone).'],
+  ['Ajouter à l\'écran d\'accueil', 'Cherche l\'option "Ajouter à l\'écran d\'accueil" (parfois nommée "Installer l\'application") dans la liste.'],
+  ['Lancer comme une app', 'Une icône HARDWOOD apparaît sur ton écran d\'accueil : elle rouvre directement ta carrière, plein écran, comme une vraie application.'],
+];
+function homeScreenStrip(){
+  return `<div class="ws-traj">${HOME_SCREEN_STEPS.map((t,i)=>`
+    <div class="ws-traj-step"><div class="ws-traj-n">${i+1}</div>
+      <div><div class="ws-traj-l">${t[0]}</div><div class="ws-traj-d">${t[1]}</div></div></div>`).join('')}</div>`;
+}
+
 // Écran de bienvenue plein écran (1re carrière uniquement, rouvrable depuis le titre) :
 // un vrai écran (comme screenTitle/screenCreate), pas une tuile, pour pouvoir structurer le
 // propos en sections qu'on parcourt plutôt qu'un pavé de texte compressé dans un coin.
@@ -82,6 +96,12 @@ export function screenWelcome(){
       <div class="ws-kicker">03 · Ta trajectoire</div>
       <p class="ws-lead">De 16 à 38 ans. Personne ne connaît la sienne à l'avance.</p>
       ${trajectoryStrip()}
+    </section>
+
+    <section class="ws-section">
+      <div class="ws-kicker">04 · Sur ton téléphone</div>
+      <p class="ws-lead">HARDWOOD est un lien, pas une appli du store -- mais tu peux l'installer comme une, en trois gestes :</p>
+      ${homeScreenStrip()}
     </section>
 
     <div style="margin-top:8px;text-align:center">

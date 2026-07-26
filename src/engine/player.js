@@ -3,6 +3,7 @@ import { STYLES } from '../data/styles.js';
 import { LEAGUES } from '../data/leagues.js';
 import { ARCHETYPES } from '../data/archetypes.js';
 import { clamp, ri, pick } from './utils.js';
+import { clubPercentile } from './competition.js';
 
 export function newPlayer(){
   return {
@@ -38,15 +39,25 @@ export function ovr(p){
   let s=0; for(const k in w){ s += (p.attrs[k]||0)*w[k]; }
   return Math.round(s);
 }
-// Rôle dans l'équipe : évolue selon ton niveau vs la ligue et ton temps de jeu récent
+// Rôle dans l'équipe : évolue selon ton niveau vs la ligue, la force réelle de l'effectif du
+// club où tu es, et ton temps de jeu récent.
 export function roleOf(p){
   const lg=LEAGUES[p.league]; if(!lg) return {key:'espoir',label:'🌱 Espoir'};
   const o=ovr(p); const lastMin=p.seasons.length?p.seasons[p.seasons.length-1].minutes:0;
-  if(o>=lg.star+2) return {key:'franchise',label:'👑 Franchise player'};
-  if(o>=lg.star-2) return {key:'star',label:'⭐ Star de l\'équipe'};
+  // Concurrence réelle du poste : arriver dans un effectif fort (vs son propre vivier de ligue,
+  // voir clubPercentile() dans engine/competition.js) relève la barre pour jouer/être titulaire,
+  // un effectif faible l'abaisse -- le rôle dépend donc de ton niveau ET de la force réelle de
+  // l'équipe où tu es, pas seulement d'un seuil générique identique pour tous les clubs d'une
+  // même ligue. Purement déterministe (aucun bruit), donc strictement identique quel que soit le
+  // point d'appel (HUD, bilan de saison, minutes de la saison en cours).
+  const { percentile } = clubPercentile(p, lg, playCountry(p));
+  const rosterAdj = (percentile - 0.5) * 12; // +/-6 autour des seuils de ligue
+  const starter = lg.starter + rosterAdj, star = lg.star + rosterAdj;
+  if(o>=star+2) return {key:'franchise',label:'👑 Franchise player'};
+  if(o>=star-2) return {key:'star',label:'⭐ Star de l\'équipe'};
   // un coach qui te fait confiance t'ouvre le poste de titulaire même un cran en-dessous de la barre pure
-  if(o>=lg.starter || (o>=lg.starter-3 && p.coach>=75)) return {key:'starter',label:'🏀 Titulaire'};
-  if(o>=lg.starter-6 || lastMin>=14) return {key:'rotation',label:'🔄 Rotation'};
+  if(o>=starter || (o>=starter-3 && p.coach>=75)) return {key:'starter',label:'🏀 Titulaire'};
+  if(o>=starter-6 || lastMin>=14) return {key:'rotation',label:'🔄 Rotation'};
   return {key:'bench',label:'🪑 Bout de banc'};
 }
 export function attrOf(p, key){ return p.attrs[key]||50; }

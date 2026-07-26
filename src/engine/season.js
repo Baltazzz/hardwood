@@ -5,12 +5,12 @@ import { LIFESTYLES } from '../data/lifestyles.js';
 import { ARCHETYPES } from '../data/archetypes.js';
 import { LEAGUES } from '../data/leagues.js';
 import { NATIONS } from '../data/nations.js';
-import { ovr, salaryFor, arrivalCoachTrust, playCountry } from './player.js';
+import { ovr, salaryFor, arrivalCoachTrust, playCountry, roleOf } from './player.js';
 import { EVENTS, careerPhase } from './events.js';
 import { pickClubName, clubInfo } from './clubs.js';
 import { rnd, ri, pick, clamp, round, jit, capitalize, money } from './utils.js';
 import { applyTagEffects } from './tags.js';
-import { simulateStandings, simulatePlayoffs, checkClubMovement } from './competition.js';
+import { simulateStandings, simulatePlayoffs, checkClubMovement, clubPercentile } from './competition.js';
 import { renderEvent, showDeltaFlash, renderSeasonResult, renderMoveScreen, endCareer } from '../ui/screens.js';
 
 /* ============================================================
@@ -174,8 +174,22 @@ export function simulateSeason(){
   if(p.reputation>=42 && !p.natCap && p.year%2===0) p.natCap=true;
   const lg=LEAGUES[p.league], pos=POSITIONS.find(x=>x.id===p.pos);
   const o=ovr(p);
-  // ----- TEMPS DE JEU : selon le niveau vs seuil de titulaire de la ligue -----
-  const gap = o - lg.starter;
+  // Force réelle de l'effectif du club (percentile dans son vrai vivier de ligue, voir
+  // clubPercentile() dans engine/competition.js) : calculée UNE FOIS ici et réutilisée pour le
+  // temps de jeu ci-dessous ET pour la note d'équipe du classement plus bas -- les deux doivent
+  // juger le même effectif réel. roleOf() (engine/player.js) applique le même ajustement pour
+  // que le rôle affiché (HUD, bilan de saison) ne contredise jamais les minutes réellement
+  // distribuées cette saison.
+  const nationId = playCountry(p);
+  const clubCtx = clubPercentile(p, lg, nationId);
+  const rosterAdj = (clubCtx.percentile - 0.5) * 12; // +/-6 autour des seuils de ligue
+  // ----- TEMPS DE JEU : selon le niveau vs la concurrence RÉELLE du poste dans ce club -----
+  // Arriver plus faible que l'effectif (effectif fort => rosterAdj>0 => barre relevée) place
+  // logiquement sur le banc ; un effectif faible (rosterAdj<0) abaisse la barre et ouvre des
+  // minutes plus tôt. Avant ce correctif, seul le seuil générique de la ligue comptait, identique
+  // pour tous les clubs d'un même palier -- signer dans un club réel fort ou faible ne changeait
+  // jamais la concurrence pour les minutes, seulement le classement (incohérence corrigée ici).
+  const gap = o - (lg.starter + rosterAdj);
   const youngRun = p.age<=21 ? 1 : 0;              // les jeunes ont un peu de temps de jeu offert
   let minutes = clamp(21 + gap*1.35 + youngRun + (p.coach-50)/9, 6, 36); // la confiance du coach compte, et pèse fort
   // Drafté tard (ou en fin de tableau) : la confiance du staff n'est pas acquise, il faut
@@ -228,15 +242,21 @@ export function simulateSeason(){
   let stl = clamp(stl36*mFactor*perf + rnd(-0.25,0.25), 0, 4.5);
   pts=round(pts,1); ast=round(ast,1); reb=round(reb,1); blk=round(blk,1); stl=round(stl,1);
 
-  // succès collectif : prestige club + ton niveau + hasard. Le total de victoires est un
-  // pourcentage de victoires (comme en vrai) ramené au nombre de matchs réels de la ligue —
-  // une saison EuroLeague (~34 matchs) ne peut plus afficher un total de victoires de saison NBA.
-  // teamRating reste la même échelle qu'avant (les seuils MVP/titre plus bas s'y réfèrent
-  // directement, inchangés) : seule la conversion teamRating -> % de victoires a été recalée
-  // ci-dessous, qui sous-évaluait nettement un titulaire ou une star (ex. star NBA ~38% de
-  // victoires en moyenne avant correctif, jamais crédible au niveau du "vrai" basket où une
-  // équipe avec une star tourne plutôt autour de 55-65%).
-  const teamRating = clamp(lg.prestige*3 + (o-lg.starter)*1.2 + rnd(-14,14), 5, 100);
+  // succès collectif : force RÉELLE de l'effectif (clubCtx.percentile, même calcul que pour les
+  // minutes ci-dessus et que pour les autres clubs du classement -- voir simulateStandings())
+  // + apport individuel du joueur + hasard. Corrige une incohérence : avant ce lot, seule la
+  // prestige générique de la ligue servait de base pour LE CLUB DU JOUEUR (les autres clubs du
+  // classement utilisaient déjà leur vraie force) -- une superstar dans un club réel faible et
+  // un role player dans un club réel fort avaient donc exactement la même note de départ, ce qui
+  // écrasait le poids réel du niveau individuel sur le succès collectif. Coefficient individuel
+  // recalé à 1.9 (vs 1.2 avant) : une superstar (o-lg.starter ~ +15-20) pèse désormais nettement
+  // sur ses propres chances de titre, un role player dans un grand club reste porté par le
+  // percentile de l'effectif, un club réellement faible ne gagne plus par le seul hasard du bruit
+  // (audit de calibration : voir AGENDA.md, taux de titre élite maintenu dans la bande établie).
+  // Le total de victoires est un pourcentage de victoires (comme en vrai) ramené au nombre de
+  // matchs réels de la ligue -- une saison EuroLeague (~34 matchs) ne peut plus afficher un total
+  // de victoires de saison NBA.
+  const teamRating = clamp(lg.prestige*3 + (clubCtx.percentile-0.5)*24 + (o-lg.starter)*1.25 + rnd(-14,14), 5, 100);
   const winPct = clamp(0.30 + teamRating*0.005, 0.15, 0.80);
   const wins = Math.max(1, Math.round(winPct*leagueGames));
 
@@ -283,7 +303,7 @@ export function simulateSeason(){
   // teamRating (déjà calculé plus haut, cohérent avec le reste de sa saison). Cohérence
   // enjeu -> résultat conservée : si l'événement narratif "match décisif" a tranché cette saison
   // (forceFinals), son issue EST la finale, jamais un second tirage qui pourrait la contredire.
-  const standings = simulateStandings(p, lg, teamRating);
+  const standings = simulateStandings(p, lg, teamRating, nationId);
   const playoffs = simulatePlayoffs(teamRating, standings.playerRank, standings.poolSize, p.seasonMods.forceFinals);
   const champion = playoffs.champion;
   if(champion){
@@ -331,7 +351,12 @@ export function simulateSeason(){
   if(p.reputation>=45 && p.year%2===0){
     const zoneTourn = p.nation.path==='eu' ? 'EuroBasket' : p.nation.path==='au' ? 'Coupe d\'Asie' : 'Coupe des Amériques';
     const tourn = pick(['Coupe du Monde','Jeux Olympiques', zoneTourn]);
-    const natPower = clamp(p.nation.strength + (o-70)*0.6 + rnd(-16,16),20,105);
+    // Déjà construit sur le même principe que le club (force réelle de l'équipe -- ici
+    // p.nation.strength, fixe par nation -- + apport individuel + bruit) : pas de bug de fond
+    // symétrique à celui du club (qui utilisait un prestige générique au lieu de la vraie force
+    // du club signé). Coefficient individuel légèrement relevé (0.6 -> 0.75) par cohérence avec
+    // le renforcement du poids individuel côté club.
+    const natPower = clamp(p.nation.strength + (o-70)*0.75 + rnd(-16,16),20,105);
     let medal=null;
     if(natPower>96){ medal='Or'; A('🥇 '+tourn); }
     else if(natPower>88){ medal='Argent'; A('🥈 '+tourn); }
@@ -362,12 +387,20 @@ export function simulateSeason(){
   renderSeasonResult(season, natLine, champion);
 }
 function medalEmoji(m){return m==='Or'?'🥇':m==='Argent'?'🥈':'🥉';}
-export function seasonVerdict(s,lg){
-  const gap=s.ovr-lg.starter;
-  if(s.minutes<10) return `Saison compliquée : peu de temps de jeu, tu tournes surtout au bout du banc. Il faut hausser le ton ou changer d'air.`;
-  if(s.ovr>=lg.star) return `Saison référence. Tu es l'un des tout meilleurs de ${lg.name} : les projecteurs sont braqués sur toi.`;
-  if(gap>=4) return `Bonne saison de titulaire à ${s.club}. Tu tiens ton rang et tu attires le regard.`;
-  return `Saison correcte, tu grappilles ta place dans la rotation. Le vrai palier reste à franchir.`;
+// Texte de bilan synchronisé sur roleOf(p) (source unique du rôle réel, voir engine/player.js) :
+// avant ce correctif, ce verdict comparait l'OVR de la saison à des seuils propres (gap>=4 pour
+// "titulaire", sinon "tu grappilles ta place dans la rotation" par défaut) qui pouvaient
+// contredire le vrai rôle affiché ailleurs (HUD, étiquette de rôle) -- un titulaire net (roleOf
+// = 'starter') pouvait par exemple entendre le message de rotation. Appelé juste après
+// simulateSeason(), avant toute progression d'intersaison : p reflète encore exactement l'état
+// de la saison s qu'on commente.
+export function seasonVerdict(p,s,lg){
+  const role = roleOf(p).key;
+  if(role==='franchise') return `Saison référence. Tu es l'un des tout meilleurs de ${lg.name} : les projecteurs sont braqués sur toi.`;
+  if(role==='star') return `Belle saison de star à ${s.club}. Tu t'affirmes parmi les meilleurs de ${lg.name}, la confiance grandit match après match.`;
+  if(role==='starter') return `Bonne saison de titulaire à ${s.club}. Tu tiens ton rang et tu attires le regard.`;
+  if(role==='rotation') return `Saison correcte, tu grappilles ta place dans la rotation. Le vrai palier reste à franchir.`;
+  return `Saison compliquée : peu de temps de jeu, tu tournes surtout au bout du banc. Il faut hausser le ton ou changer d'air.`;
 }
 
 /* ============================================================

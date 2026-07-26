@@ -6,13 +6,15 @@
 // force par club dans les données sources), une estimation grossière et assumée comme telle
 // (pas une statistique réelle précise) ; à défaut, une teinte de force stable dérivée du nom,
 // même logique que pour l'accent de couleur (voir engine/accent.js).
+// Pas d'import de player.js ici (nationId est passé par l'appelant) : évite un cycle avec
+// player.js, qui importe clubPercentile() ci-dessous pour l'attribution de rôle.
 import { getClubPool } from './clubs.js';
-import { playCountry } from './player.js';
 import { clamp, rnd } from './utils.js';
 
 // Estimation grossière de niveau relatif (0-100), PAS une donnée officielle : sert uniquement à
-// donner un classement crédible aux deux paliers globaux, qui n'ont pas de force par club dans
-// clubData.js (contrairement à tous les autres paliers, nation-aware).
+// donner un classement crédible aux clubs non couverts par clubData.js (paliers globaux
+// NBA/EuroLeague au-delà du noyau curé, et clubs génériques de remplissage -- voir
+// REAL_LEAGUE_SIZE ci-dessous).
 const NBA_STRENGTH = { 'Boston':90, 'L.A. Lakers':79, 'Golden State':76, 'Denver':88, 'Milwaukee':83,
   'Miami':74, 'New York':82, 'Dallas':81, 'Phoenix':78, 'OKC':87, 'Philadelphie':80, 'Memphis':75 };
 const EURO_STRENGTH = { 'Real Madrid':90, 'FC Barcelone':82, 'Panathinaïkos':85, 'Olympiakos':88,
@@ -30,18 +32,58 @@ function clubStrength(tierKey, clubName, clubDataEntry) {
   return hashStrength(clubName);
 }
 
-// Classement de fin de saison : une note par club, sauf le club du joueur qui reprend teamRating
-// (déjà calculé dans simulateSeason() : prestige + niveau du joueur + bruit -- cohérent avec le
-// reste de sa saison plutôt qu'un second tirage indépendant). Piège évité : le champ `strength`
-// de clubData.js (0-100, "force absolue" du club dans ses propres données) et teamRating
-// (baseline lg.prestige*3, souvent 20-70 en pratique) ne sont PAS sur la même échelle -- les
-// comparer bruts aurait systématiquement enterré le joueur dans le classement, même excellent.
-// On convertit donc la force de chaque club en RANG relatif au sein de son propre vivier, puis
-// on reconstruit une note sur la même échelle que teamRating (même baseline, même amplitude de
-// bruit) : la comparaison redevient cohérente quel que soit le palier.
-export function simulateStandings(p, lg, teamRating) {
+// Certains paliers domestiques ont, en réalité, plus de clubs que ce qui est nommé et documenté
+// individuellement dans clubData.js (faute de données fiables sur chacun) : Élite 2 (France,
+// 2e division) compte 20 clubs réels pour 16 nommés en base, la SuperLiga (Serbie, élite) 8
+// clubs réels pour 6 nommés -- vérifié séance tenante (recherche web, saison 2024-25). Le total
+// réel sert de référence pour la position affichée et le nombre total du classement (voir
+// paddedPool ci-dessous), complété par des clubs génériques pour la seule mécanique de rang :
+// jamais sélectionnables comme club du joueur (getClubPool(), utilisé pour les vraies
+// signatures, n'est pas modifié), et volontairement en dessous de la moyenne du vivier (peu
+// probable qu'un club non individuellement documenté soit une référence du championnat).
+const REAL_LEAGUE_SIZE = { FR: { second: 20 }, RS: { national: 8 } };
+function paddedPool(tierKey, nationId, pool) {
+  const target = REAL_LEAGUE_SIZE[nationId]?.[tierKey];
+  if (!target || pool.length >= target) return pool;
+  const extra = [];
+  for (let i = pool.length; i < target; i++) {
+    const name = `Club régional ${i - pool.length + 1}`;
+    extra.push({ name, strength: 55 + (hashStrength(name) % 12) }); // 55-66 : réaliste pour un ventre mou non documenté
+  }
+  return [...pool, ...extra];
+}
+
+// Classe le vivier RÉEL du palier (padding compris) par force réelle, et situe le club du
+// joueur dedans (percentile 1 = meilleur du vivier, 0 = dernier). Purement déterministe (aucun
+// tirage aléatoire) : calculé une fois par saison dans simulateSeason() et réutilisé tel quel à
+// la fois pour l'attribution de rôle/minutes (engine/player.js roleOf()) et pour la note
+// d'équipe du classement ci-dessous -- les deux doivent juger le même effectif réel, jamais deux
+// évaluations indépendantes qui pourraient se contredire.
+export function clubPercentile(p, lg, nationId) {
   const tierKey = p.league;
-  const pool = getClubPool(tierKey, playCountry(p));
+  const pool = paddedPool(tierKey, nationId, getClubPool(tierKey, nationId));
+  const ranked = pool
+    .map(c => ({ name: c.name, strength: clubStrength(tierKey, c.name, c), isPlayerClub: c.name === p.club }))
+    .sort((a, b) => b.strength - a.strength);
+  const idx = ranked.findIndex(c => c.isPlayerClub);
+  const n = Math.max(1, ranked.length - 1);
+  const percentile = idx >= 0 && ranked.length > 1 ? 1 - idx / n : 0.5;
+  return { percentile, poolSize: ranked.length, ranked };
+}
+
+// Classement de fin de saison : une note par club (force réelle + bruit), sauf le club du joueur
+// qui reprend teamRating (déjà calculé dans simulateSeason() à partir du MÊME percentile réel
+// que clubPercentile() ci-dessus, plus l'apport individuel du joueur -- cohérent avec le reste
+// de sa saison plutôt qu'un second tirage indépendant). Piège évité : le champ `strength` de
+// clubData.js (0-100, "force absolue" du club dans ses propres données) et teamRating (baseline
+// lg.prestige*3, souvent 20-70 en pratique) ne sont PAS sur la même échelle -- les comparer
+// bruts aurait systématiquement enterré le joueur dans le classement, même excellent. On
+// convertit donc la force de chaque club en RANG relatif au sein de son propre vivier (réel,
+// padding compris), puis on reconstruit une note sur la même échelle que teamRating (même
+// baseline, même amplitude de bruit) : la comparaison redevient cohérente quel que soit le palier.
+export function simulateStandings(p, lg, teamRating, nationId) {
+  const tierKey = p.league;
+  const pool = paddedPool(tierKey, nationId, getClubPool(tierKey, nationId));
   const others = pool.filter(c => c.name !== p.club)
     .map(c => ({ name: c.name, strength: clubStrength(tierKey, c.name, c) }))
     .sort((a, b) => b.strength - a.strength);

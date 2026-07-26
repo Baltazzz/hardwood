@@ -14,8 +14,18 @@ export const LEAGUES = {
   gleague:  {tier:4,   emoji:'🔶', name:'G League', short:'G-LEAGUE', color:'#3b6d8a', starter:64, star:74, prestige:4, games:50},
   national: {tier:3,   emoji:'🏆', name:'Élite nationale', short:'ÉLITE NAT.', color:'#3b8a6d', starter:69, star:80, prestige:6, games:34},
   nbl1:     {tier:3,   emoji:'🏅', name:'NBL1 (régionale)', short:'NBL1', color:'#5a8a3b', starter:66, star:78, prestige:5, games:22},
-  euro:     {tier:2,   emoji:'⭐', name:'EuroLeague', short:'EUROLEAGUE', color:'#c98a4b', starter:77, star:87, prestige:9, games:34, clubs:['Real Madrid','FC Barcelone','Panathinaïkos','Olympiakos','Fenerbahçe','Monaco','Baskonia','Maccabi','Žalgiris']},
+  // clubs : liste RÉELLE et complète (18 EuroLeague, 30 NBA -- vérifié saison 2024-25), pas
+  // seulement un sous-ensemble curé comme avant ce lot (9/18, 12/30) qui faussait à la fois le
+  // nombre affiché entre parenthèses dans le classement de fin de saison et les clubs
+  // effectivement signables. Seuls les 9/12 clubs d'origine ont une force curée dans
+  // NBA_STRENGTH/EURO_STRENGTH (engine/competition.js) ; les nouveaux utilisent le repli par
+  // hachage stable déjà prévu pour ce cas (hashStrength()), comme n'importe quel club non curé.
+  euro:     {tier:2,   emoji:'⭐', name:'EuroLeague', short:'EUROLEAGUE', color:'#c98a4b', starter:77, star:87, prestige:9, games:34,
+    clubs:['Real Madrid','FC Barcelone','Panathinaïkos','Olympiakos','Fenerbahçe','Monaco','Baskonia','Maccabi','Žalgiris',
+      'Anadolu Efes','Paris Basketball','Bayern Munich','Crvena Zvezda','Partizan','ASVEL','Olimpia Milano','Virtus Bologne','ALBA Berlin']},
   nbl:      {tier:2,   emoji:'🌟', name:'NBL (Australie)', short:'NBL', color:'#b98a3b', starter:74, star:85, prestige:8, games:28},
-  nba:      {tier:1,   emoji:'🏀', name:'NBA', short:'NBA', color:'#ec6a43', starter:78, star:90, prestige:12, games:82, clubs:['Boston','L.A. Lakers','Golden State','Denver','Milwaukee','Miami','New York','Dallas','Phoenix','OKC','Philadelphie','Memphis']},
+  nba:      {tier:1,   emoji:'🏀', name:'NBA', short:'NBA', color:'#ec6a43', starter:78, star:90, prestige:12, games:82,
+    clubs:['Boston','L.A. Lakers','Golden State','Denver','Milwaukee','Miami','New York','Dallas','Phoenix','OKC','Philadelphie','Memphis',
+      'Atlanta','Brooklyn','Charlotte','Chicago','Cleveland','Detroit','Houston','Indiana','LA Clippers','New Orleans','Minnesota','Orlando','Portland','Sacramento','San Antonio','Toronto','Utah','Washington']},
 };
 export const clubColor = (lg)=>LEAGUES[lg]?LEAGUES[lg].color:'#5c6b7a';

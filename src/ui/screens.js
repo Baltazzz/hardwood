@@ -249,7 +249,7 @@ export function renderSeasonResult(s, natLine, champion){
   // .statline-ctx dans styles.css), demandé pour hiérarchiser visuellement les deux familles.
   const perfCells=[['PTS',s.pts],['REB',s.reb],['PAS',s.ast],['CTR',s.blk??0],['INT',s.stl??0]];
   const ctxCells=[['MIN',s.minutes],['MJ',gpLabel],['VIC',s.wins]];
-  let verdict = seasonVerdict(s,lg);
+  let verdict = seasonVerdict(p,s,lg);
   const prev = p.seasons.length>=2 ? p.seasons[p.seasons.length-2].ovr : null;
   const delta = prev!==null ? s.ovr - prev : null;
   const deltaTri = delta>0

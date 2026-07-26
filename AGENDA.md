@@ -34,6 +34,55 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Coché récemment
 
+- [x] **AGD-11 — Cohérence de simulation (performance individuelle, tailles de ligue, rôle)** _(implémenté et vérifié le 2026-07-26)_
+  Quatre volets liés, le premier touchant l'équilibrage :
+  1. *Performance individuelle → résultat d'équipe/sélection*. Bug de fond identifié :
+     `simulateStandings()`/`teamRating` (club du joueur) utilisait un prestige générique de
+     ligue comme base, jamais la force RÉELLE du club spécifiquement signé (alors que les clubs
+     adverses du classement, eux, utilisaient déjà leur vraie force) — une superstar dans un
+     club réel faible et un role player dans un club réel fort avaient donc exactement la même
+     note de départ. Nouvelle fonction `clubPercentile()` (`engine/competition.js`, pure,
+     déterministe) situe le club du joueur dans son vrai vivier de ligue (padding compris, voir
+     point 2) ; `teamRating` combine désormais ce percentile réel + l'apport individuel du
+     joueur (coefficient recalé 1.2 → 1.25, avec un terme de percentile ±12) + bruit. Sélection
+     nationale (`natPower`) déjà structurellement saine (force réelle de la nation + apport
+     individuel) — coefficient individuel relevé par cohérence (0.6 → 0.75), pas de bug de fond
+     symétrique à corriger là.
+     Audité soigneusement comme demandé : taux de titre élite avant ce lot ~12-16% (bande de
+     bruit déjà établie), après plusieurs cycles de réglage (premier essai à coefficient 1.9
+     → 21%, trop haut, redescendu) : **4 runs à 300 carrières stabilisés à 13.3% / 17% / 14.7% /
+     14.7%, moyenne ~14.9%** — dans la fourchette crédible, pas de dérive. Corrélation vérifiée
+     directement (pas seulement le taux agrégé) : sur 300 carrières ayant atteint un palier
+     élite, taux de titre par pic d'OVR — <80 (role player) 1.1%, 80-87 : 9.3%, 88-93 (star) :
+     24.5%, >=94 (superstar) : 33.3%. Écart ~30x entre role player et superstar : le niveau
+     individuel pèse désormais nettement, sans effacer le poids de la force réelle d'équipe
+     (vérifié séparément : même OVR pile au seuil générique de titulaire → "rotation" dans le
+     club le plus fort de sa ligue, "titulaire" dans le plus faible).
+  2. *Nombre réel de clubs par championnat*. Nombres vérifiés séance tenante (recherche web,
+     saison 2024-25) : NBA 12→30 clubs, EuroLeague 9→18 (listes complètes ajoutées dans
+     `data/leagues.js`, les clubs non curés utilisant le repli par hachage déjà prévu pour ce
+     cas), Élite 2 France 16→20 et SuperLiga Serbie 6→8 (padding par clubs génériques dédiés au
+     seul calcul de classement, jamais sélectionnables comme club du joueur — voir
+     `REAL_LEAGUE_SIZE`/`paddedPool()` dans `competition.js`). Les autres paliers vérifiés
+     étaient déjà exacts ou à ±1 près (variation normale de saison à saison, non corrigée) :
+     BBL Allemagne, Betclic Élite France, ACB Espagne, NBL Australie, G League, Slovénie, Grèce
+     (élite), 2e division Allemagne/Grèce.
+  3. *Texte de bilan de saison incohérent avec le rôle réel*. `seasonVerdict()` comparait
+     l'OVR à des seuils propres (dupliqués, désynchronisés de `roleOf()`) — un titulaire net
+     pouvait entendre "tu grappilles ta place dans la rotation" (le cas signalé). Réécrit pour
+     appeler `roleOf(p)` directement (source unique du rôle), un message dédié par palier de
+     rôle (bench/rotation/starter/star/franchise).
+  4. *Évolution du rôle dans le club*. `roleOf()` (engine/player.js) et le calcul des minutes
+     (`simulateSeason()`) utilisent désormais le même `clubPercentile()` que le point 1 pour
+     ajuster les seuils titulaire/star à la force RÉELLE de l'effectif (pas seulement au seuil
+     générique de la ligue) : un effectif fort relève la barre (arriver plus faible que
+     l'effectif place sur le banc), un effectif faible l'abaisse. Progression testée
+     directement : à club fixe (fort), rôle passe rotation → titulaire → franchise à mesure que
+     l'OVR monte (50 → 60 → 69 → 75 → 82 → 90), sans saut ni incohérence.
+  Vérifié globalement : 0% crash sur 150+300+300×5 carrières, 0% repli "Club libre", 0
+  violation d'intégrité des événements uniques (contrôle f) toujours actif), 0 incohérence
+  texte/rôle sur 1771 bilans de saison vérifiés (80 carrières pilotées dédiées).
+
 - [x] **AGD-10 — Correction de cohérence : événements uniques qui se répétaient** _(implémenté et vérifié le 2026-07-26)_
   Revue complète des ~155 événements (`src/data/events/*.js`) pour repérer les décisions
   structurantes/fondations/premières fois qui ne portaient pas le marqueur `once:true`. Trois

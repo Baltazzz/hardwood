@@ -138,6 +138,9 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
 .title-screen h1 .o{color:var(--orange)}
 .title-screen .tag{color:var(--chalk-dim);font-family:'Bricolage Grotesque';font-size:15px;max-width:440px;margin:14px auto 0}
 .kbd{font-family:'Bricolage Grotesque';font-weight:600;font-size:12px;color:var(--chalk-dim);margin-top:26px;letter-spacing:.06em}
+/* Petite marque discrète (voir public/logo-mark.png) : uniquement dans le pied de l'écran
+   titre, jamais au-dessus du wordmark HARDWOOD qui doit rester la vedette de l'écran. */
+.brand-mark-mini{width:18px;height:18px;vertical-align:-4px;margin-right:6px;border-radius:5px}
 .welcome-link{color:var(--mint-soft);text-decoration:none;border-bottom:1px dashed rgba(161,130,31,.5)}
 .welcome-link:hover{color:var(--orange-soft)}
 

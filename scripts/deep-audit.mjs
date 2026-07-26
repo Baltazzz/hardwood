@@ -69,6 +69,12 @@ function driveOneCareer(document, errors, state) {
     poolSize: s.standings?.poolSize ?? null,
     playoffs: s.playoffs || null,
   }));
+  // Toutes ligues confondues (pas seulement NBA) : sert à l'audit de corrélation force
+  // d'équipe -> résultat général (section i ci-dessous, réponse au point 5 -- performance du
+  // joueur vers résultat de l'équipe/sélection, pas seulement un cas NBA).
+  const allSeasons = G.seasons.map(s => ({
+    ovr: s.ovr, clubStrengthPctile: s.clubStrengthPctile, champion: !!s.champion,
+  }));
   const result = {
     crashed: false,
     tier: rec.tier || null,
@@ -81,6 +87,7 @@ function driveOneCareer(document, errors, state) {
     freeClubSeasons: G.seasons.filter(s => s.club === 'Club libre').length,
     tags: rec.tags || [],
     nbaSeasons,
+    allSeasons,
   };
   clickId(document, 'again');
   return result;
@@ -373,13 +380,56 @@ async function main() {
     console.log(`  Club ${t.padEnd(7)} : ${cells}`);
   });
 
+  // i) Corrélation force d'équipe -> résultat, TOUTES LIGUES confondues (pas seulement NBA) :
+  // même clubStrengthPctile (force réelle de l'effectif, indépendante de l'apport du joueur),
+  // mais sur l'intégralité des saisons jouées (toute ligue) -- réponse générale au point
+  // "performance du joueur vers résultat de l'équipe", au-delà du seul cas NBA détaillé en h).
+  const allSeasonsFlat = [];
+  results.forEach(r => (r.allSeasons || []).forEach(s => allSeasonsFlat.push(s)));
+  const globalStrengthStats = {};
+  STRENGTH_ORDER.forEach(t => globalStrengthStats[t] = { n: 0, champ: 0 });
+  allSeasonsFlat.forEach(s => {
+    const t = strengthTier(s.clubStrengthPctile);
+    if (!t) return;
+    globalStrengthStats[t].n++;
+    if (s.champion) globalStrengthStats[t].champ++;
+  });
+  const globalCrossTab = {};
+  STRENGTH_ORDER.forEach(t => { globalCrossTab[t] = {}; OVR_TIERS.forEach(([label]) => globalCrossTab[t][label] = { n: 0, champ: 0 }); });
+  allSeasonsFlat.forEach(s => {
+    const t = strengthTier(s.clubStrengthPctile);
+    if (!t) return;
+    const tierEntry = OVR_TIERS.find(([, test]) => test(s.ovr));
+    if (!tierEntry) return;
+    const cell = globalCrossTab[t][tierEntry[0]];
+    cell.n++;
+    if (s.champion) cell.champ++;
+  });
+
+  console.log(`\n-- i) Corrélation force d'équipe réelle -> résultat (toutes ligues, ${allSeasonsFlat.length} saisons) --`);
+  console.log('Par tertile de force réelle de club (indépendante du joueur), % de saisons championnes :');
+  STRENGTH_ORDER.forEach(t => {
+    const d = globalStrengthStats[t];
+    const cp = d.n ? round1(d.champ / d.n * 100) : 0;
+    console.log(`  ${t.padEnd(7)} (n=${d.n}) : championne ${cp}%`);
+  });
+  console.log('Croisement force de club x niveau du joueur (% de saisons championnes) :');
+  STRENGTH_ORDER.forEach(t => {
+    const cells = OVR_TIERS.map(([label]) => {
+      const c = globalCrossTab[t][label];
+      return `${label} ${c.n ? round1(c.champ / c.n * 100) : 0}%(n=${c.n})`;
+    }).join(', ');
+    console.log(`  Club ${t.padEnd(7)} : ${cells}`);
+  });
+
   console.log('\nRÉSULTATS BRUTS (JSON) :');
   console.log(JSON.stringify({ N, crashed, completed, freeClubCareers, freeClubSeasonsTotal, withTitle, withEliteTitle, withMVP, withAllStar, withHOF, withPhenom, tierCounts, nbaCount: nbaResults.length, median, pathTotals, byBracket,
     tags: { avgTagCount, tagFreq: tagFreqSorted },
     diversity: { totalDefined, avgDistinct, avgTotal, neverSeenPct, neverSeenCount, top10, bottom10 },
     onceIntegrity: { onceCount: onceIds.size, careersWithViolation, violations: onceViolationsSorted.map(([id, v]) => ({ id, ...v })) },
     nbaFormat: { totalSeasons: allNba.length, confCount, forcedFinalSeasons, violations: gViolations, zoneDirect, zonePlayIn, zoneOut },
-    nbaStrengthCorrelation: { strengthStats, crossTab } }, null, 0));
+    nbaStrengthCorrelation: { strengthStats, crossTab },
+    globalStrengthCorrelation: { n: allSeasonsFlat.length, strengthStats: globalStrengthStats, crossTab: globalCrossTab } }, null, 0));
 }
 
 main().catch(err => { console.error('DEEP AUDIT ÉCHOUÉ :', err); process.exitCode = 1; });

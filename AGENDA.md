@@ -37,6 +37,63 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Coché récemment
 
+- [x] **AGD-16 — Lot de corrections groupées (identité de club, nationalités)** _(implémenté et vérifié le 2026-07-27)_
+  Demande en 8 points. Deux points étaient de vrais chantiers neufs cette session ; les six
+  autres décrivaient des problèmes déjà corrigés lors de chantiers précédents (AGD-11, AGD-15,
+  certains dans cette même session) — vérifiés à nouveau plutôt que ré-implémentés à l'aveugle,
+  conformément à la consigne de ne jamais se fier à une impression.
+  1. *Dominante de couleur de club, corrigée*. Un choix AUTOMATIQUE basé sur la saturation
+     ("la couleur la plus vive gagne" entre primaire/secondaire) a été essayé puis abandonné en
+     session : vérifié cas par cas, il basculait à tort vers l'or secondaire dès qu'il y en
+     avait un (L.A. Lakers, Denver Nuggets, ...) car un or est presque toujours plus saturé
+     qu'un bleu/violet marine, alors que c'est justement ce bleu/violet qui est l'identité
+     reconnaissable de ces clubs — la saturation brute n'est pas un indicateur fiable de
+     reconnaissabilité de marque. Conservé : la primaire reste la dominante par défaut (`accent.js`),
+     avec une table `CLUB_DOMINANT_OVERRIDE` en dur et extensible pour les exceptions connues
+     (Charlotte : violet assumé plutôt que la teinte sarcelle ; Utah : même bleu officiel mais
+     éclairci, le marine brut lisant "presque noir" puisque `ensureContrast` ne peut qu'assombrir,
+     jamais éclaircir). `gen-club-data.mjs` détecte et signale désormais les doublons de couleurs
+     conflictuelles à l'ingestion (aucun trouvé dans le fichier actuel malgré la demande initiale
+     de dédoublonner "Los Angeles Lakers" — vérifié ligne par ligne dans `data-source/
+     clubcolor.xlsx`, une seule occurrence NBA existe, plus sa franchise G League affiliée "South
+     Bay Lakers", nom distinct et non un doublon). South East Melbourne Phoenix (NBL australien,
+     aucune couleur nulle part dans l'Excel) reçoit une couleur de repli manuelle explicite en
+     attendant que l'Excel soit complété. Contraste revérifié exhaustivement sur les 460 clubs
+     réels : 0 échec sous 4.5:1 (texte de tuile) et 0 échec sous 3:1 (encre de pastille).
+  2. *Victoires réservées à la NBA*, 3. *playoffs NBA avec conférences/Play-In*, 4. *vrai nombre
+     de clubs par championnat*, 5. *performance du joueur vers résultat d'équipe*, 6. *cohérence
+     texte de bilan vers rôle réel*, 7. *évolution du rôle dans le club* : déjà implémentés lors
+     de chantiers précédents (points 2-3 : AGD-15, cette session même, juste avant ce lot ;
+     points 4-7 : AGD-11/AGD-04, sessions antérieures) — confirmé par lecture directe du code
+     actuel (formule `teamRating` dans `season.js` combinant bien `clubPercentile` réel + apport
+     individuel ; `seasonVerdict()` lisant `roleOf(p).key` ; `simulateNbaStandings`/
+     `simulateNbaPlayoffs` avec conférences Est/Ouest et Play-In ; `REAL_LEAGUE_SIZE`/comptes
+     réels par ligue), puis reconfirmé par l'audit complet de fin de session (voir ci-dessous) :
+     aucune régression, aucun changement de code nécessaire sur ces 6 points.
+  8. *Nationalités*. Israël retiré de `src/data/nations.js` (34 nations restantes). Écran de
+     choix de nation compacté : nouvelle grille dédiée `.nation-grid`/`.opt.nation-opt` (tuiles
+     flag + nom + force en coin, réutilise `.abbr`) remplaçant les cartes pleine taille
+     génériques qui forçaient un long défilement avec ~35 entrées.
+  Committé par étape logique (3 commits distincts : couleurs de club / nationalités / ce
+  registre), pas en un seul bloc, comme demandé.
+  Rendu montré à l'utilisateur via le showcase avant livraison (Charlotte/Utah corrigés, grille
+  de nations compacte).
+  **Audit complet de fin de session** (focus explicite demandé sur le point 5) :
+  - 0% crash sur 100+300 carrières, 0% repli "Club libre", 0 violation d'intégrité des
+    événements uniques, 0 incohérence de format NBA (2032 saisons NBA auditées).
+  - **Taux de titre élite (toutes ligues) : 10% sur 300 carrières** — dans la fourchette de
+    bruit déjà établie (7.7-21.7%), aucune dérive détectée après reconfirmation du point 5.
+  - **Corrélation force d'équipe -> résultat, NBA (2032 saisons)** : qualification 36.8%
+    (Faible) / 66.2% (Moyen) / 79.8% (Fort), titre 0.3% / 1.4% / 2.5% — progression monotone
+    nette, les équipes fortes se qualifient et gagnent bien plus que les faibles.
+  - **Corrélation force d'équipe -> résultat, toutes ligues (6709 saisons)** : titre 0.2%
+    (Faible) / 0.7% (Moyen) / 1.7% (Fort) — même progression monotone hors NBA. Croisement force
+    de club x niveau du joueur : une Superstar dans un club Fort atteint 10% de saisons
+    championnes (n=50) contre 0.3% pour un Role player dans un club Fort (n=1335) et 0.1% pour
+    un Role player dans un club Faible (n=1404) — l'apport individuel pèse nettement, sans
+    effacer le signal de force d'équipe (un Role player dans un club Fort reste toujours
+    au-dessus d'un Role player dans un club plus faible).
+
 - [x] **AGD-15 — Réalisme NBA (conférences, Play-In, victoires réservées à la NBA)** _(implémenté et vérifié le 2026-07-26)_
   Quatre volets liés, dans l'esprit "la NBA mérite plus de détail que les autres ligues" :
   1. *Total de victoires retiré partout sauf en NBA*. La cellule "VIC" du bilan de saison

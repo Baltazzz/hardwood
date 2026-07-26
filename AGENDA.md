@@ -20,6 +20,35 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Coché récemment
 
+- [x] **AGD-18 — Ajustement dominante Charlotte/Utah + re-vérification AGD-06** _(implémenté et vérifié le 2026-07-27)_
+  Deux points, le premier déjà satisfait avant cette session (re-vérifié plutôt que refait) :
+  1. *AGD-06 (animations des moments forts côté club)* : déjà implémenté et coché lors d'un
+     chantier précédent cette même session (`.grand-moment-announce` dans `styles.css`, posé en
+     JS dans `renderEvent()` pour clutch/défense/duel/finale, réutilise `@keyframes natAnnounce`
+     de l'annonce de sélection nationale). Confirmé intact par lecture directe du code puis par un
+     rendu forcé des 4 catégories (`clutch_shot`, `defensive_stand`, `rival_duel`, `finals_moment`)
+     : la classe d'animation est bien posée à chaque fois, 0 erreur. Aucun changement de code
+     nécessaire.
+  2. *Dominante de couleur Charlotte/Utah, corrigée dans `CLUB_DOMINANT_OVERRIDE`
+     (`engine/accent.js`)* : Charlotte passe au bleu clair/sarcelle (teal, `#00788C`) en
+     dominante (violet en secondaire) -- inverse du choix précédent, sur demande explicite.
+     Utah passe au violet emblématique (`#4B2E83`, identité "montagnes" des années 90, absente
+     des deux couleurs officielles actuelles ingérées depuis l'Excel -- teinte choisie à la main)
+     en dominante, or gardé en secondaire. Table toujours un simple objet `{primary,secondary}`
+     par nom de club, ajouter un club supplémentaire ne demande qu'une ligne. Contraste
+     exhaustif revérifié sur les 460 clubs réels après ce changement : toujours 0 échec sous
+     4.5:1 (texte de tuile) et 0 échec sous 3:1 (encre de pastille). Doublon "Los Angeles
+     Lakers" revérifié à l'ingestion (`npm run gen:data`) : toujours absent (une seule ligne NBA
+     dans `data-source/clubcolor.xlsx`, la détection de doublons conflictuels ajoutée au chantier
+     précédent n'a rien signalé). South East Melbourne Phoenix confirmé toujours pourvu de sa
+     couleur de repli manuelle (`MANUAL_COLOR_FALLBACK`, AU/nbl 10/10 clubs colorés).
+  Rendu montré à l'utilisateur via le showcase avant livraison (Charlotte et Utah ajoutés en
+  exemples dédiés à la section identité de club).
+  Vérifié : 0% crash sur 100+200 carrières, 0 violation d'intégrité des événements uniques, 0
+  incohérence de format NBA. Taux de titre élite 13% sur 200 carrières, dans la bande de bruit
+  déjà établie (7.7-21.7%) -- attendu, aucune logique de jeu touchée (uniquement deux valeurs
+  hex dans `accent.js`).
+
 - [x] **AGD-17 — Gros lot contenu et rejouabilité (événements humour/NBA, badges transversaux)** _(implémenté et vérifié le 2026-07-27)_
   Deux volets :
   1. *Références et humour NBA, en événements génériques*. Quatre nouveaux événements dans

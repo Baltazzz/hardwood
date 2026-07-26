@@ -39,15 +39,20 @@ for (const [name, colors] of Object.entries(GLOBAL_CLUB_COLORS)) {
 // sur des centaines de clubs jamais vérifiés un par un.
 //
 // Correction manuelle, en dur et EXTENSIBLE (ajouter une entrée {primary,secondary} suffit) :
-// identité reconnaissable qui diffère de la primaire officielle telle qu'ingérée, ou cas où
-// aucune des deux couleurs sources ne rend bien en dominante telle quelle (Utah : le marine
-// officiel est quasi noir à l'écran -- ensureContrast ne fait qu'assombrir, jamais éclaircir, un
-// primaire déjà très sombre reste donc "presque noir" même conforme au contraste ; on garde la
-// même teinte bleue mais éclaircie, plutôt que de basculer sur le jaune secondaire qui n'est pas
-// du tout l'identité recherchée).
+// identité reconnaissable qui diffère de la primaire officielle telle qu'ingérée -- une décision
+// éditoriale (quelle couleur "fait" le club aux yeux des gens), pas quelque chose de dérivable
+// automatiquement des données sources. Ajuster une entrée ici n'affecte jamais le reste du
+// catalogue : chaque club en dehors de cette table garde sa vraie primaire officielle.
+//  - Charlotte : le bleu clair/sarcelle (teal) domine, plutôt que le violet -- c'est la couleur
+//    de marque la plus reconnaissable des Hornets (violet gardé en secondaire).
+//  - Utah : le violet emblématique (identité "montagnes" des années 90, celle que la plupart des
+//    gens associent encore au Jazz) domine, plutôt que le bleu marine officiel actuel -- ce
+//    violet ne fait pas partie des deux couleurs ingérées depuis l'Excel (marine/or), c'est donc
+//    une teinte choisie à la main, pas dérivée d'une couleur source. Or gardé en secondaire
+//    (l'autre couleur historique de ce même maillot).
 const CLUB_DOMINANT_OVERRIDE = {
-  'Charlotte': { primary: '#1D1160', secondary: '#00788C' },
-  'Utah': { primary: '#005FCC', secondary: '#F9A01B' },
+  'Charlotte': { primary: '#00788C', secondary: '#1D1160' },
+  'Utah': { primary: '#4B2E83', secondary: '#F9A01B' },
 };
 
 function realColorsFor(clubName) {

@@ -34,6 +34,41 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Coché récemment
 
+- [x] **AGD-09 — Raffinement visuel décor/donnée** _(implémenté et vérifié le 2026-07-26)_
+  Lot purement visuel (aucun changement de gameplay), dans la continuité Terre battue. Sept
+  volets :
+  1. *Décor vs donnée* : nouveau sous-thème visuel pour les blocs de données qui évoluent
+     (stats, jauges, OVR, classement) — lavis or discret + bordure un cran plus définie
+     (`--data-wash`/`--data-line` dans `styles.css`), appliqué aux jauges du profil, à la fiche
+     technique, à l'anneau OVR, aux stats de saison et au contexte de compétition. Le récit
+     (texte narratif, choix, motifs d'ambiance) garde le décor crème/terracotta inchangé.
+  2. *Trois tuiles principales teintées* : profil (terracotta, accentué), fiche technique
+     (or/donnée), carte de choix en cours (prune) — lavis discrets et distincts sur les trois
+     cartes de l'écran de jeu principal.
+  3. *Forme des tuiles* : bordures adoucies (semi-transparentes plutôt qu'un trait plein
+     uniforme), ombre douce dédiée par tuile (`--tile-shadow`), coins arrondis agrandis --
+     `.opt`, `.choice`, `.lg`, `.trophy-item`, `.ws-stat`, `.hof-row`, `.best-season`.
+  4. *Fond des tuiles assombri* : `--panel` blanc pur → ivoire chaud (#FAF5EA), `--panel2`
+     assombri en proportion -- effet global sur la quasi-totalité des cartes de l'appli.
+  5. *Vert/rouge classiques* : nouveaux tokens `--green`/`--red` dédiés aux résultats de
+     décision (delta OVR, flash-up/down), remplaçant l'ancien `--up` qui pointait en réalité
+     vers une teinte or (pas un vert). Contraste AA vérifié (>=4.5:1) sur les trois fonds
+     pertinents (`--court`/`--panel`/`--court2`).
+  6. *Hiérarchie du bilan de saison* : stats de jeu (PTS/REB/PAS/CTR/INT) dans la grille
+     "donnée" existante, MIN/MJ/VIC désormais dans une bande à part (`.statline-ctx`), plus
+     petite, sobre, sans lavis -- se lit comme un cadre plutôt qu'une ligne de score.
+  7. *Écran titre* : passage à la police condensée 'Big Shoulders Display' (agrandie, ombre
+     portée légère pour le caractère), clamp recalé pour une marge de sécurité réelle à 360px.
+     Bug trouvé et corrigé en session : cette police était déjà utilisée par endroits
+     (`nat-tourn`, `legend-title`) depuis un chantier précédent mais n'était en réalité JAMAIS
+     chargée dans le vrai jeu (absente du `@import` Google Fonts de `styles.css`, seul le
+     showcase de revue visuelle l'inlinait séparément) -- corrigé, ajoutée à l'`@import`.
+  Vérifié : rendu écran par écran montré à l'utilisateur via le showcase avant livraison. Audit
+  de non-régression à 300 carrières après les changements : 0% crash, 0% repli "Club libre",
+  indicateurs de récompense (titre 18.7%, titre élite 14.7%, MVP 8%, phénomène 1.7%, All-Star
+  26%, HOF 12.3%) dans la bande de bruit déjà établie -- attendu, aucune logique de jeu touchée
+  (seuls `styles.css` et deux points de rendu HTML/couleur dans `screens.js` modifiés).
+
 - [x] **AGD-08 — Nationalités et immersion nationale** _(implémenté et vérifié le 2026-07-26)_
   Trois volets, tous vérifiés :
   1. *Choix de nationalité enrichi* : liste de nations (`src/data/nations.js`) passée de 9 à 14

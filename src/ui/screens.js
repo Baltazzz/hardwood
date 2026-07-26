@@ -244,17 +244,20 @@ export function showDeltaFlash(outcome, deltas){
 export function renderSeasonResult(s, natLine, champion){
   const p=G, lg=LEAGUES[p.league];
   const gpLabel = (s.leagueGames!=null) ? `${s.gamesPlayed}/${s.leagueGames}` : '·';
-  const cells=[
-    ['PTS',s.pts],['REB',s.reb],['PAS',s.ast],['CTR',s.blk??0],['INT',s.stl??0],['MIN',s.minutes],['MJ',gpLabel],['VIC',s.wins]
-  ];
+  // Stats de jeu (perf, la vraie ligne de score) vs contexte de saison (MIN/MJ/VIC, un cadre
+  // d'information, pas une performance) : deux blocs distincts côté rendu (voir .statline vs
+  // .statline-ctx dans styles.css), demandé pour hiérarchiser visuellement les deux familles.
+  const perfCells=[['PTS',s.pts],['REB',s.reb],['PAS',s.ast],['CTR',s.blk??0],['INT',s.stl??0]];
+  const ctxCells=[['MIN',s.minutes],['MJ',gpLabel],['VIC',s.wins]];
   let verdict = seasonVerdict(s,lg);
   const prev = p.seasons.length>=2 ? p.seasons[p.seasons.length-2].ovr : null;
   const delta = prev!==null ? s.ovr - prev : null;
   const deltaTri = delta>0
     ? `<svg viewBox="0 0 24 24" width="9" height="9" style="vertical-align:1px"><path d="M12 5L20 18H4Z" fill="currentColor"/></svg>`
     : `<svg viewBox="0 0 24 24" width="9" height="9" style="vertical-align:1px"><path d="M12 19L4 6H20Z" fill="currentColor"/></svg>`;
+  // Vert/rouge classiques (voir --up/--down dans styles.css) pour une lecture immédiate bon/mauvais.
   const deltaHtml = delta!==null && delta!==0
-    ? `<span class="chip" style="background:${delta>0?'rgba(161,130,31,.12)':'rgba(181,52,46,.10)'};border-color:${delta>0?'var(--up)':'var(--down)'};color:${delta>0?'var(--up)':'var(--down)'}">${deltaTri} ${Math.abs(delta)} OVR vs saison passée</span>`
+    ? `<span class="chip" style="background:${delta>0?'rgba(43,110,61,.12)':'rgba(186,51,39,.10)'};border-color:${delta>0?'var(--up)':'var(--down)'};color:${delta>0?'var(--up)':'var(--down)'}">${deltaTri} ${Math.abs(delta)} OVR vs saison passée</span>`
     : '';
   const accList = s.acc.slice();
   if(s.td) accList.push(`🎯 ${s.td} triple-double${s.td>1?'s':''}`);
@@ -277,7 +280,8 @@ export function renderSeasonResult(s, natLine, champion){
   stage.innerHTML = renderHUD(natLine?'nation':'club') + `<div class="card scoreboard${natLine?' nat-mode':''}">
     <div class="sb-head"><h2>Saison ${p.year} · bilan</h2>
       <div style="display:flex;gap:6px;flex-wrap:wrap">${deltaHtml}<span class="chip n">${lg.short} · ${p.club}</span></div></div>
-    <div class="statline">${cells.map((c,i)=>`<div class="stat-cell${i===0?' hot':''}"><div class="sv">${c[1]}</div><div class="sl">${c[0]}</div></div>`).join('')}</div>
+    <div class="statline">${perfCells.map((c,i)=>`<div class="stat-cell${i===0?' hot':''}"><div class="sv">${c[1]}</div><div class="sl">${c[0]}</div></div>`).join('')}</div>
+    <div class="statline-ctx">${ctxCells.map(c=>`<div class="ctx-cell"><span class="ctx-v">${c[1]}</span><span class="ctx-l">${c[0]}</span></div>`).join('')}</div>
     ${natHtml}
     <div class="verdict">${verdict}</div>
     ${compHtml}${accHtml}

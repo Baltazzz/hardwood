@@ -7,7 +7,7 @@ import { clubPercentile } from './competition.js';
 
 export function newPlayer(){
   return {
-    step:0, nation:null, playNation:null, pos:null, style:null, life:null, name:'',
+    step:0, nation:null, playNation:null, startPath:null, pos:null, style:null, life:null, name:'',
     age:16, year:1,
     attrs:{}, potential:0, hype:0, devArchetype:null,
     league:null, club:null, contractY:0, salary:0,
@@ -32,6 +32,13 @@ export function newPlayer(){
 // Change uniquement via une expatriation choisie (voir engine/season.js) ; p.nation ne change
 // jamais. Repli sur p.nation.id tant qu'aucune expatriation n'a eu lieu.
 export function playCountry(p){ return p.playNation || (p.nation && p.nation.id); }
+
+// Voie de développement choisie via l'académie de départ ('us'=lycée->NCAA->draft,
+// 'eu'=académie->pro->Europe->NBA, 'au'=académie->NBL1->NBL->passerelle NBA) -- voir
+// engine/academies.js. Fixée une fois pour toutes au choix d'académie, juste après la création,
+// et totalement DÉCOUPLÉE de p.nation.path (qui n'existe plus pour cet usage) : la nationalité
+// ne détermine plus le point de départ sportif, seulement l'identité et l'éligibilité en
+// sélection. p.playNation démarre sur le pays de l'académie choisie, pas sur celui de p.nation.
 
 /* OVR pondéré par le poste */
 export function ovr(p){
@@ -125,8 +132,9 @@ function rollTalent(p){
   // boost les 3 attributs clés du poste
   const keys=Object.entries(pos.w).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>x[0]);
   keys.forEach(k=>{ p.attrs[k]=clamp(p.attrs[k]+ri(6,14),0,60); });
-  // nation US/Australie légèrement plus athlétique
-  if(p.nation.path==='us'||p.nation.path==='au'){ p.attrs.ath=clamp(p.attrs.ath+ri(2,7),0,65); }
+  // Flavor d'identité (pas de voie de développement -- décidée plus tard par l'académie) :
+  // continents Amérique du Nord/Océanie légèrement plus athlétiques, à titre culturel.
+  if(p.nation.continent==='namerica'||p.nation.continent==='oceania'){ p.attrs.ath=clamp(p.attrs.ath+ri(2,7),0,65); }
   // style de jeu : oriente le profil de départ
   const st=STYLES.find(x=>x.id===p.style);
   if(st){ for(const k in st.boost){ p.attrs[k]=clamp(p.attrs[k]+st.boost[k],0,66); } }

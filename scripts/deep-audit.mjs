@@ -24,7 +24,8 @@ function driveOneCareer(document, errors, state) {
     pickRandomEl(document.querySelectorAll('.opt')).click();
     clickId(document, 'nextC');
   }
-  clickId(document, 'nextC');
+  clickId(document, 'nextC'); // -> écran de choix d'académie (voir engine/academies.js)
+  pickRandomEl(document.querySelectorAll('.academy-opt')).click();
 
   let arrivalPath = null, reachedNBA = false;
   for (let i = 0; i < 1200; i++) {
@@ -42,6 +43,7 @@ function driveOneCareer(document, errors, state) {
       else if (h2.includes("t'appelle")) candidate = 'nbaSwan';
     }
     if (document.getElementById('afterSeason')) clickId(document, 'afterSeason');
+    else if (document.getElementById('natContinue')) clickId(document, 'natContinue');
     else if (document.querySelector('.choice')) {
       pickRandomEl(document.querySelectorAll('.choice')).click();
       const cont = document.getElementById('contBtn');

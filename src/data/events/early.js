@@ -28,7 +28,7 @@ export const EARLY_EVENTS = [
       {label:'Signer pro maintenant', hint:'Le grand saut, tout de suite',
         // lg.tier===5 couvre 'academy' (voie eu/au) ET 'college' (voie us) : la voie us n'a pas
         // de "2e division" domestique, le grand saut équivalent y est la G League.
-        effect:({p})=>({forceMove:{type:'promo', to:p.nation.path==='au'?'nbl1':p.nation.path==='us'?'gleague':'second'}, morale:+4, money:+30}),
+        effect:({p})=>({forceMove:{type:'promo', to:p.startPath==='au'?'nbl1':p.startPath==='us'?'gleague':'second'}, morale:+4, money:+30}),
         outcome:'Tu franchis le pas vers le monde pro plus tôt que prévu.'},
       {label:'Rester en formation encore un an', hint:'Dominer avant de monter',
         effect:{tir:+2, dribble:+2, qi:+1}, outcome:'Tu restes et tu écrases ta catégorie. Ton jeu s\'affine.'}

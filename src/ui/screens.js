@@ -6,7 +6,7 @@ import { LIFESTYLES } from '../data/lifestyles.js';
 import { LEAGUES } from '../data/leagues.js';
 import { newPlayer, rollTalent, ovr, salaryFor, clubSalaryMod, playCountry } from '../engine/player.js';
 import { hofBest, hofAdd } from '../engine/hof.js';
-import { applyChoice, postSeason, doMove, beginSeasonKeep, draftProjection, seasonVerdict, startCareer, nextEventOrSim, beginSeason, pushTL, pickExpatNation } from '../engine/season.js';
+import { applyChoice, postSeason, doMove, beginSeasonKeep, draftProjection, seasonVerdict, startCareer, chooseAcademy, nextEventOrSim, beginSeason, pushTL, pickExpatNation } from '../engine/season.js';
 import { catTag } from '../engine/events.js';
 import { pickClub, pickClubName, pickClubs, clubInfo } from '../engine/clubs.js';
 import { renderHUD, animateStats } from './hud.js';
@@ -115,10 +115,10 @@ export function screenTitle(){
 export function screenCreate(){
   const p=G;
   if(p.step===0){ // nation
-    stage.innerHTML = wrapCreate(1,'Ton pays','Il façonne ton parcours, tes stats de départ et ta sélection nationale.',
+    stage.innerHTML = wrapCreate(1,'Ton pays','Ton identité et ton éligibilité en sélection nationale -- ton point de départ sportif se décidera plus tard, indépendamment.',
       NATIONS.map((n,i)=>`<button class="opt ${p.nation&&p.nation.id===n.id?'pick':''}" data-i="${i}">
         <div class="flag">${n.flag}</div><div class="ttl">${n.name}</div>
-        <div class="desc">${n.path==='us'?'Voie US : université → draft':n.path==='au'?'Voie Australie : formation → NBL1 → NBL':'Voie Europe : formation → clubs'} · Sélection ${n.strength}</div></button>`).join(''),
+        <div class="desc">Sélection nationale · force ${n.strength}</div></button>`).join(''),
       false, !!p.nation);
     bindOpts(NATIONS,(n)=>{p.nation=n;});
   }
@@ -185,6 +185,35 @@ function wireNav(){
     G.step++; screenCreate();
   };
 }
+// Choix d'académie de départ (voir engine/academies.js pour la génération des offres) :
+// remplace l'ancien point de départ automatique déduit de la nationalité. Chaque offre porte
+// l'identité d'un pays réel (avec ses propres données de club, voir ACADEMY_NATION_IDS) et un
+// vrai club d'académie tiré de ce pays -- choisir, c'est décider à la fois du pays de jeu ET de
+// la voie de développement (US/Europe/Australie), indépendamment de la nationalité du joueur.
+const ACADEMY_PATH_LABEL = { us:'Voie US · lycée → université → draft', eu:'Voie Europe · académie → clubs pro', au:'Voie Australie · académie → NBL1 → NBL' };
+export function renderAcademyChoice(offers){
+  const p = G;
+  const cards = offers.map((n,i)=>{
+    const club = pickClub('academy', n.id);
+    const fl = flavor(club);
+    const abroad = n.id !== p.nation.id;
+    return `<button class="opt academy-opt" data-i="${i}">
+      <div class="flag">${n.flag}</div><div class="ttl">${club.name}</div>
+      <div class="desc">${n.name} · ${ACADEMY_PATH_LABEL[n.path]}</div>
+      <div class="desc academy-sub">${fl?fl+' · ':''}${abroad?'À l\'étranger, loin des tiens':'Dans ton pays natal'}</div>
+    </button>`;
+  }).join('');
+  stage.innerHTML = `<div class="create academy-choice">
+    <div class="step-h"><span class="num">Nouveau chapitre</span></div>
+    <h2>Les académies s'intéressent à toi</h2>
+    <p class="sub">Ton profil a circulé. Plusieurs centres de formation, dans des pays différents, veulent te faire confiance. Ce choix décide de ton pays d'évolution et de ta voie de départ pour les prochaines années -- indépendamment de ta nationalité.</p>
+    <div class="opt-grid academy-grid">${cards}</div>
+  </div>`;
+  stage.querySelectorAll('.academy-opt').forEach(el=>{
+    el.onclick=()=>{ chooseAcademy(offers[+el.dataset.i]); };
+  });
+}
+
 // Étoile en SVG fait maison plutôt qu'un glyphe unicode ★ : Bricolage Grotesque ne couvre pas
 // ce caractère, qui basculait silencieusement sur une police système différente (incohérence
 // visuelle) en plus d'hériter d'une couleur mal choisie. Ici la couleur est fixée dans le SVG,
@@ -205,16 +234,23 @@ export function renderEvent(ev){
   const body = typeof ev.body==='function'?ev.body(ctx):ev.body;
   const title= typeof ev.title==='function'?ev.title(ctx):ev.title;
   const choices = ev.choices(ctx);
-  // Fenêtre sélection nationale : l'accent bascule sur les couleurs du pays, en cohérence
-  // avec le changement d'ambiance déjà en place pour ces événements.
+  // Fenêtre de sélection nationale (p.seasonMods.natWindow, fixée en tête de saison) : bascule
+  // COMPLÈTE de thème (accent couleurs du pays) pour toute la saison, pas seulement l'événement
+  // "nation" lui-même -- une vraie parenthèse à part. En plus de ça, l'événement nation
+  // spécifique reçoit sa propre petite animation d'annonce (.nation-announce) au moment où il
+  // survient, distincte de l'ambiance de fond déjà posée par la fenêtre.
   // "Grand moment" (jet réel à la clé, cf. CAT_ICON dans events.js) : cartouche dédiée pour que
   // ces événements se distinguent visuellement avant même la lecture du titre.
   const grandMoment = ['clutch','defense','duel','finals'].includes(ev.cat);
-  stage.innerHTML = renderHUD(ev.cat==='nation'?'nation':'club') + `<div class="card event${grandMoment?' grand-moment':''}" style="margin-top:2px">
+  const natWindow = !!p.seasonMods.natWindow;
+  const isNatAnnounce = ev.cat==='nation';
+  const cardClass = ['event', grandMoment?'grand-moment':'', natWindow?'nation-window':'', isNatAnnounce?'nation-announce':''].filter(Boolean).join(' ');
+  stage.innerHTML = renderHUD(natWindow||isNatAnnounce?'nation':'club') + `<div class="card ${cardClass}" style="margin-top:2px">
     <div class="season-tag">
       <span class="chip">📅 Saison ${p.year} · ${p.age} ans</span>
       <span class="chip n">${LEAGUES[p.league].emoji||'🏀'} ${lg.short} · ${p.club}</span>
       <span class="chip n">${catTag(ev)}</span>
+      ${natWindow?`<span class="chip n nat-window-chip">${p.nation.flag} Fenêtre sélection</span>`:''}
     </div>
     <h2>${title}</h2>
     <div class="body">${body}</div>
@@ -241,7 +277,7 @@ export function showDeltaFlash(outcome, deltas){
   document.getElementById('contBtn').onclick=()=>nextEventOrSim();
 }
 
-export function renderSeasonResult(s, natLine, champion){
+export function renderSeasonResult(s, champion){
   const p=G, lg=LEAGUES[p.league];
   const gpLabel = (s.leagueGames!=null) ? `${s.gamesPlayed}/${s.leagueGames}` : '·';
   // Stats de jeu (perf, la vraie ligne de score) vs contexte de saison (MIN/MJ/VIC, un cadre
@@ -262,27 +298,14 @@ export function renderSeasonResult(s, natLine, champion){
   const accList = s.acc.slice();
   if(s.td) accList.push(`🎯 ${s.td} triple-double${s.td>1?'s':''}`);
   const accHtml = accList.length? `<div class="accolades">${accList.map(a=>`<span class="badge ${a.includes('MVP')||a.includes('Champion')?'title':''}">${a}</span>`).join('')}</div>`:'';
-  // Cartouche dédiée à la sélection nationale : bascule d'ambiance nette (liseré + fond teintés
-  // --mint, la couleur déjà utilisée pour le mode d'accent "nation"), médaille en vraie icône
-  // (même dessin que l'armoire à trophées) plutôt qu'un simple mot dans une ligne de verdict —
-  // un grand tournoi doit se voir avant même d'être lu.
-  const natHtml = natLine? `<div class="nat-cartouche">
-    <div class="nat-flag">${p.nation.flag}</div>
-    <div class="nat-body">
-      <div class="nat-eyebrow">Sélection nationale · ${p.nation.name}</div>
-      <div class="nat-tourn">${natLine.tourn}</div>
-      <div class="nat-outcome">${natLine.medal?`<b>Médaille ${natLine.medal.toLowerCase()}</b>`:'Éliminé en phase finale'}${natLine.mvp?' · <b>MVP du tournoi</b>':''}</div>
-    </div>
-    ${natLine.medal?`<div class="nat-medal">${medalIcon(natLine.medal,44)}</div>`:''}
-  </div>`:'';
   const compHtml = renderCompetitionContext(s, lg, p);
-  // Une saison avec tournoi national garde l'accent "pays" jusqu'au bilan inclus.
-  stage.innerHTML = renderHUD(natLine?'nation':'club') + `<div class="card scoreboard${natLine?' nat-mode':''}">
+  // La sélection nationale a désormais son propre écran dédié (voir renderNationalResult()) --
+  // ce bilan reste un bilan de CLUB, thème club, même les saisons de tournoi.
+  stage.innerHTML = renderHUD('club') + `<div class="card scoreboard">
     <div class="sb-head"><h2>Saison ${p.year} · bilan</h2>
       <div style="display:flex;gap:6px;flex-wrap:wrap">${deltaHtml}<span class="chip n">${lg.short} · ${p.club}</span></div></div>
     <div class="statline">${perfCells.map((c,i)=>`<div class="stat-cell${i===0?' hot':''}"><div class="sv">${c[1]}</div><div class="sl">${c[0]}</div></div>`).join('')}</div>
     <div class="statline-ctx">${ctxCells.map(c=>`<div class="ctx-cell"><span class="ctx-v">${c[1]}</span><span class="ctx-l">${c[0]}</span></div>`).join('')}</div>
-    ${natHtml}
     <div class="verdict">${verdict}</div>
     ${compHtml}${accHtml}
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:18px">
@@ -293,6 +316,35 @@ export function renderSeasonResult(s, natLine, champion){
   document.getElementById('afterSeason').onclick=()=>postSeason();
   const rb=document.getElementById('retireBtn'); if(rb) rb.onclick=()=>endCareer('choice');
   animateStats();
+}
+
+// Résultat de tournoi national : un écran à part entière (thème "nation" complet, pas une
+// simple ligne noyée dans le bilan de club), volontairement TRÈS différent selon l'issue --
+// rapide et sobre en cas d'élimination, une vraie séquence de célébration (médaille agrandie,
+// texte dédié par métal) en cas de podium. onContinue ramène vers le bilan de saison du club.
+const NAT_MEDAL_COPY = {
+  Or: (nat)=>`Sommet du basket mondial : ${nat} monte sur la plus haute marche du podium, et toi avec elle.`,
+  Argent: (nat)=>`Une finale perdue la tête haute : ${nat} termine sur le podium, tout près du sommet.`,
+  Bronze: (nat)=>`Arrachée dans la douleur : ${nat} termine sur le podium.`,
+};
+export function renderNationalResult(natLine, onContinue){
+  const p = G;
+  const won = !!natLine.medal;
+  stage.innerHTML = renderHUD('nation') + `<div class="card nat-result ${won?'celebrate':'quick'}">
+    <div class="nat-result-flag">${p.nation.flag}</div>
+    <div class="nat-result-eyebrow">${natLine.tourn} · Sélection ${p.nation.name}</div>
+    ${won ? `
+      <div class="nat-result-medal-wrap">${medalIcon(natLine.medal,108)}</div>
+      <h2 class="nat-result-title">Médaille ${natLine.medal.toLowerCase()} !</h2>
+      <p class="nat-result-sub">${NAT_MEDAL_COPY[natLine.medal](p.nation.name)}</p>
+    ` : `
+      <h2 class="nat-result-title">Éliminé</h2>
+      <p class="nat-result-sub">Le tournoi s'arrête là pour ${p.nation.name}. Retour au club.</p>
+    `}
+    ${natLine.mvp?`<div class="nat-result-mvp">🏅 Élu MVP du tournoi</div>`:''}
+    <button class="btn" id="natContinue">${won?'Savourer, puis reprendre la saison':'Reprendre la saison'}</button>
+  </div>`;
+  document.getElementById('natContinue').onclick=()=>onContinue();
 }
 
 // Contexte de compétition condensé : classement (leader + voisins directs + le joueur) et
@@ -334,7 +386,7 @@ export function renderMoveScreen(move){
   let title,body,choices;
   const toLg = move.to?LEAGUES[move.to]:null;
   // dernier rung avant la NBA selon le chemin du joueur (miroir de season.js)
-  const continental = p.nation.path==='au' ? 'nbl' : 'euro';
+  const continental = p.startPath==='au' ? 'nbl' : 'euro';
 
   if(move.type==='draftDecl'){
     const intl = move.origin==='intl';
@@ -413,7 +465,7 @@ export function renderMoveScreen(move){
   }
   else if(move.type==='freeAgency'){
     const rivals = pickClubs(p.league, playCountry(p), 2, {exclude:p.club, popularity:p.popularity});
-    const upMap = { academy: p.nation.path==='au'?'nbl1':'third', third:'second', second:'national', national:'euro',
+    const upMap = { academy: p.startPath==='au'?'nbl1':'third', third:'second', second:'national', national:'euro',
                     nbl1:'nbl', nbl:'nba', gleague:'nba', euro:'nba' };
     const upKey=upMap[p.league];
     const canUp = upKey && o>=LEAGUES[upKey].starter-2 && p.age<=30;
@@ -434,7 +486,7 @@ export function renderMoveScreen(move){
     // Marché ouvert = aussi l'occasion d'une offre venue de l'étranger, une fois le premier
     // contrat pro déjà signé (donc hors formation) : une vraie option d'expatriation, pas
     // seulement un changement de club dans le même pays.
-    if(p.nation.path==='eu' && ['third','second','national'].includes(p.league)){
+    if(p.startPath==='eu' && ['third','second','national'].includes(p.league)){
       const expatId = pickExpatNation(p);
       if(expatId){
         const destName = NATIONS.find(n=>n.id===expatId)?.name || '';

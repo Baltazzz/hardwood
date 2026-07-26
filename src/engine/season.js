@@ -8,22 +8,44 @@ import { NATIONS } from '../data/nations.js';
 import { ovr, salaryFor, arrivalCoachTrust, playCountry, roleOf } from './player.js';
 import { EVENTS, careerPhase } from './events.js';
 import { pickClubName, clubInfo } from './clubs.js';
+import { generateAcademyOffers } from './academies.js';
 import { rnd, ri, pick, clamp, round, jit, capitalize, money } from './utils.js';
 import { applyTagEffects } from './tags.js';
 import { simulateStandings, simulatePlayoffs, checkClubMovement, clubPercentile } from './competition.js';
-import { renderEvent, showDeltaFlash, renderSeasonResult, renderMoveScreen, endCareer } from '../ui/screens.js';
+import { renderEvent, showDeltaFlash, renderSeasonResult, renderMoveScreen, renderAcademyChoice, renderNationalResult, endCareer } from '../ui/screens.js';
+
+// Tournoi de zone continentale de la sélection nationale, par continent réel (p.nation.continent
+// -- voir data/nations.js). L'Océanie rejoint la zone Asie (FIBA Asia Cup, comme dans la réalité
+// depuis le rattachement de l'Australie/Nouvelle-Zélande à cette zone).
+const ZONE_TOURN = { europe:'EuroBasket', namerica:'Coupe des Amériques', samerica:'Coupe des Amériques',
+  africa:'Coupe d\'Afrique', asia:'Coupe d\'Asie', oceania:'Coupe d\'Asie' };
 
 /* ============================================================
    DÉMARRAGE DE CARRIÈRE
 ============================================================ */
+// Ne fixe plus le point de départ directement : présente d'abord les offres d'académies (voir
+// engine/academies.js) -- la nationalité n'y joue plus aucun rôle mécanique, seulement
+// l'identité et l'éligibilité en sélection (voir chooseAcademy() ci-dessous).
 export function startCareer(){
   const p=G;
-  p.playNation = p.nation.id; // pays de formation par défaut ; changera seulement si expatriation
-  p.league = p.nation.path==='us' ? 'college' : 'academy';
+  p.age=16; p.year=1;
+  const offers = generateAcademyOffers(p.nation);
+  renderAcademyChoice(offers);
+}
+// Finalise le début de carrière une fois une académie choisie : p.playNation (pays de JEU) part
+// du pays de l'académie choisie, pas de p.nation (origine, fixe, réservé à la sélection) -- deux
+// joueurs de même nationalité peuvent tout à fait démarrer dans des pays différents.
+export function chooseAcademy(academyNation){
+  const p=G;
+  p.playNation = academyNation.id;
+  p.startPath = academyNation.path;
+  p.league = p.startPath==='us' ? 'college' : 'academy';
   p.club = pickClubName(p.league, playCountry(p));
   p.contractY = 2; p.salary = p.league==='college'?0:ri(20,60);
-  p.age=16; p.year=1;
-  pushTL(`Débuts à <b>${p.club}</b> (${LEAGUES[p.league].short}).`);
+  const abroad = academyNation.id !== p.nation.id;
+  pushTL(abroad
+    ? `Quitte ${p.nation.name} pour l'académie de <b>${p.club}</b> (${academyNation.name}, ${LEAGUES[p.league].short}).`
+    : `Débuts à <b>${p.club}</b> (${LEAGUES[p.league].short}).`);
   beginSeason();
 }
 export function pushTL(html){ G.timeline.push({age:G.age, html}); }
@@ -35,7 +57,14 @@ export function beginSeason(){
   const p=G;
   p.seasonMods={ tir:0,adr3:0,dribble:0,passe:0,def:0,reb:0,ath:0,qi:0,
                  reputation:0,morale:0,coach:0,media:0,popularity:0,money:0,fitness:0,
-                 perfBonus:0, injuryGames:0, forceMove:null, forceFinals:null, clubMovement:null };
+                 perfBonus:0, injuryGames:0, forceMove:null, forceFinals:null, clubMovement:null,
+                 natBonus:0 };
+  // Fenêtre de sélection nationale : fixée une fois pour toutes ici, en tête de saison (même
+  // condition que le tournoi lui-même, calculé plus bas dans simulateSeason()) -- sert à thémer
+  // TOUTE la saison (HUD en mode "nation", voir renderEvent()/renderSeasonResult()), pas
+  // seulement l'écran de résultat final. Figée dès le départ pour éviter qu'un petit
+  // mouvement de réputation en cours de saison ne fasse changer le thème en plein milieu.
+  p.seasonMods.natWindow = p.reputation>=45 && p.year%2===0;
   // recharge de forme en intersaison : de moins en moins efficace avec l'âge, la forme
   // s'use sur la durée d'une carrière plutôt que de repartir à l'identique chaque année
   const ageWear = clamp((p.age-27)*0.6, 0, 10);
@@ -134,6 +163,9 @@ export function applyChoice(choice, ctx){
     if(k==='pendingFA'){ p.pendingFA=true; continue; }
     if(k==='injuryGames'){ p.seasonMods.injuryGames+=eff[k]; deltas.push({k:'Blessure',v:-eff[k],raw:true}); continue; }
     if(k==='perfBonus'){ p.seasonMods.perfBonus+=eff[k]; continue; }
+    // Contribution d'un choix pris pendant la fenêtre de sélection nationale au résultat du
+    // tournoi (voir natPower dans simulateSeason() et events/shared.js nation_stakes).
+    if(k==='natBonus'){ p.seasonMods.natBonus=(p.seasonMods.natBonus||0)+eff[k]; continue; }
     if(k==='money'){ p.money=Math.max(0,p.money+eff[k]); deltas.push({k:'Fortune',v:eff[k],money:true}); continue; }
     if(ATTRS.find(a=>a.id===k)){ const jv=jit(eff[k]); p.attrs[k]=clamp(p.attrs[k]+jv,1,99); deltas.push({k:ATTRS.find(a=>a.id===k).name,v:jv}); }
     else if(k in p){ const jv=jit(eff[k]); p[k]=clamp(p[k]+jv,0,100); deltas.push({k:capitalize(k),v:jv}); }
@@ -346,17 +378,24 @@ export function simulateSeason(){
   p.seasons.push(season);
   p.peakOvr=Math.max(p.peakOvr,o);
 
-  // sélection nationale (tournoi tous les 2 ans à partir de rep suffisante)
+  // Sélection nationale (tournoi tous les 2 ans à partir de rep suffisante) : condition figée en
+  // tête de saison (p.seasonMods.natWindow, voir beginSeason()), pas recalculée ici.
   let natLine=null;
-  if(p.reputation>=45 && p.year%2===0){
-    const zoneTourn = p.nation.path==='eu' ? 'EuroBasket' : p.nation.path==='au' ? 'Coupe d\'Asie' : 'Coupe des Amériques';
+  if(p.seasonMods.natWindow){
+    // Zone continentale RÉELLE de la sélection (p.nation.continent, fixe) -- indépendante de la
+    // voie de développement du joueur (p.startPath, qui vient de l'académie choisie) : un
+    // prospect sénégalais formé en Europe joue la Coupe d'Afrique avec le Sénégal, pas
+    // l'EuroBasket. ZONE_TOURN['asia'] couvre aussi l'Océanie (l'Australie concourt en FIBA Asia
+    // Cup depuis son rattachement à la zone Asie-Océanie).
+    const zoneTourn = ZONE_TOURN[p.nation.continent] || 'Coupe des Amériques';
     const tourn = pick(['Coupe du Monde','Jeux Olympiques', zoneTourn]);
     // Déjà construit sur le même principe que le club (force réelle de l'équipe -- ici
     // p.nation.strength, fixe par nation -- + apport individuel + bruit) : pas de bug de fond
     // symétrique à celui du club (qui utilisait un prestige générique au lieu de la vraie force
     // du club signé). Coefficient individuel légèrement relevé (0.6 -> 0.75) par cohérence avec
-    // le renforcement du poids individuel côté club.
-    const natPower = clamp(p.nation.strength + (o-70)*0.75 + rnd(-16,16),20,105);
+    // le renforcement du poids individuel côté club. + natBonus : contribution des choix
+    // contextuels pris pendant la fenêtre de sélection (voir events/shared.js nation_stakes).
+    const natPower = clamp(p.nation.strength + (o-70)*0.75 + (p.seasonMods.natBonus||0) + rnd(-16,16),20,105);
     let medal=null;
     if(natPower>96){ medal='Or'; A('🥇 '+tourn); }
     else if(natPower>88){ medal='Argent'; A('🥈 '+tourn); }
@@ -364,6 +403,7 @@ export function simulateSeason(){
     natLine={tourn,medal, mvp:(o>=88 && natPower>90 && Math.random()>.6)};
     if(natLine.mvp){ A('MVP '+tourn); }
     if(medal) pushTL(`${medalEmoji(medal)} <b>${medal}</b> à ${tourn} avec ${p.nation.name}.`);
+    else pushTL(`Éliminé en phase finale de ${tourn} avec ${p.nation.name}.`);
   }
 
   // effets moraux post-saison
@@ -384,7 +424,12 @@ export function simulateSeason(){
   if(p.league==='nba'){ if(p.firstNbaAge===null) p.firstNbaAge=p.age; p.nbaStruggle = minutes<14 ? (p.nbaStruggle+1) : 0; }
   else { p.nbaStruggle=0; }
 
-  renderSeasonResult(season, natLine, champion);
+  // La sélection nationale se vit comme une parenthèse à part : quand un tournoi a eu lieu
+  // cette saison, son résultat s'annonce sur son propre écran dédié (voir renderNationalResult()
+  // dans screens.js -- rapide si l'issue est mauvaise, une vraie séquence de célébration en cas
+  // de médaille), AVANT de revenir au bilan de saison classique du club.
+  if(natLine){ renderNationalResult(natLine, () => renderSeasonResult(season, champion)); }
+  else { renderSeasonResult(season, champion); }
 }
 function medalEmoji(m){return m==='Or'?'🥇':m==='Argent'?'🥈':'🥉';}
 // Texte de bilan synchronisé sur roleOf(p) (source unique du rôle réel, voir engine/player.js) :
@@ -488,7 +533,7 @@ function resolveMovement(){
   const p=G, lg=LEAGUES[p.league], o=ovr(p);
   const last=p.seasons[p.seasons.length-1];
   // dernier rung avant la NBA : EuroLeague pour les chemins eu/us, NBL pour l'Australie
-  const continental = p.nation.path==='au' ? 'nbl' : 'euro';
+  const continental = p.startPath==='au' ? 'nbl' : 'euro';
 
   // forceMove imposé par un choix d'événement
   if(p.seasonMods.forceMove){ return buildMove(p.seasonMods.forceMove); }
@@ -508,7 +553,7 @@ function resolveMovement(){
 
   // --- NBA : le pari a échoué (pas de temps de jeu) → renvoyé se relancer, en G-League côté US, sinon au rung continental ---
   if(p.league==='nba' && p.nbaStruggle>=2 && o<LEAGUES.nba.starter){
-    const sendTo = p.nation.path==='us' ? 'gleague' : continental;
+    const sendTo = p.startPath==='us' ? 'gleague' : continental;
     return {type:'nbaReturn', to:sendTo, club:pickClubName(sendTo, playCountry(p))};
   }
 
@@ -554,11 +599,11 @@ function resolveMovement(){
   // promotions SUIVANTES, en revanche, sont l'occasion réaliste d'une offre venue d'un autre
   // pays : le joueur a déjà fait ses preuves en pro, le marché européen s'intéresse à lui au-delà
   // de ses frontières. Quitter son pays, découvrir un nouveau championnat -- un vrai tournant.
-  if(p.league==='academy' && p.nation.path==='eu' && (o>=LEAGUES.third.starter-2 || p.age>=19)){
+  if(p.league==='academy' && p.startPath==='eu' && (o>=LEAGUES.third.starter-2 || p.age>=19)){
     return {type:'promo', to:'third', club:pickClubName('third', playCountry(p))};
   }
   if(p.league==='third' && o>=LEAGUES.second.starter-3){
-    if(p.nation.path==='eu' && Math.random()<0.3){
+    if(p.startPath==='eu' && Math.random()<0.3){
       const destId = pickExpatNation(p);
       if(destId){
         const nc = pickClubName('second', destId, {exclude:p.club});
@@ -568,7 +613,7 @@ function resolveMovement(){
     return {type:'promo', to:'second', club:pickClubName('second', playCountry(p))};
   }
   if(p.league==='second' && o>=LEAGUES.national.starter-3){
-    if(p.nation.path==='eu' && Math.random()<0.3){
+    if(p.startPath==='eu' && Math.random()<0.3){
       const destId = pickExpatNation(p);
       if(destId){
         const nc = pickClubName('national', destId, {exclude:p.club});
@@ -579,7 +624,7 @@ function resolveMovement(){
   }
 
   // ================= VOIE AUSTRALIE (formation -> NBL1 -> NBL) =================
-  if(p.league==='academy' && p.nation.path==='au' && (o>=LEAGUES.nbl1.starter-2 || p.age>=19)){
+  if(p.league==='academy' && p.startPath==='au' && (o>=LEAGUES.nbl1.starter-2 || p.age>=19)){
     return {type:'promo', to:'nbl1', club:pickClubName('nbl1', playCountry(p))};
   }
   if(p.league==='nbl1' && o>=LEAGUES.nbl.starter-3){
@@ -611,9 +656,9 @@ function resolveMovement(){
   // nation-incompatible.
   if(o < lg.starter-9 && lg.tier<5){
     const down = p.league==='gleague'
-      ? (p.nation.path==='eu' ? 'second' : null)
+      ? (p.startPath==='eu' ? 'second' : null)
       : p.league==='euro'
-      ? (p.nation.path==='eu' ? 'national' : 'gleague')
+      ? (p.startPath==='eu' ? 'national' : 'gleague')
       : { nba:continental, nbl:'nbl1', national:'second',
           second:'third', third:'academy', nbl1:'academy' }[p.league];
     if(down) return {type:'demote', to:down, club:pickClubName(down, playCountry(p))};

@@ -10,7 +10,7 @@ const BRONZE = '#A9673A';
 // Tournois de sélection nationale (voir simulateSeason() dans season.js) : sert à distinguer
 // "MVP <tournoi>" (honneur national) de "MVP <ligue>" (honneur club), qui partagent le même
 // préfixe de chaîne.
-const NAT_TOURNAMENTS = ['Coupe du Monde', 'Jeux Olympiques', 'EuroBasket', "Coupe d'Asie", 'Coupe des Amériques'];
+const NAT_TOURNAMENTS = ['Coupe du Monde', 'Jeux Olympiques', 'EuroBasket', "Coupe d'Asie", 'Coupe des Amériques', "Coupe d'Afrique"];
 
 export function classifyAccolade(key) {
   if (key.startsWith('🥇') || key.startsWith('🥈') || key.startsWith('🥉')) return 'national';

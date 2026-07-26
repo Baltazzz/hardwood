@@ -99,6 +99,25 @@ export const SHARED_EVENTS = [
         outcome:'Tu remercies, tu raccroches, tu retournes t\'entraîner comme si de rien n\'était. Mais ce soir-là, seul, le sourire ne te quitte pas.'}
     ]},
 
+  // Choix contextuel de la fenêtre de sélection (voir p.seasonMods.natWindow, fixé en tête de
+  // saison dans beginSeason()) : le texte s'adapte au niveau réel du joueur (star attendue au
+  // sommet vs role player du groupe), et l'issue pèse concrètement sur le résultat du tournoi
+  // via natBonus (voir natPower dans simulateSeason()) -- pas une simple couleur narrative.
+  {id:'nation_stakes', cat:'nation', cooldown:2,
+    when:(p,lg)=>!!(p.seasonMods && p.seasonMods.natWindow),
+    title:'Sélection nationale : la pression monte',
+    weight:()=>1.3,
+    body:({p,lg})=> ovr(p)>=lg.star
+      ? `<i>(Vestiaire de la sélection, le sélectionneur s'arrête devant toi.)</i> Le sélectionneur ${p.nation.flag} compte sur toi comme référence de l'équipe pour ce tournoi. Le pays entier attend.`
+      : `<i>(Vestiaire de la sélection, les rôles se répartissent.)</i> Tu fais partie du groupe ${p.nation.flag} pour ce tournoi, sans en être la tête d'affiche. Comment abordes-tu ta part du travail ?`,
+    choices:({p})=>[
+      {label:'Porter le maillot sur mes épaules', hint:'Un pari sur ta performance internationale',
+        effect:(ctx)=>{ const ok=actionRoll(ovr(p),72); ctx.ok=ok; return ok?{natBonus:+10, reputation:+3}:{natBonus:-4}; },
+        outcome:(ctx)=> ctx.ok?'Tu hausses ton niveau pile au bon moment. La sélection y croit un peu plus.':'La pression internationale te pèse davantage que prévu.'},
+      {label:'Jouer mon rôle, sans en faire trop', hint:'La sérénité, pour tenir la distance du tournoi',
+        effect:{natBonus:+3, morale:+2}, outcome:'Tu restes toi-même. Un groupe qui tient sur la durée se construit aussi comme ça.'}
+    ]},
+
   {id:'extension', cat:'contract', cooldown:3,
     when:(p,lg)=>p.contractY<=1 && ovr(p)>=lg.starter,
     title:'Ton club propose une prolongation',

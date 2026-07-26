@@ -18,10 +18,13 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
   événements ("grand moment" — clutch/défense/duel/finale) ont désormais une cartouche visuelle
   dédiée (`.grand-moment` dans `styles.css` : liseré + motif ballon agrandi, recoloré en prune
   le 2026-07-28 avec la bascule de palette), pour se distinguer visuellement des événements
-  courants. Ça reste une mise en forme statique, pas une animation/mise en scène du moment
-  lui-même au moment de la résolution du choix.
-  **Critère** : à définir avec l'utilisateur (quels moments ? quel type d'animation ? respect
-  de `prefers-reduced-motion`, déjà en place globalement).
+  courants. Progrès adjacent le 2026-07-29 (lot création et immersion nationale, voir AGD-12) :
+  une vraie animation d'entrée (`.nation-announce`, échelle + fondu) existe désormais, mais
+  seulement pour les événements de sélection nationale, pas pour les grands moments de club
+  (clutch/défense/duel/finale) qui restent en mise en forme statique.
+  **Critère** : à définir avec l'utilisateur (quels moments côté club ? même traitement que
+  `.nation-announce` ou différent ? respect de `prefers-reduced-motion`, déjà en place
+  globalement).
 
 - [ ] **AGD-07 — Enrichissement de la carte de fin et du Panthéon**
   Ajouté au registre le 2026-07-26 (mêmes réserves de provenance que AGD-06). État actuel déjà
@@ -33,6 +36,55 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
   **Critère** : à définir avec l'utilisateur une fois le manque précisé.
 
 ## Coché récemment
+
+- [x] **AGD-12 — Création et immersion nationale (nationalités, académies, sélection)** _(implémenté et vérifié le 2026-07-26)_
+  Trois volets :
+  1. *Beaucoup plus de nationalités*. `src/data/nations.js` passe de 14 à **35 nations**,
+     couvrant les nationalités réellement représentées en NBA et les nations phares du basket
+     mondial (Croatie, Lettonie, Monténégro, Bosnie-Herzégovine, Finlande, Suisse, Ukraine,
+     Pologne, Israël -- Europe ; République dominicaine, Bahamas, Îles Vierges -- Amérique du
+     Nord ; Argentine, Brésil -- Amérique du Sud ; **Sénégal**, Cameroun, Soudan du Sud, RD Congo
+     -- Afrique ; Chine, Japon, Philippines -- Asie), toutes vérifiées par recherche web pour la
+     cohérence des noms/forces. Nouveau champ `continent` par nation, utilisé pour la zone de
+     tournoi de sélection (`Coupe d'Afrique` ajoutée) et la génération d'académies (point 2).
+     Le pays choisi n'affiche plus de championnat de départ associé (texte retiré de l'écran de
+     création) : `p.nation.path` n'a plus aucun rôle dans le point de départ sportif, remplacé
+     partout où c'était le cas (`season.js` x9, `screens.js` x3, `events/early.js`) par un
+     nouveau `p.startPath`, fixé uniquement par l'académie choisie (point 2). Nationalité et
+     point de départ sont désormais entièrement découplés.
+  2. *Nouveau modèle de départ par académies*. L'ancien point de départ automatique (déduit de
+     la nationalité) est remplacé par un vrai écran de choix (`renderAcademyChoice()`,
+     `engine/academies.js`) : "les académies s'intéressent à ton profil", 5-6 offres, réparties
+     avec au moins une par grand continent doté de données de championnat (Amérique du Nord,
+     Europe, Océanie -- les 3 voies jouables), plusieurs sur le continent d'origine du joueur
+     s'il en a une localement, et un tirage entièrement aléatoire pour les joueurs venus d'un
+     continent sans donnée (Afrique, Asie, Amérique du Sud). Chaque offre porte un vrai club
+     d'académie réel (`pickClub('academy', ...)`) ; choisir fixe `p.playNation`/`p.startPath`
+     sur le pays de l'académie, pas sur la nationalité -- un prospect sénégalais peut très bien
+     démarrer aux États-Unis ou en Europe.
+  3. *Sélection nationale beaucoup plus marquante*. Fenêtre de sélection (`p.seasonMods.natWindow`,
+     fixée en tête de saison) : bascule complète de thème visuel pour toute la saison de
+     tournoi (liseré + chip "Fenêtre sélection" à l'accent dynamique du pays), pas seulement
+     l'événement national lui-même. Petite animation d'annonce dédiée (`.nation-announce`) quand
+     l'événement national survient. Nouveau choix contextuel (`nation_stakes`, adapté au niveau
+     réel du joueur -- star attendue au sommet vs role player du groupe) dont l'issue pèse
+     concrètement sur le résultat via `natBonus`. Résultat de tournoi déplacé sur un **écran
+     dédié** (`renderNationalResult()`) plutôt qu'une ligne noyée dans le bilan de club : rapide
+     et sobre en cas d'élimination, vraie séquence de célébration (médaille agrandie animée,
+     halo, motif de fond, mention MVP) en cas de médaille -- une parenthèse à part, pas une
+     saison de club de plus.
+  Rendu montré à l'utilisateur (écran d'académies, bascule de thème + annonce, résultat rapide
+  et célébration or/bronze) via le showcase avant livraison.
+  Vérifié : 0% crash sur 80+150+300+300 carrières pilotées après les changements (les deux
+  harnais de test, `tests/harness.mjs` et `scripts/deep-audit.mjs`, ont dû être mis à jour pour
+  gérer les deux nouveaux écrans -- choix d'académie et résultat national -- insérés dans le
+  flux normal de carrière). 0% repli "Club libre". 0 violation d'intégrité des événements
+  uniques (66 événements marqués `once`, contrôle f) toujours actif) sur deux runs à 300
+  carrières. Taux de titre élite non affecté par ce lot (aucune formule de récompense touchée) :
+  13.7%/14.3% sur deux runs à 300, dans la bande de bruit déjà établie. Génération d'académies
+  vérifiée directement (script dédié, 200 tirages par profil) : 0 tirage sans les 3 voies pour
+  un joueur d'un continent doté de données, tirage bien non garanti pour un joueur d'un
+  continent sans donnée (Sénégal/Chine/Argentine testés).
 
 - [x] **AGD-11 — Cohérence de simulation (performance individuelle, tailles de ligue, rôle)** _(implémenté et vérifié le 2026-07-26)_
   Quatre volets liés, le premier touchant l'équilibrage :

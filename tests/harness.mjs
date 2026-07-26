@@ -32,7 +32,13 @@ export function driveOneCareer({ document, errors, state, ATTRS }) {
     opt.click();
     clickId(document, 'nextC');
   }
-  clickId(document, 'nextC'); // étape 5 (scouting + nom) -> startCareer()
+  clickId(document, 'nextC'); // étape 5 (scouting + nom) -> startCareer() -> écran d'académies
+
+  // --- choix d'académie (voir engine/academies.js) : nouvel écran entre la création et la
+  // première saison, remplace l'ancien point de départ automatique déduit de la nationalité.
+  const academyOpt = pickRandomEl(document.querySelectorAll('.academy-opt'));
+  if (!academyOpt) throw new Error('Aucune option ".academy-opt" sur l\'écran de choix d\'académie');
+  academyOpt.click();
 
   // --- boucle de saison / intersaison jusqu'à la fin de carrière ---
   let age22MaxAttr = null;
@@ -45,6 +51,8 @@ export function driveOneCareer({ document, errors, state, ATTRS }) {
     }
     if (document.getElementById('afterSeason')) {
       clickId(document, 'afterSeason');
+    } else if (document.getElementById('natContinue')) {
+      clickId(document, 'natContinue'); // résultat de tournoi national -> retour au bilan de club
     } else if (document.querySelector('.choice')) {
       const choice = pickRandomEl(document.querySelectorAll('.choice'));
       choice.click();

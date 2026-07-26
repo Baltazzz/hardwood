@@ -37,6 +37,57 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Coché récemment
 
+- [x] **AGD-15 — Réalisme NBA (conférences, Play-In, victoires réservées à la NBA)** _(implémenté et vérifié le 2026-07-26)_
+  Quatre volets liés, dans l'esprit "la NBA mérite plus de détail que les autres ligues" :
+  1. *Total de victoires retiré partout sauf en NBA*. La cellule "VIC" du bilan de saison
+     (`renderSeasonResult()` dans `screens.js`) n'est désormais affichée que si `p.league==='nba'`
+     — ailleurs (EuroLeague comprise), elle n'apportait que de la confusion (formats de saison
+     très variables, aucun repère réel). Le calcul interne de `wins` (`season.js`) reste
+     inchangé pour toutes les ligues : il alimente aussi le facteur de progression
+     (`winFactor`), retirer son affichage ne devait pas couper ce calcul.
+  2. *Format playoffs NBA réaliste*. Nouvelles fonctions dédiées dans `engine/competition.js` :
+     `simulateNbaStandings()` classe les 30 clubs réels en deux conférences RÉELLES de 15 (Est/
+     Ouest, table `NBA_CONFERENCE` couvrant les 30 noms de `LEAGUES.nba.clubs`), le club du
+     joueur situé dans sa vraie conférence. `simulateNbaPlayoffs()` modélise le vrai format
+     actuel : les 6 premiers de la conférence qualifiés directement, les places 7-10 disputant
+     le Play-In (7e/8e ont deux chances, 9e/10e doivent enchaîner deux victoires) pour les deux
+     dernières places, 11e et au-delà : saison terminée. Une fois qualifiée (8 têtes de série),
+     l'équipe traverse 4 tours (1er tour, demi-finale de conférence, finale de conférence,
+     Finale NBA) — la Finale est une vraie confrontation entre les deux conférences, jamais un
+     prolongement du même vivier de 15. Cohérence conservée avec le mécanisme narratif "match
+     décisif" (`forceFinals`) : son issue reste la Finale NBA, jamais un second tirage
+     contradictoire. Les autres ligues gardent le classement/phase finale génériques existants
+     (`simulateStandings`/`simulatePlayoffs`, non touchés).
+  3. *Affichage dédié + cohérence de bout en bout*. `renderCompetitionContext()` (`screens.js`)
+     a une branche NBA : titre explicite ("NBA · Conférence Est/Ouest"), pastille de zone
+     (qualification directe / Play-In / hors playoffs, nouveaux styles `.standings-zone-*` dans
+     `styles.css`), résumé de parcours mentionnant le Play-In quand il a été traversé. Nouveau
+     contrôle d'audit dédié dans `scripts/deep-audit.mjs` (section g) : vérifie sur chaque
+     saison NBA jouée que classement/qualification/parcours/champion restent cohérents entre eux
+     (poolSize toujours 15, conférence valide, rang 1-6 toujours qualifié sans Play-In, seed
+     Play-In toujours 7 ou 8 quand validé, champion implique finale atteinte, finale atteinte
+     implique 4 tours). Un champ `clubStrengthPctile` (force réelle de l'effectif, indépendante
+     de l'apport du joueur) a été ajouté à chaque saison pour l'audit de corrélation (point 4).
+  4. *Audit de corrélation force d'équipe -> résultat*. Nouvelle section h) dans
+     `scripts/deep-audit.mjs`, sur 2411 saisons NBA (300 carrières) : par tertile de force réelle
+     de club, qualification 34.2% (Faible) / 60.8% (Moyen) / 86.5% (Fort), finale NBA 2.2% /
+     2.9% / 6.9%, titre 0.6% / 1% / 2.9% — progression monotone nette, la force d'équipe prédit
+     bien le résultat. Croisement force de club x niveau du joueur (% de saisons championnes) :
+     un Superstar dans un club Fort atteint 3.1% (petit échantillon, n=32) contre 0% pour un
+     Role player dans un club Faible (n=378) — l'apport individuel module sans effacer le signal
+     de force d'équipe, dans toutes les combinaisons observées.
+  Vérifié : 0% crash sur 150+300 carrières, 0% repli "Club libre". Section g) de l'audit dédié
+  NBA : **0 incohérence détectée sur 2411 saisons NBA** (classement/qualification/parcours/
+  champion). Répartition conférence Est 1134 / Ouest 1277 (proche de 50/50, cohérent avec 15/15
+  clubs réels). Zone qualification directe (rang 1-6) : 100% qualifiées comme attendu. Zone
+  Play-In (rang 7-10) : 36.5% qualifiées via le Play-In (le reste éliminé, cohérent avec un
+  format resserré). Hors playoffs (rang 11-15) : 0.2% qualifiées, uniquement via les 6 saisons
+  "forcées" par l'événement narratif match décisif sur tout le run (mécanisme documenté, pas une
+  incohérence). Taux de titre élite (toutes ligues) 11.3% sur 300 carrières — dans la bande de
+  bruit déjà établie (7.7-21.7%), aucune dérive de calibration causée par ce lot. Rendu des 5
+  scénarios (tête de série directe championne / éliminée, Play-In validé / éliminé, hors zone)
+  montré à l'utilisateur via le showcase avant livraison.
+
 - [x] **AGD-14 — Tuto : installer le lien comme une app sur téléphone** _(implémenté et vérifié le 2026-07-26)_
   Micro-ajout demandé en session : nouvelle 4e section ("04 · Sur ton téléphone") sur l'écran de
   bienvenue/tuto (`screenWelcome()` dans `screens.js`), qui explique en 3 étapes génériques

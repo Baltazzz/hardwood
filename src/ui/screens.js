@@ -304,7 +304,11 @@ export function renderSeasonResult(s, champion){
   // d'information, pas une performance) : deux blocs distincts côté rendu (voir .statline vs
   // .statline-ctx dans styles.css), demandé pour hiérarchiser visuellement les deux familles.
   const perfCells=[['PTS',s.pts],['REB',s.reb],['PAS',s.ast],['CTR',s.blk??0],['INT',s.stl??0]];
-  const ctxCells=[['MIN',s.minutes],['MJ',gpLabel],['VIC',s.wins]];
+  // Le total de victoires n'est vraiment crédible/attendu qu'en NBA (82 matchs, référence connue
+  // de tous) -- ailleurs, il n'apporte que de la confusion (formats de saison très variables,
+  // aucun repère réel pour juger si "22 victoires" est bon ou mauvais dans telle ligue).
+  const ctxCells=[['MIN',s.minutes],['MJ',gpLabel]];
+  if(p.league==='nba') ctxCells.push(['VIC',s.wins]);
   let verdict = seasonVerdict(p,s,lg);
   const prev = p.seasons.length>=2 ? p.seasons[p.seasons.length-2].ovr : null;
   const delta = prev!==null ? s.ovr - prev : null;
@@ -367,12 +371,40 @@ export function renderNationalResult(natLine, onContinue){
   document.getElementById('natContinue').onclick=()=>onContinue();
 }
 
+// Zone de qualification NBA associée à un rang de conférence (voir simulateNbaStandings/
+// simulateNbaPlayoffs dans engine/competition.js) : affichée à part du classement pour que la
+// frontière qualification directe / Play-In / élimination se lise d'un coup d'œil, sans avoir à
+// déduire le seuil du rang brut.
+function nbaSeedZone(rank){
+  if(rank<=6) return { label:'Qualification directe en playoffs', cls:'good' };
+  if(rank<=10) return { label:'Zone de Play-In', cls:'warn' };
+  return { label:'Hors playoffs', cls:'bad' };
+}
+// Résumé du parcours de playoffs NBA : mentionne d'abord le Play-In s'il a été traversé (seule
+// façon d'atteindre une 7e/8e tête de série), puis le parcours de tours classique -- jamais les
+// deux tirages en contradiction puisque tout vient du même appel à simulateNbaPlayoffs().
+function nbaPlayoffLine(po){
+  const playInNote = !po.playIn ? '' : po.playIn.result==='eliminated'
+    ? 'Play-In : éliminé, saison terminée.'
+    : `Play-In validé (${po.seed}e tête de série).`;
+  if(!po.qualified) return playInNote || `Playoffs : hors zone qualificative cette saison.`;
+  const path = po.rounds.map(r=>r.label).join(' → ');
+  const tail = po.champion
+    ? `${path} · <b style="color:var(--mint)">Champion NBA</b> !`
+    : po.reachedFinals
+      ? `${path} · Finale NBA perdue.`
+      : `Élimination en ${po.rounds[po.rounds.length-1].label.toLowerCase()}.`;
+  return playInNote ? `${playInNote} Playoffs : ${tail}` : `Playoffs : ${tail}`;
+}
 // Contexte de compétition condensé : classement (leader + voisins directs + le joueur) et
 // parcours de phase finale résumé en quelques mots. Données déjà calculées dans
-// simulateSeason() (voir engine/competition.js) — ici uniquement de la mise en forme.
+// simulateSeason() (voir engine/competition.js) — ici uniquement de la mise en forme. La NBA a
+// un affichage dédié (conférence explicite + zone de qualification + Play-In), les autres ligues
+// gardent le format générique existant.
 function renderCompetitionContext(s, lg, p){
   const st = s.standings, po = s.playoffs;
   if(!st) return '';
+  const isNba = p.league==='nba';
   const row=(rank,name,me)=>`<div class="standings-row${me?' me':''}"><span class="sr-rk">#${rank}</span><span class="sr-nm">${me?`<b>${name}</b>`:name}</span></div>`;
   const rows = [
     st.playerRank>1 ? row(1, st.leader.name, false) : null,
@@ -380,15 +412,20 @@ function renderCompetitionContext(s, lg, p){
     row(st.playerRank, p.club, true),
     st.below ? row(st.playerRank+1, st.below.name, false) : null,
   ].filter(Boolean).join('');
-  const playoffLine = !po ? '' : !po.qualified
+  const title = isNba
+    ? `NBA · Conférence ${st.conference} (${st.poolSize} clubs)`
+    : `${lg.short} · classement (${st.poolSize} clubs)`;
+  const zoneHtml = isNba ? (()=>{ const z=nbaSeedZone(st.playerRank); return `<div class="standings-zone standings-zone-${z.cls}">${z.label}</div>`; })() : '';
+  const playoffLine = !po ? '' : isNba ? nbaPlayoffLine(po) : (!po.qualified
     ? `Playoffs : pas de qualification cette saison.`
     : po.champion
       ? `Playoffs : ${po.rounds.map(r=>r.label).join(' → ')} · <b style="color:var(--mint)">titre remporté</b> !`
       : po.reachedFinals
         ? `Playoffs : finale perdue, après ${po.rounds.length-1} tour${po.rounds.length-1>1?'s':''} franchi${po.rounds.length-1>1?'s':''}.`
-        : `Playoffs : élimination en ${po.rounds[po.rounds.length-1].label.toLowerCase()}.`;
+        : `Playoffs : élimination en ${po.rounds[po.rounds.length-1].label.toLowerCase()}.`);
   return `<div class="verdict standings-box">
-    <div class="standings-title">${lg.short} · classement (${st.poolSize} clubs)</div>
+    <div class="standings-title">${title}</div>
+    ${zoneHtml}
     <div class="standings-rows">${rows}</div>
     ${playoffLine?`<div class="standings-playoff">${playoffLine}</div>`:''}
   </div>`;

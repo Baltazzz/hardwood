@@ -410,6 +410,13 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
 .standings-box{background:var(--data-wash);border-color:var(--data-line);border-left-color:var(--mint)}
 .standings-title{font-family:'Bricolage Grotesque';font-weight:700;font-size:11px;letter-spacing:.1em;
   text-transform:uppercase;color:var(--chalk-dim);margin-bottom:8px}
+/* Zone de qualification NBA (voir nbaSeedZone() dans screens.js) : lecture immédiate directe/
+   Play-In/hors playoffs sans avoir à déduire le seuil depuis le rang brut affiché en dessous. */
+.standings-zone{display:inline-block;font-family:'Bricolage Grotesque';font-weight:700;font-size:10.5px;
+  letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:6px;margin-bottom:8px}
+.standings-zone-good{background:rgba(43,110,61,.12);color:var(--up)}
+.standings-zone-warn{background:rgba(224,86,45,.12);color:var(--orange-soft)}
+.standings-zone-bad{background:rgba(186,51,39,.10);color:var(--down)}
 .standings-rows{display:flex;flex-direction:column;gap:3px}
 .standings-row{display:flex;gap:10px;font-size:13.5px}
 .standings-row .sr-rk{color:var(--chalk-dim);min-width:26px;font-weight:600}

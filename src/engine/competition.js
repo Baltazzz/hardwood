@@ -98,6 +98,98 @@ export function simulateStandings(p, lg, teamRating, nationId) {
   return { rows, playerRank: rows.findIndex(r => r.isPlayerClub) + 1, poolSize: rows.length };
 }
 
+// Conférence réelle de chaque club NBA (saison 2024-25 : Est = Atlantique/Central/Sud-Est,
+// Ouest = Nord-Ouest/Pacifique/Sud-Ouest) -- sert uniquement au format de fin de saison NBA
+// ci-dessous (classement + playoffs par conférence, avec Play-In), pas à l'estimation de force
+// (déjà couverte par NBA_STRENGTH/hashStrength ci-dessus). Couvre les 30 noms réels de
+// LEAGUES.nba.clubs (data/leagues.js) ; un repli 'Est' existe par sécurité si jamais un nom non
+// mappé apparaissait, mais ne devrait jamais être exercé en pratique.
+const NBA_CONFERENCE = {
+  'Boston':'Est', 'Brooklyn':'Est', 'New York':'Est', 'Philadelphie':'Est', 'Toronto':'Est',
+  'Chicago':'Est', 'Cleveland':'Est', 'Detroit':'Est', 'Indiana':'Est', 'Milwaukee':'Est',
+  'Atlanta':'Est', 'Charlotte':'Est', 'Miami':'Est', 'Orlando':'Est', 'Washington':'Est',
+  'Denver':'Ouest', 'Minnesota':'Ouest', 'OKC':'Ouest', 'Portland':'Ouest', 'Utah':'Ouest',
+  'Golden State':'Ouest', 'LA Clippers':'Ouest', 'L.A. Lakers':'Ouest', 'Phoenix':'Ouest', 'Sacramento':'Ouest',
+  'Dallas':'Ouest', 'Houston':'Ouest', 'Memphis':'Ouest', 'New Orleans':'Ouest', 'San Antonio':'Ouest',
+};
+
+// Classement NBA fidèle au vrai système : deux conférences classées SÉPARÉMENT (15 clubs
+// chacune), le club du joueur situé dans sa vraie conférence -- jamais un classement à 30 qui
+// mélangerait les deux, comme en pratique. Même logique de conversion rang -> note que
+// simulateStandings() ci-dessus (voir son commentaire), appliquée au sein de la seule conférence
+// du joueur plutôt qu'au vivier entier.
+export function simulateNbaStandings(p, lg, teamRating) {
+  const pool = getClubPool('nba', null); // palier global : nationId ignoré (voir clubs.js)
+  const conference = NBA_CONFERENCE[p.club] || 'Est';
+  const confPool = pool.filter(c => (NBA_CONFERENCE[c.name] || 'Est') === conference);
+  const others = confPool.filter(c => c.name !== p.club)
+    .map(c => ({ name: c.name, strength: clubStrength('nba', c.name, c) }))
+    .sort((a, b) => b.strength - a.strength);
+  const n = Math.max(1, others.length - 1);
+  const rows = others.map((c, i) => {
+    const percentile = others.length > 1 ? 1 - i / n : 0.5;
+    const rating = clamp(lg.prestige * 3 + (percentile - 0.5) * 40 + rnd(-14, 14), 5, 100);
+    return { name: c.name, rating, isPlayerClub: false };
+  });
+  rows.push({ name: p.club, rating: teamRating, isPlayerClub: true });
+  rows.sort((a, b) => b.rating - a.rating);
+  return { conference, rows, playerRank: rows.findIndex(r => r.isPlayerClub) + 1, poolSize: rows.length };
+}
+
+// Playoffs NBA au vrai format actuel : dans chaque conférence (15 clubs), les 6 premiers sont
+// qualifiés directement (têtes de série 1-6, entrée directe au 1er tour) ; les places 7 à 10
+// disputent le Play-In pour les deux dernières places de playoffs (7e et 8e tête de série) --
+// 7e/8e ont deux chances (un match, puis en cas de défaite un match d'élimination directe contre
+// le vainqueur du 9e/10e), 9e/10e doivent enchaîner deux victoires pour arracher la 8e place ;
+// au-delà de la 10e place, saison terminée sans playoffs. Une fois qualifiée (8 têtes de série),
+// l'équipe traverse 4 tours jusqu'au titre : 1er tour, demi-finale de conférence, finale de
+// conférence, puis une vraie Finale NBA contre le champion de l'AUTRE conférence -- jamais un
+// simple prolongement du même vivier de 15 clubs. Cohérence avec le mécanisme narratif "match
+// décisif" (forceFinals) conservée à l'identique de simulatePlayoffs() : si l'événement a déjà
+// tranché la saison, son issue EST la Finale NBA, jamais un second tirage qui pourrait la
+// contredire.
+export function simulateNbaPlayoffs(teamRating, playerRank, forcedFinal) {
+  const roundLabels = ['1er tour', 'Demi-finale de conférence', 'Finale de conférence', 'Finale NBA'];
+  if (forcedFinal != null) {
+    const rounds = roundLabels.map((label, i) => ({ label, won: i < roundLabels.length - 1 ? true : forcedFinal }));
+    return { qualified: true, playIn: null, seed: null, rounds, reachedFinals: true, champion: forcedFinal };
+  }
+  if (playerRank > 10) {
+    return { qualified: false, playIn: null, seed: null, rounds: [], reachedFinals: false, champion: false };
+  }
+  const winProb = (bonus = 0) => clamp(0.5 + (teamRating - 58) * 0.006 + bonus, 0.08, 0.85);
+  let seed = playerRank, playIn = null;
+  if (playerRank >= 7) {
+    const isSeventhOrEighth = playerRank <= 8;
+    if (isSeventhOrEighth) {
+      const wonGame1 = Math.random() < winProb(0.03);
+      if (wonGame1) { seed = 7; playIn = { result: 'seed7' }; }
+      else {
+        const wonElim = Math.random() < winProb(-0.03);
+        if (!wonElim) return { qualified: false, playIn: { result: 'eliminated' }, seed: null, rounds: [], reachedFinals: false, champion: false };
+        seed = 8; playIn = { result: 'seed8' };
+      }
+    } else {
+      const wonGame1 = Math.random() < winProb(0);
+      if (!wonGame1) return { qualified: false, playIn: { result: 'eliminated' }, seed: null, rounds: [], reachedFinals: false, champion: false };
+      const wonElim = Math.random() < winProb(-0.05);
+      if (!wonElim) return { qualified: false, playIn: { result: 'eliminated' }, seed: null, rounds: [], reachedFinals: false, champion: false };
+      seed = 8; playIn = { result: 'seed8' };
+    }
+  }
+  const rounds = [];
+  let alive = true;
+  for (let i = 0; i < roundLabels.length && alive; i++) {
+    const isFinal = i === roundLabels.length - 1;
+    const advanceProb = clamp(0.5 + (teamRating - 58) / 80 - i * 0.045 - (seed - 1) * 0.01, 0.08, isFinal ? 0.55 : 0.78);
+    const won = Math.random() < advanceProb;
+    rounds.push({ label: roundLabels[i], won });
+    if (!won) alive = false;
+  }
+  const reachedFinals = rounds.length === roundLabels.length;
+  return { qualified: true, playIn, seed, rounds, reachedFinals, champion: reachedFinals && rounds[rounds.length - 1].won };
+}
+
 // Phase finale résumée (2-3 tours selon la taille du vivier), jamais de match par match.
 // Cohérence avec le mécanisme clutch déjà en place : si l'événement narratif "match décisif"
 // (finals_moment) a tranché cette saison, son issue EST la finale -- pas de second tirage qui

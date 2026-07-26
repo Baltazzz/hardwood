@@ -59,6 +59,16 @@ function driveOneCareer(document, errors, state) {
   // "jeune phénomène" : MVP (ligue majeure ou continentale) obtenu avant 22 ans, ou OVR >=90 avant 22 ans
   const youngMVP = G.seasons.some(s => s.age < 22 && s.acc.some(a => a === 'MVP' || a === 'MVP EuroLeague'));
   const youngElite = G.seasons.some(s => s.age < 22 && s.ovr >= 90);
+  // Saisons NBA détaillées (format conférences + Play-In, voir engine/competition.js
+  // simulateNbaStandings/simulateNbaPlayoffs) : sert au contrôle d'intégrité dédié NBA et à
+  // l'audit de corrélation force d'équipe -> résultat (voir sections g/h ci-dessous).
+  const nbaSeasons = G.seasons.filter(s => s.league === 'nba').map(s => ({
+    ovr: s.ovr, clubStrengthPctile: s.clubStrengthPctile,
+    conference: s.standings?.conference || null,
+    playerRank: s.standings?.playerRank ?? null,
+    poolSize: s.standings?.poolSize ?? null,
+    playoffs: s.playoffs || null,
+  }));
   const result = {
     crashed: false,
     tier: rec.tier || null,
@@ -70,6 +80,7 @@ function driveOneCareer(document, errors, state) {
     eventHistory: (G.eventHistory || []).slice(),
     freeClubSeasons: G.seasons.filter(s => s.club === 'Club libre').length,
     tags: rec.tags || [],
+    nbaSeasons,
   };
   clickId(document, 'again');
   return result;
@@ -264,11 +275,111 @@ async function main() {
     });
   }
 
+  // g) Contrôle dédié NBA : cohérence de bout en bout du format conférences + Play-In
+  // (engine/competition.js simulateNbaStandings/simulateNbaPlayoffs) -- classement, qualification,
+  // parcours de playoffs et champion doivent rester cohérents entre eux à chaque saison NBA jouée.
+  const allNba = [];
+  results.forEach(r => (r.nbaSeasons || []).forEach(s => allNba.push(s)));
+  let gViolations = 0;
+  const gDetails = [];
+  const flagG = (msg) => { gViolations++; if (gDetails.length < 12) gDetails.push(msg); };
+  const confCount = { Est: 0, Ouest: 0, autre: 0 };
+  let forcedFinalSeasons = 0;
+  allNba.forEach((s, i) => {
+    if (s.poolSize !== 15) flagG(`saison #${i} : poolSize=${s.poolSize} (attendu 15)`);
+    if (s.conference === 'Est' || s.conference === 'Ouest') confCount[s.conference]++; else confCount.autre++;
+    if (s.playerRank == null || s.playerRank < 1 || s.playerRank > 15) flagG(`saison #${i} : playerRank=${s.playerRank} hors 1-15`);
+    const po = s.playoffs;
+    if (!po) { flagG(`saison #${i} : aucune donnée playoffs`); return; }
+    if (po.champion && !po.reachedFinals) flagG(`saison #${i} : champion sans reachedFinals`);
+    if (po.reachedFinals && (!po.rounds || po.rounds.length !== 4)) flagG(`saison #${i} : reachedFinals avec ${po.rounds?.length ?? 0} tours (attendu 4)`);
+    if (po.champion && po.rounds[po.rounds.length - 1]?.won !== true) flagG(`saison #${i} : champion mais dernier tour non gagné`);
+    if (!po.qualified && (po.champion || po.reachedFinals)) flagG(`saison #${i} : non qualifié mais champion/finaliste`);
+    if (s.playerRank <= 6 && po.playIn) flagG(`saison #${i} : tête de série directe (rang ${s.playerRank}) avec un Play-In`);
+    if (s.playerRank <= 6 && !po.qualified) flagG(`saison #${i} : rang ${s.playerRank} (top 6) non qualifié`);
+    // seed reflète le rang réel pour une tête de série directe (1-6, cohérent avec le rang) --
+    // un Play-In qui ÉLIMINE laisse seed à null (pas de tête de série gagnée, cohérent) ; seul un
+    // Play-In VALIDÉ (qualified) doit obligatoirement retomber sur 7 ou 8.
+    if (po.playIn && po.qualified && po.seed !== 7 && po.seed !== 8) flagG(`saison #${i} : seed Play-In=${po.seed} (attendu 7 ou 8)`);
+    // rang > 10 qualifié ou 7-10 qualifié sans Play-In : uniquement possible via l'événement
+    // narratif "match décisif" (forceFinals, voir simulateNbaPlayoffs) -- pas une violation en soi,
+    // juste compté à part pour rester transparent sur sa fréquence réelle.
+    if ((s.playerRank > 10 && po.qualified) || (s.playerRank >= 7 && s.playerRank <= 10 && po.qualified && !po.playIn)) forcedFinalSeasons++;
+  });
+  const zoneStats = (lo, hi) => {
+    const zone = allNba.filter(s => s.playerRank >= lo && s.playerRank <= hi);
+    const qualified = zone.filter(s => s.playoffs?.qualified).length;
+    const champ = zone.filter(s => s.playoffs?.champion).length;
+    return { n: zone.length, qualifiedPct: zone.length ? round1(qualified / zone.length * 100) : 0, champPct: zone.length ? round1(champ / zone.length * 100) : 0 };
+  };
+  const zoneDirect = zoneStats(1, 6), zonePlayIn = zoneStats(7, 10), zoneOut = zoneStats(11, 15);
+
+  console.log(`\n-- g) Cohérence du format NBA (conférences + Play-In) : ${allNba.length} saisons NBA jouées --`);
+  console.log(`Répartition conférence : Est ${confCount.Est}, Ouest ${confCount.Ouest}${confCount.autre ? `, autre(!) ${confCount.autre}` : ''}`);
+  console.log(`Saisons "forcées" par l'événement narratif match décisif (qualif hors zone normale) : ${forcedFinalSeasons}`);
+  console.log(`Zone qualification directe (rang 1-6)  : ${zoneDirect.n} saisons, ${zoneDirect.qualifiedPct}% qualifiées, ${zoneDirect.champPct}% championnes`);
+  console.log(`Zone Play-In (rang 7-10)               : ${zonePlayIn.n} saisons, ${zonePlayIn.qualifiedPct}% qualifiées (via Play-In), ${zonePlayIn.champPct}% championnes`);
+  console.log(`Hors playoffs (rang 11-15)              : ${zoneOut.n} saisons, ${zoneOut.qualifiedPct}% qualifiées (devrait être ~0, sauf rares cas forcés), ${zoneOut.champPct}% championnes`);
+  if (!gViolations) {
+    console.log(`OK : aucune incohérence structurelle détectée (classement ↔ qualification ↔ parcours ↔ champion).`);
+  } else {
+    console.log(`⚠️  ${gViolations} incohérence(s) détectée(s) :`);
+    gDetails.forEach(d => console.log(`  ${d}`));
+  }
+
+  // h) Corrélation force d'équipe -> résultat (NBA) : clubStrengthPctile est la force RÉELLE de
+  // l'effectif (percentile dans son vrai vivier), indépendante de l'apport individuel du joueur
+  // (voir season.js) -- sert à vérifier que les clubs forts gagnent bien plus souvent que les
+  // faibles, et que le niveau du joueur module ce résultat sans l'effacer.
+  const strengthTier = (pct) => pct == null ? null : pct < 0.34 ? 'Faible' : pct < 0.67 ? 'Moyen' : 'Fort';
+  const STRENGTH_ORDER = ['Faible', 'Moyen', 'Fort'];
+  const strengthStats = {};
+  STRENGTH_ORDER.forEach(t => strengthStats[t] = { n: 0, qualified: 0, finals: 0, champ: 0 });
+  allNba.forEach(s => {
+    const t = strengthTier(s.clubStrengthPctile);
+    if (!t) return;
+    strengthStats[t].n++;
+    if (s.playoffs?.qualified) strengthStats[t].qualified++;
+    if (s.playoffs?.reachedFinals) strengthStats[t].finals++;
+    if (s.playoffs?.champion) strengthStats[t].champ++;
+  });
+
+  const OVR_TIERS = [['Role player (<80)', o => o < 80], ['Confirmé (80-86)', o => o >= 80 && o < 87], ['Star (87-93)', o => o >= 87 && o < 94], ['Superstar (94+)', o => o >= 94]];
+  const crossTab = {};
+  STRENGTH_ORDER.forEach(t => { crossTab[t] = {}; OVR_TIERS.forEach(([label]) => crossTab[t][label] = { n: 0, champ: 0 }); });
+  allNba.forEach(s => {
+    const t = strengthTier(s.clubStrengthPctile);
+    if (!t) return;
+    const tierEntry = OVR_TIERS.find(([, test]) => test(s.ovr));
+    if (!tierEntry) return;
+    const cell = crossTab[t][tierEntry[0]];
+    cell.n++;
+    if (s.playoffs?.champion) cell.champ++;
+  });
+
+  console.log(`\n-- h) Corrélation force d'équipe réelle -> résultat (NBA, ${allNba.length} saisons) --`);
+  console.log('Par tertile de force réelle de club (indépendante du joueur) :');
+  STRENGTH_ORDER.forEach(t => {
+    const d = strengthStats[t];
+    const qp = d.n ? round1(d.qualified / d.n * 100) : 0, fp = d.n ? round1(d.finals / d.n * 100) : 0, cp = d.n ? round1(d.champ / d.n * 100) : 0;
+    console.log(`  ${t.padEnd(7)} (n=${d.n}) : qualifiée ${qp}%, finale NBA ${fp}%, championne ${cp}%`);
+  });
+  console.log('\nCroisement force de club x niveau du joueur (% de saisons championnes) :');
+  STRENGTH_ORDER.forEach(t => {
+    const cells = OVR_TIERS.map(([label]) => {
+      const c = crossTab[t][label];
+      return `${label} ${c.n ? round1(c.champ / c.n * 100) : 0}%(n=${c.n})`;
+    }).join(', ');
+    console.log(`  Club ${t.padEnd(7)} : ${cells}`);
+  });
+
   console.log('\nRÉSULTATS BRUTS (JSON) :');
   console.log(JSON.stringify({ N, crashed, completed, freeClubCareers, freeClubSeasonsTotal, withTitle, withEliteTitle, withMVP, withAllStar, withHOF, withPhenom, tierCounts, nbaCount: nbaResults.length, median, pathTotals, byBracket,
     tags: { avgTagCount, tagFreq: tagFreqSorted },
     diversity: { totalDefined, avgDistinct, avgTotal, neverSeenPct, neverSeenCount, top10, bottom10 },
-    onceIntegrity: { onceCount: onceIds.size, careersWithViolation, violations: onceViolationsSorted.map(([id, v]) => ({ id, ...v })) } }, null, 0));
+    onceIntegrity: { onceCount: onceIds.size, careersWithViolation, violations: onceViolationsSorted.map(([id, v]) => ({ id, ...v })) },
+    nbaFormat: { totalSeasons: allNba.length, confCount, forcedFinalSeasons, violations: gViolations, zoneDirect, zonePlayIn, zoneOut },
+    nbaStrengthCorrelation: { strengthStats, crossTab } }, null, 0));
 }
 
 main().catch(err => { console.error('DEEP AUDIT ÉCHOUÉ :', err); process.exitCode = 1; });

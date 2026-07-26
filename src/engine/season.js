@@ -11,7 +11,7 @@ import { pickClubName, clubInfo } from './clubs.js';
 import { generateAcademyOffers } from './academies.js';
 import { rnd, ri, pick, clamp, round, jit, capitalize, money } from './utils.js';
 import { applyTagEffects } from './tags.js';
-import { simulateStandings, simulatePlayoffs, checkClubMovement, clubPercentile } from './competition.js';
+import { simulateStandings, simulatePlayoffs, checkClubMovement, clubPercentile, simulateNbaStandings, simulateNbaPlayoffs } from './competition.js';
 import { renderEvent, showDeltaFlash, renderSeasonResult, renderMoveScreen, renderAcademyChoice, renderNationalResult, endCareer } from '../ui/screens.js';
 
 // Tournoi de zone continentale de la sélection nationale, par continent réel (p.nation.continent
@@ -335,8 +335,14 @@ export function simulateSeason(){
   // teamRating (déjà calculé plus haut, cohérent avec le reste de sa saison). Cohérence
   // enjeu -> résultat conservée : si l'événement narratif "match décisif" a tranché cette saison
   // (forceFinals), son issue EST la finale, jamais un second tirage qui pourrait la contredire.
-  const standings = simulateStandings(p, lg, teamRating, nationId);
-  const playoffs = simulatePlayoffs(teamRating, standings.playerRank, standings.poolSize, p.seasonMods.forceFinals);
+  // La NBA a droit à son propre format réaliste (conférences + Play-In, voir competition.js) --
+  // les autres ligues gardent le classement/phase finale génériques existants.
+  const standings = isNBA
+    ? simulateNbaStandings(p, lg, teamRating)
+    : simulateStandings(p, lg, teamRating, nationId);
+  const playoffs = isNBA
+    ? simulateNbaPlayoffs(teamRating, standings.playerRank, p.seasonMods.forceFinals)
+    : simulatePlayoffs(teamRating, standings.playerRank, standings.poolSize, p.seasonMods.forceFinals);
   const champion = playoffs.champion;
   if(champion){
     A(isNBA?'Champion NBA':isEuro?'Champion EuroLeague':'Champion '+lg.short);
@@ -366,6 +372,7 @@ export function simulateSeason(){
   const rank = standings.playerRank, rows = standings.rows;
   const standingsCtx = {
     poolSize: standings.poolSize, playerRank: rank,
+    conference: standings.conference || null, // null hors NBA, 'Est'/'Ouest' en NBA
     leader: rows[0],
     above: rank>=2 ? rows[rank-2] : null,
     below: rank<rows.length ? rows[rank] : null,
@@ -374,6 +381,11 @@ export function simulateSeason(){
   // rangement saison
   const season={year:p.year,age:p.age,league:p.league,club:p.club,pts,ast,reb,blk,stl,wins,
     gamesPlayed,leagueGames,td,ovr:o,minutes:round(minutes,0),acc:acc.slice(),champion,injured:p.seasonMods.injuryGames>0,
+    // force RÉELLE de l'effectif (percentile dans son vrai vivier, indépendant de l'apport
+    // individuel du joueur) : exposée sur la saison pour l'audit de corrélation force -> résultat
+    // (scripts/deep-audit.mjs), qui a besoin de la force d'équipe SEULE, pas de teamRating (déjà
+    // mélangé à l'OVR du joueur, voir plus haut).
+    clubStrengthPctile: clubCtx.percentile,
     standings:standingsCtx, playoffs};
   p.seasons.push(season);
   p.peakOvr=Math.max(p.peakOvr,o);

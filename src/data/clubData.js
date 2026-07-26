@@ -1,5 +1,8 @@
 // AUTO-GÉNÉRÉ par scripts/gen-club-data.mjs à partir de data-source/*.xlsx — NE PAS ÉDITER À LA MAIN.
 // Après mise à jour des fichiers Excel source : npm run gen:data
+// primary/secondary (par club/académie) et GLOBAL_CLUB_COLORS (paliers NBA/EuroLeague, non
+// nation-aware) viennent de data-source/clubcolor.xlsx ; null quand aucune couleur officielle
+// n'a été trouvée pour ce nom (voir le rapport d'écarts affiché par npm run gen:data).
 export const CLUB_DATA = {
   "FR": {
     "national": [
@@ -9,7 +12,9 @@ export const CLUB_DATA = {
         "potential": 94,
         "prestige": 92,
         "category": "Elite",
-        "comment": "Reference francaise, ambition EuroLeague"
+        "comment": "Reference francaise, ambition EuroLeague",
+        "primary": "#D71920",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Paris Basketball",
@@ -17,7 +22,9 @@ export const CLUB_DATA = {
         "potential": 98,
         "prestige": 81,
         "category": "Rising Project",
-        "comment": "Croissance exceptionnelle"
+        "comment": "Croissance exceptionnelle",
+        "primary": "#111111",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "ASVEL",
@@ -25,7 +32,9 @@ export const CLUB_DATA = {
         "potential": 87,
         "prestige": 98,
         "category": "Historic Club",
-        "comment": "Club historique soutenu par Tony Parker"
+        "comment": "Club historique soutenu par Tony Parker",
+        "primary": "#000000",
+        "secondary": "#8BC53F"
       },
       {
         "name": "JL Bourg",
@@ -33,7 +42,9 @@ export const CLUB_DATA = {
         "potential": 91,
         "prestige": 78,
         "category": "Rising Project",
-        "comment": "Organisation exemplaire"
+        "comment": "Organisation exemplaire",
+        "primary": "#C8102E",
+        "secondary": "#111111"
       },
       {
         "name": "Cholet",
@@ -41,7 +52,9 @@ export const CLUB_DATA = {
         "potential": 88,
         "prestige": 84,
         "category": "Talent Factory",
-        "comment": "Centre de formation elite"
+        "comment": "Centre de formation elite",
+        "primary": "#D71920",
+        "secondary": "#000000"
       },
       {
         "name": "Le Mans",
@@ -49,7 +62,9 @@ export const CLUB_DATA = {
         "potential": 80,
         "prestige": 89,
         "category": "Historic Club",
-        "comment": "Institution du basket francais"
+        "comment": "Institution du basket francais",
+        "primary": "#C8102E",
+        "secondary": "#F5C400"
       },
       {
         "name": "Nanterre 92",
@@ -57,7 +72,9 @@ export const CLUB_DATA = {
         "potential": 82,
         "prestige": 77,
         "category": "Competitive",
-        "comment": "Stable"
+        "comment": "Stable",
+        "primary": "#7AC143",
+        "secondary": "#111111"
       },
       {
         "name": "Dijon",
@@ -65,7 +82,9 @@ export const CLUB_DATA = {
         "potential": 79,
         "prestige": 75,
         "category": "Competitive",
-        "comment": "Regulier"
+        "comment": "Regulier",
+        "primary": "#D71920",
+        "secondary": "#111111"
       },
       {
         "name": "Strasbourg",
@@ -73,7 +92,9 @@ export const CLUB_DATA = {
         "potential": 83,
         "prestige": 88,
         "category": "Historic Club",
-        "comment": "Fort potentiel"
+        "comment": "Fort potentiel",
+        "primary": "#E30613",
+        "secondary": "#0057B8"
       },
       {
         "name": "Chalon",
@@ -81,7 +102,9 @@ export const CLUB_DATA = {
         "potential": 83,
         "prestige": 82,
         "category": "Historic Club",
-        "comment": "Retour au premier plan"
+        "comment": "Retour au premier plan",
+        "primary": "#C8102E",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Nancy",
@@ -89,7 +112,9 @@ export const CLUB_DATA = {
         "potential": 80,
         "prestige": 87,
         "category": "Historic Club",
-        "comment": "Base supporters solide"
+        "comment": "Base supporters solide",
+        "primary": "#C8102E",
+        "secondary": "#F5C400"
       },
       {
         "name": "Saint-Quentin",
@@ -97,7 +122,9 @@ export const CLUB_DATA = {
         "potential": 87,
         "prestige": 68,
         "category": "Rising Project",
-        "comment": "Projet ambitieux"
+        "comment": "Projet ambitieux",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Limoges CSP",
@@ -105,7 +132,9 @@ export const CLUB_DATA = {
         "potential": 68,
         "prestige": 99,
         "category": "Historic Club",
-        "comment": "Palmares exceptionnel"
+        "comment": "Palmares exceptionnel",
+        "primary": "#007A53",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Gravelines",
@@ -113,7 +142,9 @@ export const CLUB_DATA = {
         "potential": 72,
         "prestige": 79,
         "category": "Average",
-        "comment": "Club combatif"
+        "comment": "Club combatif",
+        "primary": "#0057B8",
+        "secondary": "#FFD100"
       },
       {
         "name": "Le Portel",
@@ -121,7 +152,9 @@ export const CLUB_DATA = {
         "potential": 70,
         "prestige": 63,
         "category": "Average",
-        "comment": "Petit budget"
+        "comment": "Petit budget",
+        "primary": "#0057B8",
+        "secondary": "#F28C00"
       },
       {
         "name": "Boulazac",
@@ -129,7 +162,9 @@ export const CLUB_DATA = {
         "potential": 78,
         "prestige": 61,
         "category": "Rising Project",
-        "comment": "Promu ambitieux"
+        "comment": "Promu ambitieux",
+        "primary": "#E30613",
+        "secondary": "#111111"
       }
     ],
     "second": [
@@ -139,7 +174,9 @@ export const CLUB_DATA = {
         "potential": 84,
         "prestige": 85,
         "category": "Promotion Candidate",
-        "comment": "Retour elite possible"
+        "comment": "Retour elite possible",
+        "primary": "#C8102E",
+        "secondary": "#111111"
       },
       {
         "name": "Blois",
@@ -147,7 +184,9 @@ export const CLUB_DATA = {
         "potential": 83,
         "prestige": 73,
         "category": "Promotion Candidate",
-        "comment": "Structure moderne"
+        "comment": "Structure moderne",
+        "primary": "#D71920",
+        "secondary": "#111111"
       },
       {
         "name": "Roanne",
@@ -155,7 +194,9 @@ export const CLUB_DATA = {
         "potential": 78,
         "prestige": 93,
         "category": "Historic Club",
-        "comment": "Ancien champion"
+        "comment": "Ancien champion",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Pau-Orthez",
@@ -163,7 +204,9 @@ export const CLUB_DATA = {
         "potential": 78,
         "prestige": 99,
         "category": "Historic Club",
-        "comment": "Tres grand nom"
+        "comment": "Tres grand nom",
+        "primary": "#007A53",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Antibes",
@@ -171,7 +214,9 @@ export const CLUB_DATA = {
         "potential": 76,
         "prestige": 89,
         "category": "Historic Club",
-        "comment": "Passe prestigieux"
+        "comment": "Passe prestigieux",
+        "primary": "#0057B8",
+        "secondary": "#FFD100"
       },
       {
         "name": "Poitiers",
@@ -179,7 +224,9 @@ export const CLUB_DATA = {
         "potential": 75,
         "prestige": 76,
         "category": "Historic Club",
-        "comment": "Tradition basket"
+        "comment": "Tradition basket",
+        "primary": "#000000",
+        "secondary": "#FFD100"
       },
       {
         "name": "Vichy-Clermont",
@@ -187,7 +234,9 @@ export const CLUB_DATA = {
         "potential": 75,
         "prestige": 74,
         "category": "Competitive",
-        "comment": "Projet solide"
+        "comment": "Projet solide",
+        "primary": "#0057B8",
+        "secondary": "#F28C00"
       },
       {
         "name": "Fos Provence",
@@ -195,7 +244,9 @@ export const CLUB_DATA = {
         "potential": 73,
         "prestige": 69,
         "category": "Average",
-        "comment": "Entre D1 et D2"
+        "comment": "Entre D1 et D2",
+        "primary": "#0057B8",
+        "secondary": "#F28C00"
       },
       {
         "name": "Saint-Chamond",
@@ -203,7 +254,9 @@ export const CLUB_DATA = {
         "potential": 77,
         "prestige": 66,
         "category": "Rising Project",
-        "comment": "Progression continue"
+        "comment": "Progression continue",
+        "primary": "#E30613",
+        "secondary": "#111111"
       },
       {
         "name": "Nantes",
@@ -211,7 +264,9 @@ export const CLUB_DATA = {
         "potential": 75,
         "prestige": 71,
         "category": "Rising Project",
-        "comment": "Fort bassin"
+        "comment": "Fort bassin",
+        "primary": "#0057B8",
+        "secondary": "#F28C00"
       },
       {
         "name": "Denain",
@@ -219,7 +274,9 @@ export const CLUB_DATA = {
         "potential": 72,
         "prestige": 67,
         "category": "Competitive",
-        "comment": "Equipe difficile"
+        "comment": "Equipe difficile",
+        "primary": "#007A53",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Aix-Maurienne",
@@ -227,7 +284,9 @@ export const CLUB_DATA = {
         "potential": 71,
         "prestige": 64,
         "category": "Average",
-        "comment": "Stable"
+        "comment": "Stable",
+        "primary": "#0057B8",
+        "secondary": "#E30613"
       },
       {
         "name": "Hyeres-Toulon",
@@ -235,7 +294,9 @@ export const CLUB_DATA = {
         "potential": 74,
         "prestige": 83,
         "category": "Historic Club",
-        "comment": "Potentiel regional"
+        "comment": "Potentiel regional",
+        "primary": "#FFD100",
+        "secondary": "#0057B8"
       },
       {
         "name": "Caen",
@@ -243,7 +304,9 @@ export const CLUB_DATA = {
         "potential": 76,
         "prestige": 69,
         "category": "Rising Project",
-        "comment": "Developpement"
+        "comment": "Developpement",
+        "primary": "#C8102E",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Evreux",
@@ -251,7 +314,9 @@ export const CLUB_DATA = {
         "potential": 71,
         "prestige": 73,
         "category": "Historic Club",
-        "comment": "Tradition"
+        "comment": "Tradition",
+        "primary": "#0057B8",
+        "secondary": "#00A651"
       },
       {
         "name": "Chalons-Reims",
@@ -259,7 +324,9 @@ export const CLUB_DATA = {
         "potential": 72,
         "prestige": 72,
         "category": "Historic Club",
-        "comment": "Structure connue"
+        "comment": "Structure connue",
+        "primary": "#C8102E",
+        "secondary": "#F5C400"
       }
     ],
     "third": [
@@ -269,7 +336,9 @@ export const CLUB_DATA = {
         "potential": 74,
         "prestige": 82,
         "category": "Historic Club",
-        "comment": "Ancien elite"
+        "comment": "Ancien elite",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Quimper",
@@ -277,7 +346,9 @@ export const CLUB_DATA = {
         "potential": 73,
         "prestige": 76,
         "category": "Competitive",
-        "comment": "Vise la montee"
+        "comment": "Vise la montee",
+        "primary": "#007A53",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Mulhouse",
@@ -285,7 +356,9 @@ export const CLUB_DATA = {
         "potential": 76,
         "prestige": 72,
         "category": "Rising Project",
-        "comment": "Professionnalisation"
+        "comment": "Professionnalisation",
+        "primary": "#E30613",
+        "secondary": "#111111"
       },
       {
         "name": "Besancon",
@@ -293,7 +366,9 @@ export const CLUB_DATA = {
         "potential": 72,
         "prestige": 74,
         "category": "Historic Club",
-        "comment": "Histoire riche"
+        "comment": "Histoire riche",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Challans",
@@ -301,7 +376,9 @@ export const CLUB_DATA = {
         "potential": 75,
         "prestige": 67,
         "category": "Rising Project",
-        "comment": "Projet ambitieux"
+        "comment": "Projet ambitieux",
+        "primary": "#0057B8",
+        "secondary": "#F28C28"
       },
       {
         "name": "LyonSO",
@@ -309,7 +386,9 @@ export const CLUB_DATA = {
         "potential": 75,
         "prestige": 71,
         "category": "Rising Project",
-        "comment": "Potentiel metropole"
+        "comment": "Potentiel metropole",
+        "primary": "#C8102E",
+        "secondary": "#111111"
       },
       {
         "name": "Tarbes-Lourdes",
@@ -317,7 +396,9 @@ export const CLUB_DATA = {
         "potential": 70,
         "prestige": 68,
         "category": "Average",
-        "comment": "Structure durable"
+        "comment": "Structure durable",
+        "primary": "#0057B8",
+        "secondary": "#F28C28"
       },
       {
         "name": "Avignon-Le Pontet",
@@ -325,7 +406,9 @@ export const CLUB_DATA = {
         "potential": 71,
         "prestige": 63,
         "category": "Average",
-        "comment": "Club formateur"
+        "comment": "Club formateur",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Toulouse BC",
@@ -333,7 +416,9 @@ export const CLUB_DATA = {
         "potential": 74,
         "prestige": 72,
         "category": "Rising Project",
-        "comment": "Grand marche"
+        "comment": "Grand marche",
+        "primary": "#56002B",
+        "secondary": "#E5DBD0"
       },
       {
         "name": "Feurs",
@@ -341,7 +426,9 @@ export const CLUB_DATA = {
         "potential": 70,
         "prestige": 55,
         "category": "Average",
-        "comment": "Developpement local"
+        "comment": "Developpement local",
+        "primary": "#007A53",
+        "secondary": "#FFFFFF"
       }
     ],
     "academy": [
@@ -351,7 +438,9 @@ export const CLUB_DATA = {
         "rating": 99,
         "prestige": 100,
         "category": null,
-        "comment": "Principale filiere elite"
+        "comment": "Principale filiere elite",
+        "primary": "#0055A4",
+        "secondary": "#EF4135"
       },
       {
         "name": "Cholet Formation",
@@ -359,7 +448,9 @@ export const CLUB_DATA = {
         "rating": 96,
         "prestige": 94,
         "category": null,
-        "comment": "Reference nationale"
+        "comment": "Reference nationale",
+        "primary": "#D71920",
+        "secondary": "#000000"
       },
       {
         "name": "ASVEL Academy",
@@ -367,7 +458,9 @@ export const CLUB_DATA = {
         "rating": 95,
         "prestige": 97,
         "category": null,
-        "comment": "Production reguliere"
+        "comment": "Production reguliere",
+        "primary": "#000000",
+        "secondary": "#8BC53F"
       },
       {
         "name": "Monaco Academy",
@@ -375,7 +468,9 @@ export const CLUB_DATA = {
         "rating": 91,
         "prestige": 88,
         "category": null,
-        "comment": "Moyens importants"
+        "comment": "Moyens importants",
+        "primary": "#D71920",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Paris Basketball Academy",
@@ -383,7 +478,9 @@ export const CLUB_DATA = {
         "rating": 90,
         "prestige": 80,
         "category": null,
-        "comment": "Projet en croissance"
+        "comment": "Projet en croissance",
+        "primary": "#111111",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Le Mans Formation",
@@ -391,7 +488,9 @@ export const CLUB_DATA = {
         "rating": 89,
         "prestige": 89,
         "category": null,
-        "comment": "Centre reconnu"
+        "comment": "Centre reconnu",
+        "primary": "#C8102E",
+        "secondary": "#F5C400"
       },
       {
         "name": "JL Bourg Academy",
@@ -399,7 +498,9 @@ export const CLUB_DATA = {
         "rating": 88,
         "prestige": 75,
         "category": null,
-        "comment": "Developpement rapide"
+        "comment": "Developpement rapide",
+        "primary": "#C8102E",
+        "secondary": "#111111"
       },
       {
         "name": "Nanterre Formation",
@@ -407,7 +508,9 @@ export const CLUB_DATA = {
         "rating": 86,
         "prestige": 77,
         "category": null,
-        "comment": "Detection francilienne"
+        "comment": "Detection francilienne",
+        "primary": "#7AC143",
+        "secondary": "#111111"
       },
       {
         "name": "Strasbourg Formation",
@@ -415,7 +518,9 @@ export const CLUB_DATA = {
         "rating": 85,
         "prestige": 82,
         "category": null,
-        "comment": "Reservoir Grand Est"
+        "comment": "Reservoir Grand Est",
+        "primary": "#E30613",
+        "secondary": "#0057B8"
       },
       {
         "name": "Limoges Formation",
@@ -423,7 +528,9 @@ export const CLUB_DATA = {
         "rating": 85,
         "prestige": 98,
         "category": null,
-        "comment": "Tradition historique"
+        "comment": "Tradition historique",
+        "primary": "#007A53",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Pau-Orthez Formation",
@@ -431,7 +538,9 @@ export const CLUB_DATA = {
         "rating": 84,
         "prestige": 99,
         "category": null,
-        "comment": "Grande reputation"
+        "comment": "Grande reputation",
+        "primary": "#007A53",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Dijon Formation",
@@ -439,7 +548,9 @@ export const CLUB_DATA = {
         "rating": 82,
         "prestige": 71,
         "category": null,
-        "comment": "Regional solide"
+        "comment": "Regional solide",
+        "primary": "#D71920",
+        "secondary": "#111111"
       },
       {
         "name": "Nancy Formation",
@@ -447,7 +558,9 @@ export const CLUB_DATA = {
         "rating": 82,
         "prestige": 84,
         "category": null,
-        "comment": "Bons jeunes"
+        "comment": "Bons jeunes",
+        "primary": "#C8102E",
+        "secondary": "#F5C400"
       },
       {
         "name": "Chalon Formation",
@@ -455,7 +568,9 @@ export const CLUB_DATA = {
         "rating": 81,
         "prestige": 79,
         "category": null,
-        "comment": "Historique"
+        "comment": "Historique",
+        "primary": "#C8102E",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Antibes Formation",
@@ -463,7 +578,9 @@ export const CLUB_DATA = {
         "rating": 80,
         "prestige": 87,
         "category": null,
-        "comment": "Club developpeur"
+        "comment": "Club developpeur",
+        "primary": "#0057B8",
+        "secondary": "#FFD100"
       }
     ]
   },
@@ -475,7 +592,9 @@ export const CLUB_DATA = {
         "potential": 92,
         "prestige": 96,
         "category": "Elite",
-        "comment": "Meilleur budget allemand, favori naturel et vitrine EuroLeague du pays."
+        "comment": "Meilleur budget allemand, favori naturel et vitrine EuroLeague du pays.",
+        "primary": "#DC052D",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "ALBA Berlin",
@@ -483,7 +602,9 @@ export const CLUB_DATA = {
         "potential": 90,
         "prestige": 98,
         "category": "Elite",
-        "comment": "Club historique, très gros prestige national et forte culture formation."
+        "comment": "Club historique, très gros prestige national et forte culture formation.",
+        "primary": "#FDB515",
+        "secondary": "#0057B8"
       },
       {
         "name": "Bamberg Baskets",
@@ -491,7 +612,9 @@ export const CLUB_DATA = {
         "potential": 84,
         "prestige": 92,
         "category": "Historic Club",
-        "comment": "Ancienne puissance dominante allemande, toujours capable de viser le haut."
+        "comment": "Ancienne puissance dominante allemande, toujours capable de viser le haut.",
+        "primary": "#7A0019",
+        "secondary": "#F2B632"
       },
       {
         "name": "Telekom Baskets Bonn",
@@ -499,7 +622,9 @@ export const CLUB_DATA = {
         "potential": 86,
         "prestige": 84,
         "category": "Strong",
-        "comment": "Projet très solide, régulier en haut de tableau et compétitif en Europe."
+        "comment": "Projet très solide, régulier en haut de tableau et compétitif en Europe.",
+        "primary": "#E20074",
+        "secondary": "#00B5CC"
       },
       {
         "name": "ratiopharm Ulm",
@@ -507,7 +632,9 @@ export const CLUB_DATA = {
         "potential": 94,
         "prestige": 82,
         "category": "Talent Factory",
-        "comment": "Projet moderne, excellent développement de jeunes et forte trajectoire."
+        "comment": "Projet moderne, excellent développement de jeunes et forte trajectoire.",
+        "primary": "#FF6500",
+        "secondary": "#000000"
       },
       {
         "name": "Niners Chemnitz",
@@ -515,7 +642,9 @@ export const CLUB_DATA = {
         "potential": 88,
         "prestige": 76,
         "category": "Rising Project",
-        "comment": "Progression forte ces dernières saisons, club très bien structuré."
+        "comment": "Progression forte ces dernières saisons, club très bien structuré.",
+        "primary": "#F6C400",
+        "secondary": "#1C1C1C"
       },
       {
         "name": "Wurzburg Baskets",
@@ -523,7 +652,9 @@ export const CLUB_DATA = {
         "potential": 86,
         "prestige": 74,
         "category": "Rising Project",
-        "comment": "Club en hausse, bon environnement pour jeunes joueurs."
+        "comment": "Club en hausse, bon environnement pour jeunes joueurs.",
+        "primary": "#D71920",
+        "secondary": "#111111"
       },
       {
         "name": "MHP Riesen Ludwigsburg",
@@ -531,7 +662,9 @@ export const CLUB_DATA = {
         "potential": 80,
         "prestige": 80,
         "category": "Competitive",
-        "comment": "Club dur à jouer, identité défensive et compétitivité régulière."
+        "comment": "Club dur à jouer, identité défensive et compétitivité régulière.",
+        "primary": "#FFD200",
+        "secondary": "#000000"
       },
       {
         "name": "EWE Baskets Oldenburg",
@@ -539,7 +672,9 @@ export const CLUB_DATA = {
         "potential": 78,
         "prestige": 86,
         "category": "Historic Club",
-        "comment": "Club établi avec forte base de supporters, plutôt stable."
+        "comment": "Club établi avec forte base de supporters, plutôt stable.",
+        "primary": "#FFD100",
+        "secondary": "#003B7A"
       },
       {
         "name": "Rasta Vechta",
@@ -547,7 +682,9 @@ export const CLUB_DATA = {
         "potential": 84,
         "prestige": 76,
         "category": "Competitive",
-        "comment": "Petit marché très performant, bon projet sportif."
+        "comment": "Petit marché très performant, bon projet sportif.",
+        "primary": "#F28C00",
+        "secondary": "#000000"
       },
       {
         "name": "Rostock Seawolves",
@@ -555,7 +692,9 @@ export const CLUB_DATA = {
         "potential": 83,
         "prestige": 70,
         "category": "Rising Project",
-        "comment": "Club récent au haut niveau, potentiel Nord allemand intéressant."
+        "comment": "Club récent au haut niveau, potentiel Nord allemand intéressant.",
+        "primary": "#00A3E0",
+        "secondary": "#002B5C"
       },
       {
         "name": "Gladiators Trier",
@@ -563,7 +702,9 @@ export const CLUB_DATA = {
         "potential": 82,
         "prestige": 77,
         "category": "Rising Project",
-        "comment": "Promu ambitieux avec tradition basket et public solide."
+        "comment": "Promu ambitieux avec tradition basket et public solide.",
+        "primary": "#8C6B2F",
+        "secondary": "#111111"
       },
       {
         "name": "Skyliners Frankfurt",
@@ -571,7 +712,9 @@ export const CLUB_DATA = {
         "potential": 81,
         "prestige": 88,
         "category": "Historic Club",
-        "comment": "Grand nom allemand, potentiel supérieur à sa force actuelle."
+        "comment": "Grand nom allemand, potentiel supérieur à sa force actuelle.",
+        "primary": "#004B93",
+        "secondary": "#F37021"
       },
       {
         "name": "Hamburg Towers",
@@ -579,7 +722,9 @@ export const CLUB_DATA = {
         "potential": 84,
         "prestige": 73,
         "category": "Rising Project",
-        "comment": "Grand marché urbain, potentiel économique important."
+        "comment": "Grand marché urbain, potentiel économique important.",
+        "primary": "#00AEEF",
+        "secondary": "#1A1A1A"
       },
       {
         "name": "Syntainics MBC",
@@ -587,7 +732,9 @@ export const CLUB_DATA = {
         "potential": 73,
         "prestige": 68,
         "category": "Average",
-        "comment": "Club installé mais plafond limité face aux gros marchés."
+        "comment": "Club installé mais plafond limité face aux gros marchés.",
+        "primary": "#FFD400",
+        "secondary": "#004A99"
       },
       {
         "name": "Science City Jena",
@@ -595,7 +742,9 @@ export const CLUB_DATA = {
         "potential": 82,
         "prestige": 70,
         "category": "Rising Project",
-        "comment": "Projet universitaire intéressant, montée récente et potentiel de croissance."
+        "comment": "Projet universitaire intéressant, montée récente et potentiel de croissance.",
+        "primary": "#0054A6",
+        "secondary": "#F58220"
       },
       {
         "name": "Braunschweig",
@@ -603,7 +752,9 @@ export const CLUB_DATA = {
         "potential": 78,
         "prestige": 72,
         "category": "Average",
-        "comment": "Club formateur mais résultats irréguliers."
+        "comment": "Club formateur mais résultats irréguliers.",
+        "primary": "#FFD100",
+        "secondary": "#1C1C1C"
       },
       {
         "name": "MLP Academics Heidelberg",
@@ -611,7 +762,9 @@ export const CLUB_DATA = {
         "potential": 77,
         "prestige": 71,
         "category": "Average",
-        "comment": "Structure sérieuse mais niveau sportif fragile."
+        "comment": "Structure sérieuse mais niveau sportif fragile.",
+        "primary": "#002F6C",
+        "secondary": "#E30613"
       }
     ],
     "second": [
@@ -621,7 +774,9 @@ export const CLUB_DATA = {
         "potential": 84,
         "prestige": 82,
         "category": "Promotion Candidate",
-        "comment": "Très grosse saison ProA, public fort et ambition de remontée."
+        "comment": "Très grosse saison ProA, public fort et ambition de remontée.",
+        "primary": "#001555",
+        "secondary": "#FFCC00"
       },
       {
         "name": "Crailsheim Merlins",
@@ -629,7 +784,9 @@ export const CLUB_DATA = {
         "potential": 82,
         "prestige": 78,
         "category": "Promotion Candidate",
-        "comment": "Expérience BBL récente, effectif souvent compétitif."
+        "comment": "Expérience BBL récente, effectif souvent compétitif.",
+        "primary": "#7B1E3A",
+        "secondary": "#F5A623"
       },
       {
         "name": "BG Gottingen",
@@ -637,7 +794,9 @@ export const CLUB_DATA = {
         "potential": 80,
         "prestige": 82,
         "category": "Promotion Candidate",
-        "comment": "Relégué de BBL, structure habituée au haut niveau."
+        "comment": "Relégué de BBL, structure habituée au haut niveau.",
+        "primary": "#5A2D81",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Eisbaren Bremerhaven",
@@ -645,7 +804,9 @@ export const CLUB_DATA = {
         "potential": 80,
         "prestige": 83,
         "category": "Historic Club",
-        "comment": "Ancien club BBL, fort potentiel de retour."
+        "comment": "Ancien club BBL, fort potentiel de retour.",
+        "primary": "#00A3E0",
+        "secondary": "#001F5B"
       },
       {
         "name": "Artland Dragons",
@@ -653,7 +814,9 @@ export const CLUB_DATA = {
         "potential": 79,
         "prestige": 80,
         "category": "Historic Club",
-        "comment": "Nom connu du basket allemand, bonne culture club."
+        "comment": "Nom connu du basket allemand, bonne culture club.",
+        "primary": "#009245",
+        "secondary": "#111111"
       },
       {
         "name": "Kirchheim Knights",
@@ -661,7 +824,9 @@ export const CLUB_DATA = {
         "potential": 79,
         "prestige": 70,
         "category": "Competitive",
-        "comment": "Club solide de ProA, bon tremplin pour joueurs."
+        "comment": "Club solide de ProA, bon tremplin pour joueurs.",
+        "primary": "#6F2C8F",
+        "secondary": "#F5C400"
       },
       {
         "name": "GIESSEN 46ers",
@@ -669,7 +834,9 @@ export const CLUB_DATA = {
         "potential": 78,
         "prestige": 88,
         "category": "Historic Club",
-        "comment": "Très gros passé, prestige supérieur au niveau actuel."
+        "comment": "Très gros passé, prestige supérieur au niveau actuel.",
+        "primary": "#D71920",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "PS Karlsruhe Lions",
@@ -677,7 +844,9 @@ export const CLUB_DATA = {
         "potential": 77,
         "prestige": 68,
         "category": "Competitive",
-        "comment": "Club régulier et difficile à manœuvrer."
+        "comment": "Club régulier et difficile à manœuvrer.",
+        "primary": "#F39200",
+        "secondary": "#111111"
       },
       {
         "name": "Nurnberg Falcons",
@@ -685,7 +854,9 @@ export const CLUB_DATA = {
         "potential": 76,
         "prestige": 72,
         "category": "Competitive",
-        "comment": "Marché intéressant, potentiel de développement."
+        "comment": "Marché intéressant, potentiel de développement.",
+        "primary": "#00A6E7",
+        "secondary": "#111111"
       },
       {
         "name": "BBC Bayreuth",
@@ -693,7 +864,9 @@ export const CLUB_DATA = {
         "potential": 76,
         "prestige": 80,
         "category": "Historic Club",
-        "comment": "Ancien club BBL, réputation solide."
+        "comment": "Ancien club BBL, réputation solide.",
+        "primary": "#F7C600",
+        "secondary": "#111111"
       },
       {
         "name": "VfL Bochum",
@@ -701,7 +874,9 @@ export const CLUB_DATA = {
         "potential": 75,
         "prestige": 66,
         "category": "Average",
-        "comment": "Club sérieux, plutôt milieu de tableau."
+        "comment": "Club sérieux, plutôt milieu de tableau.",
+        "primary": "#0057B8",
+        "secondary": "#F58220"
       },
       {
         "name": "RheinStars Koln",
@@ -709,7 +884,9 @@ export const CLUB_DATA = {
         "potential": 82,
         "prestige": 76,
         "category": "Rising Project",
-        "comment": "Gros marché de Cologne, potentiel important si projet stable."
+        "comment": "Gros marché de Cologne, potentiel important si projet stable.",
+        "primary": "#FFD100",
+        "secondary": "#111111"
       },
       {
         "name": "Tigers Tubingen",
@@ -717,7 +894,9 @@ export const CLUB_DATA = {
         "potential": 76,
         "prestige": 78,
         "category": "Historic Club",
-        "comment": "Expérience BBL récente, base locale saine."
+        "comment": "Expérience BBL récente, base locale saine.",
+        "primary": "#FFD200",
+        "secondary": "#000000"
       },
       {
         "name": "EPG Baskets Koblenz",
@@ -725,7 +904,9 @@ export const CLUB_DATA = {
         "potential": 75,
         "prestige": 64,
         "category": "Average",
-        "comment": "Projet professionnel en développement."
+        "comment": "Projet professionnel en développement.",
+        "primary": "#00529B",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "SBB Baskets Wolmirstedt",
@@ -733,7 +914,9 @@ export const CLUB_DATA = {
         "potential": 76,
         "prestige": 60,
         "category": "Rising Project",
-        "comment": "Nouveau venu ambitieux, potentiel limité mais dynamique."
+        "comment": "Nouveau venu ambitieux, potentiel limité mais dynamique.",
+        "primary": "#003B7A",
+        "secondary": "#F7A800"
       },
       {
         "name": "Paderborn Baskets",
@@ -741,7 +924,9 @@ export const CLUB_DATA = {
         "potential": 75,
         "prestige": 67,
         "category": "Average",
-        "comment": "Club formateur et stable."
+        "comment": "Club formateur et stable.",
+        "primary": "#003DA5",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Bayer Giants Leverkusen",
@@ -749,7 +934,9 @@ export const CLUB_DATA = {
         "potential": 76,
         "prestige": 84,
         "category": "Historic Club",
-        "comment": "Très grand nom historique, actuellement en reconstruction."
+        "comment": "Très grand nom historique, actuellement en reconstruction.",
+        "primary": "#E30613",
+        "secondary": "#000000"
       },
       {
         "name": "Uni Baskets Munster",
@@ -757,7 +944,9 @@ export const CLUB_DATA = {
         "potential": 74,
         "prestige": 65,
         "category": "Average",
-        "comment": "Structure universitaire, développement progressif."
+        "comment": "Structure universitaire, développement progressif.",
+        "primary": "#006633",
+        "secondary": "#FFFFFF"
       }
     ],
     "third": [
@@ -767,7 +956,9 @@ export const CLUB_DATA = {
         "potential": 78,
         "prestige": 68,
         "category": "Promotion Candidate",
-        "comment": "Champion ProB récent, projet en très forte dynamique."
+        "comment": "Champion ProB récent, projet en très forte dynamique.",
+        "primary": "#111111",
+        "secondary": "#F5A623"
       },
       {
         "name": "OrangeAcademy Ulm",
@@ -775,7 +966,9 @@ export const CLUB_DATA = {
         "potential": 94,
         "prestige": 82,
         "category": "Talent Factory",
-        "comment": "Réserve d’Ulm, excellente pour les jeunes prospects."
+        "comment": "Réserve d’Ulm, excellente pour les jeunes prospects.",
+        "primary": "#FF6500",
+        "secondary": "#000000"
       },
       {
         "name": "SSV Lok Bernau",
@@ -783,7 +976,9 @@ export const CLUB_DATA = {
         "potential": 78,
         "prestige": 70,
         "category": "Competitive",
-        "comment": "Club solide de ProB, souvent compétitif."
+        "comment": "Club solide de ProB, souvent compétitif.",
+        "primary": "#C8102E",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Baskets Juniors Westerstede",
@@ -791,7 +986,9 @@ export const CLUB_DATA = {
         "potential": 84,
         "prestige": 66,
         "category": "Talent Factory",
-        "comment": "Réserve/structure jeunes liée au bassin Oldenburg."
+        "comment": "Réserve/structure jeunes liée au bassin Oldenburg.",
+        "primary": "#FFD100",
+        "secondary": "#003B7A"
       },
       {
         "name": "Itzehoe Eagles",
@@ -799,7 +996,9 @@ export const CLUB_DATA = {
         "potential": 72,
         "prestige": 67,
         "category": "Competitive",
-        "comment": "Club établi du Nord, bon niveau D3."
+        "comment": "Club établi du Nord, bon niveau D3.",
+        "primary": "#004C97",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "EN Baskets Schwelm",
@@ -807,7 +1006,9 @@ export const CLUB_DATA = {
         "potential": 71,
         "prestige": 64,
         "category": "Average",
-        "comment": "Structure stable de ProB."
+        "comment": "Structure stable de ProB.",
+        "primary": "#005AA9",
+        "secondary": "#F39200"
       },
       {
         "name": "BBC Coburg",
@@ -815,7 +1016,9 @@ export const CLUB_DATA = {
         "potential": 77,
         "prestige": 65,
         "category": "Competitive",
-        "comment": "Très compétitif dans la poule Sud."
+        "comment": "Très compétitif dans la poule Sud.",
+        "primary": "#D71920",
+        "secondary": "#111111"
       },
       {
         "name": "Porsche BBA Ludwigsburg",
@@ -823,7 +1026,9 @@ export const CLUB_DATA = {
         "potential": 90,
         "prestige": 80,
         "category": "Talent Factory",
-        "comment": "Académie de Ludwigsburg, très utile pour début à 16-18 ans."
+        "comment": "Académie de Ludwigsburg, très utile pour début à 16-18 ans.",
+        "primary": "#FFD200",
+        "secondary": "#000000"
       },
       {
         "name": "FC Bayern Munich II",
@@ -831,7 +1036,9 @@ export const CLUB_DATA = {
         "potential": 92,
         "prestige": 93,
         "category": "Talent Factory",
-        "comment": "Réserve du Bayern, tremplin vers BBL/EuroLeague."
+        "comment": "Réserve du Bayern, tremplin vers BBL/EuroLeague.",
+        "primary": "#DC052D",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Skyliners Frankfurt Juniors",
@@ -839,7 +1046,9 @@ export const CLUB_DATA = {
         "potential": 88,
         "prestige": 84,
         "category": "Talent Factory",
-        "comment": "Réserve de Francfort, bon point d’entrée pour jeunes."
+        "comment": "Réserve de Francfort, bon point d’entrée pour jeunes.",
+        "primary": "#004B93",
+        "secondary": "#F37021"
       },
       {
         "name": "Dresden Titans",
@@ -847,7 +1056,9 @@ export const CLUB_DATA = {
         "potential": 76,
         "prestige": 72,
         "category": "Competitive",
-        "comment": "Club avec expérience ProA et marché intéressant."
+        "comment": "Club avec expérience ProA et marché intéressant.",
+        "primary": "#00A3E0",
+        "secondary": "#111111"
       },
       {
         "name": "Wurzburg Baskets Akademie",
@@ -855,7 +1066,9 @@ export const CLUB_DATA = {
         "potential": 86,
         "prestige": 72,
         "category": "Talent Factory",
-        "comment": "Académie liée à Wurzburg, profil formation."
+        "comment": "Académie liée à Wurzburg, profil formation.",
+        "primary": "#D71920",
+        "secondary": "#111111"
       }
     ],
     "academy": [
@@ -865,7 +1078,9 @@ export const CLUB_DATA = {
         "rating": 96,
         "prestige": 96,
         "category": null,
-        "comment": "Structure la plus attractive pour jeunes visant EuroLeague."
+        "comment": "Structure la plus attractive pour jeunes visant EuroLeague.",
+        "primary": "#DC052D",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "ALBA Berlin Academy",
@@ -873,7 +1088,9 @@ export const CLUB_DATA = {
         "rating": 97,
         "prestige": 98,
         "category": null,
-        "comment": "Référence allemande en développement et formation."
+        "comment": "Référence allemande en développement et formation.",
+        "primary": "#FDB515",
+        "secondary": "#0057B8"
       },
       {
         "name": "OrangeAcademy Ulm",
@@ -881,7 +1098,9 @@ export const CLUB_DATA = {
         "rating": 95,
         "prestige": 84,
         "category": null,
-        "comment": "Très gros tremplin pour prospects, souvent lié à Ulm."
+        "comment": "Très gros tremplin pour prospects, souvent lié à Ulm.",
+        "primary": "#FF6500",
+        "secondary": "#000000"
       },
       {
         "name": "Porsche BBA Ludwigsburg",
@@ -889,7 +1108,9 @@ export const CLUB_DATA = {
         "rating": 91,
         "prestige": 80,
         "category": null,
-        "comment": "Académie réputée et environnement compétitif."
+        "comment": "Académie réputée et environnement compétitif.",
+        "primary": "#FFD200",
+        "secondary": "#000000"
       },
       {
         "name": "Skyliners Juniors",
@@ -897,7 +1118,9 @@ export const CLUB_DATA = {
         "rating": 90,
         "prestige": 86,
         "category": null,
-        "comment": "Bon développement, surtout pour profils allemands."
+        "comment": "Bon développement, surtout pour profils allemands.",
+        "primary": "#004B93",
+        "secondary": "#F37021"
       },
       {
         "name": "Baskets Juniors Westerstede",
@@ -905,7 +1128,9 @@ export const CLUB_DATA = {
         "rating": 88,
         "prestige": 78,
         "category": null,
-        "comment": "Réservoir jeunes du Nord allemand."
+        "comment": "Réservoir jeunes du Nord allemand.",
+        "primary": "#FFD100",
+        "secondary": "#003B7A"
       },
       {
         "name": "Wurzburg Baskets Akademie",
@@ -913,7 +1138,9 @@ export const CLUB_DATA = {
         "rating": 87,
         "prestige": 74,
         "category": null,
-        "comment": "Bon point de départ pour carrière nationale."
+        "comment": "Bon point de départ pour carrière nationale.",
+        "primary": "#D71920",
+        "secondary": "#111111"
       },
       {
         "name": "Towers Academy Hamburg",
@@ -921,7 +1148,9 @@ export const CLUB_DATA = {
         "rating": 84,
         "prestige": 72,
         "category": null,
-        "comment": "Gros marché, projet jeune encore en croissance."
+        "comment": "Gros marché, projet jeune encore en croissance.",
+        "primary": "#00AEEF",
+        "secondary": "#1A1A1A"
       },
       {
         "name": "Bonn/Rheinland Youth",
@@ -929,7 +1158,9 @@ export const CLUB_DATA = {
         "rating": 84,
         "prestige": 76,
         "category": null,
-        "comment": "Bassin intéressant pour débuter en Allemagne."
+        "comment": "Bassin intéressant pour débuter en Allemagne.",
+        "primary": "#E20074",
+        "secondary": "#00B5CC"
       },
       {
         "name": "Bamberg Youth Program",
@@ -937,7 +1168,9 @@ export const CLUB_DATA = {
         "rating": 83,
         "prestige": 88,
         "category": null,
-        "comment": "Tradition basket importante, prestige historique."
+        "comment": "Tradition basket importante, prestige historique.",
+        "primary": "#7A0019",
+        "secondary": "#F2B632"
       }
     ]
   },
@@ -949,7 +1182,9 @@ export const CLUB_DATA = {
         "potential": 90,
         "prestige": 99,
         "category": "Elite",
-        "comment": "Puissance EuroLeague, favori national permanent et très haut niveau de stabilité."
+        "comment": "Puissance EuroLeague, favori national permanent et très haut niveau de stabilité.",
+        "primary": "#E30613",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Panathinaikos",
@@ -957,7 +1192,9 @@ export const CLUB_DATA = {
         "potential": 91,
         "prestige": 100,
         "category": "Elite",
-        "comment": "Géant européen, immense prestige et attractivité maximale."
+        "comment": "Géant européen, immense prestige et attractivité maximale.",
+        "primary": "#007A33",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "PAOK",
@@ -965,7 +1202,9 @@ export const CLUB_DATA = {
         "potential": 86,
         "prestige": 91,
         "category": "Historic Club",
-        "comment": "Très grand nom de Thessalonique, forte base supporters et dynamique sportive positive."
+        "comment": "Très grand nom de Thessalonique, forte base supporters et dynamique sportive positive.",
+        "primary": "#000000",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "AEK Athens",
@@ -973,7 +1212,9 @@ export const CLUB_DATA = {
         "potential": 84,
         "prestige": 93,
         "category": "Historic Club",
-        "comment": "Club historique d’Athènes, potentiel élevé mais fonctionnement parfois instable."
+        "comment": "Club historique d’Athènes, potentiel élevé mais fonctionnement parfois instable.",
+        "primary": "#FFD100",
+        "secondary": "#000000"
       },
       {
         "name": "Aris Thessaloniki",
@@ -981,7 +1222,9 @@ export const CLUB_DATA = {
         "potential": 81,
         "prestige": 94,
         "category": "Historic Club",
-        "comment": "Club mythique du basket grec, prestige supérieur à la force actuelle."
+        "comment": "Club mythique du basket grec, prestige supérieur à la force actuelle.",
+        "primary": "#FFD200",
+        "secondary": "#000000"
       },
       {
         "name": "Peristeri",
@@ -989,7 +1232,9 @@ export const CLUB_DATA = {
         "potential": 80,
         "prestige": 78,
         "category": "Competitive",
-        "comment": "Club solide, régulièrement compétitif derrière les géants."
+        "comment": "Club solide, régulièrement compétitif derrière les géants.",
+        "primary": "#003B7A",
+        "secondary": "#F4C300"
       },
       {
         "name": "Promitheas Patras",
@@ -997,7 +1242,9 @@ export const CLUB_DATA = {
         "potential": 85,
         "prestige": 75,
         "category": "Rising Project",
-        "comment": "Projet moderne de Patras, bon développement et ambitions européennes."
+        "comment": "Projet moderne de Patras, bon développement et ambitions européennes.",
+        "primary": "#0057A8",
+        "secondary": "#F2C500"
       },
       {
         "name": "Mykonos",
@@ -1005,7 +1252,9 @@ export const CLUB_DATA = {
         "potential": 88,
         "prestige": 67,
         "category": "Rising Project",
-        "comment": "Nouveau projet très ambitieux, potentiel financier et médiatique intéressant."
+        "comment": "Nouveau projet très ambitieux, potentiel financier et médiatique intéressant.",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Kolossos Rhodes",
@@ -1013,7 +1262,9 @@ export const CLUB_DATA = {
         "potential": 74,
         "prestige": 70,
         "category": "Average",
-        "comment": "Club stable de l’élite grecque, plafond limité mais maintien crédible."
+        "comment": "Club stable de l’élite grecque, plafond limité mais maintien crédible.",
+        "primary": "#005BAC",
+        "secondary": "#FFD100"
       },
       {
         "name": "Iraklis",
@@ -1021,7 +1272,9 @@ export const CLUB_DATA = {
         "potential": 82,
         "prestige": 88,
         "category": "Historic Club",
-        "comment": "Grand nom historique revenu dans l’élite, potentiel supérieur au niveau actuel."
+        "comment": "Grand nom historique revenu dans l’élite, potentiel supérieur au niveau actuel.",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Karditsa",
@@ -1029,7 +1282,9 @@ export const CLUB_DATA = {
         "potential": 79,
         "prestige": 66,
         "category": "Rising Project",
-        "comment": "Club récent au haut niveau, progression régulière."
+        "comment": "Club récent au haut niveau, progression régulière.",
+        "primary": "#005CA9",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Maroussi",
@@ -1037,7 +1292,9 @@ export const CLUB_DATA = {
         "potential": 75,
         "prestige": 77,
         "category": "Historic Club",
-        "comment": "Ancien club européen, aujourd’hui profil maintien/reconstruction."
+        "comment": "Ancien club européen, aujourd’hui profil maintien/reconstruction.",
+        "primary": "#006633",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Panionios",
@@ -1045,7 +1302,9 @@ export const CLUB_DATA = {
         "potential": 74,
         "prestige": 89,
         "category": "Historic Club",
-        "comment": "Très gros passé mais situation sportive fragile."
+        "comment": "Très gros passé mais situation sportive fragile.",
+        "primary": "#003DA5",
+        "secondary": "#C8102E"
       }
     ],
     "second": [
@@ -1055,7 +1314,9 @@ export const CLUB_DATA = {
         "potential": 82,
         "prestige": 67,
         "category": "Promotion Candidate",
-        "comment": "Meilleure dynamique de D2, candidat sérieux à la montée."
+        "comment": "Meilleure dynamique de D2, candidat sérieux à la montée.",
+        "primary": "#0057A8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Vikos Ioanninon",
@@ -1063,7 +1324,9 @@ export const CLUB_DATA = {
         "potential": 83,
         "prestige": 65,
         "category": "Rising Project",
-        "comment": "Projet très compétitif en D2 avec forte progression récente."
+        "comment": "Projet très compétitif en D2 avec forte progression récente.",
+        "primary": "#009245",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Proteas Voulas",
@@ -1071,7 +1334,9 @@ export const CLUB_DATA = {
         "potential": 82,
         "prestige": 66,
         "category": "Rising Project",
-        "comment": "Club performant de la banlieue athénienne, bon potentiel."
+        "comment": "Club performant de la banlieue athénienne, bon potentiel.",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "NE Megaridas",
@@ -1079,7 +1344,9 @@ export const CLUB_DATA = {
         "potential": 81,
         "prestige": 64,
         "category": "Rising Project",
-        "comment": "Très compétitif, profil moderne et offensif."
+        "comment": "Très compétitif, profil moderne et offensif.",
+        "primary": "#003DA5",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Papagou",
@@ -1087,7 +1354,9 @@ export const CLUB_DATA = {
         "potential": 76,
         "prestige": 72,
         "category": "Competitive",
-        "comment": "Club installé de la région athénienne, bon niveau D2."
+        "comment": "Club installé de la région athénienne, bon niveau D2.",
+        "primary": "#003087",
+        "secondary": "#F7C600"
       },
       {
         "name": "AGEH Gymnastikos",
@@ -1095,7 +1364,9 @@ export const CLUB_DATA = {
         "potential": 75,
         "prestige": 70,
         "category": "Competitive",
-        "comment": "Club historique régional, bon niveau de compétition."
+        "comment": "Club historique régional, bon niveau de compétition.",
+        "primary": "#006633",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Lavrio",
@@ -1103,7 +1374,9 @@ export const CLUB_DATA = {
         "potential": 77,
         "prestige": 76,
         "category": "Historic Club",
-        "comment": "Expérience récente en première division, capable de remonter."
+        "comment": "Expérience récente en première division, capable de remonter.",
+        "primary": "#1C355E",
+        "secondary": "#F2A900"
       },
       {
         "name": "Psyhiko Athens",
@@ -1111,7 +1384,9 @@ export const CLUB_DATA = {
         "potential": 74,
         "prestige": 67,
         "category": "Competitive",
-        "comment": "Club athénien solide et régulier en D2."
+        "comment": "Club athénien solide et régulier en D2.",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Koroivos",
@@ -1119,7 +1394,9 @@ export const CLUB_DATA = {
         "potential": 73,
         "prestige": 69,
         "category": "Competitive",
-        "comment": "Ancien pensionnaire de l’élite, structure stable."
+        "comment": "Ancien pensionnaire de l’élite, structure stable.",
+        "primary": "#006633",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Panerythraikos",
@@ -1127,7 +1404,9 @@ export const CLUB_DATA = {
         "potential": 72,
         "prestige": 65,
         "category": "Average",
-        "comment": "Club de milieu de tableau, bon environnement local."
+        "comment": "Club de milieu de tableau, bon environnement local.",
+        "primary": "#D71920",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "GS Sofadon",
@@ -1135,7 +1414,9 @@ export const CLUB_DATA = {
         "potential": 72,
         "prestige": 59,
         "category": "Average",
-        "comment": "Projet encore limité mais compétitif par séquences."
+        "comment": "Projet encore limité mais compétitif par séquences.",
+        "primary": "#0057A8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Dafni",
@@ -1143,7 +1424,9 @@ export const CLUB_DATA = {
         "potential": 70,
         "prestige": 62,
         "category": "Average",
-        "comment": "Club formateur/rotation D2, plafond modéré."
+        "comment": "Club formateur/rotation D2, plafond modéré.",
+        "primary": "#FFD100",
+        "secondary": "#000000"
       },
       {
         "name": "Machites Peiramatiko",
@@ -1151,7 +1434,9 @@ export const CLUB_DATA = {
         "potential": 71,
         "prestige": 58,
         "category": "Average",
-        "comment": "Petit projet de D2, utile pour début de carrière."
+        "comment": "Petit projet de D2, utile pour début de carrière.",
+        "primary": "#003DA5",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Niki Volou",
@@ -1159,7 +1444,9 @@ export const CLUB_DATA = {
         "potential": 70,
         "prestige": 64,
         "category": "Historic Club",
-        "comment": "Nom historique multisport, basket en reconstruction."
+        "comment": "Nom historique multisport, basket en reconstruction.",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Egaleo AO",
@@ -1167,7 +1454,9 @@ export const CLUB_DATA = {
         "potential": 68,
         "prestige": 70,
         "category": "Historic Club",
-        "comment": "Club athénien connu mais fragile sportivement."
+        "comment": "Club athénien connu mais fragile sportivement.",
+        "primary": "#0066B3",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Ikaroi Trikalon",
@@ -1175,7 +1464,9 @@ export const CLUB_DATA = {
         "potential": 68,
         "prestige": 56,
         "category": "Rebuilding",
-        "comment": "Profil très bas de tableau, bon point de départ pour carrière difficile."
+        "comment": "Profil très bas de tableau, bon point de départ pour carrière difficile.",
+        "primary": "#000000",
+        "secondary": "#FFD100"
       }
     ],
     "third": [
@@ -1185,7 +1476,9 @@ export const CLUB_DATA = {
         "potential": 78,
         "prestige": 71,
         "category": "Promotion Candidate",
-        "comment": "Club athénien performant, bon candidat à l’Elite League."
+        "comment": "Club athénien performant, bon candidat à l’Elite League.",
+        "primary": "#FFD100",
+        "secondary": "#000000"
       },
       {
         "name": "K.O. Holargos",
@@ -1193,7 +1486,9 @@ export const CLUB_DATA = {
         "potential": 77,
         "prestige": 68,
         "category": "Promotion Candidate",
-        "comment": "Projet solide, proche du niveau D2."
+        "comment": "Projet solide, proche du niveau D2.",
+        "primary": "#003DA5",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Panellinios Athens",
@@ -1201,7 +1496,9 @@ export const CLUB_DATA = {
         "potential": 75,
         "prestige": 86,
         "category": "Historic Club",
-        "comment": "Très grand nom historique du sport grec, niveau actuel plus bas."
+        "comment": "Très grand nom historique du sport grec, niveau actuel plus bas.",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Kronos Agiou Dimitriou",
@@ -1209,7 +1506,9 @@ export const CLUB_DATA = {
         "potential": 77,
         "prestige": 65,
         "category": "Rising Project",
-        "comment": "Très compétitif en troisième niveau, bon tremplin."
+        "comment": "Très compétitif en troisième niveau, bon tremplin.",
+        "primary": "#D71920",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "GAS Komotini",
@@ -1217,7 +1516,9 @@ export const CLUB_DATA = {
         "potential": 78,
         "prestige": 63,
         "category": "Rising Project",
-        "comment": "Très forte dynamique régionale en NL1."
+        "comment": "Très forte dynamique régionale en NL1.",
+        "primary": "#0057A8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "HANTH Thessaloniki",
@@ -1225,7 +1526,9 @@ export const CLUB_DATA = {
         "potential": 75,
         "prestige": 78,
         "category": "Historic Club",
-        "comment": "Institution sportive de Thessalonique, profil formateur."
+        "comment": "Institution sportive de Thessalonique, profil formateur.",
+        "primary": "#003087",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Promitheas 2014",
@@ -1233,7 +1536,9 @@ export const CLUB_DATA = {
         "potential": 88,
         "prestige": 72,
         "category": "Talent Factory",
-        "comment": "Structure liée à Promitheas, excellent profil jeune."
+        "comment": "Structure liée à Promitheas, excellent profil jeune.",
+        "primary": "#0057A8",
+        "secondary": "#F2C500"
       },
       {
         "name": "DEKA",
@@ -1241,7 +1546,9 @@ export const CLUB_DATA = {
         "potential": 90,
         "prestige": 74,
         "category": "Talent Factory",
-        "comment": "Académie reconnue de Thessalonique, idéale pour début à 16 ans."
+        "comment": "Académie reconnue de Thessalonique, idéale pour début à 16 ans.",
+        "primary": "#000000",
+        "secondary": "#FFD100"
       },
       {
         "name": "Ionikos Nikaias",
@@ -1249,7 +1556,9 @@ export const CLUB_DATA = {
         "potential": 72,
         "prestige": 78,
         "category": "Historic Club",
-        "comment": "Nom important du basket grec, actuellement niveau inférieur."
+        "comment": "Nom important du basket grec, actuellement niveau inférieur.",
+        "primary": "#003DA5",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Pagrati Athens",
@@ -1257,7 +1566,9 @@ export const CLUB_DATA = {
         "potential": 70,
         "prestige": 76,
         "category": "Historic Club",
-        "comment": "Club athénien historique, bon contexte narratif."
+        "comment": "Club athénien historique, bon contexte narratif.",
+        "primary": "#800020",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Apollon Patras",
@@ -1265,7 +1576,9 @@ export const CLUB_DATA = {
         "potential": 72,
         "prestige": 80,
         "category": "Historic Club",
-        "comment": "Ancien club de haut niveau, reconstruction en divisions inférieures."
+        "comment": "Ancien club de haut niveau, reconstruction en divisions inférieures.",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "KAO Dramas",
@@ -1273,7 +1586,9 @@ export const CLUB_DATA = {
         "potential": 70,
         "prestige": 60,
         "category": "Average",
-        "comment": "Club régional correct, profil bas de tableau."
+        "comment": "Club régional correct, profil bas de tableau.",
+        "primary": "#006633",
+        "secondary": "#FFFFFF"
       }
     ],
     "academy": [
@@ -1283,7 +1598,9 @@ export const CLUB_DATA = {
         "rating": 95,
         "prestige": 99,
         "category": null,
-        "comment": "Très forte structure, passerelle vers l’élite grecque et EuroLeague."
+        "comment": "Très forte structure, passerelle vers l’élite grecque et EuroLeague.",
+        "primary": "#E30613",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Panathinaikos Academy",
@@ -1291,7 +1608,9 @@ export const CLUB_DATA = {
         "rating": 96,
         "prestige": 100,
         "category": null,
-        "comment": "Académie très prestigieuse, énorme attractivité nationale."
+        "comment": "Académie très prestigieuse, énorme attractivité nationale.",
+        "primary": "#007A33",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Aris Academy",
@@ -1299,7 +1618,9 @@ export const CLUB_DATA = {
         "rating": 88,
         "prestige": 94,
         "category": null,
-        "comment": "Tradition basket exceptionnelle à Thessalonique."
+        "comment": "Tradition basket exceptionnelle à Thessalonique.",
+        "primary": "#FFD200",
+        "secondary": "#000000"
       },
       {
         "name": "PAOK Academy",
@@ -1307,7 +1628,9 @@ export const CLUB_DATA = {
         "rating": 87,
         "prestige": 91,
         "category": null,
-        "comment": "Très bonne base régionale et forte identité club."
+        "comment": "Très bonne base régionale et forte identité club.",
+        "primary": "#000000",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "AEK Academy",
@@ -1315,7 +1638,9 @@ export const CLUB_DATA = {
         "rating": 86,
         "prestige": 93,
         "category": null,
-        "comment": "Prestige élevé, bonne exposition athénienne."
+        "comment": "Prestige élevé, bonne exposition athénienne.",
+        "primary": "#FFD100",
+        "secondary": "#000000"
       },
       {
         "name": "Promitheas Academy",
@@ -1323,7 +1648,9 @@ export const CLUB_DATA = {
         "rating": 90,
         "prestige": 76,
         "category": null,
-        "comment": "Projet moderne et très intéressant pour jeunes prospects."
+        "comment": "Projet moderne et très intéressant pour jeunes prospects.",
+        "primary": "#0057A8",
+        "secondary": "#F2C500"
       },
       {
         "name": "DEKA Academy",
@@ -1331,7 +1658,9 @@ export const CLUB_DATA = {
         "rating": 92,
         "prestige": 78,
         "category": null,
-        "comment": "Académie réputée, très adaptée pour commencer à 16 ans."
+        "comment": "Académie réputée, très adaptée pour commencer à 16 ans.",
+        "primary": "#000000",
+        "secondary": "#FFD100"
       },
       {
         "name": "Peristeri Academy",
@@ -1339,7 +1668,9 @@ export const CLUB_DATA = {
         "rating": 84,
         "prestige": 78,
         "category": null,
-        "comment": "Bon environnement de développement près d’Athènes."
+        "comment": "Bon environnement de développement près d’Athènes.",
+        "primary": "#003B7A",
+        "secondary": "#F4C300"
       },
       {
         "name": "Panionios Academy",
@@ -1347,7 +1678,9 @@ export const CLUB_DATA = {
         "rating": 82,
         "prestige": 89,
         "category": null,
-        "comment": "Grand prestige historique, bon contexte de progression."
+        "comment": "Grand prestige historique, bon contexte de progression.",
+        "primary": "#003DA5",
+        "secondary": "#C8102E"
       },
       {
         "name": "Iraklis Academy",
@@ -1355,7 +1688,9 @@ export const CLUB_DATA = {
         "rating": 82,
         "prestige": 88,
         "category": null,
-        "comment": "Club historique, potentiel de relance pour jeunes joueurs."
+        "comment": "Club historique, potentiel de relance pour jeunes joueurs.",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Maroussi Academy",
@@ -1363,7 +1698,9 @@ export const CLUB_DATA = {
         "rating": 80,
         "prestige": 77,
         "category": null,
-        "comment": "Structure athénienne utile pour début senior."
+        "comment": "Structure athénienne utile pour début senior.",
+        "primary": "#006633",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Papagou Youth",
@@ -1371,7 +1708,9 @@ export const CLUB_DATA = {
         "rating": 78,
         "prestige": 72,
         "category": null,
-        "comment": "Bon point d’entrée pour carrière locale."
+        "comment": "Bon point d’entrée pour carrière locale.",
+        "primary": "#003087",
+        "secondary": "#F7C600"
       }
     ]
   },
@@ -1383,7 +1722,9 @@ export const CLUB_DATA = {
         "potential": 90,
         "prestige": 100,
         "category": "Elite",
-        "comment": "Géant serbe et régional, énorme fanbase, exposition EuroLeague et pression maximale."
+        "comment": "Géant serbe et régional, énorme fanbase, exposition EuroLeague et pression maximale.",
+        "primary": "#000000",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Crvena zvezda Meridianbet",
@@ -1391,7 +1732,9 @@ export const CLUB_DATA = {
         "potential": 89,
         "prestige": 100,
         "category": "Elite",
-        "comment": "Autre géant de Belgrade, très gros prestige, régulier en EuroLeague et trophées nationaux."
+        "comment": "Autre géant de Belgrade, très gros prestige, régulier en EuroLeague et trophées nationaux.",
+        "primary": "#E31837",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Mega MIS",
@@ -1399,7 +1742,9 @@ export const CLUB_DATA = {
         "potential": 99,
         "prestige": 78,
         "category": "Talent Factory",
-        "comment": "Référence européenne pour le développement de prospects et passerelle NBA/Europe."
+        "comment": "Référence européenne pour le développement de prospects et passerelle NBA/Europe.",
+        "primary": "#FFD100",
+        "secondary": "#000000"
       },
       {
         "name": "FMP Soccerbet",
@@ -1407,7 +1752,9 @@ export const CLUB_DATA = {
         "potential": 88,
         "prestige": 76,
         "category": "Talent Factory",
-        "comment": "Club de développement très connecté au haut niveau serbe, régulier et formateur."
+        "comment": "Club de développement très connecté au haut niveau serbe, régulier et formateur.",
+        "primary": "#003DA5",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Spartak Office Shoes",
@@ -1415,7 +1762,9 @@ export const CLUB_DATA = {
         "potential": 88,
         "prestige": 74,
         "category": "Rising Project",
-        "comment": "Champion serbe récent, projet en forte croissance à Subotica."
+        "comment": "Champion serbe récent, projet en forte croissance à Subotica.",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Borac Mozzart Cacak",
@@ -1423,7 +1772,9 @@ export const CLUB_DATA = {
         "potential": 82,
         "prestige": 86,
         "category": "Historic Club",
-        "comment": "Ville de basket historique, formation solide et identité très forte."
+        "comment": "Ville de basket historique, formation solide et identité très forte.",
+        "primary": "#D71920",
+        "secondary": "#FFFFFF"
       }
     ],
     "second": [
@@ -1433,7 +1784,9 @@ export const CLUB_DATA = {
         "potential": 82,
         "prestige": 72,
         "category": "Promotion Candidate",
-        "comment": "Très fort en saison régulière KLS, club stable et compétitif."
+        "comment": "Très fort en saison régulière KLS, club stable et compétitif.",
+        "primary": "#0057A8",
+        "secondary": "#F2C94C"
       },
       {
         "name": "Vojvodina",
@@ -1441,7 +1794,9 @@ export const CLUB_DATA = {
         "potential": 85,
         "prestige": 79,
         "category": "Rising Project",
-        "comment": "Gros potentiel régional à Novi Sad, ambition de rejoindre durablement le haut niveau."
+        "comment": "Gros potentiel régional à Novi Sad, ambition de rejoindre durablement le haut niveau.",
+        "primary": "#E30613",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Dynamic Balkan Bet",
@@ -1449,7 +1804,9 @@ export const CLUB_DATA = {
         "potential": 86,
         "prestige": 72,
         "category": "Talent Factory",
-        "comment": "Club belgradois très orienté développement et jeunes joueurs."
+        "comment": "Club belgradois très orienté développement et jeunes joueurs.",
+        "primary": "#0066B3",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "OKK Beograd",
@@ -1457,7 +1814,9 @@ export const CLUB_DATA = {
         "potential": 83,
         "prestige": 88,
         "category": "Historic Club",
-        "comment": "Club historique de Belgrade, prestige important malgré niveau actuel inférieur aux géants."
+        "comment": "Club historique de Belgrade, prestige important malgré niveau actuel inférieur aux géants.",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Metalac Valjevo",
@@ -1465,7 +1824,9 @@ export const CLUB_DATA = {
         "potential": 79,
         "prestige": 78,
         "category": "Historic Club",
-        "comment": "Club traditionnel serbe, bon contexte de carrière pour progresser."
+        "comment": "Club traditionnel serbe, bon contexte de carrière pour progresser.",
+        "primary": "#003DA5",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Sloboda Uzice",
@@ -1473,7 +1834,9 @@ export const CLUB_DATA = {
         "potential": 78,
         "prestige": 74,
         "category": "Competitive",
-        "comment": "Club régional solide, souvent difficile à jouer à domicile."
+        "comment": "Club régional solide, souvent difficile à jouer à domicile.",
+        "primary": "#D71920",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Sloga Kraljevo",
@@ -1481,7 +1844,9 @@ export const CLUB_DATA = {
         "potential": 77,
         "prestige": 77,
         "category": "Historic Club",
-        "comment": "Nom connu du basket serbe, structure historique."
+        "comment": "Nom connu du basket serbe, structure historique.",
+        "primary": "#FFFFFF",
+        "secondary": "#003DA5"
       },
       {
         "name": "Tamis Pancevo",
@@ -1489,7 +1854,9 @@ export const CLUB_DATA = {
         "potential": 76,
         "prestige": 70,
         "category": "Competitive",
-        "comment": "Club installé en KLS, profil stable mais plafond limité."
+        "comment": "Club installé en KLS, profil stable mais plafond limité.",
+        "primary": "#0057B8",
+        "secondary": "#FFD100"
       },
       {
         "name": "Cacak 94",
@@ -1497,7 +1864,9 @@ export const CLUB_DATA = {
         "potential": 79,
         "prestige": 66,
         "category": "Rising Project",
-        "comment": "Deuxième projet de Cacak, utile pour trajectoire de développement."
+        "comment": "Deuxième projet de Cacak, utile pour trajectoire de développement.",
+        "primary": "#D71920",
+        "secondary": "#000000"
       },
       {
         "name": "SPD Radnicki Kragujevac",
@@ -1505,7 +1874,9 @@ export const CLUB_DATA = {
         "potential": 78,
         "prestige": 74,
         "category": "Historic Club",
-        "comment": "Ville sportive importante, club capable de retrouver une meilleure dynamique."
+        "comment": "Ville sportive importante, club capable de retrouver une meilleure dynamique.",
+        "primary": "#0057A8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "BKK Radnicki Beograd",
@@ -1513,7 +1884,9 @@ export const CLUB_DATA = {
         "potential": 75,
         "prestige": 80,
         "category": "Historic Club",
-        "comment": "Ancien nom du basket belgradois, aujourd’hui niveau moyen."
+        "comment": "Ancien nom du basket belgradois, aujourd’hui niveau moyen.",
+        "primary": "#D71920",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Mladost MaxBet Zemun",
@@ -1521,7 +1894,9 @@ export const CLUB_DATA = {
         "potential": 74,
         "prestige": 68,
         "category": "Average",
-        "comment": "Club de Zemun, profil régulier mais moins attractif que les gros projets."
+        "comment": "Club de Zemun, profil régulier mais moins attractif que les gros projets.",
+        "primary": "#006633",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Borac Zemun",
@@ -1529,7 +1904,9 @@ export const CLUB_DATA = {
         "potential": 78,
         "prestige": 64,
         "category": "Rising Project",
-        "comment": "Promu depuis D2, potentiel correct pour carrière basse division."
+        "comment": "Promu depuis D2, potentiel correct pour carrière basse division.",
+        "primary": "#D71920",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Hercegovac Gajdobra",
@@ -1537,7 +1914,9 @@ export const CLUB_DATA = {
         "potential": 79,
         "prestige": 62,
         "category": "Rising Project",
-        "comment": "Promu ambitieux, petit marché mais bonne dynamique."
+        "comment": "Promu ambitieux, petit marché mais bonne dynamique.",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Vrsac",
@@ -1545,7 +1924,9 @@ export const CLUB_DATA = {
         "potential": 72,
         "prestige": 76,
         "category": "Historic Club",
-        "comment": "Ancien club important, situation plus fragile récemment."
+        "comment": "Ancien club important, situation plus fragile récemment.",
+        "primary": "#FFD100",
+        "secondary": "#000000"
       },
       {
         "name": "Joker Sombor",
@@ -1553,7 +1934,9 @@ export const CLUB_DATA = {
         "potential": 76,
         "prestige": 68,
         "category": "Rising Project",
-        "comment": "Projet de Sombor avec visibilité intéressante, mais encore en développement."
+        "comment": "Projet de Sombor avec visibilité intéressante, mais encore en développement.",
+        "primary": "#000000",
+        "secondary": "#FFD100"
       }
     ],
     "third": [
@@ -1563,7 +1946,9 @@ export const CLUB_DATA = {
         "potential": 78,
         "prestige": 68,
         "category": "Promotion Candidate",
-        "comment": "Champion D2 récent, très forte dynamique et candidat naturel à la montée."
+        "comment": "Champion D2 récent, très forte dynamique et candidat naturel à la montée.",
+        "primary": "#0066B3",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "KK Nis",
@@ -1571,7 +1956,9 @@ export const CLUB_DATA = {
         "potential": 77,
         "prestige": 73,
         "category": "Promotion Candidate",
-        "comment": "Grand bassin de population, vice-champion D2 et potentiel régional."
+        "comment": "Grand bassin de population, vice-champion D2 et potentiel régional.",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "KK Pirot",
@@ -1579,7 +1966,9 @@ export const CLUB_DATA = {
         "potential": 75,
         "prestige": 65,
         "category": "Competitive",
-        "comment": "Très compétitif en D2, bon club de transition."
+        "comment": "Très compétitif en D2, bon club de transition.",
+        "primary": "#003DA5",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Konstantin Nis",
@@ -1587,7 +1976,9 @@ export const CLUB_DATA = {
         "potential": 75,
         "prestige": 72,
         "category": "Historic Club",
-        "comment": "Nom connu à Nis, profil intéressant pour reconstruction."
+        "comment": "Nom connu à Nis, profil intéressant pour reconstruction.",
+        "primary": "#D71920",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Beko Beograd",
@@ -1595,7 +1986,9 @@ export const CLUB_DATA = {
         "potential": 72,
         "prestige": 66,
         "category": "Average",
-        "comment": "Club belgradois de D2, utile pour début senior."
+        "comment": "Club belgradois de D2, utile pour début senior.",
+        "primary": "#E30613",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Ivanjica",
@@ -1603,7 +1996,9 @@ export const CLUB_DATA = {
         "potential": 72,
         "prestige": 58,
         "category": "Average",
-        "comment": "Petit projet régional, bon niveau de départ bas."
+        "comment": "Petit projet régional, bon niveau de départ bas.",
+        "primary": "#006633",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Zdravlje Leskovac",
@@ -1611,7 +2006,9 @@ export const CLUB_DATA = {
         "potential": 73,
         "prestige": 70,
         "category": "Historic Club",
-        "comment": "Ancien passage au haut niveau, prestige local raisonnable."
+        "comment": "Ancien passage au haut niveau, prestige local raisonnable.",
+        "primary": "#FFD100",
+        "secondary": "#000000"
       },
       {
         "name": "Jagodina",
@@ -1619,7 +2016,9 @@ export const CLUB_DATA = {
         "potential": 72,
         "prestige": 68,
         "category": "Historic Club",
-        "comment": "Ancien champion D2, structure connue."
+        "comment": "Ancien champion D2, structure connue.",
+        "primary": "#D71920",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "IBC Beograd",
@@ -1627,7 +2026,9 @@ export const CLUB_DATA = {
         "potential": 70,
         "prestige": 60,
         "category": "Average",
-        "comment": "Club de Belgrade, profil rotation D2."
+        "comment": "Club de Belgrade, profil rotation D2.",
+        "primary": "#000000",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Loznica",
@@ -1635,7 +2036,9 @@ export const CLUB_DATA = {
         "potential": 71,
         "prestige": 61,
         "category": "Average",
-        "comment": "Club régional, progression possible mais plafond limité."
+        "comment": "Club régional, progression possible mais plafond limité.",
+        "primary": "#006633",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Proleter Zrenjanin",
@@ -1643,7 +2046,9 @@ export const CLUB_DATA = {
         "potential": 70,
         "prestige": 71,
         "category": "Historic Club",
-        "comment": "Nom historique, actuellement niveau inférieur."
+        "comment": "Nom historique, actuellement niveau inférieur.",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Klik Arilje",
@@ -1651,7 +2056,9 @@ export const CLUB_DATA = {
         "potential": 69,
         "prestige": 56,
         "category": "Average",
-        "comment": "Petit club de D2, bon pour carrière difficile."
+        "comment": "Petit club de D2, bon pour carrière difficile.",
+        "primary": "#D71920",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Dunav Stari Banovci",
@@ -1659,7 +2066,9 @@ export const CLUB_DATA = {
         "potential": 69,
         "prestige": 58,
         "category": "Average",
-        "comment": "Club de développement local."
+        "comment": "Club de développement local.",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "OKK Novi Pazar",
@@ -1667,7 +2076,9 @@ export const CLUB_DATA = {
         "potential": 70,
         "prestige": 67,
         "category": "Rebuilding",
-        "comment": "Relégué/fragile, gros contexte local mais reconstruction nécessaire."
+        "comment": "Relégué/fragile, gros contexte local mais reconstruction nécessaire.",
+        "primary": "#0057A8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Mladost SP",
@@ -1675,7 +2086,9 @@ export const CLUB_DATA = {
         "potential": 69,
         "prestige": 64,
         "category": "Rebuilding",
-        "comment": "Situation sportive difficile, club de bas de tableau."
+        "comment": "Situation sportive difficile, club de bas de tableau.",
+        "primary": "#006633",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Sloven Ruma",
@@ -1683,7 +2096,9 @@ export const CLUB_DATA = {
         "potential": 68,
         "prestige": 55,
         "category": "Rebuilding",
-        "comment": "Profil outsider, idéal pour challenge long."
+        "comment": "Profil outsider, idéal pour challenge long.",
+        "primary": "#D71920",
+        "secondary": "#FFFFFF"
       }
     ],
     "academy": [
@@ -1693,7 +2108,9 @@ export const CLUB_DATA = {
         "rating": 99,
         "prestige": 82,
         "category": null,
-        "comment": "Probablement la meilleure porte d’entrée serbe pour un prospect très haut potentiel."
+        "comment": "Probablement la meilleure porte d’entrée serbe pour un prospect très haut potentiel.",
+        "primary": "#FFD100",
+        "secondary": "#000000"
       },
       {
         "name": "Partizan Academy",
@@ -1701,7 +2118,9 @@ export const CLUB_DATA = {
         "rating": 95,
         "prestige": 100,
         "category": null,
-        "comment": "Très prestigieuse, exposition maximale mais concurrence élevée."
+        "comment": "Très prestigieuse, exposition maximale mais concurrence élevée.",
+        "primary": "#000000",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Crvena zvezda Academy",
@@ -1709,7 +2128,9 @@ export const CLUB_DATA = {
         "rating": 95,
         "prestige": 100,
         "category": null,
-        "comment": "Très haute visibilité nationale, grosse pression et forte exigence."
+        "comment": "Très haute visibilité nationale, grosse pression et forte exigence.",
+        "primary": "#E31837",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "FMP Youth Program",
@@ -1717,7 +2138,9 @@ export const CLUB_DATA = {
         "rating": 92,
         "prestige": 78,
         "category": null,
-        "comment": "Structure très formatrice, connectée au haut niveau serbe."
+        "comment": "Structure très formatrice, connectée au haut niveau serbe.",
+        "primary": "#003DA5",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Dynamic Academy",
@@ -1725,7 +2148,9 @@ export const CLUB_DATA = {
         "rating": 90,
         "prestige": 72,
         "category": null,
-        "comment": "Bon environnement pour jeunes à Belgrade."
+        "comment": "Bon environnement pour jeunes à Belgrade.",
+        "primary": "#0066B3",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Borac Cacak Youth",
@@ -1733,7 +2158,9 @@ export const CLUB_DATA = {
         "rating": 88,
         "prestige": 86,
         "category": null,
-        "comment": "Ville historique de formation, bonne identité basket."
+        "comment": "Ville historique de formation, bonne identité basket.",
+        "primary": "#D71920",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "OKK Beograd Youth",
@@ -1741,7 +2168,9 @@ export const CLUB_DATA = {
         "rating": 86,
         "prestige": 88,
         "category": null,
-        "comment": "Prestige historique et bassin belgradois."
+        "comment": "Prestige historique et bassin belgradois.",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Vojvodina Academy",
@@ -1749,7 +2178,9 @@ export const CLUB_DATA = {
         "rating": 85,
         "prestige": 79,
         "category": null,
-        "comment": "Potentiel régional important à Novi Sad."
+        "comment": "Potentiel régional important à Novi Sad.",
+        "primary": "#E30613",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Spartak Subotica Youth",
@@ -1757,7 +2188,9 @@ export const CLUB_DATA = {
         "rating": 84,
         "prestige": 74,
         "category": null,
-        "comment": "Académie en progression grâce à la montée du club."
+        "comment": "Académie en progression grâce à la montée du club.",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Metalac Valjevo Youth",
@@ -1765,7 +2198,9 @@ export const CLUB_DATA = {
         "rating": 82,
         "prestige": 78,
         "category": null,
-        "comment": "Club traditionnel, bon cadre de progression."
+        "comment": "Club traditionnel, bon cadre de progression.",
+        "primary": "#003DA5",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Radnicki Kragujevac Youth",
@@ -1773,7 +2208,9 @@ export const CLUB_DATA = {
         "rating": 80,
         "prestige": 74,
         "category": null,
-        "comment": "Bassin sportif intéressant pour départ régional."
+        "comment": "Bassin sportif intéressant pour départ régional.",
+        "primary": "#0057A8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Zemun Youth Program",
@@ -1781,7 +2218,9 @@ export const CLUB_DATA = {
         "rating": 78,
         "prestige": 68,
         "category": null,
-        "comment": "Bon point d’entrée senior pour joueurs locaux."
+        "comment": "Bon point d’entrée senior pour joueurs locaux.",
+        "primary": "#D71920",
+        "secondary": "#FFFFFF"
       }
     ]
   },
@@ -1793,7 +2232,9 @@ export const CLUB_DATA = {
         "potential": 86,
         "prestige": 98,
         "category": "Elite",
-        "comment": "Club dominant du pays, plus haut prestige slovene et exposition ABA/EuroCup."
+        "comment": "Club dominant du pays, plus haut prestige slovene et exposition ABA/EuroCup.",
+        "primary": "#009CDE",
+        "secondary": "#00A651"
       },
       {
         "name": "Krka Novo Mesto",
@@ -1801,7 +2242,9 @@ export const CLUB_DATA = {
         "potential": 82,
         "prestige": 91,
         "category": "Historic Club",
-        "comment": "Finaliste régulier, structure forte et deuxième puissance nationale actuelle."
+        "comment": "Finaliste régulier, structure forte et deuxième puissance nationale actuelle.",
+        "primary": "#006633",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Ilirija Ljubljana",
@@ -1809,7 +2252,9 @@ export const CLUB_DATA = {
         "potential": 90,
         "prestige": 78,
         "category": "Rising Project",
-        "comment": "Projet de Ljubljana en forte progression, très intéressant pour carrière jeune."
+        "comment": "Projet de Ljubljana en forte progression, très intéressant pour carrière jeune.",
+        "primary": "#006633",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "GGD Sencur",
@@ -1817,7 +2262,9 @@ export const CLUB_DATA = {
         "potential": 82,
         "prestige": 72,
         "category": "Competitive",
-        "comment": "Club solide du haut de tableau, bon tremplin national."
+        "comment": "Club solide du haut de tableau, bon tremplin national.",
+        "primary": "#0057A8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Helios Suns Domzale",
@@ -1825,7 +2272,9 @@ export const CLUB_DATA = {
         "potential": 83,
         "prestige": 82,
         "category": "Historic Club",
-        "comment": "Club historique et formateur, souvent compétitif en Slovénie."
+        "comment": "Club historique et formateur, souvent compétitif en Slovénie.",
+        "primary": "#FFCC00",
+        "secondary": "#000000"
       },
       {
         "name": "ECE Triglav Kranj",
@@ -1833,7 +2282,9 @@ export const CLUB_DATA = {
         "potential": 82,
         "prestige": 74,
         "category": "Rising Project",
-        "comment": "Club en progression, bon environnement pour lancer une carrière pro."
+        "comment": "Club en progression, bon environnement pour lancer une carrière pro.",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Rogaska Crystal",
@@ -1841,7 +2292,9 @@ export const CLUB_DATA = {
         "potential": 75,
         "prestige": 76,
         "category": "Competitive",
-        "comment": "Club traditionnel, stable mais plafond limité actuellement."
+        "comment": "Club traditionnel, stable mais plafond limité actuellement.",
+        "primary": "#000000",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Hopsi Polzela",
@@ -1849,7 +2302,9 @@ export const CLUB_DATA = {
         "potential": 74,
         "prestige": 72,
         "category": "Average",
-        "comment": "Club installé, profil milieu-bas de tableau."
+        "comment": "Club installé, profil milieu-bas de tableau.",
+        "primary": "#006633",
+        "secondary": "#FFD100"
       },
       {
         "name": "Zlatorog Lasko",
@@ -1857,7 +2312,9 @@ export const CLUB_DATA = {
         "potential": 76,
         "prestige": 85,
         "category": "Historic Club",
-        "comment": "Ancien nom fort du basket slovène, prestige supérieur au niveau actuel."
+        "comment": "Ancien nom fort du basket slovène, prestige supérieur au niveau actuel.",
+        "primary": "#FFD100",
+        "secondary": "#006633"
       },
       {
         "name": "Tajfun Sentjur",
@@ -1865,7 +2322,9 @@ export const CLUB_DATA = {
         "potential": 74,
         "prestige": 75,
         "category": "Historic Club",
-        "comment": "Ancien champion national, aujourd’hui plutôt en reconstruction."
+        "comment": "Ancien champion national, aujourd’hui plutôt en reconstruction.",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Terme Olimia Podcetrtek",
@@ -1873,7 +2332,9 @@ export const CLUB_DATA = {
         "potential": 73,
         "prestige": 66,
         "category": "Average",
-        "comment": "Petit projet stable, lutte souvent pour rester compétitif."
+        "comment": "Petit projet stable, lutte souvent pour rester compétitif.",
+        "primary": "#009245",
+        "secondary": "#FFFFFF"
       }
     ],
     "second": [
@@ -1883,7 +2344,9 @@ export const CLUB_DATA = {
         "potential": 79,
         "prestige": 64,
         "category": "Promotion Candidate",
-        "comment": "Très forte saison en deuxième division, candidat crédible à la montée."
+        "comment": "Très forte saison en deuxième division, candidat crédible à la montée.",
+        "primary": "#006633",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Nova Gorica mladi",
@@ -1891,7 +2354,9 @@ export const CLUB_DATA = {
         "potential": 82,
         "prestige": 66,
         "category": "Rising Project",
-        "comment": "Champion/haut niveau D2 avec profil jeune très intéressant."
+        "comment": "Champion/haut niveau D2 avec profil jeune très intéressant.",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Voga Grosuplje",
@@ -1899,7 +2364,9 @@ export const CLUB_DATA = {
         "potential": 75,
         "prestige": 61,
         "category": "Competitive",
-        "comment": "Club solide de deuxième division, bon passage pour minutes seniors."
+        "comment": "Club solide de deuxième division, bon passage pour minutes seniors.",
+        "primary": "#003DA5",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Ipros Vrhnika",
@@ -1907,7 +2374,9 @@ export const CLUB_DATA = {
         "potential": 75,
         "prestige": 60,
         "category": "Competitive",
-        "comment": "Compétitif en D2, profil stable."
+        "comment": "Compétitif en D2, profil stable.",
+        "primary": "#0057A8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "LTH Castings Skofja Loka",
@@ -1915,7 +2384,9 @@ export const CLUB_DATA = {
         "potential": 74,
         "prestige": 65,
         "category": "Competitive",
-        "comment": "Club de D2 régulier, bonne culture régionale."
+        "comment": "Club de D2 régulier, bonne culture régionale.",
+        "primary": "#E30613",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Splosna plovba Portoroz",
@@ -1923,7 +2394,9 @@ export const CLUB_DATA = {
         "potential": 73,
         "prestige": 67,
         "category": "Average",
-        "comment": "Club côtier connu, niveau D2 moyen/compétitif."
+        "comment": "Club côtier connu, niveau D2 moyen/compétitif.",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Geoplin Slovan Ljubljana",
@@ -1931,7 +2404,9 @@ export const CLUB_DATA = {
         "potential": 80,
         "prestige": 88,
         "category": "Historic Club",
-        "comment": "Très grand nom historique de Ljubljana, actuellement niveau inférieur mais prestige élevé."
+        "comment": "Très grand nom historique de Ljubljana, actuellement niveau inférieur mais prestige élevé.",
+        "primary": "#003087",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Luxuris Celje",
@@ -1939,7 +2414,9 @@ export const CLUB_DATA = {
         "potential": 73,
         "prestige": 63,
         "category": "Average",
-        "comment": "Club compétitif par séquences, bon début pro."
+        "comment": "Club compétitif par séquences, bon début pro.",
+        "primary": "#FFD100",
+        "secondary": "#000000"
       },
       {
         "name": "KK Hidria",
@@ -1947,7 +2424,9 @@ export const CLUB_DATA = {
         "potential": 72,
         "prestige": 58,
         "category": "Average",
-        "comment": "Profil bas/milieu de D2, développement local."
+        "comment": "Profil bas/milieu de D2, développement local.",
+        "primary": "#006633",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "KD Postojna",
@@ -1955,7 +2434,9 @@ export const CLUB_DATA = {
         "potential": 72,
         "prestige": 60,
         "category": "Average",
-        "comment": "Club régional utile pour début senior."
+        "comment": "Club régional utile pour début senior.",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Jezica Ljubljana",
@@ -1963,7 +2444,9 @@ export const CLUB_DATA = {
         "potential": 73,
         "prestige": 62,
         "category": "Average",
-        "comment": "Bassin de Ljubljana, potentiel de jeunes correct."
+        "comment": "Bassin de Ljubljana, potentiel de jeunes correct.",
+        "primary": "#E30613",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "VBO Ljubljana",
@@ -1971,7 +2454,9 @@ export const CLUB_DATA = {
         "potential": 72,
         "prestige": 60,
         "category": "Average",
-        "comment": "Petit projet de Ljubljana, point d’entrée bas niveau."
+        "comment": "Petit projet de Ljubljana, point d’entrée bas niveau.",
+        "primary": "#003DA5",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Jance Ljubljana",
@@ -1979,7 +2464,9 @@ export const CLUB_DATA = {
         "potential": 71,
         "prestige": 59,
         "category": "Average",
-        "comment": "Club local, bon pour scénario début carrière difficile."
+        "comment": "Club local, bon pour scénario début carrière difficile.",
+        "primary": "#006633",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "KK Litija",
@@ -1987,7 +2474,9 @@ export const CLUB_DATA = {
         "potential": 69,
         "prestige": 58,
         "category": "Rebuilding",
-        "comment": "Bas de tableau, profil reconstruction."
+        "comment": "Bas de tableau, profil reconstruction.",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       }
     ],
     "third": [
@@ -1997,7 +2486,9 @@ export const CLUB_DATA = {
         "potential": 94,
         "prestige": 95,
         "category": "Talent Factory",
-        "comment": "Réserve/jeunes du club dominant, excellent point de départ à 16 ans."
+        "comment": "Réserve/jeunes du club dominant, excellent point de départ à 16 ans.",
+        "primary": "#009CDE",
+        "secondary": "#00A651"
       },
       {
         "name": "Krka Youth",
@@ -2005,7 +2496,9 @@ export const CLUB_DATA = {
         "potential": 88,
         "prestige": 88,
         "category": "Talent Factory",
-        "comment": "Formation de Novo Mesto, très bon tremplin national."
+        "comment": "Formation de Novo Mesto, très bon tremplin national.",
+        "primary": "#006633",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Helios Suns Youth",
@@ -2013,7 +2506,9 @@ export const CLUB_DATA = {
         "potential": 87,
         "prestige": 80,
         "category": "Talent Factory",
-        "comment": "Académie réputée, bonne passerelle vers 1 SKL."
+        "comment": "Académie réputée, bonne passerelle vers 1 SKL.",
+        "primary": "#FFCC00",
+        "secondary": "#000000"
       },
       {
         "name": "Slovan Youth",
@@ -2021,7 +2516,9 @@ export const CLUB_DATA = {
         "potential": 84,
         "prestige": 86,
         "category": "Talent Factory",
-        "comment": "Grand prestige historique, bon scénario de relance via jeunes."
+        "comment": "Grand prestige historique, bon scénario de relance via jeunes.",
+        "primary": "#003087",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Triglav Youth",
@@ -2029,7 +2526,9 @@ export const CLUB_DATA = {
         "potential": 82,
         "prestige": 70,
         "category": "Talent Factory",
-        "comment": "Développement régional à Kranj, profil intéressant pour jeunes slovènes."
+        "comment": "Développement régional à Kranj, profil intéressant pour jeunes slovènes.",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       }
     ],
     "academy": [
@@ -2039,7 +2538,9 @@ export const CLUB_DATA = {
         "rating": 94,
         "prestige": 98,
         "category": null,
-        "comment": "Meilleure exposition slovène, passerelle ABA/EuroCup."
+        "comment": "Meilleure exposition slovène, passerelle ABA/EuroCup.",
+        "primary": "#009CDE",
+        "secondary": "#00A651"
       },
       {
         "name": "Krka Novo Mesto Academy",
@@ -2047,7 +2548,9 @@ export const CLUB_DATA = {
         "rating": 90,
         "prestige": 91,
         "category": null,
-        "comment": "Très bonne formation nationale et continuité vers l’équipe première."
+        "comment": "Très bonne formation nationale et continuité vers l’équipe première.",
+        "primary": "#006633",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Helios Suns Academy",
@@ -2055,7 +2558,9 @@ export const CLUB_DATA = {
         "rating": 88,
         "prestige": 82,
         "category": null,
-        "comment": "Académie reconnue, bonne orientation développement."
+        "comment": "Académie reconnue, bonne orientation développement.",
+        "primary": "#FFCC00",
+        "secondary": "#000000"
       },
       {
         "name": "Ilirija Ljubljana Youth",
@@ -2063,7 +2568,9 @@ export const CLUB_DATA = {
         "rating": 86,
         "prestige": 78,
         "category": null,
-        "comment": "Projet de Ljubljana en hausse, adapté aux jeunes prospects."
+        "comment": "Projet de Ljubljana en hausse, adapté aux jeunes prospects.",
+        "primary": "#006633",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Slovan Ljubljana Youth",
@@ -2071,7 +2578,9 @@ export const CLUB_DATA = {
         "rating": 85,
         "prestige": 88,
         "category": null,
-        "comment": "Prestige historique très fort, bon scénario de relance."
+        "comment": "Prestige historique très fort, bon scénario de relance.",
+        "primary": "#003087",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Triglav Kranj Academy",
@@ -2079,7 +2588,9 @@ export const CLUB_DATA = {
         "rating": 82,
         "prestige": 74,
         "category": null,
-        "comment": "Bonne formation régionale et accès rapide aux minutes."
+        "comment": "Bonne formation régionale et accès rapide aux minutes.",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Sencur Youth",
@@ -2087,7 +2598,9 @@ export const CLUB_DATA = {
         "rating": 81,
         "prestige": 72,
         "category": null,
-        "comment": "Club solide pour progresser sans pression excessive."
+        "comment": "Club solide pour progresser sans pression excessive.",
+        "primary": "#0057A8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Zlatorog Lasko Youth",
@@ -2095,7 +2608,9 @@ export const CLUB_DATA = {
         "rating": 80,
         "prestige": 85,
         "category": null,
-        "comment": "Prestige historique et culture basket importante."
+        "comment": "Prestige historique et culture basket importante.",
+        "primary": "#FFD100",
+        "secondary": "#006633"
       },
       {
         "name": "Rogaska Youth",
@@ -2103,7 +2618,9 @@ export const CLUB_DATA = {
         "rating": 78,
         "prestige": 76,
         "category": null,
-        "comment": "Bon cadre régional pour débuter."
+        "comment": "Bon cadre régional pour débuter.",
+        "primary": "#000000",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Postojna Youth",
@@ -2111,7 +2628,9 @@ export const CLUB_DATA = {
         "rating": 75,
         "prestige": 60,
         "category": null,
-        "comment": "Point d’entrée local pour trajectoire basse division."
+        "comment": "Point d’entrée local pour trajectoire basse division.",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       }
     ]
   },
@@ -2123,7 +2642,9 @@ export const CLUB_DATA = {
         "potential": 90,
         "prestige": 100,
         "category": "Elite",
-        "comment": "Geant europeen et reference espagnole"
+        "comment": "Geant europeen et reference espagnole",
+        "primary": "#FEBE10",
+        "secondary": "#00529F"
       },
       {
         "name": "FC Barcelona",
@@ -2131,7 +2652,9 @@ export const CLUB_DATA = {
         "potential": 88,
         "prestige": 100,
         "category": "Elite",
-        "comment": "Budget et prestige mondial"
+        "comment": "Budget et prestige mondial",
+        "primary": "#A50044",
+        "secondary": "#004D98"
       },
       {
         "name": "Valencia Basket",
@@ -2139,7 +2662,9 @@ export const CLUB_DATA = {
         "potential": 93,
         "prestige": 92,
         "category": "Elite",
-        "comment": "Champion recent et projet ambitieux"
+        "comment": "Champion recent et projet ambitieux",
+        "primary": "#F58220",
+        "secondary": "#0057B8"
       },
       {
         "name": "Unicaja Malaga",
@@ -2147,7 +2672,9 @@ export const CLUB_DATA = {
         "potential": 90,
         "prestige": 88,
         "category": "Strong",
-        "comment": "Excellente dynamique sportive"
+        "comment": "Excellente dynamique sportive",
+        "primary": "#007A33",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Baskonia",
@@ -2155,7 +2682,9 @@ export const CLUB_DATA = {
         "potential": 86,
         "prestige": 94,
         "category": "Historic Club",
-        "comment": "Place forte historique"
+        "comment": "Place forte historique",
+        "primary": "#E30613",
+        "secondary": "#003DA5"
       },
       {
         "name": "Tenerife",
@@ -2163,7 +2692,9 @@ export const CLUB_DATA = {
         "potential": 85,
         "prestige": 82,
         "category": "Competitive",
-        "comment": "Modele de stabilite"
+        "comment": "Modele de stabilite",
+        "primary": "#000000",
+        "secondary": "#F2C94C"
       },
       {
         "name": "Joventut Badalona",
@@ -2171,7 +2702,9 @@ export const CLUB_DATA = {
         "potential": 92,
         "prestige": 95,
         "category": "Talent Factory",
-        "comment": "Formation elite"
+        "comment": "Formation elite",
+        "primary": "#000000",
+        "secondary": "#009639"
       },
       {
         "name": "UCAM Murcia",
@@ -2179,7 +2712,9 @@ export const CLUB_DATA = {
         "potential": 88,
         "prestige": 78,
         "category": "Rising Project",
-        "comment": "Progression constante"
+        "comment": "Progression constante",
+        "primary": "#0057B8",
+        "secondary": "#FFD100"
       },
       {
         "name": "Gran Canaria",
@@ -2187,7 +2722,9 @@ export const CLUB_DATA = {
         "potential": 82,
         "prestige": 86,
         "category": "Competitive",
-        "comment": "Regulier en Europe"
+        "comment": "Regulier en Europe",
+        "primary": "#FFD100",
+        "secondary": "#003DA5"
       },
       {
         "name": "Manresa",
@@ -2195,7 +2732,9 @@ export const CLUB_DATA = {
         "potential": 85,
         "prestige": 81,
         "category": "Competitive",
-        "comment": "Excellent scouting"
+        "comment": "Excellent scouting",
+        "primary": "#E30613",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Bilbao Basket",
@@ -2203,7 +2742,9 @@ export const CLUB_DATA = {
         "potential": 80,
         "prestige": 84,
         "category": "Historic Club",
-        "comment": "Base supporters solide"
+        "comment": "Base supporters solide",
+        "primary": "#000000",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Zaragoza",
@@ -2211,7 +2752,9 @@ export const CLUB_DATA = {
         "potential": 79,
         "prestige": 83,
         "category": "Historic Club",
-        "comment": "Potentiel important"
+        "comment": "Potentiel important",
+        "primary": "#E30613",
+        "secondary": "#FFD100"
       },
       {
         "name": "Girona",
@@ -2219,7 +2762,9 @@ export const CLUB_DATA = {
         "potential": 89,
         "prestige": 78,
         "category": "Rising Project",
-        "comment": "Projet lie a Marc Gasol"
+        "comment": "Projet lie a Marc Gasol",
+        "primary": "#E30613",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Andorra",
@@ -2227,7 +2772,9 @@ export const CLUB_DATA = {
         "potential": 81,
         "prestige": 74,
         "category": "Competitive",
-        "comment": "Petit marche ambitieux"
+        "comment": "Petit marche ambitieux",
+        "primary": "#003DA5",
+        "secondary": "#FFD100"
       },
       {
         "name": "Breogan",
@@ -2235,7 +2782,9 @@ export const CLUB_DATA = {
         "potential": 77,
         "prestige": 75,
         "category": "Average",
-        "comment": "Club stable"
+        "comment": "Club stable",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Lleida",
@@ -2243,7 +2792,9 @@ export const CLUB_DATA = {
         "potential": 87,
         "prestige": 67,
         "category": "Rising Project",
-        "comment": "Potentiel de croissance"
+        "comment": "Potentiel de croissance",
+        "primary": "#0057B8",
+        "secondary": "#FFD100"
       },
       {
         "name": "San Pablo Burgos",
@@ -2251,7 +2802,9 @@ export const CLUB_DATA = {
         "potential": 88,
         "prestige": 82,
         "category": "Rising Project",
-        "comment": "Retour ambitieux"
+        "comment": "Retour ambitieux",
+        "primary": "#003DA5",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Granada",
@@ -2259,7 +2812,9 @@ export const CLUB_DATA = {
         "potential": 71,
         "prestige": 70,
         "category": "Rebuilding",
-        "comment": "Objectif maintien"
+        "comment": "Objectif maintien",
+        "primary": "#D71920",
+        "secondary": "#003DA5"
       }
     ],
     "second": [
@@ -2269,7 +2824,9 @@ export const CLUB_DATA = {
         "potential": 86,
         "prestige": 99,
         "category": "Historic Club",
-        "comment": "Geant du basket madrilene"
+        "comment": "Geant du basket madrilene",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Obradoiro",
@@ -2277,7 +2834,9 @@ export const CLUB_DATA = {
         "potential": 85,
         "prestige": 85,
         "category": "Promotion Candidate",
-        "comment": "Pretendant a la montee"
+        "comment": "Pretendant a la montee",
+        "primary": "#000000",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Fuenlabrada",
@@ -2285,7 +2844,9 @@ export const CLUB_DATA = {
         "potential": 84,
         "prestige": 84,
         "category": "Promotion Candidate",
-        "comment": "Experience ACB"
+        "comment": "Experience ACB",
+        "primary": "#E30613",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Leyma Coruna",
@@ -2293,7 +2854,9 @@ export const CLUB_DATA = {
         "potential": 83,
         "prestige": 78,
         "category": "Competitive",
-        "comment": "Projet solide"
+        "comment": "Projet solide",
+        "primary": "#FF7900",
+        "secondary": "#000000"
       },
       {
         "name": "Palencia",
@@ -2301,7 +2864,9 @@ export const CLUB_DATA = {
         "potential": 81,
         "prestige": 74,
         "category": "Competitive",
-        "comment": "Structure stable"
+        "comment": "Structure stable",
+        "primary": "#FFD100",
+        "secondary": "#003DA5"
       },
       {
         "name": "Gipuzkoa",
@@ -2309,7 +2874,9 @@ export const CLUB_DATA = {
         "potential": 80,
         "prestige": 79,
         "category": "Historic Club",
-        "comment": "Historique du basket basque"
+        "comment": "Historique du basket basque",
+        "primary": "#003DA5",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Alicante",
@@ -2317,7 +2884,9 @@ export const CLUB_DATA = {
         "potential": 81,
         "prestige": 77,
         "category": "Competitive",
-        "comment": "Club ambitieux"
+        "comment": "Club ambitieux",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Tizona Burgos",
@@ -2325,7 +2894,9 @@ export const CLUB_DATA = {
         "potential": 84,
         "prestige": 74,
         "category": "Rising Project",
-        "comment": "Croissance rapide"
+        "comment": "Croissance rapide",
+        "primary": "#003DA5",
+        "secondary": "#FFD100"
       },
       {
         "name": "Oviedo",
@@ -2333,7 +2904,9 @@ export const CLUB_DATA = {
         "potential": 79,
         "prestige": 72,
         "category": "Competitive",
-        "comment": "Regulier"
+        "comment": "Regulier",
+        "primary": "#003DA5",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Ourense",
@@ -2341,7 +2914,9 @@ export const CLUB_DATA = {
         "potential": 78,
         "prestige": 73,
         "category": "Competitive",
-        "comment": "Projet durable"
+        "comment": "Projet durable",
+        "primary": "#E30613",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Menorca",
@@ -2349,7 +2924,9 @@ export const CLUB_DATA = {
         "potential": 80,
         "prestige": 71,
         "category": "Rising Project",
-        "comment": "Ile avec potentiel"
+        "comment": "Ile avec potentiel",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Zamora",
@@ -2357,7 +2934,9 @@ export const CLUB_DATA = {
         "potential": 80,
         "prestige": 67,
         "category": "Rising Project",
-        "comment": "Progression recente"
+        "comment": "Progression recente",
+        "primary": "#006633",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Cantabria",
@@ -2365,7 +2944,9 @@ export const CLUB_DATA = {
         "potential": 76,
         "prestige": 65,
         "category": "Average",
-        "comment": "Budget limite"
+        "comment": "Budget limite",
+        "primary": "#003DA5",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Cartagena",
@@ -2373,7 +2954,9 @@ export const CLUB_DATA = {
         "potential": 76,
         "prestige": 64,
         "category": "Average",
-        "comment": "Developpement local"
+        "comment": "Developpement local",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Palma",
@@ -2381,7 +2964,9 @@ export const CLUB_DATA = {
         "potential": 81,
         "prestige": 68,
         "category": "Rising Project",
-        "comment": "Potentiel Baleares"
+        "comment": "Potentiel Baleares",
+        "primary": "#E30613",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Melilla",
@@ -2389,7 +2974,9 @@ export const CLUB_DATA = {
         "potential": 73,
         "prestige": 70,
         "category": "Historic Club",
-        "comment": "Longue presence en D2"
+        "comment": "Longue presence en D2",
+        "primary": "#0057A8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Palmer Mallorca",
@@ -2397,7 +2984,9 @@ export const CLUB_DATA = {
         "potential": 80,
         "prestige": 64,
         "category": "Rising Project",
-        "comment": "Projet recent"
+        "comment": "Projet recent",
+        "primary": "#006633",
+        "secondary": "#FFFFFF"
       }
     ],
     "third": [
@@ -2407,7 +2996,9 @@ export const CLUB_DATA = {
         "potential": 82,
         "prestige": 94,
         "category": "Historic Club",
-        "comment": "Ancien club ACB"
+        "comment": "Ancien club ACB",
+        "primary": "#00954C",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Valladolid",
@@ -2415,7 +3006,9 @@ export const CLUB_DATA = {
         "potential": 77,
         "prestige": 74,
         "category": "Competitive",
-        "comment": "Ville historique"
+        "comment": "Ville historique",
+        "primary": "#5B2C83",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Castellon",
@@ -2423,7 +3016,9 @@ export const CLUB_DATA = {
         "potential": 75,
         "prestige": 69,
         "category": "Competitive",
-        "comment": "Vise la D2"
+        "comment": "Vise la D2",
+        "primary": "#006633",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Moron",
@@ -2431,7 +3026,9 @@ export const CLUB_DATA = {
         "potential": 74,
         "prestige": 60,
         "category": "Average",
-        "comment": "Petit marche"
+        "comment": "Petit marche",
+        "primary": "#FFD100",
+        "secondary": "#000000"
       },
       {
         "name": "Barcelona B",
@@ -2439,7 +3036,9 @@ export const CLUB_DATA = {
         "potential": 96,
         "prestige": 95,
         "category": "Talent Factory",
-        "comment": "Reserve du Barca"
+        "comment": "Reserve du Barca",
+        "primary": "#A50044",
+        "secondary": "#004D98"
       },
       {
         "name": "Real Madrid B",
@@ -2447,7 +3046,9 @@ export const CLUB_DATA = {
         "potential": 97,
         "prestige": 100,
         "category": "Talent Factory",
-        "comment": "Reserve du Real"
+        "comment": "Reserve du Real",
+        "primary": "#FEBE10",
+        "secondary": "#00529F"
       }
     ],
     "academy": [
@@ -2457,7 +3058,9 @@ export const CLUB_DATA = {
         "rating": 99,
         "prestige": 100,
         "category": null,
-        "comment": "Meilleure academie espagnole"
+        "comment": "Meilleure academie espagnole",
+        "primary": "#FEBE10",
+        "secondary": "#00529F"
       },
       {
         "name": "La Masia Basket",
@@ -2465,7 +3068,9 @@ export const CLUB_DATA = {
         "rating": 99,
         "prestige": 100,
         "category": null,
-        "comment": "Academie iconique"
+        "comment": "Academie iconique",
+        "primary": "#A50044",
+        "secondary": "#004D98"
       },
       {
         "name": "Joventut Academy",
@@ -2473,7 +3078,9 @@ export const CLUB_DATA = {
         "rating": 98,
         "prestige": 95,
         "category": null,
-        "comment": "Formation de reference"
+        "comment": "Formation de reference",
+        "primary": "#000000",
+        "secondary": "#009639"
       },
       {
         "name": "Valencia Academy",
@@ -2481,7 +3088,9 @@ export const CLUB_DATA = {
         "rating": 95,
         "prestige": 90,
         "category": null,
-        "comment": "Developpement moderne"
+        "comment": "Developpement moderne",
+        "primary": "#F58220",
+        "secondary": "#0057B8"
       },
       {
         "name": "Estudiantes Academy",
@@ -2489,7 +3098,9 @@ export const CLUB_DATA = {
         "rating": 95,
         "prestige": 99,
         "category": null,
-        "comment": "Historique"
+        "comment": "Historique",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Baskonia Academy",
@@ -2497,7 +3108,9 @@ export const CLUB_DATA = {
         "rating": 94,
         "prestige": 94,
         "category": null,
-        "comment": "Excellente detection"
+        "comment": "Excellente detection",
+        "primary": "#E30613",
+        "secondary": "#003DA5"
       },
       {
         "name": "Unicaja Academy",
@@ -2505,7 +3118,9 @@ export const CLUB_DATA = {
         "rating": 92,
         "prestige": 88,
         "category": null,
-        "comment": "Tres bonne formation"
+        "comment": "Tres bonne formation",
+        "primary": "#007A33",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Gran Canaria Academy",
@@ -2513,7 +3128,9 @@ export const CLUB_DATA = {
         "rating": 89,
         "prestige": 86,
         "category": null,
-        "comment": "Talents insulaires"
+        "comment": "Talents insulaires",
+        "primary": "#FFD100",
+        "secondary": "#003DA5"
       },
       {
         "name": "Zaragoza Academy",
@@ -2521,7 +3138,9 @@ export const CLUB_DATA = {
         "rating": 89,
         "prestige": 83,
         "category": null,
-        "comment": "Academie reconnue"
+        "comment": "Academie reconnue",
+        "primary": "#E30613",
+        "secondary": "#FFD100"
       },
       {
         "name": "UCAM Academy",
@@ -2529,7 +3148,9 @@ export const CLUB_DATA = {
         "rating": 87,
         "prestige": 78,
         "category": null,
-        "comment": "Projet universitaire"
+        "comment": "Projet universitaire",
+        "primary": "#0057B8",
+        "secondary": "#FFD100"
       }
     ]
   },
@@ -2541,7 +3162,9 @@ export const CLUB_DATA = {
         "potential": 82,
         "prestige": 58,
         "category": "G League Contender",
-        "comment": "Très forte saison G League, bon relais de développement pour Orlando."
+        "comment": "Très forte saison G League, bon relais de développement pour Orlando.",
+        "primary": "#0077C8",
+        "secondary": "#000000"
       },
       {
         "name": "Greensboro Swarm",
@@ -2549,7 +3172,9 @@ export const CLUB_DATA = {
         "potential": 82,
         "prestige": 56,
         "category": "G League Contender",
-        "comment": "Champion G League récent, forte dynamique et beaucoup de minutes possibles."
+        "comment": "Champion G League récent, forte dynamique et beaucoup de minutes possibles.",
+        "primary": "#1D1160",
+        "secondary": "#00788C"
       },
       {
         "name": "Cleveland Charge",
@@ -2557,7 +3182,9 @@ export const CLUB_DATA = {
         "potential": 80,
         "prestige": 58,
         "category": "G League Strong",
-        "comment": "Equipe compétitive liée à Cleveland, bon tremplin vers NBA two-way."
+        "comment": "Equipe compétitive liée à Cleveland, bon tremplin vers NBA two-way.",
+        "primary": "#860038",
+        "secondary": "#FDBB30"
       },
       {
         "name": "Raptors 905",
@@ -2565,7 +3192,9 @@ export const CLUB_DATA = {
         "potential": 84,
         "prestige": 70,
         "category": "Talent Factory",
-        "comment": "Historique de développement solide, affilié à Toronto."
+        "comment": "Historique de développement solide, affilié à Toronto.",
+        "primary": "#CE1141",
+        "secondary": "#000000"
       },
       {
         "name": "Motor City Cruise",
@@ -2573,7 +3202,9 @@ export const CLUB_DATA = {
         "potential": 80,
         "prestige": 55,
         "category": "G League Strong",
-        "comment": "Bon niveau récent, utile pour joueur cherchant temps de jeu."
+        "comment": "Bon niveau récent, utile pour joueur cherchant temps de jeu.",
+        "primary": "#C8102E",
+        "secondary": "#1D42BA"
       },
       {
         "name": "Capital City Go-Go",
@@ -2581,7 +3212,9 @@ export const CLUB_DATA = {
         "potential": 78,
         "prestige": 56,
         "category": "G League Competitive",
-        "comment": "Affilié Wizards, opportunités élevées vu rebuild NBA."
+        "comment": "Affilié Wizards, opportunités élevées vu rebuild NBA.",
+        "primary": "#002B5C",
+        "secondary": "#E31837"
       },
       {
         "name": "Maine Celtics",
@@ -2589,7 +3222,9 @@ export const CLUB_DATA = {
         "potential": 76,
         "prestige": 66,
         "category": "G League Competitive",
-        "comment": "Affilié Boston, prestige élevé mais accès NBA difficile."
+        "comment": "Affilié Boston, prestige élevé mais accès NBA difficile.",
+        "primary": "#007A33",
+        "secondary": "#BA9653"
       },
       {
         "name": "Long Island Nets",
@@ -2597,7 +3232,9 @@ export const CLUB_DATA = {
         "potential": 76,
         "prestige": 62,
         "category": "G League Competitive",
-        "comment": "Marché new-yorkais, minutes de développement intéressantes."
+        "comment": "Marché new-yorkais, minutes de développement intéressantes.",
+        "primary": "#000000",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Delaware Blue Coats",
@@ -2605,7 +3242,9 @@ export const CLUB_DATA = {
         "potential": 78,
         "prestige": 70,
         "category": "Talent Factory",
-        "comment": "Très bonne réputation G League, affilié Sixers."
+        "comment": "Très bonne réputation G League, affilié Sixers.",
+        "primary": "#006BB6",
+        "secondary": "#ED174C"
       },
       {
         "name": "Noblesville Boom",
@@ -2613,7 +3252,9 @@ export const CLUB_DATA = {
         "potential": 76,
         "prestige": 55,
         "category": "New Project",
-        "comment": "Nouvelle identité affiliée Pacers, bon contexte de relance."
+        "comment": "Nouvelle identité affiliée Pacers, bon contexte de relance.",
+        "primary": "#1B365D",
+        "secondary": "#FFB81C"
       },
       {
         "name": "Birmingham Squadron",
@@ -2621,7 +3262,9 @@ export const CLUB_DATA = {
         "potential": 76,
         "prestige": 54,
         "category": "G League Average",
-        "comment": "Affilié Pelicans, environnement utile pour prospects à développer."
+        "comment": "Affilié Pelicans, environnement utile pour prospects à développer.",
+        "primary": "#0C2340",
+        "secondary": "#C8102E"
       },
       {
         "name": "Windy City Bulls",
@@ -2629,7 +3272,9 @@ export const CLUB_DATA = {
         "potential": 75,
         "prestige": 62,
         "category": "G League Average",
-        "comment": "Affilié Bulls, prestige de marque mais résultats moyens."
+        "comment": "Affilié Bulls, prestige de marque mais résultats moyens.",
+        "primary": "#CE1141",
+        "secondary": "#000000"
       },
       {
         "name": "College Park Skyhawks",
@@ -2637,7 +3282,9 @@ export const CLUB_DATA = {
         "potential": 76,
         "prestige": 56,
         "category": "G League Average",
-        "comment": "Affilié Hawks, bon marché régional."
+        "comment": "Affilié Hawks, bon marché régional.",
+        "primary": "#E03A3E",
+        "secondary": "#C1D32F"
       },
       {
         "name": "Westchester Knicks",
@@ -2645,7 +3292,9 @@ export const CLUB_DATA = {
         "potential": 76,
         "prestige": 68,
         "category": "G League Average",
-        "comment": "Affilié Knicks, grosse visibilité mais forte pression."
+        "comment": "Affilié Knicks, grosse visibilité mais forte pression.",
+        "primary": "#006BB6",
+        "secondary": "#F58426"
       },
       {
         "name": "Grand Rapids Gold",
@@ -2653,7 +3302,9 @@ export const CLUB_DATA = {
         "potential": 74,
         "prestige": 56,
         "category": "G League Rebuilding",
-        "comment": "Affilié Nuggets, développement intéressant malgré saison faible."
+        "comment": "Affilié Nuggets, développement intéressant malgré saison faible.",
+        "primary": "#0E2240",
+        "secondary": "#FEC524"
       },
       {
         "name": "Wisconsin Herd",
@@ -2661,7 +3312,9 @@ export const CLUB_DATA = {
         "potential": 73,
         "prestige": 55,
         "category": "G League Rebuilding",
-        "comment": "Affilié Bucks, profil bas de tableau."
+        "comment": "Affilié Bucks, profil bas de tableau.",
+        "primary": "#00471B",
+        "secondary": "#EEE1C6"
       },
       {
         "name": "South Bay Lakers",
@@ -2669,7 +3322,9 @@ export const CLUB_DATA = {
         "potential": 82,
         "prestige": 74,
         "category": "G League Contender",
-        "comment": "Très forte saison, affilié Lakers donc visibilité maximale."
+        "comment": "Très forte saison, affilié Lakers donc visibilité maximale.",
+        "primary": "#552583",
+        "secondary": "#FDB927"
       },
       {
         "name": "Mexico City Capitanes",
@@ -2677,7 +3332,9 @@ export const CLUB_DATA = {
         "potential": 80,
         "prestige": 72,
         "category": "G League Contender",
-        "comment": "Projet international unique, bon contexte narratif et scouting global."
+        "comment": "Projet international unique, bon contexte narratif et scouting global.",
+        "primary": "#1D428A",
+        "secondary": "#FFCD00"
       },
       {
         "name": "Stockton Kings",
@@ -2685,7 +3342,9 @@ export const CLUB_DATA = {
         "potential": 80,
         "prestige": 60,
         "category": "G League Strong",
-        "comment": "Finaliste récent, affilié Kings, bon niveau compétitif."
+        "comment": "Finaliste récent, affilié Kings, bon niveau compétitif.",
+        "primary": "#5A2D81",
+        "secondary": "#63727A"
       },
       {
         "name": "Rio Grande Valley Vipers",
@@ -2693,7 +3352,9 @@ export const CLUB_DATA = {
         "potential": 81,
         "prestige": 68,
         "category": "Talent Factory",
-        "comment": "Historique très fort en G League, affilié Rockets."
+        "comment": "Historique très fort en G League, affilié Rockets.",
+        "primary": "#CE1141",
+        "secondary": "#000000"
       },
       {
         "name": "Austin Spurs",
@@ -2701,7 +3362,9 @@ export const CLUB_DATA = {
         "potential": 84,
         "prestige": 70,
         "category": "Talent Factory",
-        "comment": "Affilié Spurs, très bon fit pour prospects longs à développer."
+        "comment": "Affilié Spurs, très bon fit pour prospects longs à développer.",
+        "primary": "#C4CED4",
+        "secondary": "#000000"
       },
       {
         "name": "Iowa Wolves",
@@ -2709,7 +3372,9 @@ export const CLUB_DATA = {
         "potential": 78,
         "prestige": 56,
         "category": "G League Competitive",
-        "comment": "Affilié Minnesota, bon environnement de transition."
+        "comment": "Affilié Minnesota, bon environnement de transition.",
+        "primary": "#0C2340",
+        "secondary": "#236192"
       },
       {
         "name": "Rip City Remix",
@@ -2717,7 +3382,9 @@ export const CLUB_DATA = {
         "potential": 80,
         "prestige": 56,
         "category": "G League Competitive",
-        "comment": "Affilié Portland, opportunités élevées avec reconstruction NBA."
+        "comment": "Affilié Portland, opportunités élevées avec reconstruction NBA.",
+        "primary": "#E03A3E",
+        "secondary": "#000000"
       },
       {
         "name": "San Diego Clippers",
@@ -2725,7 +3392,9 @@ export const CLUB_DATA = {
         "potential": 78,
         "prestige": 58,
         "category": "G League Competitive",
-        "comment": "Projet lié aux Clippers, marché californien attractif."
+        "comment": "Projet lié aux Clippers, marché californien attractif.",
+        "primary": "#C8102E",
+        "secondary": "#1D428A"
       },
       {
         "name": "Sioux Falls Skyforce",
@@ -2733,7 +3402,9 @@ export const CLUB_DATA = {
         "potential": 77,
         "prestige": 68,
         "category": "Historic G League",
-        "comment": "Club historique de G League, affilié Miami."
+        "comment": "Club historique de G League, affilié Miami.",
+        "primary": "#98002E",
+        "secondary": "#F9A01B"
       },
       {
         "name": "Texas Legends",
@@ -2741,7 +3412,9 @@ export const CLUB_DATA = {
         "potential": 76,
         "prestige": 62,
         "category": "G League Average",
-        "comment": "Affilié Dallas, opportunités en contexte de rebuild NBA."
+        "comment": "Affilié Dallas, opportunités en contexte de rebuild NBA.",
+        "primary": "#00538C",
+        "secondary": "#002B5E"
       },
       {
         "name": "Salt Lake City Stars",
@@ -2749,7 +3422,9 @@ export const CLUB_DATA = {
         "potential": 76,
         "prestige": 56,
         "category": "G League Average",
-        "comment": "Affilié Utah, minutes possibles dans projet long."
+        "comment": "Affilié Utah, minutes possibles dans projet long.",
+        "primary": "#002B5C",
+        "secondary": "#F9A01B"
       },
       {
         "name": "Santa Cruz Warriors",
@@ -2757,7 +3432,9 @@ export const CLUB_DATA = {
         "potential": 75,
         "prestige": 76,
         "category": "Talent Factory",
-        "comment": "Affilié Warriors, grosse culture de développement."
+        "comment": "Affilié Warriors, grosse culture de développement.",
+        "primary": "#1D428A",
+        "secondary": "#FFC72C"
       },
       {
         "name": "Oklahoma City Blue",
@@ -2765,7 +3442,9 @@ export const CLUB_DATA = {
         "potential": 78,
         "prestige": 62,
         "category": "G League Rebuilding",
-        "comment": "Affilié OKC, système fort mais profondeur NBA rend l’accès difficile."
+        "comment": "Affilié OKC, système fort mais profondeur NBA rend l’accès difficile.",
+        "primary": "#007AC1",
+        "secondary": "#EF3B24"
       },
       {
         "name": "Valley Suns",
@@ -2773,7 +3452,9 @@ export const CLUB_DATA = {
         "potential": 76,
         "prestige": 54,
         "category": "New Project",
-        "comment": "Jeune équipe affiliée Suns, projet encore fragile."
+        "comment": "Jeune équipe affiliée Suns, projet encore fragile.",
+        "primary": "#1D1160",
+        "secondary": "#E56020"
       },
       {
         "name": "Memphis Hustle",
@@ -2781,7 +3462,9 @@ export const CLUB_DATA = {
         "potential": 75,
         "prestige": 54,
         "category": "G League Rebuilding",
-        "comment": "Affilié Grizzlies, minutes possibles mais résultats faibles."
+        "comment": "Affilié Grizzlies, minutes possibles mais résultats faibles.",
+        "primary": "#5D76A9",
+        "secondary": "#12173F"
       }
     ],
     "college": [
@@ -2791,7 +3474,9 @@ export const CLUB_DATA = {
         "potential": 96,
         "prestige": 100,
         "category": "Blue Blood",
-        "comment": "Programme ultra médiatique, recrutement élite et pipeline NBA majeur."
+        "comment": "Programme ultra médiatique, recrutement élite et pipeline NBA majeur.",
+        "primary": "#003087",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Kentucky Wildcats",
@@ -2799,7 +3484,9 @@ export const CLUB_DATA = {
         "potential": 95,
         "prestige": 100,
         "category": "Blue Blood",
-        "comment": "Marque NCAA immense, historique NBA factory et pression maximale."
+        "comment": "Marque NCAA immense, historique NBA factory et pression maximale.",
+        "primary": "#0033A0",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "North Carolina Tar Heels",
@@ -2807,7 +3494,9 @@ export const CLUB_DATA = {
         "potential": 92,
         "prestige": 100,
         "category": "Blue Blood",
-        "comment": "Programme légendaire, prestige maximum même si cycles sportifs variables."
+        "comment": "Programme légendaire, prestige maximum même si cycles sportifs variables.",
+        "primary": "#7BAFD4",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Kansas Jayhawks",
@@ -2815,7 +3504,9 @@ export const CLUB_DATA = {
         "potential": 91,
         "prestige": 99,
         "category": "Blue Blood",
-        "comment": "Stabilité historique, prestige énorme et gros niveau de compétition."
+        "comment": "Stabilité historique, prestige énorme et gros niveau de compétition.",
+        "primary": "#0051BA",
+        "secondary": "#E8000D"
       },
       {
         "name": "UConn Huskies",
@@ -2823,7 +3514,9 @@ export const CLUB_DATA = {
         "potential": 93,
         "prestige": 96,
         "category": "Modern Power",
-        "comment": "Programme champion récent, très gros prestige moderne."
+        "comment": "Programme champion récent, très gros prestige moderne.",
+        "primary": "#000E2F",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Gonzaga Bulldogs",
@@ -2831,7 +3524,9 @@ export const CLUB_DATA = {
         "potential": 88,
         "prestige": 92,
         "category": "Modern Power",
-        "comment": "Programme régulier très connu, excellent développement offensif."
+        "comment": "Programme régulier très connu, excellent développement offensif.",
+        "primary": "#041E42",
+        "secondary": "#C8102E"
       },
       {
         "name": "Arizona Wildcats",
@@ -2839,7 +3534,9 @@ export const CLUB_DATA = {
         "potential": 90,
         "prestige": 93,
         "category": "Strong Program",
-        "comment": "Très fort programme, recrutement de haut niveau et grosse visibilité."
+        "comment": "Très fort programme, recrutement de haut niveau et grosse visibilité.",
+        "primary": "#CC0033",
+        "secondary": "#003366"
       },
       {
         "name": "Michigan Wolverines",
@@ -2847,7 +3544,9 @@ export const CLUB_DATA = {
         "potential": 90,
         "prestige": 90,
         "category": "Strong Program",
-        "comment": "Très forte saison/ranking récent, belle marque Big Ten."
+        "comment": "Très forte saison/ranking récent, belle marque Big Ten.",
+        "primary": "#00274C",
+        "secondary": "#FFCB05"
       },
       {
         "name": "Michigan State Spartans",
@@ -2855,7 +3554,9 @@ export const CLUB_DATA = {
         "potential": 86,
         "prestige": 92,
         "category": "Historic Program",
-        "comment": "Programme Tom Izzo historique, réputé pour dureté et développement."
+        "comment": "Programme Tom Izzo historique, réputé pour dureté et développement.",
+        "primary": "#18453B",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Houston Cougars",
@@ -2863,7 +3564,9 @@ export const CLUB_DATA = {
         "potential": 88,
         "prestige": 88,
         "category": "Strong Program",
-        "comment": "Culture défensive et intensité, souvent elite contender."
+        "comment": "Culture défensive et intensité, souvent elite contender.",
+        "primary": "#C8102E",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Purdue Boilermakers",
@@ -2871,7 +3574,9 @@ export const CLUB_DATA = {
         "potential": 87,
         "prestige": 86,
         "category": "Strong Program",
-        "comment": "Programme très solide, développement intérieur et culture Big Ten."
+        "comment": "Programme très solide, développement intérieur et culture Big Ten.",
+        "primary": "#CEB888",
+        "secondary": "#000000"
       },
       {
         "name": "Florida Gators",
@@ -2879,7 +3584,9 @@ export const CLUB_DATA = {
         "potential": 86,
         "prestige": 88,
         "category": "Strong Program",
-        "comment": "Très bon programme SEC, attractif pour prospects athlétiques."
+        "comment": "Très bon programme SEC, attractif pour prospects athlétiques.",
+        "primary": "#0021A5",
+        "secondary": "#FA4616"
       },
       {
         "name": "Alabama Crimson Tide",
@@ -2887,7 +3594,9 @@ export const CLUB_DATA = {
         "potential": 88,
         "prestige": 86,
         "category": "Rising Program",
-        "comment": "Basket en forte hausse avec gros soutien sportif SEC."
+        "comment": "Basket en forte hausse avec gros soutien sportif SEC.",
+        "primary": "#9E1B32",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Tennessee Volunteers",
@@ -2895,7 +3604,9 @@ export const CLUB_DATA = {
         "potential": 86,
         "prestige": 84,
         "category": "Strong Program",
-        "comment": "Programme physique, régulier et très compétitif."
+        "comment": "Programme physique, régulier et très compétitif.",
+        "primary": "#FF8200",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Arkansas Razorbacks",
@@ -2903,7 +3614,9 @@ export const CLUB_DATA = {
         "potential": 88,
         "prestige": 86,
         "category": "Rising Program",
-        "comment": "Forte marque SEC, recrutement souvent agressif."
+        "comment": "Forte marque SEC, recrutement souvent agressif.",
+        "primary": "#9D2235",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "UCLA Bruins",
@@ -2911,7 +3624,9 @@ export const CLUB_DATA = {
         "potential": 86,
         "prestige": 99,
         "category": "Blue Blood",
-        "comment": "Prestige historique maximal, niveau moderne parfois plus variable."
+        "comment": "Prestige historique maximal, niveau moderne parfois plus variable.",
+        "primary": "#2D68C4",
+        "secondary": "#F2A900"
       },
       {
         "name": "Illinois Fighting Illini",
@@ -2919,7 +3634,9 @@ export const CLUB_DATA = {
         "potential": 86,
         "prestige": 84,
         "category": "Strong Program",
-        "comment": "Très forte saison récente, programme Big Ten ambitieux."
+        "comment": "Très forte saison récente, programme Big Ten ambitieux.",
+        "primary": "#13294B",
+        "secondary": "#FF5F05"
       },
       {
         "name": "Iowa State Cyclones",
@@ -2927,7 +3644,9 @@ export const CLUB_DATA = {
         "potential": 86,
         "prestige": 82,
         "category": "Strong Program",
-        "comment": "Très compétitif récemment, bon environnement pour progression."
+        "comment": "Très compétitif récemment, bon environnement pour progression.",
+        "primary": "#C8102E",
+        "secondary": "#F1BE48"
       },
       {
         "name": "Texas Longhorns",
@@ -2935,7 +3654,9 @@ export const CLUB_DATA = {
         "potential": 87,
         "prestige": 88,
         "category": "Rising Program",
-        "comment": "Gros moyens, gros marché, potentiel supérieur aux résultats moyens."
+        "comment": "Gros moyens, gros marché, potentiel supérieur aux résultats moyens.",
+        "primary": "#BF5700",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Louisville Cardinals",
@@ -2943,7 +3664,9 @@ export const CLUB_DATA = {
         "potential": 85,
         "prestige": 91,
         "category": "Historic Program",
-        "comment": "Grand nom NCAA, en reconstruction positive."
+        "comment": "Grand nom NCAA, en reconstruction positive.",
+        "primary": "#AD0000",
+        "secondary": "#000000"
       },
       {
         "name": "Wisconsin Badgers",
@@ -2951,7 +3674,9 @@ export const CLUB_DATA = {
         "potential": 82,
         "prestige": 86,
         "category": "Historic Program",
-        "comment": "Culture stable, développement patient et compétitif."
+        "comment": "Culture stable, développement patient et compétitif.",
+        "primary": "#C5050C",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Virginia Cavaliers",
@@ -2959,7 +3684,9 @@ export const CLUB_DATA = {
         "potential": 83,
         "prestige": 88,
         "category": "Historic Program",
-        "comment": "Très forte identité défensive, bon développement tactique."
+        "comment": "Très forte identité défensive, bon développement tactique.",
+        "primary": "#232D4B",
+        "secondary": "#F84C1E"
       },
       {
         "name": "St. John’s Red Storm",
@@ -2967,7 +3694,9 @@ export const CLUB_DATA = {
         "potential": 86,
         "prestige": 88,
         "category": "Rising Program",
-        "comment": "Marché new-yorkais, forte visibilité et réveil récent."
+        "comment": "Marché new-yorkais, forte visibilité et réveil récent.",
+        "primary": "#BA0C2F",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Villanova Wildcats",
@@ -2975,7 +3704,9 @@ export const CLUB_DATA = {
         "potential": 83,
         "prestige": 90,
         "category": "Historic Program",
-        "comment": "Prestige récent fort, idéal pour guard intelligent."
+        "comment": "Prestige récent fort, idéal pour guard intelligent.",
+        "primary": "#003E7E",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Baylor Bears",
@@ -2983,7 +3714,9 @@ export const CLUB_DATA = {
         "potential": 84,
         "prestige": 86,
         "category": "Strong Program",
-        "comment": "Champion récent historique, bon développement moderne."
+        "comment": "Champion récent historique, bon développement moderne.",
+        "primary": "#154734",
+        "secondary": "#FFB81C"
       },
       {
         "name": "Auburn Tigers",
@@ -2991,7 +3724,9 @@ export const CLUB_DATA = {
         "potential": 85,
         "prestige": 82,
         "category": "Rising Program",
-        "comment": "Programme SEC très attractif, profil athlétique."
+        "comment": "Programme SEC très attractif, profil athlétique.",
+        "primary": "#0C2340",
+        "secondary": "#E87722"
       },
       {
         "name": "Texas Tech Red Raiders",
@@ -2999,7 +3734,9 @@ export const CLUB_DATA = {
         "potential": 84,
         "prestige": 80,
         "category": "Competitive",
-        "comment": "Programme dur, défensif et compétitif."
+        "comment": "Programme dur, défensif et compétitif.",
+        "primary": "#CC0000",
+        "secondary": "#000000"
       },
       {
         "name": "Marquette Golden Eagles",
@@ -3007,7 +3744,9 @@ export const CLUB_DATA = {
         "potential": 83,
         "prestige": 84,
         "category": "Competitive",
-        "comment": "Très bon programme Big East, fort pour guards."
+        "comment": "Très bon programme Big East, fort pour guards.",
+        "primary": "#003DA5",
+        "secondary": "#FFB81C"
       },
       {
         "name": "Saint Mary’s Gaels",
@@ -3015,7 +3754,9 @@ export const CLUB_DATA = {
         "potential": 81,
         "prestige": 78,
         "category": "Competitive",
-        "comment": "Programme stable, excellent développement malgré marché moindre."
+        "comment": "Programme stable, excellent développement malgré marché moindre.",
+        "primary": "#003DA5",
+        "secondary": "#C99700"
       },
       {
         "name": "Creighton Bluejays",
@@ -3023,7 +3764,9 @@ export const CLUB_DATA = {
         "potential": 82,
         "prestige": 80,
         "category": "Competitive",
-        "comment": "Programme Big East propre, offensif et régulier."
+        "comment": "Programme Big East propre, offensif et régulier.",
+        "primary": "#005CA9",
+        "secondary": "#FFFFFF"
       }
     ],
     "academy": [
@@ -3033,7 +3776,9 @@ export const CLUB_DATA = {
         "rating": 98,
         "prestige": 95,
         "category": null,
-        "comment": "Chemin fictif/jeu pour prospects américains très haut potentiel hors NCAA."
+        "comment": "Chemin fictif/jeu pour prospects américains très haut potentiel hors NCAA.",
+        "primary": "#C8102E",
+        "secondary": "#1D428A"
       },
       {
         "name": "Overtime Elite",
@@ -3041,7 +3786,9 @@ export const CLUB_DATA = {
         "rating": 94,
         "prestige": 88,
         "category": null,
-        "comment": "Chemin alternatif moderne entre lycée, pro et draft."
+        "comment": "Chemin alternatif moderne entre lycée, pro et draft.",
+        "primary": "#000000",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Montverde Academy",
@@ -3049,7 +3796,9 @@ export const CLUB_DATA = {
         "rating": 98,
         "prestige": 96,
         "category": null,
-        "comment": "Prep school ultra réputée, pipeline NCAA/NBA."
+        "comment": "Prep school ultra réputée, pipeline NCAA/NBA.",
+        "primary": "#006633",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "IMG Academy",
@@ -3057,7 +3806,9 @@ export const CLUB_DATA = {
         "rating": 97,
         "prestige": 95,
         "category": null,
-        "comment": "Structure sportive internationale, préparation pro très forte."
+        "comment": "Structure sportive internationale, préparation pro très forte.",
+        "primary": "#003B5C",
+        "secondary": "#00AEEF"
       },
       {
         "name": "Oak Hill Academy",
@@ -3065,7 +3816,9 @@ export const CLUB_DATA = {
         "rating": 96,
         "prestige": 98,
         "category": null,
-        "comment": "Académie historique avec énorme prestige basket."
+        "comment": "Académie historique avec énorme prestige basket.",
+        "primary": "#003366",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Duke Recruiting Pipeline",
@@ -3073,7 +3826,9 @@ export const CLUB_DATA = {
         "rating": 97,
         "prestige": 100,
         "category": null,
-        "comment": "Point de départ bleu blood pour prospects 5 étoiles."
+        "comment": "Point de départ bleu blood pour prospects 5 étoiles.",
+        "primary": "#003087",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Kentucky Recruiting Pipeline",
@@ -3081,7 +3836,9 @@ export const CLUB_DATA = {
         "rating": 97,
         "prestige": 100,
         "category": null,
-        "comment": "Voie royale one-and-done/pro sous pression maximale."
+        "comment": "Voie royale one-and-done/pro sous pression maximale.",
+        "primary": "#0033A0",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "G League Ignite Legacy Slot",
@@ -3089,7 +3846,9 @@ export const CLUB_DATA = {
         "rating": 90,
         "prestige": 85,
         "category": null,
-        "comment": "Slot gameplay inspiré des anciens chemins pro pré-draft."
+        "comment": "Slot gameplay inspiré des anciens chemins pro pré-draft.",
+        "primary": "#C8102E",
+        "secondary": "#1D428A"
       },
       {
         "name": "USA Basketball Junior Pathway",
@@ -3097,7 +3856,9 @@ export const CLUB_DATA = {
         "rating": 96,
         "prestige": 98,
         "category": null,
-        "comment": "Sélection nationale junior, boost de prestige et potentiel."
+        "comment": "Sélection nationale junior, boost de prestige et potentiel.",
+        "primary": "#002868",
+        "secondary": "#BF0A30"
       },
       {
         "name": "AAU Elite Circuit",
@@ -3105,7 +3866,9 @@ export const CLUB_DATA = {
         "rating": 92,
         "prestige": 90,
         "category": null,
-        "comment": "Chemin AAU pour scouting, recrutement NCAA et exposition nationale."
+        "comment": "Chemin AAU pour scouting, recrutement NCAA et exposition nationale.",
+        "primary": "#000000",
+        "secondary": "#FFFFFF"
       }
     ]
   },
@@ -3117,7 +3880,9 @@ export const CLUB_DATA = {
         "potential": 86,
         "prestige": 94,
         "category": "Elite",
-        "comment": "Gros marché, champion récent, forte attractivité et visibilité internationale."
+        "comment": "Gros marché, champion récent, forte attractivité et visibilité internationale.",
+        "primary": "#5B2C83",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Perth Wildcats",
@@ -3125,7 +3890,9 @@ export const CLUB_DATA = {
         "potential": 84,
         "prestige": 100,
         "category": "Elite",
-        "comment": "Club le plus titré et plus prestigieux du NBL, culture de playoffs permanente."
+        "comment": "Club le plus titré et plus prestigieux du NBL, culture de playoffs permanente.",
+        "primary": "#D71920",
+        "secondary": "#000000"
       },
       {
         "name": "Melbourne United",
@@ -3133,7 +3900,9 @@ export const CLUB_DATA = {
         "potential": 86,
         "prestige": 92,
         "category": "Elite",
-        "comment": "Organisation très stable, gros marché et aspirant au titre presque chaque saison."
+        "comment": "Organisation très stable, gros marché et aspirant au titre presque chaque saison.",
+        "primary": "#002B5C",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Adelaide 36ers",
@@ -3141,7 +3910,9 @@ export const CLUB_DATA = {
         "potential": 88,
         "prestige": 88,
         "category": "Strong",
-        "comment": "Club historique, forte ambition récente et effectif très attractif."
+        "comment": "Club historique, forte ambition récente et effectif très attractif.",
+        "primary": "#0033A0",
+        "secondary": "#E31837"
       },
       {
         "name": "Illawarra Hawks",
@@ -3149,7 +3920,9 @@ export const CLUB_DATA = {
         "potential": 85,
         "prestige": 82,
         "category": "Strong",
-        "comment": "Club compétitif, bon environnement pour joueurs en progression."
+        "comment": "Club compétitif, bon environnement pour joueurs en progression.",
+        "primary": "#D71920",
+        "secondary": "#FDB913"
       },
       {
         "name": "South East Melbourne Phoenix",
@@ -3157,7 +3930,9 @@ export const CLUB_DATA = {
         "potential": 88,
         "prestige": 78,
         "category": "Rising Project",
-        "comment": "Franchise récente dans un gros marché, croissance intéressante."
+        "comment": "Franchise récente dans un gros marché, croissance intéressante.",
+        "primary": null,
+        "secondary": null
       },
       {
         "name": "Tasmania JackJumpers",
@@ -3165,7 +3940,9 @@ export const CLUB_DATA = {
         "potential": 84,
         "prestige": 80,
         "category": "Competitive",
-        "comment": "Projet très populaire et compétitif depuis son arrivée dans la ligue."
+        "comment": "Projet très populaire et compétitif depuis son arrivée dans la ligue.",
+        "primary": "#2B2B2B",
+        "secondary": "#C66A2B"
       },
       {
         "name": "New Zealand Breakers",
@@ -3173,7 +3950,9 @@ export const CLUB_DATA = {
         "potential": 86,
         "prestige": 85,
         "category": "Competitive",
-        "comment": "Club néo-zélandais intégré au NBL, bon historique et développement de talents."
+        "comment": "Club néo-zélandais intégré au NBL, bon historique et développement de talents.",
+        "primary": "#00A3E0",
+        "secondary": "#111111"
       },
       {
         "name": "Cairns Taipans",
@@ -3181,7 +3960,9 @@ export const CLUB_DATA = {
         "potential": 78,
         "prestige": 74,
         "category": "Average",
-        "comment": "Petit marché mais bonne culture de scouting et développement."
+        "comment": "Petit marché mais bonne culture de scouting et développement.",
+        "primary": "#007A53",
+        "secondary": "#F15A22"
       },
       {
         "name": "Brisbane Bullets",
@@ -3189,7 +3970,9 @@ export const CLUB_DATA = {
         "potential": 82,
         "prestige": 86,
         "category": "Historic Club",
-        "comment": "Grand marché et prestige historique, mais résultats récents irréguliers."
+        "comment": "Grand marché et prestige historique, mais résultats récents irréguliers.",
+        "primary": "#0057B8",
+        "secondary": "#D71920"
       }
     ],
     "nbl1": [
@@ -3199,7 +3982,9 @@ export const CLUB_DATA = {
         "potential": 82,
         "prestige": 90,
         "category": "Historic Club",
-        "comment": "Nom historique du basket australien, excellent contexte narratif."
+        "comment": "Nom historique du basket australien, excellent contexte narratif.",
+        "primary": "#14213D",
+        "secondary": "#F15A22"
       },
       {
         "name": "Knox Raiders",
@@ -3207,7 +3992,9 @@ export const CLUB_DATA = {
         "potential": 80,
         "prestige": 74,
         "category": "Competitive",
-        "comment": "Très bon club NBL1, bassin de talents de Melbourne."
+        "comment": "Très bon club NBL1, bassin de talents de Melbourne.",
+        "primary": "#002B5C",
+        "secondary": "#F5C242"
       },
       {
         "name": "Sandringham Sabres",
@@ -3215,7 +4002,9 @@ export const CLUB_DATA = {
         "potential": 80,
         "prestige": 76,
         "category": "Competitive",
-        "comment": "Club réputé de Victoria, bon développement de jeunes."
+        "comment": "Club réputé de Victoria, bon développement de jeunes.",
+        "primary": "#C8102E",
+        "secondary": "#000000"
       },
       {
         "name": "Frankston Blues",
@@ -3223,7 +4012,9 @@ export const CLUB_DATA = {
         "potential": 78,
         "prestige": 72,
         "category": "Competitive",
-        "comment": "Structure solide, souvent compétitive en NBL1 South."
+        "comment": "Structure solide, souvent compétitive en NBL1 South.",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Dandenong Rangers",
@@ -3231,7 +4022,9 @@ export const CLUB_DATA = {
         "potential": 80,
         "prestige": 75,
         "category": "Talent Factory",
-        "comment": "Club formateur reconnu dans Victoria."
+        "comment": "Club formateur reconnu dans Victoria.",
+        "primary": "#006B3F",
+        "secondary": "#FFD100"
       },
       {
         "name": "Geelong United",
@@ -3239,7 +4032,9 @@ export const CLUB_DATA = {
         "potential": 79,
         "prestige": 73,
         "category": "Rising Project",
-        "comment": "Projet régional en progression avec bassin intéressant."
+        "comment": "Projet régional en progression avec bassin intéressant.",
+        "primary": "#002D72",
+        "secondary": "#F15A22"
       },
       {
         "name": "Centre of Excellence",
@@ -3247,7 +4042,9 @@ export const CLUB_DATA = {
         "potential": 98,
         "prestige": 95,
         "category": "Talent Factory",
-        "comment": "Programme national AIS/Basketball Australia, point de départ élite pour U18."
+        "comment": "Programme national AIS/Basketball Australia, point de départ élite pour U18.",
+        "primary": "#0B3D91",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Canberra Basketball",
@@ -3255,7 +4052,9 @@ export const CLUB_DATA = {
         "potential": 78,
         "prestige": 70,
         "category": "Rising Project",
-        "comment": "Marché de capitale, bon environnement de développement."
+        "comment": "Marché de capitale, bon environnement de développement.",
+        "primary": "#0B3D91",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Manly Warringah Sea Eagles",
@@ -3263,7 +4062,9 @@ export const CLUB_DATA = {
         "potential": 76,
         "prestige": 68,
         "category": "Competitive",
-        "comment": "Club stable de NSW, bon point de départ senior."
+        "comment": "Club stable de NSW, bon point de départ senior.",
+        "primary": "#6C1D45",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Newcastle Falcons",
@@ -3271,7 +4072,9 @@ export const CLUB_DATA = {
         "potential": 76,
         "prestige": 70,
         "category": "Competitive",
-        "comment": "Ville sportive importante, potentiel régional."
+        "comment": "Ville sportive importante, potentiel régional.",
+        "primary": "#0057B8",
+        "secondary": "#FDB913"
       },
       {
         "name": "Sydney Comets",
@@ -3279,7 +4082,9 @@ export const CLUB_DATA = {
         "potential": 78,
         "prestige": 76,
         "category": "Historic Club",
-        "comment": "Club connu de Sydney, bonne base locale."
+        "comment": "Club connu de Sydney, bonne base locale.",
+        "primary": "#C8102E",
+        "secondary": "#1B1B1B"
       },
       {
         "name": "Mackay Meteors",
@@ -3287,7 +4092,9 @@ export const CLUB_DATA = {
         "potential": 78,
         "prestige": 76,
         "category": "Competitive",
-        "comment": "Club fort du Queensland, tradition NBL1 North."
+        "comment": "Club fort du Queensland, tradition NBL1 North.",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Townsville Heat",
@@ -3295,7 +4102,9 @@ export const CLUB_DATA = {
         "potential": 78,
         "prestige": 80,
         "category": "Historic Club",
-        "comment": "Ville historique du basket australien, héritage Crocodiles."
+        "comment": "Ville historique du basket australien, héritage Crocodiles.",
+        "primary": "#E31837",
+        "secondary": "#000000"
       },
       {
         "name": "Gold Coast Rollers",
@@ -3303,7 +4112,9 @@ export const CLUB_DATA = {
         "potential": 80,
         "prestige": 74,
         "category": "Rising Project",
-        "comment": "Marché attractif, potentiel de développement élevé."
+        "comment": "Marché attractif, potentiel de développement élevé.",
+        "primary": "#0099D8",
+        "secondary": "#F9A01B"
       },
       {
         "name": "Logan Thunder",
@@ -3311,7 +4122,9 @@ export const CLUB_DATA = {
         "potential": 78,
         "prestige": 70,
         "category": "Competitive",
-        "comment": "Bon bassin Queensland, régulièrement compétitif."
+        "comment": "Bon bassin Queensland, régulièrement compétitif.",
+        "primary": "#5B2C83",
+        "secondary": "#00A651"
       },
       {
         "name": "Warwick Senators",
@@ -3319,7 +4132,9 @@ export const CLUB_DATA = {
         "potential": 80,
         "prestige": 75,
         "category": "Competitive",
-        "comment": "Très fort en Australie-Occidentale, bon niveau NBL1."
+        "comment": "Très fort en Australie-Occidentale, bon niveau NBL1.",
+        "primary": "#7A263A",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Rockingham Flames",
@@ -3327,7 +4142,9 @@ export const CLUB_DATA = {
         "potential": 80,
         "prestige": 75,
         "category": "Competitive",
-        "comment": "Club performant de WA, profil haut de NBL1."
+        "comment": "Club performant de WA, profil haut de NBL1.",
+        "primary": "#D71920",
+        "secondary": "#FDB913"
       },
       {
         "name": "Geraldton Buccaneers",
@@ -3335,7 +4152,9 @@ export const CLUB_DATA = {
         "potential": 77,
         "prestige": 78,
         "category": "Historic Club",
-        "comment": "Club régional avec forte tradition basket."
+        "comment": "Club régional avec forte tradition basket.",
+        "primary": "#003A70",
+        "secondary": "#C99700"
       },
       {
         "name": "Joondalup Wolves",
@@ -3343,7 +4162,9 @@ export const CLUB_DATA = {
         "potential": 77,
         "prestige": 73,
         "category": "Competitive",
-        "comment": "Structure solide de Perth/WA."
+        "comment": "Structure solide de Perth/WA.",
+        "primary": "#006B3F",
+        "secondary": "#A7A9AC"
       },
       {
         "name": "Sturt Sabres",
@@ -3351,7 +4172,9 @@ export const CLUB_DATA = {
         "potential": 78,
         "prestige": 72,
         "category": "Talent Factory",
-        "comment": "Club réputé d’Australie-Méridionale, développement jeunes."
+        "comment": "Club réputé d’Australie-Méridionale, développement jeunes.",
+        "primary": "#C8102E",
+        "secondary": "#000000"
       },
       {
         "name": "Forestville Eagles",
@@ -3359,7 +4182,9 @@ export const CLUB_DATA = {
         "potential": 77,
         "prestige": 73,
         "category": "Competitive",
-        "comment": "Club historique SA, bonne culture de compétition."
+        "comment": "Club historique SA, bonne culture de compétition.",
+        "primary": "#0057B8",
+        "secondary": "#FDB913"
       },
       {
         "name": "West Adelaide Bearcats",
@@ -3367,7 +4192,9 @@ export const CLUB_DATA = {
         "potential": 76,
         "prestige": 72,
         "category": "Historic Club",
-        "comment": "Nom traditionnel du basket sud-australien."
+        "comment": "Nom traditionnel du basket sud-australien.",
+        "primary": "#7A0019",
+        "secondary": "#F5C542"
       },
       {
         "name": "Central Districts Lions",
@@ -3375,7 +4202,9 @@ export const CLUB_DATA = {
         "potential": 75,
         "prestige": 66,
         "category": "Average",
-        "comment": "Club local utile pour debut senior."
+        "comment": "Club local utile pour debut senior.",
+        "primary": "#0057B8",
+        "secondary": "#FFD100"
       }
     ],
     "academy": [
@@ -3385,7 +4214,9 @@ export const CLUB_DATA = {
         "potential": 99,
         "prestige": 98,
         "category": "Talent Factory",
-        "comment": "Voie de formation principale pour prospects australiens de niveau international."
+        "comment": "Voie de formation principale pour prospects australiens de niveau international.",
+        "primary": "#0B3D91",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "NBA Global Academy Australia",
@@ -3393,7 +4224,9 @@ export const CLUB_DATA = {
         "potential": 99,
         "prestige": 96,
         "category": "Talent Factory",
-        "comment": "Programme de très haut potentiel, directement pensé pour prospects NBA."
+        "comment": "Programme de très haut potentiel, directement pensé pour prospects NBA.",
+        "primary": "#17408B",
+        "secondary": "#C9082A"
       },
       {
         "name": "Victorian Institute of Sport Basketball",
@@ -3401,7 +4234,9 @@ export const CLUB_DATA = {
         "potential": 90,
         "prestige": 85,
         "category": "Talent Factory",
-        "comment": "Très gros bassin à Melbourne/Victoria."
+        "comment": "Très gros bassin à Melbourne/Victoria.",
+        "primary": "#002B5C",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "New South Wales Institute Basketball",
@@ -3409,7 +4244,9 @@ export const CLUB_DATA = {
         "potential": 88,
         "prestige": 82,
         "category": "Talent Factory",
-        "comment": "Bassin Sydney/NSW, bon tremplin jeunes."
+        "comment": "Bassin Sydney/NSW, bon tremplin jeunes.",
+        "primary": "#0057B8",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Queensland Academy Basketball",
@@ -3417,7 +4254,9 @@ export const CLUB_DATA = {
         "potential": 86,
         "prestige": 80,
         "category": "Talent Factory",
-        "comment": "Développement fort dans le Queensland."
+        "comment": "Développement fort dans le Queensland.",
+        "primary": "#6A1B9A",
+        "secondary": "#FDB913"
       },
       {
         "name": "Basketball Australia Centre of Excellence",
@@ -3425,7 +4264,9 @@ export const CLUB_DATA = {
         "rating": 99,
         "prestige": 98,
         "category": null,
-        "comment": "Meilleur point de départ australien pour un joueur de 16 ans."
+        "comment": "Meilleur point de départ australien pour un joueur de 16 ans.",
+        "primary": "#0B3D91",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "NBA Global Academy Australia",
@@ -3433,7 +4274,9 @@ export const CLUB_DATA = {
         "rating": 99,
         "prestige": 96,
         "category": null,
-        "comment": "Programme haut potentiel pour prospects NBA/internationaux."
+        "comment": "Programme haut potentiel pour prospects NBA/internationaux.",
+        "primary": "#17408B",
+        "secondary": "#C9082A"
       },
       {
         "name": "Sydney Kings Youth Pathway",
@@ -3441,7 +4284,9 @@ export const CLUB_DATA = {
         "rating": 90,
         "prestige": 94,
         "category": null,
-        "comment": "Très forte visibilité et marché majeur."
+        "comment": "Très forte visibilité et marché majeur.",
+        "primary": "#5B2C83",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Perth Wildcats Academy",
@@ -3449,7 +4294,9 @@ export const CLUB_DATA = {
         "rating": 89,
         "prestige": 100,
         "category": null,
-        "comment": "Prestige maximum en Australie, culture professionnelle forte."
+        "comment": "Prestige maximum en Australie, culture professionnelle forte.",
+        "primary": "#D71920",
+        "secondary": "#000000"
       },
       {
         "name": "Melbourne United Academy",
@@ -3457,7 +4304,9 @@ export const CLUB_DATA = {
         "rating": 90,
         "prestige": 92,
         "category": null,
-        "comment": "Excellent marché et très bon environnement pro."
+        "comment": "Excellent marché et très bon environnement pro.",
+        "primary": "#002B5C",
+        "secondary": "#FFFFFF"
       },
       {
         "name": "Adelaide 36ers Development",
@@ -3465,7 +4314,9 @@ export const CLUB_DATA = {
         "rating": 86,
         "prestige": 88,
         "category": null,
-        "comment": "Club historique, bon tremplin NBL."
+        "comment": "Club historique, bon tremplin NBL.",
+        "primary": "#0033A0",
+        "secondary": "#E31837"
       },
       {
         "name": "Illawarra Hawks Development",
@@ -3473,7 +4324,9 @@ export const CLUB_DATA = {
         "rating": 85,
         "prestige": 82,
         "category": null,
-        "comment": "Bon cadre de progression et accès aux minutes."
+        "comment": "Bon cadre de progression et accès aux minutes.",
+        "primary": "#D71920",
+        "secondary": "#FDB913"
       },
       {
         "name": "New Zealand Breakers Academy",
@@ -3481,7 +4334,9 @@ export const CLUB_DATA = {
         "rating": 86,
         "prestige": 85,
         "category": null,
-        "comment": "Très bon développement Océanie, passerelle NBL/NCAA."
+        "comment": "Très bon développement Océanie, passerelle NBL/NCAA.",
+        "primary": "#00A3E0",
+        "secondary": "#111111"
       },
       {
         "name": "Tasmania JackJumpers Development",
@@ -3489,7 +4344,9 @@ export const CLUB_DATA = {
         "rating": 82,
         "prestige": 80,
         "category": null,
-        "comment": "Projet récent mais très stable et populaire."
+        "comment": "Projet récent mais très stable et populaire.",
+        "primary": "#2B2B2B",
+        "secondary": "#C66A2B"
       },
       {
         "name": "Melbourne Tigers Juniors",
@@ -3497,7 +4354,9 @@ export const CLUB_DATA = {
         "rating": 84,
         "prestige": 90,
         "category": null,
-        "comment": "Fort héritage historique et bassin Victoria."
+        "comment": "Fort héritage historique et bassin Victoria.",
+        "primary": "#14213D",
+        "secondary": "#F15A22"
       },
       {
         "name": "Sturt Sabres Juniors",
@@ -3505,8 +4364,180 @@ export const CLUB_DATA = {
         "rating": 82,
         "prestige": 72,
         "category": null,
-        "comment": "Très bon programme junior en Australie-Méridionale."
+        "comment": "Très bon programme junior en Australie-Méridionale.",
+        "primary": "#C8102E",
+        "secondary": "#000000"
       }
     ]
+  }
+};
+export const GLOBAL_CLUB_COLORS = {
+  "Boston": {
+    "primary": "#007A33",
+    "secondary": "#BA9653"
+  },
+  "L.A. Lakers": {
+    "primary": "#552583",
+    "secondary": "#FDB927"
+  },
+  "Golden State": {
+    "primary": "#1D428A",
+    "secondary": "#FFC72C"
+  },
+  "Denver": {
+    "primary": "#0E2240",
+    "secondary": "#FEC524"
+  },
+  "Milwaukee": {
+    "primary": "#00471B",
+    "secondary": "#EEE1C6"
+  },
+  "Miami": {
+    "primary": "#98002E",
+    "secondary": "#F9A01B"
+  },
+  "New York": {
+    "primary": "#006BB6",
+    "secondary": "#F58426"
+  },
+  "Dallas": {
+    "primary": "#00538C",
+    "secondary": "#002B5E"
+  },
+  "Phoenix": {
+    "primary": "#1D1160",
+    "secondary": "#E56020"
+  },
+  "OKC": {
+    "primary": "#007AC1",
+    "secondary": "#EF3B24"
+  },
+  "Philadelphie": {
+    "primary": "#006BB6",
+    "secondary": "#ED174C"
+  },
+  "Memphis": {
+    "primary": "#5D76A9",
+    "secondary": "#12173F"
+  },
+  "Atlanta": {
+    "primary": "#E03A3E",
+    "secondary": "#C1D32F"
+  },
+  "Brooklyn": {
+    "primary": "#000000",
+    "secondary": "#FFFFFF"
+  },
+  "Charlotte": {
+    "primary": "#1D1160",
+    "secondary": "#00788C"
+  },
+  "Chicago": {
+    "primary": "#CE1141",
+    "secondary": "#000000"
+  },
+  "Cleveland": {
+    "primary": "#860038",
+    "secondary": "#FDBB30"
+  },
+  "Detroit": {
+    "primary": "#C8102E",
+    "secondary": "#1D42BA"
+  },
+  "Houston": {
+    "primary": "#CE1141",
+    "secondary": "#000000"
+  },
+  "Indiana": {
+    "primary": "#002D62",
+    "secondary": "#FDBB30"
+  },
+  "LA Clippers": {
+    "primary": "#C8102E",
+    "secondary": "#1D428A"
+  },
+  "New Orleans": {
+    "primary": "#0C2340",
+    "secondary": "#C8102E"
+  },
+  "Minnesota": {
+    "primary": "#0C2340",
+    "secondary": "#236192"
+  },
+  "Orlando": {
+    "primary": "#0077C0",
+    "secondary": "#C4CED4"
+  },
+  "Portland": {
+    "primary": "#E03A3E",
+    "secondary": "#000000"
+  },
+  "Sacramento": {
+    "primary": "#5A2D81",
+    "secondary": "#63727A"
+  },
+  "San Antonio": {
+    "primary": "#C4CED4",
+    "secondary": "#000000"
+  },
+  "Toronto": {
+    "primary": "#CE1141",
+    "secondary": "#000000"
+  },
+  "Utah": {
+    "primary": "#002B5C",
+    "secondary": "#F9A01B"
+  },
+  "Washington": {
+    "primary": "#002B5C",
+    "secondary": "#E31837"
+  },
+  "Real Madrid": {
+    "primary": "#FEBE10",
+    "secondary": "#00529F"
+  },
+  "FC Barcelone": {
+    "primary": "#A50044",
+    "secondary": "#004D98"
+  },
+  "Panathinaïkos": {
+    "primary": "#007A33",
+    "secondary": "#FFFFFF"
+  },
+  "Olympiakos": {
+    "primary": "#E30613",
+    "secondary": "#FFFFFF"
+  },
+  "Monaco": {
+    "primary": "#D71920",
+    "secondary": "#FFFFFF"
+  },
+  "Baskonia": {
+    "primary": "#E30613",
+    "secondary": "#003DA5"
+  },
+  "Paris Basketball": {
+    "primary": "#111111",
+    "secondary": "#FFFFFF"
+  },
+  "Bayern Munich": {
+    "primary": "#DC052D",
+    "secondary": "#FFFFFF"
+  },
+  "Crvena Zvezda": {
+    "primary": "#E31837",
+    "secondary": "#FFFFFF"
+  },
+  "Partizan": {
+    "primary": "#000000",
+    "secondary": "#FFFFFF"
+  },
+  "ASVEL": {
+    "primary": "#000000",
+    "secondary": "#8BC53F"
+  },
+  "ALBA Berlin": {
+    "primary": "#FDB515",
+    "secondary": "#0057B8"
   }
 };

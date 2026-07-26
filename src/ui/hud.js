@@ -2,8 +2,8 @@ import { G } from '../engine/state.js';
 import { ATTRS, POSITIONS } from '../data/positions.js';
 import { LEAGUES } from '../data/leagues.js';
 import { ovr, roleOf } from '../engine/player.js';
-import { clamp, money, reducedMotion, easeOut } from '../engine/utils.js';
-import { applyAccent, emblemColors } from '../engine/accent.js';
+import { clamp, money, reducedMotion, easeOut, clubInitials } from '../engine/utils.js';
+import { applyAccent, emblemColors, textColorOn, hexToRgba } from '../engine/accent.js';
 import { activeTags, renderTagChips } from '../engine/tags.js';
 import { stage } from './dom.js';
 
@@ -15,20 +15,20 @@ function meter(label,val,color){
     <div class="bar"><i style="width:${clamp(val,0,100)}%;background:${color}"></i></div></div>`;
 }
 
-// Écusson de club fait maison en SVG : silhouette de blason classique, coupée en deux teintes
-// (primaire/secondaire dérivée -- voir emblemColors() dans accent.js), liseré crème pour se
-// détacher proprement quelle que soit la combinaison de couleurs. Remplace l'ancienne pastille
-// carrée à initiale : plus grand, sans lettre, point focal du HUD plutôt qu'un simple repère.
-let emblemUid = 0;
-const SHIELD_PATH = 'M12 2.4 L19.6 5.4 V11.6 C19.6 17 15.6 20.5 12 21.6 C8.4 20.5 4.4 17 4.4 11.6 V5.4 Z';
-function clubEmblemSvg(primary, secondary){
-  const id = 'em' + (emblemUid++);
-  return `<svg viewBox="0 0 24 24" width="44" height="44" style="flex:none;filter:drop-shadow(0 2px 4px rgba(36,24,19,.16))">
-    <defs><clipPath id="${id}"><rect x="12" y="0" width="12" height="24"/></clipPath></defs>
-    <path d="${SHIELD_PATH}" fill="${primary}"/>
-    <path d="${SHIELD_PATH}" fill="${secondary}" clip-path="url(#${id})"/>
-    <path d="M12 2.4 V21.6" stroke="rgba(255,248,238,.55)" stroke-width="1"/>
-    <path d="${SHIELD_PATH}" fill="none" stroke="var(--panel)" stroke-width="1.4"/>
+// Pastille d'identité de club : depuis que la tuile profil entière porte la couleur du club
+// (voir .player-card dans styles.css), l'ancien écusson-bouclier fait double emploi et ne
+// convainc pas. Remplacé par des initiales de club sobres sur fond primaire, avec un discret
+// repli de coin en secondaire (écho du panneau latéral d'un maillot) -- redevient un simple
+// accent maintenant que l'identité visuelle vit sur la tuile, pas sur la pastille.
+function clubMarkSvg(primary, secondary, name){
+  const initials = clubInitials(name);
+  const ink = textColorOn(primary);
+  const fontSize = initials.length>=3 ? 15 : 17;
+  return `<svg viewBox="0 0 44 44" width="44" height="44" style="flex:none;filter:drop-shadow(0 2px 4px rgba(36,24,19,.16))">
+    <rect x="0" y="0" width="44" height="44" rx="12" fill="${primary}"/>
+    <path d="M44 44 L44 27 L27 44 Z" fill="${secondary}" opacity=".9"/>
+    <text x="21" y="28" text-anchor="middle" font-family="'Big Shoulders Display',sans-serif" font-weight="800"
+      font-size="${fontSize}" letter-spacing="0.5" fill="${ink}">${initials}</text>
   </svg>`;
 }
 
@@ -71,8 +71,13 @@ export function renderHUD(mode='club'){
     <div class="attr"><div class="arow"><span class="an">${a.name}</span>
       <span class="av" id="av-${a.id}">${p.attrs[a.id]}</span></div>
       <div class="abar"><i style="width:${p.attrs[a.id]}%"></i></div></div>`).join('');
+  // Lavis dynamique de la tuile profil (voir .player-card dans styles.css) : rgba() pré-calculés
+  // à faible opacité, sûrs pour le texte quelle que soit la couleur de club (voir hexToRgba()).
+  // La bande latérale et le repli de coin utilisent les teintes pleines, sans risque puisque
+  // aucun texte ne les recouvre.
+  const jerseyWash = `--club-primary:${accentHex};--club-secondary:${emblemSecondary};--club-primary-wash:${hexToRgba(accentHex,.22)};--club-secondary-wash:${hexToRgba(emblemSecondary,.16)}`;
   return `<div class="hud">
-    <div class="card player-card">
+    <div class="card player-card" style="${jerseyWash}">
       <div class="club-stripe"></div>
       <div class="pc-top">
         <div><div class="pc-name">${p.name}</div>
@@ -80,7 +85,7 @@ export function renderHUD(mode='club'){
         <div class="ovr-badge" style="--pct:${o}"><div class="n" id="ovrN">${o}</div><div class="l">OVR</div></div>
       </div>
       <div class="pc-club">
-        ${clubEmblemSvg(emblemPrimary, emblemSecondary)}
+        ${clubMarkSvg(emblemPrimary, emblemSecondary, p.club)}
         <div><div class="cn">${p.club||'Sans club'}</div>
           <div class="cl">${lg?lg.short:''}${p.club&&p.seasons.length?` · <span style="color:var(--mint)">${roleOf(p).label}</span>`:''}</div></div>
       </div>

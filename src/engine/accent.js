@@ -2,20 +2,33 @@
 // une fenêtre de sélection nationale), avec garde-fou de contraste automatique. L'objectif est
 // que deux carrières se ressentent visuellement différentes, jamais qu'une couleur de club
 // improbable rende l'interface illisible sur le fond crème Terre battue.
+import { CLUB_DATA, GLOBAL_CLUB_COLORS } from '../data/clubData.js';
 
-// Vraies couleurs de marque, réservées aux clubs globaux de src/data/leagues.js (NBA/EuroLeague :
-// noms de vrais clubs, peu nombreux, faciles à vérifier). Les centaines de clubs de
-// src/data/clubData.js (générés depuis les fichiers Excel source) n'ont pas de couleur officielle
-// en base : ils reçoivent une teinte stable dérivée de leur nom (voir hashHue) plutôt qu'une
-// couleur inventée présentée comme authentique.
-const CLUB_ACCENT = {
-  'Boston':'#007A33', 'L.A. Lakers':'#552583', 'Golden State':'#1D428A', 'Denver':'#FEC524',
-  'Milwaukee':'#00471B', 'Miami':'#98002E', 'New York':'#F58426', 'Dallas':'#00538C',
-  'Phoenix':'#E56020', 'OKC':'#EF3B24', 'Philadelphie':'#006BB6', 'Memphis':'#5D76A9',
-  'Real Madrid':'#FEBE10', 'FC Barcelone':'#004D98', 'Panathinaïkos':'#046A38',
-  'Olympiakos':'#D91A21', 'Fenerbahçe':'#0A3F7F', 'Monaco':'#DA1F26', 'Baskonia':'#00A54F',
-  'Maccabi':'#FFCD00', 'Žalgiris':'#01A64F',
-};
+// Vraies couleurs de marque (primaire + secondaire), ingérées depuis data-source/clubcolor.xlsx
+// via scripts/gen-club-data.mjs : couvrent la quasi-totalité des clubs/académies de
+// src/data/clubData.js (nation par nation) + les paliers globaux NBA/EuroLeague
+// (GLOBAL_CLUB_COLORS, non nation-aware). Un club peut apparaître sous le même nom dans
+// plusieurs nations/paliers ; en cas de collision, le premier rencontré gagne (sans conséquence
+// pratique, les noms de clubs réels ne se recoupent quasiment jamais entre nations). Les rares
+// clubs sans couleur officielle en base (nations sans fichier source dédié, ex. Turquie/Italie/
+// Lituanie/Israël pour les paliers globaux) reçoivent toujours une teinte stable dérivée de leur
+// nom (voir hashHue) plutôt qu'une couleur inventée présentée comme authentique.
+const REAL_CLUB_COLORS = new Map();
+for (const nation of Object.keys(CLUB_DATA)) {
+  for (const tier of Object.keys(CLUB_DATA[nation])) {
+    for (const c of CLUB_DATA[nation][tier]) {
+      if (c.primary && !REAL_CLUB_COLORS.has(c.name)) {
+        REAL_CLUB_COLORS.set(c.name, { primary: c.primary, secondary: c.secondary });
+      }
+    }
+  }
+}
+for (const [name, colors] of Object.entries(GLOBAL_CLUB_COLORS)) {
+  if (!REAL_CLUB_COLORS.has(name)) REAL_CLUB_COLORS.set(name, colors);
+}
+function realColorsFor(clubName) {
+  return clubName ? REAL_CLUB_COLORS.get(clubName) || null : null;
+}
 
 // Couleur "sélection nationale", dérivée de l'identité fédérale/drapeau réelle de chaque nation
 // jouable (src/data/nations.js).
@@ -45,6 +58,15 @@ function hslToHex(h,s,l){
 function hexToRgb(hex){
   const h=hex.replace('#','');
   return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16));
+}
+// rgba() prêt à l'emploi pour un lavis dynamique (posé en variable CSS depuis hud.js) : une
+// couleur de club quelconque, même très sombre ou très saturée, reste un lavis sûr pour le
+// texte une fois mélangée à faible opacité avec le fond crème -- garde-fou par construction
+// (voir .player-card dans styles.css), en plus du garde-fou de contraste déjà appliqué en amont
+// aux couleurs pleines (--accent, secondaire de emblemColors).
+export function hexToRgba(hex, alpha){
+  const [r,g,b] = hexToRgb(hex);
+  return `rgba(${r},${g},${b},${alpha})`;
 }
 function rgbToHsl(r,g,b){
   r/=255; g/=255; b/=255;
@@ -88,7 +110,8 @@ export function ensureContrast(hex, minRatio=3.5){
 
 function clubAccentRaw(clubName){
   if(!clubName) return null;
-  if(CLUB_ACCENT[clubName]) return CLUB_ACCENT[clubName];
+  const real = realColorsFor(clubName);
+  if(real) return real.primary;
   return hslToHex(hashHue(clubName), 0.62, 0.5);
 }
 function nationAccentRaw(nationId){
@@ -118,12 +141,28 @@ function ensureVisible(hex, minRatio=1.6){
   return candidate;
 }
 
-// Couleurs primaire + secondaire de l'écusson de club, toutes deux garanties lisibles/visibles
-// sur --court. Même mode 'club'/'nation' que getAccent().
+// Couleurs primaire + secondaire de l'identité de club (tuile profil + pastille d'initiales),
+// toutes deux garanties lisibles/visibles sur --court. Utilise la vraie secondaire officielle
+// quand elle est connue (mode 'club' avec couleur réelle en base) plutôt qu'une dérivation
+// algorithmique, réservée aux clubs sans donnée officielle et au mode 'nation' (pas de
+// secondaire curatée par nation).
 export function emblemColors(p, mode='club'){
+  const real = mode==='club' ? realColorsFor(p.club) : null;
+  if(real && real.secondary){
+    return { primary: ensureContrast(real.primary), secondary: ensureVisible(real.secondary) };
+  }
   const primary = getAccent(p, mode);
   const secondary = ensureVisible(deriveSecondary(primary));
   return { primary, secondary };
+}
+
+// Choisit une couleur d'encre (chalk sombre ou crème) lisible par-dessus un fond saturé donné
+// (ex. la pastille d'initiales, dont le fond est la couleur primaire du club, potentiellement
+// très claire ou très sombre selon le club) -- bascule simplement sur la luminance relative du
+// fond, à l'inverse de ensureContrast/ensureVisible qui eux assombrissent/éclaircissent une
+// couleur DESTINÉE à --court.
+export function textColorOn(bgHex){
+  return relLuminance(bgHex) > 0.42 ? '#241813' /* --chalk */ : '#FFF8EE' /* --on-accent */;
 }
 
 // mode 'club' (défaut, indexé sur p.club) ou 'nation' (fenêtre sélection nationale : événements

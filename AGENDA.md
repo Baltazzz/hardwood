@@ -37,6 +37,55 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Coché récemment
 
+- [x] **AGD-13 — Identité de club (vraies couleurs officielles, tuile "maillot", pastille d'initiales)** _(implémenté et vérifié le 2026-07-26)_
+  Trois volets liés, maintenant que les couleurs réelles de marque sont disponibles :
+  1. *Ingestion de `data-source/clubcolor.xlsx`*. `scripts/gen-club-data.mjs` étendu pour lire ce
+     fichier (452 lignes club/académie sur 8 nations) et enrichir chaque club/académie de
+     `clubData.js` avec `primary`/`secondary` (hex ou `null`), plus un nouveau
+     `GLOBAL_CLUB_COLORS` pour les paliers NBA/EuroLeague (hors structure par nation). Matching
+     tolérant par nom générique (normalisation accents/casse/ponctuation) : règle découverte et
+     appliquée sans hardcoder les divisions — un libellé de division répété sur plusieurs lignes
+     désigne toujours le vrai nom dans la colonne Club ; un libellé unique désigne le vrai nom
+     dans la colonne Division elle-même (cas des académies nommées séparément de leur club
+     parent), avec repli sur le nom du parent si l'académie elle-même n'a pas de couleur propre.
+     Table d'alias limitée (25 entrées) pour les écarts de nommage NBA (noms courts type
+     "Boston") et quelques clubs EuroLeague à orthographe alternative (FC Barcelone/Barcelona,
+     Olympiakos/Olympiacos, etc.), sans toucher `leagues.js`.
+     **Écarts de nommage signalés (aucun n'est un vrai trou à corriger)** : 7 clubs/académies du
+     jeu sans couleur trouvée — 6 attendus (Fenerbahçe, Maccabi, Žalgiris, Anadolu Efes, Olimpia
+     Milano, Virtus Bologne : nations Turquie/Israël/Lituanie/Italie sans fichier source dédié,
+     déjà en repli par teinte dérivée du nom avant ce lot) + 1 vrai trou confirmé (South East
+     Melbourne Phoenix, NBL australien, aucune ligne de couleur nulle part dans le fichier). 16
+     entrées de `clubcolor.xlsx` sans club correspondant dans le jeu, toutes bénignes (libellés
+     parents génériques déjà couverts par une couleur directe côté club réel, ex. "Nanterre" vs
+     notre "Nanterre 92" déjà coloré directement, ou libellés purement descriptifs sans homologue
+     "France", "USA Basketball", "Duke", etc.).
+  2. *Tuile profil "maillot"*. L'écusson-bouclier générique est retiré. `.player-card` (styles.css)
+     est désormais teintée d'un dégradé diagonal 3 tons aux couleurs réelles du club courant
+     (primaire + secondaire pré-calculés en `rgba()` à faible opacité via le nouvel export
+     `hexToRgba()`, seule façon fiable de faire varier l'opacité d'une couleur dynamique en CSS),
+     change à chaque transfert, garde la structure de lavis déjà en place pour les deux autres
+     tuiles principales (fiche technique en or/donnée, choix en cours en prune) — cohérence de
+     famille conservée. Bande latérale épaissie (6px→10px) et repli de coin ajoutés en couleurs
+     pleines (primaire/secondaire), sans risque de lisibilité car aucun texte ne les recouvre.
+  3. *Pastille d'initiales*. Nouvelle fonction `clubInitials()` (`engine/utils.js`) extrait 2-3
+     lettres pertinentes d'un nom de club (gère sigles tout capitales type "LA"/"OKC", accents
+     Unicode type "Žalgiris", mots grammaticaux filtrés type "Le"/"La"/"of"). Remplace l'écusson
+     par une pastille sobre : fond couleur primaire, petit repli de coin en secondaire (écho du
+     maillot), encre choisie automatiquement (`textColorOn()`) entre chalk sombre et crème selon
+     la luminance du fond pour rester lisible même sur un fond très clair ou très sombre.
+  Rendu montré à l'utilisateur via le showcase sur un échantillon volontairement extrême de
+  couleurs officielles (Brooklyn Nets noir/blanc, San Antonio Spurs gris clair/noir, Denver
+  Nuggets bleu marine/or, Boston Celtics vert/or, ASVEL noir, Real Madrid or/bleu), plus
+  Fenerbahçe pour illustrer le repli par teinte dérivée sur un club sans couleur officielle.
+  Vérifié : lisibilité calculée exhaustivement sur les 470 clubs réellement colorés (pas un
+  échantillon) — pire contraste texte de tuile 8.47:1 pour ASVEL (cible ≥4.5:1, 0 échec sur 470),
+  pire contraste encre de pastille 3.88:1 pour Helios Suns Domžale (cible ≥3:1 pour texte
+  gras/grand, 0 échec sur 470). Audit de non-régression (aucune logique de jeu touchée, seuls
+  rendu/données) : 0% crash sur 100+300 carrières, 0 violation d'intégrité des événements uniques
+  (66 événements marqués `once`, contrôle f)), taux de titre élite 13.3% sur 300 carrières —
+  dans la bande de bruit déjà établie (7.7-21.7%).
+
 - [x] **AGD-12 — Création et immersion nationale (nationalités, académies, sélection)** _(implémenté et vérifié le 2026-07-26)_
   Trois volets :
   1. *Beaucoup plus de nationalités*. `src/data/nations.js` passe de 14 à **35 nations**,

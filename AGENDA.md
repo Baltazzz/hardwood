@@ -9,23 +9,6 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Ouvert
 
-- [ ] **AGD-06 — Animations des moments forts**
-  Ajouté au registre le 2026-07-26 (item signalé comme possiblement oublié par l'utilisateur —
-  provenance non retrouvée dans l'historique git accessible ni dans `AGENDA.md` avant cette
-  date ; peut-être demandé lors d'une session antérieure non couverte par l'historique
-  consulté, à confirmer). Progrès adjacent le 2026-07-26 : pictogramme SVG dans le chip
-  d'événement (`CAT_ICON` dans `events.js`). Progrès adjacent le 2026-07-27 : ces mêmes
-  événements ("grand moment" — clutch/défense/duel/finale) ont désormais une cartouche visuelle
-  dédiée (`.grand-moment` dans `styles.css` : liseré + motif ballon agrandi, recoloré en prune
-  le 2026-07-28 avec la bascule de palette), pour se distinguer visuellement des événements
-  courants. Progrès adjacent le 2026-07-29 (lot création et immersion nationale, voir AGD-12) :
-  une vraie animation d'entrée (`.nation-announce`, échelle + fondu) existe désormais, mais
-  seulement pour les événements de sélection nationale, pas pour les grands moments de club
-  (clutch/défense/duel/finale) qui restent en mise en forme statique.
-  **Critère** : à définir avec l'utilisateur (quels moments côté club ? même traitement que
-  `.nation-announce` ou différent ? respect de `prefers-reduced-motion`, déjà en place
-  globalement).
-
 - [ ] **AGD-07 — Enrichissement de la carte de fin et du Panthéon**
   Ajouté au registre le 2026-07-26 (mêmes réserves de provenance que AGD-06). État actuel déjà
   substantiel : citations de presse (`pressReview()`), courbe d'évolution OVR (`sparkline()`),
@@ -36,6 +19,27 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
   **Critère** : à définir avec l'utilisateur une fois le manque précisé.
 
 ## Coché récemment
+
+- [x] **AGD-06 — Animations des moments forts côté club** _(implémenté et vérifié le 2026-07-27)_
+  Les grands moments côté club (money-time/clutch, stop décisif/défense, duel, finale) reçoivent
+  désormais une vraie animation d'entrée au rendu de l'événement, réutilisant TEL QUEL le style et
+  le code de l'annonce de sélection nationale déjà en place (`@keyframes natAnnounce` dans
+  `styles.css`, inchangée) : un nom de classe distinct pour rester lisible (`.grand-moment-announce`
+  plutôt que réutiliser `.nation-announce` telle quelle, sémantiquement trompeur hors contexte
+  national), mais la même règle d'animation, mot pour mot. Posée en JS dans `renderEvent()`
+  (`screens.js`) aux côtés de la classe `.grand-moment` déjà existante (liseré + motif), dès que
+  `ev.cat` est `clutch`/`defense`/`duel`/`finals` -- à chaque occurrence de l'événement, pas
+  seulement la première de la carrière (même logique que l'annonce nationale). Brève (0.5s, pop
+  scale .94→1.015→1 avec fondu), ne bloque rien : les boutons de choix restent cliquables
+  immédiatement, l'animation joue en parallèle du rendu. `prefers-reduced-motion` déjà couvert par
+  la règle globale existante (`@media (prefers-reduced-motion: reduce){*{animation:none!important}}`),
+  aucun code spécifique à ajouter.
+  Rendu montré à l'utilisateur via le showcase avant livraison (l'animation se rejoue réellement
+  au chargement de la page, CSS authentique capturée depuis le jeu, pas une simulation).
+  Vérifié : 0% crash sur 100+300 carrières, 0 violation d'intégrité des événements uniques, 0
+  incohérence de format NBA -- taux de titre élite 12.3% sur 300 carrières, dans la bande de bruit
+  déjà établie (7.7-21.7%), comme attendu pour un changement purement visuel (aucune logique de
+  jeu touchée, seuls `screens.js` et `styles.css` modifiés).
 
 - [x] **AGD-16 — Lot de corrections groupées (identité de club, nationalités)** _(implémenté et vérifié le 2026-07-27)_
   Demande en 8 points. Deux points étaient de vrais chantiers neufs cette session ; les six

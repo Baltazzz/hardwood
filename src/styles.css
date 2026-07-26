@@ -447,8 +447,10 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
   background:linear-gradient(90deg,var(--accent),var(--mint));z-index:1;pointer-events:none;
 }
 .nat-window-chip{background:rgba(161,130,31,.14);border-color:var(--accent);color:var(--chalk)}
-/* Annonce d'un événement de sélection à proprement parler : petite mise en scène d'entrée
-   distincte du fondu de base (#stage>*), pour que le moment se sente arriver. Respecte
+/* Annonce d'un événement de sélection (ou d'un grand moment côté club, voir .grand-moment-announce
+   ci-dessous) : petite mise en scène d'entrée distincte du fondu de base (#stage>*), pour que le
+   moment se sente arriver -- brève (0.5s), jamais un ralentissement du rythme (les boutons de
+   choix restent cliquables immédiatement, l'animation ne bloque rien). Respecte
    prefers-reduced-motion via la règle globale déjà en place (désactive toute animation). */
 @keyframes natAnnounce{
   0%{ transform:scale(.94); opacity:0; }
@@ -456,6 +458,11 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
   100%{ transform:scale(1); opacity:1; }
 }
 .event.nation-announce{ animation:natAnnounce .5s cubic-bezier(.2,.7,.2,1) both; }
+/* Grands moments côté club (clutch/défense/duel/finale, voir renderEvent() dans screens.js) :
+   même mise en scène d'entrée que .nation-announce, réutilisée telle quelle pour rester cohérent
+   -- un nom de classe distinct pour rester lisible/déboguable, mais littéralement la même
+   animation. */
+.event.grand-moment-announce{ animation:natAnnounce .5s cubic-bezier(.2,.7,.2,1) both; }
 
 /* Résultat de tournoi national : écran à part entière (voir renderNationalResult() dans
    screens.js), pas une ligne noyée dans le bilan de club -- volontairement très différent selon

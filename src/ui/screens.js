@@ -264,11 +264,13 @@ export function renderEvent(ev){
   // spécifique reçoit sa propre petite animation d'annonce (.nation-announce) au moment où il
   // survient, distincte de l'ambiance de fond déjà posée par la fenêtre.
   // "Grand moment" (jet réel à la clé, cf. CAT_ICON dans events.js) : cartouche dédiée pour que
-  // ces événements se distinguent visuellement avant même la lecture du titre.
+  // ces événements se distinguent visuellement avant même la lecture du titre, plus une entrée
+  // animée (.grand-moment-announce, même mise en scène que .nation-announce ci-dessous -- voir
+  // styles.css) pour que le money-time/duel/finale se sente arriver, pas juste s'afficher.
   const grandMoment = ['clutch','defense','duel','finals'].includes(ev.cat);
   const natWindow = !!p.seasonMods.natWindow;
   const isNatAnnounce = ev.cat==='nation';
-  const cardClass = ['event', grandMoment?'grand-moment':'', natWindow?'nation-window':'', isNatAnnounce?'nation-announce':''].filter(Boolean).join(' ');
+  const cardClass = ['event', grandMoment?'grand-moment grand-moment-announce':'', natWindow?'nation-window':'', isNatAnnounce?'nation-announce':''].filter(Boolean).join(' ');
   stage.innerHTML = renderHUD(natWindow||isNatAnnounce?'nation':'club') + `<div class="card ${cardClass}" style="margin-top:2px">
     <div class="season-tag">
       <span class="chip">📅 Saison ${p.year} · ${p.age} ans</span>

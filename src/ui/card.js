@@ -1,4 +1,5 @@
 import { hofLoad, hofClear } from '../engine/hof.js';
+import { BADGES, badgesState, badgesClear } from '../engine/badges.js';
 import { stage } from './dom.js';
 import { screenTitle, sparkline } from './screens.js';
 import { renderTrophyCabinet } from './trophies.js';
@@ -33,6 +34,38 @@ export function renderHallOfFame(){
   document.getElementById('hofBack').onclick=()=>screenTitle();
   stage.querySelectorAll('.hof-row').forEach(el=>{ el.onclick=()=>renderCareerDetail(list[+el.dataset.i]); });
   const hc=document.getElementById('hofClear'); if(hc) hc.onclick=()=>{ if(confirm('Effacer toutes les carrières du Panthéon ?')){ hofClear(); renderHallOfFame(); } };
+}
+
+/* ============================================================
+   BADGES (rendu) -- hauts faits transversaux (voir engine/badges.js),
+   débloqués à travers toutes les carrières, pas remis à zéro à
+   chaque partie. Même écran affiche obtenus et à décrocher.
+============================================================ */
+function badgeTile(b, entry){
+  const unlocked = !!entry;
+  return `<div class="badge-tile ${unlocked?'unlocked':'locked'}" style="--badge-color:${b.color}">
+    <div class="bt-icon">${b.emoji}</div>
+    <div class="bt-name">${b.name}</div>
+    <div class="bt-desc">${b.desc}</div>
+    <span class="bt-status">${unlocked?'Débloqué':'À décrocher'}</span>
+  </div>`;
+}
+export function renderBadges(){
+  const state = badgesState();
+  const unlockedCount = Object.keys(state.unlocked).length;
+  const tiles = BADGES.map(b=>badgeTile(b, state.unlocked[b.id])).join('');
+  stage.innerHTML = `<div class="end" style="text-align:left">
+    <div class="eyebrow" style="text-align:center">🎖️ Hauts faits</div>
+    <h2 style="text-align:center;font-size:26px;margin:6px 0 4px">Badges</h2>
+    <p class="body" style="text-align:center;color:var(--chalk-dim);margin-bottom:18px;font-size:13.5px">${unlockedCount}/${BADGES.length} débloqués, à travers toutes tes carrières.</p>
+    <div class="badge-grid">${tiles}</div>
+    <div style="margin-top:26px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn" id="badgesBack">Retour</button>
+      ${unlockedCount?`<button class="btn ghost" id="badgesClear">Réinitialiser les badges</button>`:''}
+    </div>
+  </div>`;
+  document.getElementById('badgesBack').onclick=()=>screenTitle();
+  const bc=document.getElementById('badgesClear'); if(bc) bc.onclick=()=>{ if(confirm('Réinitialiser tous les badges débloqués ?')){ badgesClear(); renderBadges(); } };
 }
 
 export function renderCareerDetail(r){

@@ -20,6 +20,51 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Coché récemment
 
+- [x] **AGD-17 — Gros lot contenu et rejouabilité (événements humour/NBA, badges transversaux)** _(implémenté et vérifié le 2026-07-27)_
+  Deux volets :
+  1. *Références et humour NBA, en événements génériques*. Quatre nouveaux événements dans
+     `src/data/events/nba_flavor.js` (nouveau fichier, agrégé dans `engine/events.js`) : la prière
+     du milieu de terrain (buzzer-beater désespéré, cat `clutch`), le rebond qui ne pardonne pas
+     (tir de la gagne qui tourne sur l'arceau avant de ressortir, putback en une fraction de
+     seconde), le tir litigieux (vérification vidéo au buzzer, nouvelle catégorie `review` ajoutée
+     à `CAT_TAG`), et un fil narratif de rédemption tardive dans `threads.js` (`clutch_redemption_arc`,
+     `phase:'late'`, `once:true`) qui fusionne les deux dernières idées de la demande (rédemption
+     après ratés + réputation "pas clutch" qui s'inverse en fin de carrière) en un seul arc
+     cohérent, gated sur un nouveau flag `clutchChoker` nourri par les échecs des deux événements
+     ci-dessus. Aucun vrai joueur/club nommé dans un scénario négatif : les événements sont
+     entièrement génériques (le ballon, l'arbitre, la salle), conformes à `data/legends.js`
+     (réservé aux comparaisons positives ailleurs dans le jeu). Toutes les conventions du moteur
+     respectées : `phase`/`cooldown`/`weight` calibrés sur les événements clutch existants,
+     intitulés de choix sans indice chiffré, ton humoristique déjà en place (ex. "Même l'arceau
+     semble s'excuser", célébration prématurée qui tourne mal).
+  2. *Badges transversaux*. Nouveau module `engine/badges.js`, même stockage robuste que le
+     Panthéon (`hof.js`) : localStorage avec repli mémoire si indisponible, jamais d'erreur levée
+     (vérifié explicitement stockage cassé simulé). 10 badges couvrant des profils de carrière
+     variés et rejouables : fidélité à un seul club, ambassadeur (or avec ≥2 nations différentes,
+     cumulatif à travers les carrières via un compteur persistant dédié), renaissance (étiquette
+     "bust" effacée), prodige précoce (MVP avant 23 ans), increvable (16+ saisons), champion à
+     tous les étages (titres à ≥2 paliers de ligue), sang-froid légendaire (clutch ≥8),
+     globe-trotter (4+ paliers de ligue joués), intronisation au Panthéon, Monsieur Triple-double
+     (10+). Écran dédié (`renderBadges()` dans `card.js`), accessible depuis le titre et depuis
+     l'écran de fin de carrière, montrant obtenus et à décrocher dans la même grille (état visuel
+     seul change). Évalués une fois par carrière terminée (`endCareer()`), avec un bandeau
+     "nouveau badge débloqué" sur l'écran de fin quand c'est le cas.
+  Rendu montré à l'utilisateur via le showcase avant livraison (4 nouveaux événements + écran
+  Badges avec mélange obtenus/à décrocher).
+  Vérifié : 0% crash sur 100+300 carrières, 0 violation d'intégrité des événements uniques (67
+  événements marqués `once` désormais, +1), 0 incohérence de format NBA. **Diversité des
+  nouveaux événements** confirmée sur un run dédié de 200 carrières pilotées : `halfcourt_prayer`
+  vu 45 fois, `rim_rattle_putback` 90 fois, `replay_review_drama` 52 fois, `clutch_redemption_arc`
+  1 fois (cohérent avec sa rareté voulue : `once`, `phase:'late'`, gated sur un flag cumulatif) —
+  58% des carrières ont vu au moins un des 4 nouveaux événements, sans dominer le pool (160
+  événements au total). Taux de titre élite 12% sur 300 carrières, dans la bande de bruit déjà
+  établie (7.7-21.7%), aucune dérive causée par ce lot. Badges : persistance et repli mémoire
+  vérifiés directement (stockage localStorage cassé simulé, 0 erreur levée, badges toujours
+  évalués et lisibles), accumulation cumulative inter-carrières vérifiée (`multi_nation_gold` se
+  déclenche bien seulement après une 2e nation différente sur une 2e carrière distincte), écran
+  de badges et flux de fin de carrière exercés sans erreur sur une carrière réelle driven de bout
+  en bout.
+
 - [x] **AGD-06 — Animations des moments forts côté club** _(implémenté et vérifié le 2026-07-27)_
   Les grands moments côté club (money-time/clutch, stop décisif/défense, duel, finale) reçoivent
   désormais une vraie animation d'entrée au rendu de l'événement, réutilisant TEL QUEL le style et

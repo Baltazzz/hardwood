@@ -1,4 +1,5 @@
-import { ovr } from '../../engine/player.js';
+import { ovr, attrOf } from '../../engine/player.js';
+import { actionRoll } from '../../engine/utils.js';
 
 /* ============================================================
    FILS NARRATIFS — paiements débloqués par des choix passés
@@ -160,6 +161,21 @@ export const THREAD_EVENTS = [
         effect:{reputation:+4, popularity:+3, media:+2}, outcome:'Tu assumes ce chapitre de ton histoire sans le cacher. Ça résonne chez d\'autres joueurs.'},
       {label:'Préférer laisser cette période derrière toi, sans en reparler', hint:'Tourner la page sans revenir dessus',
         effect:{coach:+3, morale:+2}, outcome:'Tu préfères ne pas rouvrir ce chapitre. Les actes, depuis, parlent assez d\'eux-mêmes.'}
+    ]},
+
+  {id:'clutch_redemption_arc', cat:'payoff', phase:'late', once:true,
+    when:(p,lg)=>((p.flags&&p.flags.clutchChoker)||0)>=2,
+    title:'Le récit qu\'on te colle à la peau',
+    body:()=>`Les commentateurs ont un mot pour les joueurs qui craquent dans ces moments-là, et ce n'est jamais un compliment. Une dernière balle de match avant la fin de carrière : l'occasion de changer le récit, ou de le confirmer pour de bon.`,
+    weight:()=>1.2,
+    choices:({p})=>[
+      {label:'Redemander le ballon, comme toujours', hint:'Refuser de fuir la pression, une dernière fois',
+        effect:(ctx)=>{ const shot=Math.round((attrOf(p,'tir')+attrOf(p,'adr3'))/2); const ok=actionRoll(shot,68); ctx.ok=ok;
+          return ok?{reputation:+10,popularity:+9,morale:+10,clutch:+2,flag:'clutchHero'}:{reputation:-4,morale:-6}; },
+        outcome:(ctx)=> ctx.ok?'Le mot "pas clutch" disparaît des articles à ton sujet, comme par magie. Une dernière image qui efface toutes les autres.':'Le récit continue de te coller à la peau. Tant pis : l\'histoire n\'aime pas toujours offrir de rachat.'},
+      {label:'Passer la main à un coéquipier plus en confiance', hint:'Le collectif, plutôt que le pari personnel',
+        effect:(ctx)=>{ const ok=actionRoll(attrOf(p,'qi'),56); ctx.ok=ok; return ok?{reputation:+4,coach:+6,morale:+4}:{coach:+2,morale:-1}; },
+        outcome:(ctx)=> ctx.ok?'Tu ne rentres pas dans l\'histoire par la grande porte, mais l\'équipe gagne. Ça aussi, ça compte.':'Le collectif ne trouve pas la solution non plus ce soir-là. Au moins, tu n\'auras pas porté ça seul.'}
     ]},
 
   {id:'clutch_legend_status', cat:'payoff', phase:'late', once:true,

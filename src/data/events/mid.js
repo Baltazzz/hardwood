@@ -179,7 +179,7 @@ export const MID_EVENTS = [
         effect:{reputation:+5, morale:+3, perfBonus:+3, flag:'loyalOne'}, outcome:'Tu refuses la facilité. Gagner avec ton club aurait une autre saveur.'}
     ]},
 
-  {id:'nation_leader', cat:'nation', phase:'mid', cooldown:4,
+  {id:'nation_leader', cat:'nation', phase:'mid', once:true,
     when:(p,lg)=>p.natCap && ovr(p)>=80 && (p.clubTenure||0)>=1,
     title:'On te veut capitaine de la sélection',
     body:({p})=>`La fédération voit en toi le leader de la nouvelle génération ${p.nation.flag}. Le brassard, c'est du poids sur les épaules autant qu'un honneur.`,
@@ -414,7 +414,7 @@ export const MID_EVENTS = [
         effect:{qi:+1}, outcome:'Tu laisses la direction gérer la crise. Ce n\'est pas ton rôle de trancher.'}
     ]},
 
-  {id:'shoe_deal_upgrade', cat:'business', phase:'mid', cooldown:4,
+  {id:'shoe_deal_upgrade', cat:'business', phase:'mid', once:true,
     when:(p,lg)=>p.popularity>=45 && p.money>=150,
     title:'Ta marque veut passer un cap avec toi',
     body:()=>`<i>(Coup de fil de ton agent, enthousiaste.)</i> Après une percée qui n'est pas passée inaperçue, ton équipementier propose de renégocier : une signature model à ton nom, ou un simple gros chèque cash.`,
@@ -439,7 +439,7 @@ export const MID_EVENTS = [
         effect:{qi:+2, coach:+2}, outcome:'Tu ne réponds rien. Les prochains matchs se chargeront de répondre à ta place.'}
     ]},
 
-  {id:'youth_camp_host', cat:'community', phase:'mid', cooldown:4,
+  {id:'youth_camp_host', cat:'community', phase:'mid', once:true,
     when:(p,lg)=>p.reputation>=40 && p.money>=100,
     title:'Organiser ton propre camp d\'été',
     body:()=>`L'idée te trotte en tête depuis un moment : organiser un stage d'été à ton nom, pour transmettre directement aux jeunes de ta région ce que tu as appris.`,

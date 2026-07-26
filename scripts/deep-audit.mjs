@@ -227,10 +227,46 @@ async function main() {
     tagFreqSorted.forEach(t => console.log(`  ${t.id.padEnd(16)} : ${t.pct}%`));
   }
 
+  // f) intégrité des événements marqués "once" (décisions structurantes/fondations/premières
+  // fois : ne doivent JAMAIS se reproduire dans une même carrière). Détecté indépendamment de
+  // eventHistory[dedup] ci-dessus (qui compte les DISTINCTS, pas les répétitions) : ici on
+  // compte les occurrences brutes par id dans l'historique de chaque carrière, et on signale
+  // tout id marqué `once` vu plus d'une fois dans la même carrière.
+  const onceIds = new Set(EVENTS.filter(e => e.once).map(e => e.id));
+  const onceViolations = new Map(); // id -> { careers, maxCount }
+  let careersWithViolation = 0;
+  results.forEach(r => {
+    const counts = new Map();
+    (r.eventHistory || []).forEach(id => counts.set(id, (counts.get(id) || 0) + 1));
+    let violatedThisCareer = false;
+    counts.forEach((count, id) => {
+      if (onceIds.has(id) && count > 1) {
+        violatedThisCareer = true;
+        const cur = onceViolations.get(id) || { careers: 0, maxCount: 0 };
+        cur.careers++;
+        cur.maxCount = Math.max(cur.maxCount, count);
+        onceViolations.set(id, cur);
+      }
+    });
+    if (violatedThisCareer) careersWithViolation++;
+  });
+  const onceViolationsSorted = [...onceViolations.entries()].sort((a, b) => b[1].careers - a[1].careers);
+
+  console.log(`\n-- f) Intégrité des événements uniques (${onceIds.size} événements marqués "once") --`);
+  if (!onceViolationsSorted.length) {
+    console.log(`OK : sur ${completed} carrières, aucun événement marqué unique n'est apparu plus d'une fois dans la même carrière.`);
+  } else {
+    console.log(`⚠️  ${careersWithViolation}/${completed} carrière(s) avec au moins un événement unique répété :`);
+    onceViolationsSorted.forEach(([id, v]) => {
+      console.log(`  ${id.padEnd(28)} : répété dans ${v.careers} carrière(s), jusqu'à ${v.maxCount}x dans une même carrière`);
+    });
+  }
+
   console.log('\nRÉSULTATS BRUTS (JSON) :');
   console.log(JSON.stringify({ N, crashed, completed, freeClubCareers, freeClubSeasonsTotal, withTitle, withEliteTitle, withMVP, withAllStar, withHOF, withPhenom, tierCounts, nbaCount: nbaResults.length, median, pathTotals, byBracket,
     tags: { avgTagCount, tagFreq: tagFreqSorted },
-    diversity: { totalDefined, avgDistinct, avgTotal, neverSeenPct, neverSeenCount, top10, bottom10 } }, null, 0));
+    diversity: { totalDefined, avgDistinct, avgTotal, neverSeenPct, neverSeenCount, top10, bottom10 },
+    onceIntegrity: { onceCount: onceIds.size, careersWithViolation, violations: onceViolationsSorted.map(([id, v]) => ({ id, ...v })) } }, null, 0));
 }
 
 main().catch(err => { console.error('DEEP AUDIT ÉCHOUÉ :', err); process.exitCode = 1; });

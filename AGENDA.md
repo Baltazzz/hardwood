@@ -34,6 +34,31 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Coché récemment
 
+- [x] **AGD-10 — Correction de cohérence : événements uniques qui se répétaient** _(implémenté et vérifié le 2026-07-26)_
+  Revue complète des ~155 événements (`src/data/events/*.js`) pour repérer les décisions
+  structurantes/fondations/premières fois qui ne portaient pas le marqueur `once:true`. Trois
+  événements corrigés dans `mid.js` (repérés par comparaison avec leurs équivalents déjà
+  correctement marqués `once` : `youth_camp_host` vs `charity_foundation`, `nation_leader` vs
+  `captaincy_vote`/`union_rep`) :
+  - `youth_camp_host` ("Organiser ton propre camp d'été", le cas signalé) : `cooldown:4` → `once:true`.
+  - `nation_leader` ("On te veut capitaine de la sélection") : `cooldown:4` → `once:true`.
+  - `shoe_deal_upgrade` ("Ta marque veut passer un cap avec toi", négociation de chaussure
+    signature à ton nom) : `cooldown:4` → `once:true`.
+  Tous les autres événements à connotation "première fois" (early.js quasi entièrement,
+  late.js quasi entièrement, threads.js entièrement) portaient déjà correctement le marqueur ;
+  aucune autre lacune trouvée. Le mécanisme d'application (`drawEvents()` dans `season.js`,
+  exclusion dure `if(ev.once && st.count>=1) continue`) était déjà correct et n'a pas eu besoin
+  d'être modifié — seules les métadonnées de contenu manquaient sur ces 3 événements.
+  Nouveau contrôle permanent ajouté à `scripts/deep-audit.mjs` (section "f) Intégrité des
+  événements uniques") : pour chaque carrière pilotée, compte les occurrences de chaque
+  événement dans `eventHistory` et signale tout id marqué `once` vu plus d'une fois dans une
+  même carrière (jamais à travers plusieurs carrières différentes, où la répétition est
+  normale). Testé positivement sur un historique synthétique avec doublon volontaire (détecté
+  correctement) avant d'être validé en conditions réelles.
+  Vérifié : 0% crash sur 100+300 carrières après le changement ; audit à 300 carrières,
+  section f) : 0 violation sur les 66 événements désormais marqués `once` (63 avant ce
+  correctif). Indicateurs de récompense stables dans la bande de bruit déjà établie.
+
 - [x] **AGD-09 — Raffinement visuel décor/donnée** _(implémenté et vérifié le 2026-07-26)_
   Lot purement visuel (aucun changement de gameplay), dans la continuité Terre battue. Sept
   volets :

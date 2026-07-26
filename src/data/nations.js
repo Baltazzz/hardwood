@@ -29,7 +29,6 @@ export const NATIONS = [
   {id:'CH', name:'Suisse',    flag:'🇨🇭', continent:'europe', path:'eu', strength:71, names:['Clint','Thabo','Marco','Luca','Loïc','Killian','Grégoire','Julian'], last:['Capela','Sefolosha','Kolo','Rüfenacht','Fernandez','Berset','Bösiger','Gutknecht']},
   {id:'UA', name:'Ukraine',   flag:'🇺🇦', continent:'europe', path:'eu', strength:76, names:['Sviatoslav','Oleksiy','Denys','Andriy','Vladyslav','Danylo','Kyrylo','Yevhen'], last:['Mykhailiuk','Len','Lypovyy','Sydorov','Kovalenko','Tyshchenko','Voronov','Bilyk']},
   {id:'PL', name:'Pologne',   flag:'🇵🇱', continent:'europe', path:'eu', strength:74, names:['Marcin','Mateusz','Adam','Przemysław','Aleksander','Kacper','Michał','Dominik'], last:['Gortat','Ponitka','Waczyński','Balcerowski','Sokołowski','Karnowski','Kolenda','Michalak']},
-  {id:'IL', name:'Israël',    flag:'🇮🇱', continent:'europe', path:'eu', strength:77, names:['Deni','Yovel','Tamir','Omri','Itay','Roman','Guy','Elishai'], last:['Avdija','Zoosman','Blatt','Casspi','Segev','Sorkin','Pnini','Cohen']},
 
   // ---------- Amérique du Nord ----------
   {id:'US', name:'États-Unis', flag:'🇺🇸', continent:'namerica', path:'us', strength:98, names:['Marcus','Jaylen','DeShawn','Tyrese','Cameron','Isaiah','Brandon','Malik'], last:['Carter','Brooks','Williams','Jackson','Hayes','Coleman','Reed','Bishop']},

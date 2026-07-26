@@ -135,11 +135,15 @@ export function screenTitle(){
 export function screenCreate(){
   const p=G;
   if(p.step===0){ // nation
+    // Grille compacte dédiée (voir .nation-grid/.nation-opt dans styles.css) : à la différence
+    // des autres étapes (4-8 choix), les nations sont ~35 -- la carte pleine taille générique
+    // (.opt) forçait un long défilement. Tuile réduite au flag + nom + force en coin (réutilise
+    // .abbr, déjà utilisé pour l'abréviation de poste), toutes visibles sans scroll pénible.
     stage.innerHTML = wrapCreate(1,'Ton pays','Ton identité et ton éligibilité en sélection nationale -- ton point de départ sportif se décidera plus tard, indépendamment.',
-      NATIONS.map((n,i)=>`<button class="opt ${p.nation&&p.nation.id===n.id?'pick':''}" data-i="${i}">
-        <div class="flag">${n.flag}</div><div class="ttl">${n.name}</div>
-        <div class="desc">Sélection nationale · force ${n.strength}</div></button>`).join(''),
-      false, !!p.nation);
+      NATIONS.map((n,i)=>`<button class="opt nation-opt ${p.nation&&p.nation.id===n.id?'pick':''}" data-i="${i}">
+        <span class="abbr">${n.strength}</span>
+        <div class="flag">${n.flag}</div><div class="ttl">${n.name}</div></button>`).join(''),
+      false, !!p.nation, 'nation-grid');
     bindOpts(NATIONS,(n)=>{p.nation=n;});
   }
   else if(p.step===1){ // position
@@ -178,11 +182,11 @@ export function screenCreate(){
   }
   wireNav();
 }
-function wrapCreate(num,title,sub,inner,isLast,canNext){
+function wrapCreate(num,title,sub,inner,isLast,canNext,gridClass=''){
   return `<div class="create">
     <div class="step-h"><span class="num">${num} / 5</span></div>
     <h2>${title}</h2><p class="sub">${sub}</p>
-    <div class="opt-grid">${isLast?'':inner}</div>${isLast?inner:''}
+    <div class="opt-grid ${gridClass}">${isLast?'':inner}</div>${isLast?inner:''}
     <div class="nav-row">
       <button class="btn ghost sm" id="backC">${num===1?'Annuler':'Retour'}</button>
       <button class="btn" id="nextC" ${canNext?'':'disabled style="opacity:.4;pointer-events:none"'}>Continuer</button>

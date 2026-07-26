@@ -26,8 +26,34 @@ for (const nation of Object.keys(CLUB_DATA)) {
 for (const [name, colors] of Object.entries(GLOBAL_CLUB_COLORS)) {
   if (!REAL_CLUB_COLORS.has(name)) REAL_CLUB_COLORS.set(name, colors);
 }
+// Choix de la couleur DOMINANTE entre primaire/secondaire pour l'identité de club (tuile
+// "maillot" + pastille, voir hud.js). Essayé puis abandonné : un choix AUTOMATIQUE basé sur la
+// saturation ("la couleur la plus vive gagne") -- vérifié case par case sur des clubs connus,
+// il bascule systématiquement vers un jaune/or secondaire dès qu'il y en a un (L.A. Lakers,
+// Denver, ...), car un or est presque toujours plus saturé qu'un bleu/violet marine, alors que
+// c'est justement CE bleu/violet qui est la couleur reconnaissable de ces clubs. La saturation
+// brute n'est pas un bon indicateur de "quelle couleur porte l'identité de la marque" -- c'est
+// une question de connaissance du club, pas de colorimétrie. On garde donc la primaire comme
+// dominante par défaut (le cas très largement correct), et on corrige au cas par cas les
+// exceptions connues via la table ci-dessous plutôt que de risquer une bascule automatique fausse
+// sur des centaines de clubs jamais vérifiés un par un.
+//
+// Correction manuelle, en dur et EXTENSIBLE (ajouter une entrée {primary,secondary} suffit) :
+// identité reconnaissable qui diffère de la primaire officielle telle qu'ingérée, ou cas où
+// aucune des deux couleurs sources ne rend bien en dominante telle quelle (Utah : le marine
+// officiel est quasi noir à l'écran -- ensureContrast ne fait qu'assombrir, jamais éclaircir, un
+// primaire déjà très sombre reste donc "presque noir" même conforme au contraste ; on garde la
+// même teinte bleue mais éclaircie, plutôt que de basculer sur le jaune secondaire qui n'est pas
+// du tout l'identité recherchée).
+const CLUB_DOMINANT_OVERRIDE = {
+  'Charlotte': { primary: '#1D1160', secondary: '#00788C' },
+  'Utah': { primary: '#005FCC', secondary: '#F9A01B' },
+};
+
 function realColorsFor(clubName) {
-  return clubName ? REAL_CLUB_COLORS.get(clubName) || null : null;
+  if (!clubName) return null;
+  if (CLUB_DOMINANT_OVERRIDE[clubName]) return CLUB_DOMINANT_OVERRIDE[clubName];
+  return REAL_CLUB_COLORS.get(clubName) || null;
 }
 
 // Couleur "sélection nationale", dérivée de l'identité fédérale/drapeau réelle de chaque nation

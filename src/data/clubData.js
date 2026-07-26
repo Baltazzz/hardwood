@@ -3931,8 +3931,8 @@ export const CLUB_DATA = {
         "prestige": 78,
         "category": "Rising Project",
         "comment": "Franchise récente dans un gros marché, croissance intéressante.",
-        "primary": null,
-        "secondary": null
+        "primary": "#00A9E0",
+        "secondary": "#000000"
       },
       {
         "name": "Tasmania JackJumpers",

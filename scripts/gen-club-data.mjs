@@ -84,6 +84,15 @@ const COLOR_NAME_ALIASES = {
   'Crvena Zvezda': 'Crvena zvezda Meridianbet', 'Partizan': 'Partizan Mozzart Bet',
 };
 
+// Repli manuel, en dur : clubs réels du jeu pour lesquels clubcolor.xlsx ne contient aucune
+// couleur, ni directement ni via une ligne d'académie liée (vérifié explicitement, pas une
+// simple absence de correspondance de nom) -- évite un repli par teinte dérivée du nom pour un
+// club qu'on sait pertinemment réel. À retirer dès que l'Excel est complété pour ce club (la
+// vraie donnée prime alors automatiquement, voir findColor()).
+const MANUAL_COLOR_FALLBACK = {
+  'South East Melbourne Phoenix': { primary: '#00A9E0', secondary: '#000000' }, // bleu cyan/noir du maillot réel, NBL australien
+};
+
 function normName(s) {
   return String(s ?? '')
     .normalize('NFD').replace(/[̀-ͯ]/g, '') // accents
@@ -116,8 +125,14 @@ async function loadClubColors() {
   const divisionCounts = {};
   for (const row of rows) { if (row[1] !== null) divisionCounts[row[0]] = (divisionCounts[row[0]] || 0) + 1; }
 
+  // Dédoublonnage à l'ingestion : la première occurrence d'un nom gagne (déterministe, ordre du
+  // fichier), toute occurrence suivante est ignorée -- mais signalée dès qu'elle porte des
+  // couleurs DIFFÉRENTES de la première (une vraie incohérence à corriger dans l'Excel), jamais
+  // pour un doublon inoffensif (même club listé deux fois avec les mêmes couleurs, ex. club NBA +
+  // sa franchise G League affiliée qui partage le même nom de marque).
   const direct = new Map();
   const fallback = new Map();
+  const duplicates = [];
   let sawNation = false;
 
   for (const row of rows) {
@@ -126,7 +141,11 @@ async function loadClubColors() {
     const isGenericOrRealDivision = divisionCounts[division] > 1;
     if (isGenericOrRealDivision) {
       const key = normName(club);
-      if (!direct.has(key)) direct.set(key, { name: club, primary, secondary });
+      const existing = direct.get(key);
+      if (!existing) direct.set(key, { name: club, primary, secondary });
+      else if (existing.primary !== primary || existing.secondary !== secondary) {
+        duplicates.push({ name: club, kept: existing, ignored: { primary, secondary } });
+      }
     } else {
       const key = normName(division);
       if (!direct.has(key)) direct.set(key, { name: division, primary, secondary });
@@ -135,6 +154,10 @@ async function loadClubColors() {
     }
   }
   if (!sawNation) throw new Error('clubcolor.xlsx : aucune section de nation reconnue (en-têtes attendus : ' + Object.keys(COLOR_SECTION_TO_NATION).join(', ') + ')');
+  if (duplicates.length) {
+    console.log(`\n=== Doublons détectés dans clubcolor.xlsx (couleurs conflictuelles, 1re occurrence conservée) : ${duplicates.length} ===`);
+    duplicates.forEach(d => console.log(`  ${d.name} : gardé ${d.kept.primary}/${d.kept.secondary}, ignoré ${d.ignored.primary}/${d.ignored.secondary}`));
+  }
 
   const byName = new Map([...fallback, ...direct]); // direct l'emporte sur fallback
   return { byName, rowCount: rows.filter(r => r[1] !== null).length };
@@ -143,7 +166,7 @@ async function loadClubColors() {
 function findColor(colorByName, name) {
   if (!name) return null;
   const aliased = COLOR_NAME_ALIASES[name] || name;
-  return colorByName.get(normName(aliased)) || null;
+  return colorByName.get(normName(aliased)) || MANUAL_COLOR_FALLBACK[name] || null;
 }
 
 function rowsToObjects(data) {
@@ -236,9 +259,17 @@ async function main() {
   }
   const matchedColorKeys = new Set(); // noms (normalisés) de clubcolor.xlsx effectivement consommés
   const unmatchedGame = [];
+  const manuallyFilled = [];
   for (const g of allGameNames) {
     const c = findColor(colorByName, g.name);
-    if (c) matchedColorKeys.add(normName(c.name)); else unmatchedGame.push(g);
+    if (c) {
+      matchedColorKeys.add(normName(c.name));
+      if (MANUAL_COLOR_FALLBACK[g.name]) manuallyFilled.push(g);
+    } else unmatchedGame.push(g);
+  }
+  if (manuallyFilled.length) {
+    console.log(`\n=== Couleur de repli manuelle (MANUAL_COLOR_FALLBACK, en attendant l'Excel) : ${manuallyFilled.length} ===`);
+    manuallyFilled.forEach(g => console.log(`  [${g.where}] ${g.name}`));
   }
   const unmatchedColors = [...colorByName.values()].filter(c => !matchedColorKeys.has(normName(c.name)));
 

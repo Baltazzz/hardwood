@@ -9,6 +9,15 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Ouvert
 
+- [ ] **AGD-41 — Boutique (nouvel écran, portée non précisée)**
+  Ajouté au registre le 2026-07-28, mentionné en passant par l'utilisateur comme justification du
+  lot AGD-40 ("l'accueil doit rester clair même avec plus d'entrées à l'avenir, boutique
+  notamment") -- pas une demande à traiter maintenant, mais une entrée à venir prévue par le
+  nouveau design de l'accueil (le groupe "Suivi & records" en puces compactes est justement conçu
+  pour l'absorber sans rien bousculer, voir AGD-40). Contenu/mécanique de la boutique non précisés.
+  **Critère** : à définir avec l'utilisateur au moment de la demande (quoi acheter/débloquer,
+  avec quelle monnaie -- `p.money` existe déjà côté carrière -- persistant ou par carrière, etc.).
+
 - [ ] **AGD-37 — Iconographie premium SVG (écran titre + écran de création)**
   Ajouté au registre le 2026-07-28. Remplacer les emojis par des icônes SVG faites maison,
   uniquement sur l'écran titre (menu principal) et l'écran de création (poste, style de jeu) --
@@ -64,6 +73,58 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
   les écrans vus souvent, un peu plus affirmé sur ceux vus rarement).
 
 ## Coché récemment
+
+- [x] **AGD-40 — Refonte accueil et palmarès** _(implémentée et vérifiée le 2026-07-28)_
+  Trois points.
+  1. *Réorganiser l'accueil*. Passé d'une rangée unique de tuiles identiques à trois groupes
+     visuellement distincts, avec l'ajout futur de la Boutique explicitement en tête (voir
+     AGD-41) : geste principal SEUL en haut (gros bouton "Commencer"/"Reprendre ma carrière",
+     `.home-cta`) ; "Modes de jeu" en cartes (`.mode-card`, même famille visuelle que les tuiles
+     de création `.opt` mais teinte propre à chaque mode -- terracotta pour le défi entre amis,
+     or/mint pour le défi du jour, la variation de couleur demandée n'est pas arbitraire, chaque
+     mode garde SA teinte partout ailleurs dans le jeu) ; "Suivi & records" en puces compactes
+     (Panthéon/Hauts faits/Ma progression) -- délibérément le format le plus scalable des trois,
+     conçu pour absorber la Boutique et d'autres entrées futures sans bousculer la hiérarchie.
+  2. *Refondre le palmarès (Panthéon)*. Cause du problème "chiffres mal centrés" trouvée
+     précisément : `.lg` (tuiles de statistiques, réutilisées par la fiche Panthéon ET "Ma
+     progression") ne posait jamais son propre `text-align:center` -- correct par accident sur
+     l'écran de fin de carrière (dont le conteneur `.end` est centré par défaut), RÉELLEMENT
+     décentré sur "Ma progression" (dont le conteneur passe en `text-align:left`, jamais
+     recouvert au niveau de la tuile). Corrigé au niveau du composant lui-même (`.lg{text-align:
+     center}`), plus robuste qu'un correctif au cas par cas. *"Aucun visuel, pas assez
+     glorifiant"* : liste du Panthéon reconstruite en vraie grille CSS (rang | contenu | score,
+     alignement garanti) avec un vrai podium SVG fait maison -- couronne pour la 1re place,
+     médailles or/argent pour les 2e/3e (`ui/trophies.js` `crownIcon()`, nouveau, + `medalIcon()`
+     déjà existant réutilisé -- même langage graphique que l'armoire à trophées), lavis or
+     progressif en fond pour les 3 premières places. La fiche détail reprend le même bandeau
+     couronne/médaille pour les carrières classées dans le top 3 (relie visuellement liste et
+     détail). **Séparation club/sélection nationale de l'armoire à trophées volontairement
+     INTOUCHÉE** comme demandé -- déjà bien conçue (`renderTrophyCabinet()`, formes distinctes
+     bague/coupe/trophée/distinction/médaille par famille de récompense), seulement mieux reliée
+     visuellement au reste de l'écran désormais.
+  3. *Renommer "badges"*. "Trophées" délibérément ÉCARTÉ malgré la suggestion initiale de
+     l'utilisateur : collision directe avec l'armoire à trophées déjà existante (accomplissements
+     D'UNE carrière -- Champion/MVP/médailles) qui désigne un concept différent des hauts faits
+     transversaux (accomplissements À TRAVERS toutes les carrières -- ex. "Fidélité totale",
+     "Statut ultime"). Choisi à la place : **"Hauts faits"**, déjà informellement présent dans le
+     code (l'eyebrow de l'écran disait déjà "🎖️ Hauts faits" pendant que le reste de l'interface
+     disait encore "Badges") -- généralisé PARTOUT (bouton menu titre, bouton fin de carrière,
+     bandeau de déblocage, écran dédié y compris son h2 -- devenu "Ta collection d'exploits"
+     plutôt qu'une répétition de l'eyebrow --, bouton + libellé sur "Ma progression", texte du
+     dialogue de confirmation de réinitialisation). Effet de bord réglé au passage : "Ma
+     progression" utilisait elle-même la formule "Ton palmarès grandit" comme accroche, entrant en
+     collision avec le vocabulaire du Panthéon -- remplacée par "Ta légende grandit".
+  Rendu montré à l'utilisateur via le showcase avant livraison (accueil dans ses deux états avec/
+  sans sauvegarde, Panthéon avec 5 profils variés montrant couronne + médailles + numéro
+  classique dans le même écran, fiche détail 1re place avec le bandeau couronne, accueil et
+  Panthéon testés à 360px).
+  Vérifié : audit standard 100+60 carrières (0% crash) ; smoke-test dédié sur les deux états de
+  l'accueil (avec/sans sauvegarde -- ids corrects, aucune collision) ; smoke-test dédié sur le
+  Panthéon (5 entrées synthétiques, couronne/médailles/numéros affichés au bon rang, fiche détail
+  sans erreur) ; audit méta-progression 10 carrières (inchangé par ce lot, toujours conforme) ;
+  audit approfondi 300 carrières (0% crash, 0 violation d'intégrité sur les 73 événements `once`,
+  taux de titre élite 10.3% dans la bande normale, aucune régression détectée -- ce lot est
+  purement visuel/textuel, aucune logique de jeu touchée).
 
 - [x] **AGD-39 — Lot données de carrière et méta-progression** _(implémentée et vérifiée le 2026-07-28)_
   Trois points.

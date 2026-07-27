@@ -2,7 +2,7 @@ import { hofLoad, hofBest, hofClear } from '../engine/hof.js';
 import { BADGES, badgesState, badgesClear } from '../engine/badges.js';
 import { stage } from './dom.js';
 import { screenTitle, sparkline } from './screens.js';
-import { renderTrophyCabinet } from './trophies.js';
+import { renderTrophyCabinet, crownIcon, medalIcon } from './trophies.js';
 import { tagsByIds, renderTagChips } from '../engine/tags.js';
 import { setInCareer } from './navbar.js';
 import { trackEvent } from '../engine/analytics.js';
@@ -14,14 +14,25 @@ import { shareOrFallback, canvasToFile } from './share.js';
 function fmtNum(n){ return Math.round(n||0).toLocaleString('fr-FR'); }
 
 /* ============================================================
-   PANTHÉON (rendu)
+   PANTHÉON (rendu) — refonte (voir AGENDA.md "palmarès peu flatteur") :
+   podium visuel (couronne/médailles SVG maison, ui/trophies.js) pour
+   les 3 premières places plutôt qu'un simple numéro partout, rangée
+   en vraie grille CSS pour un alignement garanti (voir .hof-row).
 ============================================================ */
+// Glyphe de rang : couronne pour le n°1, médaille or/argent pour les 2e/3e (même langage SVG que
+// l'armoire à trophées), chiffre net et centré au-delà -- jamais un simple numéro pour un podium.
+function rankGlyph(i){
+  if(i===0) return `<span class="rk-medal" title="1re place">${crownIcon(30)}</span>`;
+  if(i===1) return `<span class="rk-medal" title="2e place">${medalIcon('Argent',28)}</span>`;
+  if(i===2) return `<span class="rk-medal" title="3e place">${medalIcon('Bronze',28)}</span>`;
+  return `<span class="rk">${i+1}</span>`;
+}
 export function renderHallOfFame(){
   setInCareer(false);
   const list=hofLoad();
   const rows = list.length ? list.map((r,i)=>`
-    <div class="hof-row ${i===0?'top':''}" data-i="${i}" style="cursor:pointer">
-      <span class="rk">${i+1}</span>
+    <div class="hof-row ${i===0?'top':i<3?'podium':''}" data-i="${i}" style="cursor:pointer">
+      ${rankGlyph(i)}
       <span class="hof-main">
         <span class="hof-name">${r.flag||'🏀'} ${r.name} ${r.posEmoji||''}</span>
         <span class="hof-sub">${r.tier} · ${r.seasons} saisons · pic ${r.peak} OVR${r.nba?' · 🏀 passé par la NBA':''}</span>
@@ -41,7 +52,7 @@ export function renderHallOfFame(){
     </div>
   </div>`;
   document.getElementById('hofBack').onclick=()=>screenTitle();
-  stage.querySelectorAll('.hof-row').forEach(el=>{ el.onclick=()=>renderCareerDetail(list[+el.dataset.i]); });
+  stage.querySelectorAll('.hof-row').forEach(el=>{ el.onclick=()=>renderCareerDetail(list[+el.dataset.i], +el.dataset.i); });
   const hc=document.getElementById('hofClear'); if(hc) hc.onclick=()=>{ if(confirm('Effacer toutes les carrières du Panthéon ?')){ hofClear(); renderHallOfFame(); } };
 }
 
@@ -73,8 +84,8 @@ export function renderBadges(){
     <div class="badge-grid">${list.map(b=>badgeTile(b, state.unlocked[b.id])).join('')}</div>`;
   stage.innerHTML = `<div class="end" style="text-align:left">
     <div class="eyebrow" style="text-align:center">🎖️ Hauts faits</div>
-    <h2 style="text-align:center;font-size:26px;margin:6px 0 4px">Badges</h2>
-    <p class="body" style="text-align:center;color:var(--chalk-dim);margin-bottom:10px;font-size:13.5px">${unlockedCount}/${BADGES.length} débloqués, à travers toutes tes carrières.</p>
+    <h2 style="text-align:center;font-size:26px;margin:6px 0 4px">Ta collection d'exploits</h2>
+    <p class="body" style="text-align:center;color:var(--chalk-dim);margin-bottom:10px;font-size:13.5px">${unlockedCount}/${BADGES.length} hauts faits débloqués, à travers toutes tes carrières.</p>
     <div class="badge-progress" style="max-width:420px;margin:0 auto 22px">
       <div class="badge-progress-bar"><i style="width:${pct}%"></i></div>
     </div>
@@ -82,11 +93,11 @@ export function renderBadges(){
     ${section(locked, `🔒 À décrocher (${locked.length})`)}
     <div style="margin-top:26px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
       <button class="btn" id="badgesBack">Retour</button>
-      ${unlockedCount?`<button class="btn ghost" id="badgesClear">Réinitialiser les badges</button>`:''}
+      ${unlockedCount?`<button class="btn ghost" id="badgesClear">Réinitialiser mes hauts faits</button>`:''}
     </div>
   </div>`;
   document.getElementById('badgesBack').onclick=()=>screenTitle();
-  const bc=document.getElementById('badgesClear'); if(bc) bc.onclick=()=>{ if(confirm('Réinitialiser tous les badges débloqués ?')){ badgesClear(); renderBadges(); } };
+  const bc=document.getElementById('badgesClear'); if(bc) bc.onclick=()=>{ if(confirm('Réinitialiser tous les hauts faits débloqués ?')){ badgesClear(); renderBadges(); } };
 }
 
 /* ============================================================
@@ -117,12 +128,12 @@ export function renderProgress(){
   const maxTd = list.length ? Math.max(...list.map(r=>r.tripleDoubles||0)) : 0;
   stage.innerHTML = `<div class="end" style="text-align:left">
     <div class="eyebrow" style="text-align:center">📊 Ma progression</div>
-    <h2 style="text-align:center;font-size:26px;margin:6px 0 4px">Ton palmarès grandit</h2>
+    <h2 style="text-align:center;font-size:26px;margin:6px 0 4px">Ta légende grandit</h2>
     <p class="body" style="text-align:center;color:var(--chalk-dim);margin-bottom:18px;font-size:13.5px">${totalCareers?`${totalCareers} carrière${totalCareers>1?'s':''} menée${totalCareers>1?'s':''} à terme.`:'Aucune carrière terminée pour l\'instant -- la première est toujours la plus marquante.'}</p>
     <div class="legend-grid" style="max-width:560px">
       ${recordRow('Carrières jouées', totalCareers)}
       ${recordRow('Meilleur score légende', best)}
-      ${recordRow('Badges débloqués', `${badgeCount}/${BADGES.length}`)}
+      ${recordRow('Hauts faits débloqués', `${badgeCount}/${BADGES.length}`)}
       ${recordRow('Plus longue carrière', maxSeasons?`${maxSeasons} saisons`:'--')}
     </div>
     ${list.length?`
@@ -139,7 +150,7 @@ export function renderProgress(){
     <div style="margin-top:26px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
       <button class="btn" id="progressBack">Retour</button>
       <button class="btn ghost" id="progressHof">🏆 Voir le Panthéon</button>
-      <button class="btn ghost" id="progressBadges">🎖️ Voir les badges</button>
+      <button class="btn ghost" id="progressBadges">🎖️ Voir mes hauts faits</button>
     </div>
   </div>`;
   document.getElementById('progressBack').onclick=()=>screenTitle();
@@ -147,11 +158,19 @@ export function renderProgress(){
   document.getElementById('progressBadges').onclick=()=>renderBadges();
 }
 
-export function renderCareerDetail(r){
+// rank : index dans le Panthéon (0-based, voir renderHallOfFame()) -- optionnel, absent quand la
+// fiche est ouverte autrement qu'en cliquant une rangée du Panthéon (ex. depuis un lien de défi).
+// Reprend le même glyphe (couronne/médaille) que la liste, pour relier visuellement les deux écrans.
+export function renderCareerDetail(r, rank){
   if(!r){ renderHallOfFame(); return; }
   setInCareer(false);
+  const rankFlag = rank===0 ? `<div class="hof-rank-flag">${crownIcon(20)} 1re place au Panthéon</div>`
+    : rank===1 ? `<div class="hof-rank-flag">${medalIcon('Argent',18)} 2e place au Panthéon</div>`
+    : rank===2 ? `<div class="hof-rank-flag">${medalIcon('Bronze',18)} 3e place au Panthéon</div>`
+    : '';
   stage.innerHTML = `<div class="end">
     <div class="eyebrow">Carrière au Panthéon</div>
+    ${rankFlag}
     <div class="legend-title" style="font-size:30px">${r.tier}</div>
     <p class="subline">${r.flag||'🏀'} ${r.posEmoji||''} ${r.posName||''} · ${r.seasons} saisons · pic ${r.peak} OVR${r.nba?' · 🏀 passé par la NBA':''}</p>
     ${renderTagChips(tagsByIds(r.tags), 'center')}
@@ -185,7 +204,7 @@ export function renderCareerDetail(r){
       <button class="btn" id="detBack">Retour au Panthéon</button>
     </div>
   </div>`;
-  document.getElementById('cardBtn2').onclick=()=>renderCareerCard(r, ()=>renderCareerDetail(r));
+  document.getElementById('cardBtn2').onclick=()=>renderCareerCard(r, ()=>renderCareerDetail(r, rank));
   document.getElementById('detBack').onclick=()=>renderHallOfFame();
 }
 

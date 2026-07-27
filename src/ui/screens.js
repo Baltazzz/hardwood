@@ -133,16 +133,42 @@ export function screenTitle(){
     <div class="eyebrow">Carrière · saison après saison</div>
     <h1>HARD<span class="o">W</span>OOD</h1>
     <p class="tag">De 16 à 38 ans, écris ta légende du basket. Chaque choix pèse : le talent ouvre des portes, les décisions décident du reste. La NBA est le sommet, encore faut-il y arriver.</p>
-    <div style="margin-top:28px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-      ${resumable?`<button class="btn" id="resumeGo">▶️ Reprendre ma carrière</button>`:''}
-      <button class="btn ${resumable?'ghost':''}" id="go">Commencer ${resumable?'une nouvelle':'ma'} carrière</button>
-      <button class="btn ghost" id="hof">🏆 Panthéon</button>
-      <button class="btn ghost" id="badges">🎖️ Badges</button>
-      <button class="btn ghost" id="challengeCreate">🔗 Défi entre amis</button>
-      <button class="btn ghost" id="dailyChallenge">📅 Défi du jour</button>
-      <button class="btn ghost" id="progress">📊 Ma progression</button>
+
+    <!-- Geste principal : SEUL en haut, jamais noyé parmi d'autres tuiles -- reprendre prime sur
+         démarrer quand une sauvegarde existe (repli en lien secondaire juste dessous, jamais perdu). -->
+    <div class="home-primary">
+      <button class="btn home-cta" id="${resumable?'resumeGo':'go'}">${resumable?'▶️ Reprendre ma carrière':'Commencer ma carrière'}</button>
+      ${resumable?`<button class="btn ghost sm" id="go">Commencer une nouvelle carrière</button>`:''}
     </div>
     ${best?`<div class="best-chip">🏆 Meilleur score légende : <b>${best}</b></div>`:''}
+
+    <!-- Modes de jeu : cartes (forme distincte des puces ci-dessous), une teinte propre à
+         chacune -- le geste "lancer une partie", groupé et mis en avant. -->
+    <div class="home-group home-modes">
+      <div class="eyebrow home-group-label">Modes de jeu</div>
+      <div class="home-modes-grid">
+        <button class="mode-card accent-orange" id="challengeCreate">
+          <span class="mode-icon">🔗</span><span class="mode-ttl">Défi entre amis</span>
+          <span class="mode-desc">Même profil de départ, comparez vos carrières</span>
+        </button>
+        <button class="mode-card accent-mint" id="dailyChallenge">
+          <span class="mode-icon">📅</span><span class="mode-ttl">Défi du jour</span>
+          <span class="mode-desc">Un profil imposé, ton classement personnel</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Suivi & records : puces compactes, format le plus scalable des trois groupes (voir
+         styles.css) -- c'est ici que rejoindra la future Boutique, sans rien bousculer. -->
+    <div class="home-group home-meta">
+      <div class="eyebrow home-group-label">Suivi &amp; records</div>
+      <div class="home-meta-row">
+        <button class="btn ghost sm" id="hof">🏆 Panthéon</button>
+        <button class="btn ghost sm" id="badges">🎖️ Hauts faits</button>
+        <button class="btn ghost sm" id="progress">📊 Ma progression</button>
+      </div>
+    </div>
+
     <div class="kbd"><img class="brand-mark-mini" src="/logo-mark.png" alt="" width="18" height="18">Écris ta légende, saison après saison · <a href="#" id="welcomeReopen" class="welcome-link">comment jouer ?</a></div>
     <div class="credit">Créé par Gaspard G · <a href="#" id="cookieReopen" class="credit-link">Gérer les cookies</a></div>
   </div>`;
@@ -917,7 +943,7 @@ export function endCareer(reason){
     <p class="body" style="max-width:520px;margin:14px auto 0;text-align:center">${blurb}</p>
     ${renderTagChips(activeTags(p), 'center')}
     ${newBadgeDefs.length?`<div class="recap-block new-badges-block">
-      <div class="eyebrow" style="text-align:center;margin-bottom:10px">🎖️ Nouveau${newBadgeDefs.length>1?'x':''} badge${newBadgeDefs.length>1?'s':''} débloqué${newBadgeDefs.length>1?'s':''}</div>
+      <div class="eyebrow" style="text-align:center;margin-bottom:10px">🎖️ ${newBadgeDefs.length>1?'Nouveaux hauts faits débloqués':'Nouveau haut fait débloqué'}</div>
       <div class="badge-grid compact">${newBadgeDefs.map(b=>`<div class="badge-tile unlocked" style="--badge-color:${b.color}">
         <div class="bt-icon">${b.emoji}</div><div class="bt-name">${b.name}</div><div class="bt-desc">${b.desc}</div></div>`).join('')}</div>
     </div>`:''}
@@ -960,7 +986,7 @@ export function endCareer(reason){
       ${p.dailyDate?`<button class="btn ghost" id="dailyCompare">📅 Mon historique quotidien</button>`:''}
       <button class="btn ghost" id="cardBtn">🖼️ Ma carte</button>
       <button class="btn ghost" id="hofView">🏆 Panthéon</button>
-      <button class="btn ghost" id="badgesView">🎖️ Badges</button>
+      <button class="btn ghost" id="badgesView">🎖️ Hauts faits</button>
       <button class="btn ghost" id="copyBtn">Copier mon résumé</button>
       <button class="btn ghost" id="share">Voir la fiche complète</button>
     </div>

@@ -62,6 +62,18 @@ function medalSvg(color, size) {
   </svg>`;
 }
 
+// Couronne (1re place du Panthéon uniquement) : distincte de la médaille d'or déjà utilisée pour
+// les accolades de sélection nationale (voir medalSvg ci-dessus), pour ne jamais confondre visuellement
+// "meilleure carrière de tous les temps" (le classement lui-même) et "médaille d'or à un tournoi"
+// (un accomplissement PARMI d'autres dans une carrière) -- même famille graphique (or, traits nets).
+export function crownIcon(size = 28) {
+  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}">
+    <path d="M4 18 3 8 8.5 12.5 12 5 15.5 12.5 21 8 20 18Z" fill="var(--mint)" stroke="var(--mint-soft)" stroke-width="0.7" stroke-linejoin="round"/>
+    <rect x="4.2" y="18" width="15.6" height="2.4" rx="1.1" fill="var(--mint)"/>
+    <circle cx="4" cy="7.2" r="1.6" fill="var(--mint)"/><circle cx="12" cy="4.2" r="1.6" fill="var(--mint)"/><circle cx="20" cy="7.2" r="1.6" fill="var(--mint)"/>
+  </svg>`;
+}
+
 const MEDAL_COLORS = { Or: 'var(--mint)', Argent: SILVER, Bronze: BRONZE };
 // Icône de médaille isolée (même dessin que dans l'armoire à trophées), pour la cartouche de
 // résultat de tournoi national sur le bilan de saison -- réutilise medalSvg() sans exiger une

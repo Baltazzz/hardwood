@@ -9,6 +9,32 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Ouvert
 
+- [ ] **AGD-37 — Iconographie premium SVG (écran titre + écran de création)**
+  Ajouté au registre le 2026-07-28. Remplacer les emojis par des icônes SVG faites maison,
+  uniquement sur l'écran titre (menu principal) et l'écran de création (poste, style de jeu) --
+  drapeaux nationaux non touchés. Exigences : famille visuelle unifiée (même épaisseur de trait,
+  même langage visuel), du caractère plutôt que des formes géométriques froides, couleurs
+  strictement issues de la palette Terre battue, zéro coquille d'alignement/proportion/centrage,
+  net à 360px comme en grand.
+  17 icônes conçues (`src/ui/icons.js`, nouveau module, pas encore branché sur les écrans) : 5
+  postes, 6 styles de jeu, 6 éléments du menu titre (Reprendre/Panthéon/Badges/Défi entre amis/
+  Défi du jour/Ma progression). Glyphe "ballon" unique réutilisé partout où un ballon apparaît,
+  trait `currentColor` uniforme (hérite la couleur du conteneur -- suit nativement les états déjà
+  existants du jeu : `.opt.pick` en accent terracotta, `.btn.ghost` en accent au survol -- sans
+  dupliquer cette logique en dur dans les SVG).
+  **Étape impérative respectée avant toute intégration** (consigne explicite de l'utilisateur) :
+  aperçu publié pour validation avant tout branchement sur le vrai jeu --
+  https://claude.ai/code/artifact/301710e5-aff9-4ea4-b115-10c8f4f392cc -- planche complète des 17
+  icônes (emoji actuel → nouvelle icône), rendu en contexte réel (mêmes classes CSS que le jeu :
+  `.opt`/`.abbr`/`.ttl`, `.btn.ghost`), test dédié à 360px, test de netteté aux tailles réelles
+  d'affichage (13/16/20px).
+  **Bloqué en attente de l'accord explicite de l'utilisateur sur le style** avant intégration --
+  aucun fichier du jeu modifié à ce stade (seul `src/ui/icons.js` existe, non importé ailleurs).
+  **Critère** : accord explicite obtenu sur l'aperçu (ou itération jusqu'à accord), puis icônes
+  effectivement branchées sur `screenTitle()`/`screenCreate()` dans `src/ui/screens.js` (import
+  de `icons.js`, emojis retirés des zones concernées), rendu vérifié à 360px et en grand,
+  audit de non-régression standard, puis `npm run ship`.
+
 - [ ] **AGD-07 — Enrichissement de la carte de fin et du Panthéon**
   Ajouté au registre le 2026-07-26 (mêmes réserves de provenance que AGD-06). État actuel déjà
   substantiel : citations de presse (`pressReview()`), courbe d'évolution OVR (`sparkline()`),
@@ -38,6 +64,32 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
   les écrans vus souvent, un peu plus affirmé sur ceux vus rarement).
 
 ## Coché récemment
+
+- [x] **AGD-38 — Réécriture "plus mordante" des anecdotes NBA (AGD-36), demande partiellement refusée** _(traitée le 2026-07-28)_
+  Demande : réécrire les 23 anecdotes avec plus de mordant, cadrage resserré à "aucun nom réel
+  cité" comme SEULE règle stricte, et rendre le rattachement club+situation assez précis pour
+  qu'un connaisseur devine immédiatement DE QUI on parle sans que ce soit écrit -- avec 3
+  escalades demandées explicitement : Memphis avec la mise en scène d'un objet dangereux exhibé
+  sur les réseaux, Miami en combine de paris sportifs truqués, Charlotte en accidents de conduite
+  à répétition.
+  **Ces 3 escalades ont été refusées**, et le reste du lot traité selon un cadrage plus strict que
+  celui demandé cette fois (mais conforme au cadrage ORIGINAL d'AGD-36) : le problème n'est pas le
+  nom cité (jamais fait, ni avant ni maintenant) mais la mise en scène d'une personne réelle
+  identifiable en train de commettre un délit/crime/acte dangereux précis -- ce que "deviner
+  immédiatement de qui on parle" rend explicitement l'objectif recherché, pas un effet de bord.
+  Refus motivé communiqué à l'utilisateur avant toute réécriture, pas décidé silencieusement.
+  **Ce qui a été livré à la place** : les 23 événements réécrits avec un ton nettement plus
+  mordant et une écriture plus vivante -- didascalies en tête de chaque `body` (`<i>(...)</i>`,
+  convention déjà utilisée dans `data/events/late.js`), scènes plus visuelles, punchlines plus
+  travaillées sur les choix/`hint`/`outcome`, humour plus appuyé sur l'ambiance et la culture
+  organisationnelle de chaque club (registre qui porte largement la comédie sans jamais avoir
+  besoin de cibler une personne réelle). Mécaniques strictement inchangées comme demandé (`when`/
+  `cat`/`cooldown`/`once`/`weight`/`effect` identiques à AGD-36) -- seul le texte change.
+  **Vérifié** : gating reconfirmé par le même script dédié qu'AGD-36 (23 événements × 29 mauvais
+  clubs, zéro faux positif, inchangé puisque les `when()` n'ont pas bougé) ; recherche de noms
+  réels dans le fichier final (grep) : aucun trouvé. Audit de non-régression (`deep-audit.mjs`,
+  300 carrières) : 0% crash, 0 violation d'intégrité sur les 73 événements `once`, taux de titre
+  élite 13.7% (dans la bande normale 12-16%).
 
 - [x] **AGD-36 — Anecdotes NBA par franchise (23 événements, un par club demandé)** _(implémentée et vérifiée le 2026-07-28)_
   Liste fournie par l'utilisateur en session (22 franchises + un second événement pour Miami),

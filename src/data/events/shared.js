@@ -47,7 +47,7 @@ export const SHARED_EVENTS = [
         effect:{tir:+2, adr3:+2, coach:+2, flag:'saver'}, outcome:'Tu déclines. Tes séances supplémentaires parlent pour toi.'}
     ]},
 
-  {id:'invest', cat:'business', cooldown:4,
+  {id:'invest', cat:'business', cooldown:5,
     when:(p,lg)=>p.money>=200,
     title:'Une opportunité d\'investissement',
     body:({p})=>`Un proche te propose de placer une partie de tes gains dans un projet. Ça peut rapporter gros… ou partir en fumée.`,
@@ -146,11 +146,11 @@ export const SHARED_EVENTS = [
         effect:{pendingFA:true, reputation:+2, perfBonus:+4, coach:-2}, outcome:'Tu refuses la première offre. En fin de saison, tu écouteras le marché : à toi de le mériter d\'ici là.'}
     ]},
 
-  {id:'training_focus', cat:'training', cooldown:2,
+  {id:'training_focus', cat:'training', cooldown:4,
     when:(p,lg)=>p.age<=30,
     title:'Le chantier de l\'intersaison',
     body:`Tu as ciblé un axe pour passer un cap. Où mets-tu l'énergie de ton travail cette année ?`,
-    weight:()=>1.3,
+    weight:()=>1, // ramené (1.3 -> 1) : événement le plus vu du jeu (95%+ des carrières), voir AGENDA.md
     choices:()=>[
       {label:'Ton tir et ton adresse extérieure', hint:'Miser sur la touche',
         effect:{tir:+3, adr3:+3, coach:+1}, outcome:'Des milliers de shoots plus tard, ta main est plus sûre.'},
@@ -172,7 +172,7 @@ export const SHARED_EVENTS = [
         effect:{perfBonus:-4, morale:-1, reputation:+1}, outcome:'Tu multiplies les tentatives. Ça passe ou ça casse.'}
     ]},
 
-  {id:'community', cat:'community', cooldown:3,
+  {id:'community', cat:'community', cooldown:4,
     when:(p,lg)=>true,
     title:'Action auprès des jeunes du quartier',
     body:`On te sollicite pour un événement caritatif avec les gamins de ta ville. Du temps hors du parquet, mais une image forte.`,
@@ -196,7 +196,7 @@ export const SHARED_EVENTS = [
         effect:{morale:+2, money:+20}, outcome:'Tu gardes ta confiance dans ton entourage historique.'}
     ]},
 
-  {id:'personal', cat:'personal', cooldown:2,
+  {id:'personal', cat:'personal', cooldown:3,
     when:(p,lg)=>true,
     title:'La vie en dehors du parquet',
     body:`Entre déplacements et matchs, tes proches réclament du temps. Trouver l'équilibre te rendrait plus solide dans la tête.`,
@@ -235,7 +235,7 @@ export const SHARED_EVENTS = [
   // "night_out" et "nightlife" étaient deux événements quasi-identiques (sortie entre amis) qui
   // se tiraient indépendamment l'un de l'autre — la cause principale de la sensation de répétition
   // signalée. Fusionnés en un seul, avec un cooldown généreux : c'est LE seul event "sortie" du jeu.
-  {id:'nightlife', cat:'nightlife', cooldown:4,
+  {id:'nightlife', cat:'nightlife', cooldown:5,
     when:(p,lg)=>p.age<=31,
     title:'Sortie avec les potes ce soir ?',
     body:`La bande t'invite à sortir après une grosse semaine. Décompresser fait du bien... mais la nuit peut coûter cher.`,
@@ -266,7 +266,7 @@ export const SHARED_EVENTS = [
         effect:{popularity:+6, reputation:-5, coach:-2, flag:['controversial','hothead']}, outcome:'Ça fait le buzz, mais certains n\'ont pas apprécié le ton.'}
     ]},
 
-  {id:'overwork', cat:'training', cooldown:3,
+  {id:'overwork', cat:'training', cooldown:4,
     when:(p,lg)=>p.age<=29,
     title:'Doubler les séances ?',
     body:`Tu peux enchaîner une deuxième séance quotidienne pour passer un cap. Efficace, mais ton corps a ses limites.`,
@@ -408,7 +408,7 @@ export const SHARED_EVENTS = [
         outcome:'Tu réponds directement. Le clip fait le tour des réseaux, pour le meilleur ou pour le pire.'}
     ]},
 
-  {id:'nutritionist_upgrade', cat:'training', cooldown:4,
+  {id:'nutritionist_upgrade', cat:'training', cooldown:5,
     when:(p,lg)=>p.money>=150,
     title:'S\'entourer d\'une équipe de sciences du sport',
     body:()=>`Nutritionniste personnel, préparateur physique dédié, suivi de sommeil : tu as désormais les moyens de professionnaliser chaque détail autour de ton corps.`,
@@ -445,7 +445,7 @@ export const SHARED_EVENTS = [
         effect:{media:+3, popularity:+3, flag:'mediaFriend'}, outcome:'Tu trouves le bon dosage entre authenticité et prudence. Bel accueil général.'}
     ]},
 
-  {id:'family_emergency', cat:'personal', cooldown:3,
+  {id:'family_emergency', cat:'personal', cooldown:4,
     when:(p,lg)=>true,
     title:'Un appel qui change les priorités',
     body:()=>`<i>(Téléphone qui vibre en pleine nuit, un proche à l'autre bout du fil.)</i> Une urgence familiale te pousse à choisir entre rester concentré sur la saison ou t'absenter pour être auprès des tiens.`,

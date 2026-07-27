@@ -26,7 +26,105 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
   **Critère** : le handle fourni apparaît accolé à la signature (ex. « Créé par Gaspard G ·
   @handle »), vérifié par rendu direct de l'écran titre.
 
+- [ ] **AGD-25 — PWA réellement installable**
+  Ajouté au registre le 2026-07-27, à la suite d'un audit de conformité écrit (aucun code
+  touché pendant cet audit). Confusion identifiée avec AGD-14 : ce lot avait ajouté un TUTO
+  expliquant le geste manuel "partager → ajouter à l'écran d'accueil" (`screenWelcome()`),
+  explicitement documenté à l'époque comme n'étant PAS une vraie PWA ("Aucun manifest/PWA
+  ajouté", voir entrée AGD-14 ci-dessous). Vérifié à nouveau pendant cet audit : toujours aucun
+  `manifest.json` nulle part dans le dépôt, aucune balise `<link rel="manifest">` dans
+  `index.html`, aucun service worker, aucune dépendance `vite-plugin-pwa` dans `package.json`.
+  Sans manifest (icônes déclarées, `display:standalone`, couleur de thème) ni service worker,
+  Chrome/Android ne propose pas le vrai prompt d'installation natif ; seul le raccourci
+  navigateur manuel fonctionne (iOS Safari uniquement, partiellement).
+  **Critère** : `manifest.json` présent et lié dans `index.html`, contenant au minimum
+  nom/icônes/`display:standalone`/couleur de thème ; testable par l'apparition du prompt
+  d'installation natif Chrome/Android (ou au minimum absence d'erreur de manifest dans les
+  DevTools). Un service worker minimal (mise en cache de l'app shell) reste optionnel selon ce
+  que l'utilisateur souhaite réellement (offline complet vs simple icône d'app).
+
+- [ ] **AGD-26 — Tuiles avec "tirets latéraux qui les relient" : à clarifier**
+  Ajouté au registre le 2026-07-27, à la suite d'un audit de conformité écrit. Demande de
+  l'utilisateur : retirer des tirets latéraux qui relient visuellement certaines tuiles.
+  Recherche exhaustive menée (styles.css entier, tous les `::before`/`::after`, toutes les
+  bordures `dashed`, historique git, fichier de référence `hardwood.html`) : **aucune trace
+  trouvée**, ni dans le CSS actuel ni dans l'historique des chantiers déjà cochés (AGD-09 a bien
+  adouci les bordures des tuiles — "trait plein uniforme" → bordures semi-transparentes — mais
+  rien de documenté spécifiquement comme des "tirets qui relient" plusieurs tuiles entre elles).
+  Deux hypothèses possibles, non tranchées : (a) déjà résolu incidemment par AGD-09 sans avoir
+  été nommé ainsi à l'époque ; (b) fait référence à un écran ou un composant précis pas encore
+  identifié. **À clarifier avec l'utilisateur** : quel écran, quelle tuile exactement (option de
+  création, fiche de stats, armoire à trophées, bilan de saison... ) ?
+  **Critère** : à définir une fois l'écran concerné précisé — capture avant/après montrant la
+  disparition du tiret.
+
 ## Coché récemment
+
+- [x] **AGD-27 — Correction des stats molles et des traits, suite à des tests réels** _(implémentée et vérifiée le 2026-07-27)_
+  Quatre points, remontés après un vrai retour de test (pas seulement un audit) :
+  1. *Forme cassée dans l'autre sens*. Bug de fond confirmé et diagnostiqué précisément (pas
+     seulement "rééquilibré à l'aveugle") : instrumentation dédiée sur 300 carrières a montré une
+     forme moyenne de 94.1 en saisons 1-3, 63.1 en 4-8, 42.7 en 9-14, **31.7 en saison 15+** — une
+     RAMPE DE DÉCLIN continue sur toute la carrière, jamais un équilibre. Cause : `applyFatigue`/
+     `applyRecovery` (`engine/vitals.js`) fonctionnaient en drain/récupération ADDITIFS fixes —
+     pour un titulaire à pleine charge, le drain net dépassait systématiquement la récupération
+     (~-11/saison), donc la forme rampait vers le plancher sans jamais s'stabiliser, se
+     re-clampant au même plancher saison après saison une fois atteint (= "collée en bas").
+     Remplacé par un système de DÉRIVE VERS UNE CIBLE D'ÉQUILIBRE dépendant de l'âge (`applyRecovery`
+     comble une fraction de l'écart vers une cible 45-82 selon l'âge, `applyFatigue` garde un
+     drain proportionnel à la charge réelle mais réduit) : converge naturellement vers un
+     équilibre par profil de charge/âge, ne peut plus dériver indéfiniment ni rester collé à une
+     extrémité. **Effet de bord détecté et corrigé** : la moyenne de forme étant remontée (~52 ->
+     ~63), le coefficient de sensibilité de `form` à la forme (`simulateSeason()`) a dû être
+     recalé (0.4 -> 0.33) après qu'un premier passage a fait réapparaître le palier G.O.A.T.
+     (jamais vu depuis des dizaines de runs) à 1% — reconfirmé à 0.3% (quasi jamais) après le
+     recalage, sur deux runs indépendants.
+  2. *Variation contextuelle des stats molles*. Bug de fond identifié : popularité ne bougeait
+     QUE via un bonus "star" figé (+6/+3, binaire) et les choix narratifs — un jeune très
+     prometteur qui n'avait pas encore franchi ce seuil ne voyait quasiment jamais bouger sa
+     popularité, un joueur en échec n'avait AUCUNE pénalité de performance (seule la lente dérive
+     vers la base neutre, des saisons plus tard, finissait par corriger). Médias : aucune
+     mutation directe liée à la performance, seulement un suivi différé de la popularité.
+     Corrigé : nouvelle formule de performance directe pour popularité ET médias (`season.js`),
+     même famille que la réputation déjà réactive, amplifiée par `mediaAmp` — réagit dans les DEUX
+     sens (bons ET mauvais résultats), au même rythme que le reste de la trajectoire.
+  3. *Traits*. Fréquence de déblocage instrumentée (nouvelle section k-bis de
+     `scripts/deep-audit.mjs`, % de carrières où un trait a été actif au moins une fois, pas
+     seulement "encore actif à la fin"). Constat : bling/saver 35-37% des carrières (visibles,
+     pas envahissants), mediaFriend/hothead/leader 9-17% (fréquence moyenne saine), mais
+     clutch/fragile/controversial seulement 1-5% -- pas par manque d'événements nourrissant leur
+     flag (`clutchHero` alimenté par 9 branches d'événements différentes) mais parce que ces
+     flags sont eux-mêmes situationnels/probabilistes, et la fenêtre de décroissance (5 saisons)
+     ne laissait souvent pas le temps d'enchaîner 2 occurrences. Fenêtre allongée à 8 saisons pour
+     ces 3 flags spécifiquement (`DECAY_OVERRIDE` dans `tags.js`), seuil de déblocage inchangé (2)
+     -- reste rare (cohérent avec des moments réellement marquants), mais moins "invisible".
+     Nombre moyen de traits actifs simultanés confirmé sobre (0.3, 70-73% des instantanés à 0
+     trait) -- ni trop rare au global, ni envahissant.
+  4. *Répétitivité des choix*. Diversifié : le mécanisme de fraîcheur/cooldown existant
+     (`freshnessMult()` dans `season.js`) a été renforcé (plancher de suppression 0.06 -> 0.035,
+     courbe de retour à la normale rendue plus tardive, exposant 1.6 au lieu d'une remontée
+     linéaire) et le cooldown de 7 événements génériques confirmés dominants a été relevé
+     (`training_focus` 2->4 + poids 1.3->1, `invest`/`nightlife`/`nutritionist_upgrade` 4->5,
+     `community`/`overwork`/`family_emergency` 3->4, `personal` 2->3). Nouvelle mesure ajoutée à
+     l'audit (occurrences MOYENNES par carrière, pas seulement % de carrières touchées, qui ne
+     distinguait pas "vu 1x" de "vu 4x") : `training_focus` (le plus vu du jeu) passe de ×2.1 à
+     ×1.5-1.6 occurrences/carrière. Le taux de carrières touchées (85-93%) reste élevé pour ces
+     événements génériques à `when()` très permissif (ils restent éligibles la quasi-totalité
+     d'une carrière de 15-20 saisons -- inhérent à leur nature transverse, pas un défaut de
+     réglage), mais la vraie répétition PAR carrière a bien diminué.
+  Vérifié (deux runs indépendants de 300 carrières) : 0% crash, 0 violation d'intégrité des
+  événements uniques, 0 incohérence de format NBA. **Forme** : moyenne 62.8/62.9, écart-type
+  10.8 (les deux runs), min 27-29, max 100, **0% de saisons quasi au plancher (<=15) sur les
+  deux runs** (nouveau contrôle permanent ajouté à l'audit, section j), contre un plancher
+  massivement présent avant ce lot -- zone médiane-haute confirmée, plus de collage à une
+  extrémité. **Récompenses** : titre élite 10.3%/11.3% (bande de bruit acceptable 7.7-21.7%,
+  légèrement sous la bande "normale" 12-16% mais stable sur les deux runs, cohérent avec
+  plusieurs chantiers précédents ayant atterri dans cette même zone), MVP 5%/5.7%, HOF
+  9.3%/8.3%, All-Star 26.7%/25.3%, G.O.A.T. 0.3%/0.3% (quasi jamais, comme attendu). Popularité/
+  médias nettement plus dispersés qu'avant (écart-type popularité 22.8 -> 33-34, médias 15.4 ->
+  27.9-28.6) -- confirme la réactivité recherchée, sans dérive des probabilités de récompense
+  (aucune formule de récompense ne dépend directement de la popularité/média, hors le seuil
+  All-Star déjà existant `popularity>=78`, resté dans sa bande historique).
 
 - [x] **AGD-23 — Lot identité et partage** _(implémenté et vérifié le 2026-07-27)_
   Demande en 3 points. Vérification directe du code AVANT tout ajout (conformément à la

@@ -139,6 +139,12 @@ function bumpStreak(p, id){
   if(st) st.streak=(st.streak||0)+1;
   else p.evStats[id] = { count:0, lastYear:null, streak:1 };
 }
+// Renforcé après retour de test réel (voir AGENDA.md) : quelques événements génériques
+// quasi-toujours éligibles (when() très permissif, cooldown court) dominaient encore le pool sur
+// une carrière longue malgré ce mécanisme -- plancher de suppression abaissé (0.06 -> 0.035) et
+// courbe de retour à la normale rendue plus tardive (exposant 1.6 au lieu d'une remontée linéaire :
+// reste fortement pénalisé sur la première moitié du cooldown, ne redevient vraiment normal que
+// proche de son terme) plutôt qu'une remontée régulière dès le premier tiers du délai.
 function freshnessMult(ev, st, year){
   const cd = ev.cooldown ?? 3;
   if(!st || st.count===0){
@@ -146,7 +152,7 @@ function freshnessMult(ev, st, year){
   }
   const sinceLast = year - st.lastYear;
   if(sinceLast>=cd) return 1;
-  return clamp(0.06 + (sinceLast/cd)*0.94, 0.06, 1); // vu récemment : nettement moins probable
+  return clamp(0.035 + Math.pow(sinceLast/cd, 1.6)*0.965, 0.035, 1); // vu récemment : nettement moins probable, plus longtemps
 }
 
 export function applyChoice(choice, ctx){
@@ -259,12 +265,15 @@ export function simulateSeason(){
   if(p.age<=20 && p.potential>=95 && p.devArchetype==='precocious'){ minutes += ri(4,7); }
   minutes = clamp(minutes, 3, 36);
   // Sensibilité à la forme volontairement réduite (0.85 -> 0.5, base 0.15 -> 0.5) depuis que la
-  // forme oscille vraiment (voir engine/vitals.js -- fatigue réelle, moyenne carrière ~50 au
-  // lieu de ~100 quasi systématique avant ce lot) : la jauge affichée doit vraiment bouger pour
-  // se sentir vivante, mais sa traduction mécanique en production/progression reste contenue --
-  // sous-caler cette sensibilité aurait fait chuter tout l'équilibrage des récompenses (vérifié
-  // à l'audit : titre élite tombé à 6% avec la seule ancienne pente, hors bande établie).
-  const form = clamp((p.fitness/100)*0.4 + 0.6 + (p.morale-50)/130, 0.6, 1.2); // le moral pèse nettement plus qu'avant
+  // forme oscille vraiment (voir engine/vitals.js -- fatigue réelle convergeant vers un équilibre
+  // par charge/âge, moyenne carrière ~63 dans une zone médiane-haute, plus jamais collée à un
+  // plancher ou un plafond permanent comme avant ce lot) : la jauge affichée doit vraiment bouger
+  // pour se sentir vivante, mais sa traduction mécanique en production/progression reste contenue.
+  // Coefficient recalé (0.4 -> 0.33) après le rééquilibrage de la forme : la moyenne de forme
+  // ayant remonté (~52 -> ~63), garder 0.4 aurait fait déraper l'équilibrage vers le haut (titre
+  // élite au-dessus de la bande établie, palier G.O.A.T. réapparu alors qu'il devait rester
+  // quasi jamais atteint) -- vérifié à l'audit, pas seulement supposé.
+  const form = clamp((p.fitness/100)*0.33 + 0.6 + (p.morale-50)/130, 0.6, 1.2); // le moral pèse nettement plus qu'avant
   // L'argent accumulé finance un meilleur suivi médical : réduit (dans une mesure raisonnable)
   // le temps perdu à cause des blessures de la saison.
   const medicalCare = clamp(1 - Math.min(p.money,3000)/3000*0.25, 0.75, 1);
@@ -453,6 +462,15 @@ export function simulateSeason(){
   else if(minutes<12){ p.morale=clamp(p.morale-7,0,100); }
   if(champion){ p.morale=clamp(p.morale+10,0,100); p.reputation=clamp(p.reputation+6*mediaAmp,0,100); }
   p.reputation=clamp(p.reputation + ((pts-12)*0.25 + (o-lg.starter)*0.15)*mediaAmp, 0, 100);
+  // Popularité/médias doivent eux aussi raconter la trajectoire depuis la performance RÉELLE,
+  // pas seulement depuis le bonus "star" figé ci-dessus (trop binaire) et les choix narratifs --
+  // jusqu'ici un jeune très prometteur qui n'avait pas encore franchi le seuil "star" ne voyait
+  // quasiment jamais bouger sa popularité, un joueur en échec non plus (aucune pénalité de
+  // performance, seule la lente dérive vers la base neutre -- voir applySoftStatDrift -- finissait
+  // par l'y ramener, des saisons plus tard). Même famille de formule que la réputation ci-dessus,
+  // amplifiée par la même mediaAmp : ces deux jauges sont censées réagir vite à la trajectoire.
+  p.popularity=clamp(p.popularity + ((pts-12)*0.3 + (o-lg.starter)*0.25)*mediaAmp, 0, 100);
+  p.media=clamp(p.media + ((pts-12)*0.18 + (o-lg.starter)*0.15)*mediaAmp, 0, 100);
   // La confiance du staff se regagne (ou s'effrite) avec les prestations réelles — plus vite
   // qu'elle ne s'est perdue à l'arrivée, pour qu'une période d'adaptation dure 1-2 saisons,
   // pas cinq. Une bonne saison à forte production/minutes restaure nettement la confiance.

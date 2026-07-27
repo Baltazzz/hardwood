@@ -48,7 +48,10 @@ function driveOneCareer(document, errors, state, activeTags) {
     }
     if (document.getElementById('afterSeason')) {
       const p = state.G;
-      vitals.push({ fitness: p.fitness, morale: p.morale, popularity: p.popularity, media: p.media, activeTraits: activeTags(p).length });
+      // activeTraitIds (pas seulement le compte) : sert à calculer la fréquence de DÉBLOCAGE par
+      // trait (% de carrières où il a été actif au moins une fois), demandée en plus de la
+      // simple sobriété du nombre simultané (section k) -- voir agrégation plus bas.
+      vitals.push({ fitness: p.fitness, morale: p.morale, popularity: p.popularity, media: p.media, activeTraits: activeTags(p).length, activeTraitIds: activeTags(p).map(t => t.id) });
       clickId(document, 'afterSeason');
     }
     else if (document.getElementById('natContinue')) clickId(document, 'natContinue');
@@ -216,6 +219,7 @@ async function main() {
   // d) diversité des événements
   const totalDefined = EVENTS.length;
   const freq = new Map(); // id -> nb de carrières où il apparaît au moins 1 fois
+  const occurCount = new Map(); // id -> nb total d'occurrences brutes (toutes carrières confondues) -- sert à juger la vraie dominance dans le pool, pas seulement le taux de carrières touchées (un event vu 1x dans 90% des carrières est bien moins "dominant" qu'un event vu 4x dans 90% des carrières)
   let sumDistinct = 0, sumTotal = 0;
   results.forEach(r => {
     const hist = r.eventHistory || [];
@@ -223,21 +227,22 @@ async function main() {
     const distinctInCareer = new Set(hist);
     sumDistinct += distinctInCareer.size;
     distinctInCareer.forEach(id => freq.set(id, (freq.get(id) || 0) + 1));
+    hist.forEach(id => occurCount.set(id, (occurCount.get(id) || 0) + 1));
   });
   const avgDistinct = completed ? round1(sumDistinct / completed) : 0;
   const avgTotal = completed ? round1(sumTotal / completed) : 0;
   const seenIds = [...freq.keys()];
   const neverSeenCount = totalDefined - seenIds.length;
   const neverSeenPct = totalDefined ? round1((neverSeenCount / totalDefined) * 100) : 0;
-  const sortedByFreq = seenIds.map(id => ({ id, pct: round1((freq.get(id) / completed) * 100) })).sort((a, b) => b.pct - a.pct);
+  const sortedByFreq = seenIds.map(id => ({ id, pct: round1((freq.get(id) / completed) * 100), avgPerCareer: round1(occurCount.get(id) / completed) })).sort((a, b) => b.pct - a.pct);
   const top10 = sortedByFreq.slice(0, 10);
   const bottom10 = sortedByFreq.slice(-10).reverse();
 
   console.log(`\n-- d) Diversité des événements (${totalDefined} événements définis) --`);
   console.log(`Événements distincts vus par carrière : ${avgDistinct} en moyenne (${avgTotal} événements vus au total en moyenne)`);
   console.log(`Événements jamais vus sur l'ensemble du run : ${neverSeenPct}% (${neverSeenCount}/${totalDefined})`);
-  console.log('Top 10 événements les plus fréquents (% de carrières où ils apparaissent) :');
-  top10.forEach(e => console.log(`  ${e.id.padEnd(28)} : ${e.pct}%`));
+  console.log('Top 10 événements les plus fréquents (% de carrières où ils apparaissent, occurrences moyennes/carrière) :');
+  top10.forEach(e => console.log(`  ${e.id.padEnd(28)} : ${e.pct}%  (×${e.avgPerCareer}/carrière)`));
   console.log('Top 10 événements les plus rares (parmi ceux vus au moins une fois) :');
   bottom10.forEach(e => console.log(`  ${e.id.padEnd(28)} : ${e.pct}%`));
 
@@ -448,11 +453,12 @@ async function main() {
     const variance = vals.reduce((s, v) => s + (v - avg) * (v - avg), 0) / n;
     const stdev = Math.sqrt(variance);
     const pctCapped = round1(vals.filter(v => v >= 97).length / n * 100);
-    return { avg: round1(avg), stdev: round1(stdev), pctCapped, min: Math.min(...vals), max: Math.max(...vals) };
+    const pctFloored = round1(vals.filter(v => v <= 15).length / n * 100);
+    return { avg: round1(avg), stdev: round1(stdev), pctCapped, pctFloored, min: Math.min(...vals), max: Math.max(...vals) };
   }
   const fitnessStats = stats('fitness'), moraleStats = stats('morale'), popularityStats = stats('popularity'), mediaStats = stats('media');
   console.log(`\n-- j) Vivacité des stats molles (${allVitals.length} instantanés de fin de saison) --`);
-  console.log(`Forme       : moyenne ${fitnessStats.avg}, écart-type ${fitnessStats.stdev}, min ${fitnessStats.min}, max ${fitnessStats.max}, quasi-plafond (>=97) ${fitnessStats.pctCapped}% des saisons`);
+  console.log(`Forme       : moyenne ${fitnessStats.avg}, écart-type ${fitnessStats.stdev}, min ${fitnessStats.min}, max ${fitnessStats.max}, quasi-plafond (>=97) ${fitnessStats.pctCapped}%, quasi-plancher (<=15) ${fitnessStats.pctFloored}% des saisons`);
   console.log(`Moral       : moyenne ${moraleStats.avg}, écart-type ${moraleStats.stdev}, min ${moraleStats.min}, max ${moraleStats.max}`);
   console.log(`Popularité  : moyenne ${popularityStats.avg}, écart-type ${popularityStats.stdev}, min ${popularityStats.min}, max ${popularityStats.max}`);
   console.log(`Médias      : moyenne ${mediaStats.avg}, écart-type ${mediaStats.stdev}, min ${mediaStats.min}, max ${mediaStats.max}`);
@@ -470,6 +476,21 @@ async function main() {
   Object.keys(traitCountFreq).sort((a, b) => a - b).forEach(c => {
     console.log(`  ${c} trait(s) : ${round1(traitCountFreq[c] / traitCounts.length * 100)}%`);
   });
+
+  // k-bis) Fréquence de DÉBLOCAGE par trait (% de carrières où le trait a été actif au moins une
+  // fois à un instant donné, pas seulement "encore actif en fin de carrière" -- un trait peut se
+  // débloquer puis s'estomper, section e) ne verrait alors rien). Calculé par carrière à partir
+  // des instantanés de fin de saison (activeTraitIds), pas seulement le compte agrégé ci-dessus.
+  const traitUnlockCareers = new Map(); // id -> nb de carrières où il a été actif au moins 1 fois
+  results.forEach(r => {
+    const everActive = new Set();
+    (r.vitals || []).forEach(v => (v.activeTraitIds || []).forEach(id => everActive.add(id)));
+    everActive.forEach(id => traitUnlockCareers.set(id, (traitUnlockCareers.get(id) || 0) + 1));
+  });
+  const traitUnlockSorted = [...traitUnlockCareers.entries()].map(([id, n]) => ({ id, pct: round1(n / completed * 100) })).sort((a, b) => b.pct - a.pct);
+  console.log(`\n-- k-bis) Fréquence de déblocage par trait (% de carrières où il a été actif au moins une fois) --`);
+  if (traitUnlockSorted.length) traitUnlockSorted.forEach(t => console.log(`  ${t.id.padEnd(16)} : ${t.pct}%`));
+  else console.log('  Aucun trait débloqué sur ce run.');
 
   // l) Fréquence des fins de carrière SUBIES (blessure grave, voir le jet dans postSeason()) :
   // doit rester rare (le risque n'existe qu'à partir de p.age>=33, jamais sur un jeune) -- objectif
@@ -494,7 +515,7 @@ async function main() {
     nbaStrengthCorrelation: { strengthStats, crossTab },
     globalStrengthCorrelation: { n: allSeasonsFlat.length, strengthStats: globalStrengthStats, crossTab: globalCrossTab },
     vitalsHealth: { n: allVitals.length, fitness: fitnessStats, morale: moraleStats, popularity: popularityStats, media: mediaStats },
-    traitSobriety: { avgActiveTraits, maxActiveTraits, traitCountFreq } }, null, 0));
+    traitSobriety: { avgActiveTraits, maxActiveTraits, traitCountFreq, unlockFreq: traitUnlockSorted } }, null, 0));
 }
 
 main().catch(err => { console.error('DEEP AUDIT ÉCHOUÉ :', err); process.exitCode = 1; });

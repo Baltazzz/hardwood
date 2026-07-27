@@ -14,6 +14,15 @@ import { clamp } from './utils.js';
 
 const DECAY_SEASONS = 5;
 
+// Fenêtre de décroissance individuelle, quand un trait a besoin de plus de temps que les autres
+// pour accumuler ses 2 occurrences de flag : audit réel (voir AGENDA.md) montrant clutch/fragile/
+// controversial à peine 3-3.7% de carrières concernées (contre 12-39% pour les autres traits) --
+// pas parce que leurs événements sont absents (clutchHero est nourri par 9 branches d'événements
+// différentes), mais parce qu'ils sont eux-mêmes situationnels/probabilistes : 5 saisons ne
+// suffisent souvent pas à enchaîner 2 occurrences. Fenêtre allongée pour ces 3 traits seulement --
+// le seuil (2) ne change pas, ils gardent le même sens, juste plus de temps pour se révéler.
+const DECAY_OVERRIDE = { clutchHero: 8, injuryProne: 8, controversial: 8 };
+
 export const TAG_DEFS = [
   // ---- Jeu ----
   { id: 'clutch', label: 'Clutch', registry: 'jeu', flag: 'clutchHero', threshold: 2,
@@ -73,7 +82,7 @@ export function activeTags(p) {
     const count = flags[t.flag] || 0;
     if (count < t.threshold) return false;
     const lastYear = flagYear[t.flag] || 0;
-    return (year - lastYear) <= DECAY_SEASONS;
+    return (year - lastYear) <= (DECAY_OVERRIDE[t.flag] || DECAY_SEASONS);
   });
 }
 

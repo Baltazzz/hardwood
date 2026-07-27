@@ -114,11 +114,13 @@ html,body{background:var(--court);min-height:100%}
   background:linear-gradient(90deg,var(--orange),var(--mint));
   pointer-events:none;
 }
-.stage::before{ /* marquage de terrain, très sobre, en pied d'écran */
-  content:"";position:absolute;inset:auto 0 0 0;height:120px;opacity:.07;
-  background:repeating-linear-gradient(90deg,transparent 0 46px,var(--orange) 46px 47px);
-  pointer-events:none;
-}
+/* Motif de tirets verticaux répétés en pied d'écran RETIRÉ (voir AGENDA.md) : sur signalement
+   répété d'un "connecteur en tirets" entre les tuiles, c'était après vérification le seul motif
+   répétitif de ce type dans tout le fichier -- présent sur .stage, donc DERRIÈRE absolument tout
+   écran, en pied de page, à l'endroit précis où s'alignent souvent des boutons/tuiles. Retiré au
+   profit de tuiles bien séparées, sans repli par un autre motif répétitif. Le dégradé radial
+   ci-dessus (background de .stage) suffit comme ambiance de fond pour les écrans non couverts
+   par le nouveau traitement plus présent ci-dessous (titre/événement/bilan). */
 
 h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;letter-spacing:.01em;text-transform:uppercase;color:var(--chalk)}
 .eyebrow{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;letter-spacing:.22em;
@@ -138,10 +140,20 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
 .title-screen{padding:76px 18px 54px;text-align:center;position:relative;overflow:hidden}
 /* Motif d'ambiance discret : ballon fait maison en SVG, très bas en opacité — jamais au-dessus
    du texte. Fait main, aucune image tierce. */
+/* Direction "plus de présence en fond" (voir AGENDA.md) : le motif de terrain existant, agrandi
+   et recentré (l'ancien restait cantonné à un coin, à peine visible), combiné à une trame de
+   lattes de parquet en dessous -- toujours fait main, toujours strictement sous le texte
+   (z-index) et à une opacité qui ne gêne jamais la lecture. Écran titre = vu une fois par
+   session, peut se permettre un peu plus de présence que les écrans vus à chaque saison
+   (événement/bilan ci-dessous, volontairement plus discrets). */
 .title-screen::before{
-  content:"";position:absolute;inset:-18px -6px auto auto;width:min(280px,68vw);height:min(280px,68vw);
-  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%23E0562D' stroke-width='1.6'%3E%3Ccircle cx='100' cy='100' r='96'/%3E%3Cpath d='M100,4 V196'/%3E%3Cpath d='M4,100 H196'/%3E%3Cpath d='M30,30 Q100,100 30,170'/%3E%3Cpath d='M170,30 Q100,100 170,170'/%3E%3C/g%3E%3C/svg%3E") no-repeat;
-  background-size:contain;opacity:.06;z-index:0;pointer-events:none;
+  content:"";position:absolute;inset:-10% -8% auto auto;width:min(480px,92vw);height:min(480px,92vw);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%23E0562D' stroke-width='1.6'%3E%3Ccircle cx='100' cy='100' r='96'/%3E%3Cpath d='M100,4 V196'/%3E%3Cpath d='M4,100 H196'/%3E%3Cpath d='M30,30 Q100,100 30,170'/%3E%3Cpath d='M170,30 Q100,100 170,170'/%3E%3C/g%3E%3C/svg%3E"),
+    repeating-linear-gradient(90deg, rgba(92,74,62,.05) 0 2px, transparent 2px 32px);
+  background-repeat:no-repeat, repeat;
+  background-size:contain, auto;
+  opacity:.09;z-index:0;pointer-events:none;
 }
 .title-screen>*{position:relative;z-index:1}
 /* Wordmark sur fond clair : encre chaude pour la lisibilité de masse ; le "W" garde la
@@ -411,12 +423,18 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
 
 /* ---------- Événement ---------- */
 .event{padding:24px 22px 22px;position:relative}
-/* Accent très discret (écran vu très souvent : opacité volontairement minimale pour ne jamais
-   lasser sur la durée d'une carrière). */
+/* Direction "plus de présence en fond" (voir AGENDA.md) : motif agrandi (120px -> 220px) et
+   trame de parquet ajoutée, mais opacité volontairement la PLUS BASSE de tout le jeu -- c'est
+   l'écran vu le plus souvent, deux fois par saison sur toute une carrière, jamais de quoi lasser
+   ni gêner la lecture du texte/des choix. */
 .event::before{
-  content:"";position:absolute;inset:-10px -10px auto auto;width:120px;height:120px;
-  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%23C9A227' stroke-width='1.6'%3E%3Ccircle cx='100' cy='100' r='96'/%3E%3Cpath d='M100,4 V196'/%3E%3Cpath d='M4,100 H196'/%3E%3Cpath d='M30,30 Q100,100 30,170'/%3E%3Cpath d='M170,30 Q100,100 170,170'/%3E%3C/g%3E%3C/svg%3E") no-repeat;
-  background-size:contain;opacity:.045;z-index:0;pointer-events:none;
+  content:"";position:absolute;inset:-14px -14px auto auto;width:220px;height:220px;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%23C9A227' stroke-width='1.6'%3E%3Ccircle cx='100' cy='100' r='96'/%3E%3Cpath d='M100,4 V196'/%3E%3Cpath d='M4,100 H196'/%3E%3Cpath d='M30,30 Q100,100 30,170'/%3E%3Cpath d='M170,30 Q100,100 170,170'/%3E%3C/g%3E%3C/svg%3E"),
+    repeating-linear-gradient(90deg, rgba(92,74,62,.04) 0 2px, transparent 2px 32px);
+  background-repeat:no-repeat, repeat;
+  background-size:contain, auto;
+  opacity:.05;z-index:0;pointer-events:none;
 }
 .event>*{position:relative;z-index:1}
 /* Cartouche des "grands moments" (clutch/défense/duel/finale, jet réel à la clé) : classe posée
@@ -460,10 +478,17 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
 
 /* résultat de saison — scoreboard */
 .scoreboard{padding:24px 22px 24px;position:relative}
+/* Même direction "plus de présence en fond" que .event ci-dessus (voir AGENDA.md), même
+   retenue d'opacité : bilan vu chaque saison, texture perceptible sans jamais concurrencer les
+   chiffres. */
 .scoreboard::before{
-  content:"";position:absolute;inset:auto auto -14px -14px;width:130px;height:130px;
-  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%23E0562D' stroke-width='1.6'%3E%3Ccircle cx='100' cy='100' r='96'/%3E%3Cpath d='M100,4 V196'/%3E%3Cpath d='M4,100 H196'/%3E%3Cpath d='M30,30 Q100,100 30,170'/%3E%3Cpath d='M170,30 Q100,100 170,170'/%3E%3C/g%3E%3C/svg%3E") no-repeat;
-  background-size:contain;opacity:.045;z-index:0;pointer-events:none;
+  content:"";position:absolute;inset:auto auto -14px -14px;width:230px;height:230px;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%23E0562D' stroke-width='1.6'%3E%3Ccircle cx='100' cy='100' r='96'/%3E%3Cpath d='M100,4 V196'/%3E%3Cpath d='M4,100 H196'/%3E%3Cpath d='M30,30 Q100,100 30,170'/%3E%3Cpath d='M170,30 Q100,100 170,170'/%3E%3C/g%3E%3C/svg%3E"),
+    repeating-linear-gradient(90deg, rgba(92,74,62,.04) 0 2px, transparent 2px 32px);
+  background-repeat:no-repeat, repeat;
+  background-size:contain, auto;
+  opacity:.05;z-index:0;pointer-events:none;
 }
 .scoreboard>*{position:relative;z-index:1}
 .sb-head{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px}

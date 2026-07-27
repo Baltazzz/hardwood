@@ -147,18 +147,27 @@ function drawCard(canvas, r){
   x.font='700 46px "Bricolage Grotesque", Arial, sans-serif'; x.fillStyle=C.chalk;
   spacedText(x,'HARDWOOD',W/2,124,8);
   x.fillStyle=C.orange; x.fillRect(W/2-70,144,140,5);
-  // nom + drapeau -- troncature par LARGEUR RÉELLE mesurée (measureText), pas un nombre de
-  // caractères fixe : un nom de 16 caractères peut quand même déborder du cadre à cette taille de
-  // police selon les lettres (majuscules larges type M/W vs étroites type I/L) -- l'ancienne
-  // troncature fixe à 16 caractères ne le garantissait pas (bug de débordement signalé).
+  // Drapeau et nom DISSOCIÉS, sur deux lignes -- bug de centrage corrigé pour de bon : les
+  // concaténer dans une seule chaîne centrée (l'ancien code) fait dépendre le centrage du NOM de
+  // la largeur RENDUE du drapeau, or les émojis drapeau (séquences d'indicateurs régionaux) ont
+  // une largeur de rendu qui ne correspond pas toujours à celle que measureText() rapporte selon
+  // la police/l'OS -- le nom paraissait alors décalé même après la correction du débordement pur.
+  // Ici le nom est centré TOUT SEUL (jamais affecté par le drapeau), et un simple emoji seul se
+  // centre toujours correctement sur lui-même (aucune chaîne composite pour introduire un biais).
+  x.font='700 30px "Bricolage Grotesque", Arial, sans-serif';
+  x.fillText(r.flag||'🏀', W/2, 184);
   x.font='700 76px "Bricolage Grotesque", Arial, sans-serif'; x.fillStyle=C.chalk;
-  const flagPrefix=`${r.flag||'🏀'} `;
-  const maxNameW=(W-160)-x.measureText(flagPrefix).width;
-  x.fillText(`${flagPrefix}${truncateToWidth(x, r.name||'Joueur', maxNameW)}`, W/2, 238);
-  // poste / style / nation
-  x.font='600 30px "Bricolage Grotesque", Arial, sans-serif'; x.fillStyle=C.dim;
+  x.fillText(truncateToWidth(x, r.name||'Joueur', W-160), W/2, 258);
+  // poste / style / nation -- taille de police réduite dynamiquement si la combinaison la plus
+  // longue (ex. poste + style + "République dominicaine", 23 caractères) dépasserait la largeur
+  // sûre de la carte, même principe que la ligne de stats plus bas.
+  x.fillStyle=C.dim;
   const sub=[`${r.posEmoji||''} ${r.posName||''}`.trim(), r.styleName?`${r.styleEmoji||''} ${r.styleName}`.trim():'', r.nation||''].filter(Boolean).join('   ·   ');
-  x.fillText(sub, W/2, 286);
+  const subMaxW = W-160;
+  let subSize = 30;
+  x.font=`600 ${subSize}px "Bricolage Grotesque", Arial, sans-serif`;
+  while(subSize>18 && x.measureText(sub).width>subMaxW){ subSize-=2; x.font=`600 ${subSize}px "Bricolage Grotesque", Arial, sans-serif`; }
+  x.fillText(sub, W/2, 302);
   // badge tier
   x.font='700 52px "Bricolage Grotesque", Arial, sans-serif';
   const tw=x.measureText(r.tier||'').width; const bw=Math.min(Math.max(tw+90,360),W-140);

@@ -26,7 +26,63 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
   **Critère** : le handle fourni apparaît accolé à la signature (ex. « Créé par Gaspard G ·
   @handle »), vérifié par rendu direct de l'écran titre.
 
+- [ ] **AGD-33 — Généraliser le nouveau motif de fond aux autres écrans**
+  Ajouté au registre le 2026-07-27, en creusant AGD-32 point 2. La direction "plus de présence
+  en fond" (motif de terrain agrandi/recentré + trame de parquet, fait main en SVG) a été
+  appliquée à 3 écrans seulement comme demandé (titre, événement, bilan de saison), pour
+  validation avant généralisation. Tous les autres écrans (création de personnage, choix
+  d'académie, Panthéon, Badges, transferts, fin de carrière, écrans de défi...) sont encore sur
+  l'ancien traitement (motif minuscule en coin ou rien du tout selon l'écran).
+  **Critère** : confirmation de l'utilisateur sur la direction montrée (taille/opacité/motif),
+  puis extension aux écrans listés ci-dessus avec le même principe d'opacité (plus discret sur
+  les écrans vus souvent, un peu plus affirmé sur ceux vus rarement).
+
 ## Coché récemment
+
+- [x] **AGD-32 — Lot de finitions visuelles** _(implémentée et vérifiée le 2026-07-27, aucun changement de gameplay)_
+  Trois points :
+  1. *Nom mal centré sur la carte à partager, pour de bon cette fois*. Cause racine trouvée :
+     le correctif précédent (AGD-28) avait bien réglé le DÉBORDEMENT (troncature par largeur
+     réelle mesurée), mais pas le CENTRAGE -- drapeau et nom étaient concaténés en une seule
+     chaîne, centrée comme un bloc. Or les émojis drapeau (séquences d'indicateurs régionaux)
+     ont une largeur de RENDU qui ne correspond pas toujours à celle que `measureText()`
+     rapporte selon la police/l'OS -- le nom paraissait donc décalé, le drapeau agissant comme
+     un contrepoids asymétrique invisible dans le calcul. Corrigé en dissociant complètement les
+     deux : le drapeau seul sur sa propre ligne (un unique caractère se centre toujours
+     correctement sur lui-même, aucune chaîne composite pour introduire un biais), le nom seul
+     sur la sienne, strictement centré. Vérifié avec un nom COURT ("Jo") et un nom LONG (21
+     caractères) côte à côte dans le showcase -- centrage correct dans les deux cas. En
+     vérifiant "que rien d'autre ne déborde", un second risque trouvé et corrigé par la même
+     occasion : la ligne poste/style/nation n'avait aucune protection de largeur (nation la plus
+     longue du jeu, "République dominicaine", 23 caractères, combinée à un poste/style long
+     pouvait déborder) -- même technique de réduction dynamique de police déjà utilisée sur la
+     ligne de stats du bas.
+  2. *Plus de présence visuelle en fond*. Direction proposée sur 3 écrans comme demandé (titre,
+     événement, bilan de saison), PAS généralisée à tout le jeu -- voir AGD-33 ci-dessous pour la
+     suite, en attente de validation. Motif de terrain existant (cercle central, ligne médiane,
+     raquettes, arcs -- déjà la signature graphique du jeu, seulement confiné à un coin et à
+     peine visible) agrandi et recentré, combiné à une trame de lattes de parquet en dessous
+     (`repeating-linear-gradient` discret), fait main, toujours strictement sous le texte
+     (z-index) et jamais au-dessus. Opacité différenciée selon la fréquence de vue, comme
+     demandé : écran titre (vu une fois par session) un peu plus affirmé (0.09), événement/bilan
+     (vus chaque saison, deux fois) délibérément les plus bas de tout le jeu (0.05).
+  3. *Tuiles reliées par des tirets*. Troisième signalement du même point -- recherche reprise
+     de zéro sur les deux écrans désignés, y compris une hypothèse pas encore testée (débordement
+     de `box-shadow` entre tuiles rapprochées, trop diffus pour créer un effet de ligne). Toujours
+     aucun connecteur de tuile à tuile trouvé. Mais en reprenant tout le fichier `styles.css`
+     motif par motif, un candidat déjà identifié lors d'un signalement précédent (et écarté à
+     tort comme "juste un motif de coin") a été réexaminé : `.stage::before`, un
+     `repeating-linear-gradient` de tirets verticaux -- LE SEUL motif répétitif de ce type dans
+     tout le fichier -- posé en pied de CHAQUE écran du jeu (`.stage` enveloppe tout), à l'endroit
+     précis où s'alignent souvent des boutons/tuiles. Plutôt que reconfirmer une quatrième fois
+     "je ne trouve rien", **ce motif a été retiré** : c'est le seul candidat plausible après
+     quatre recherches, et sa suppression tranche la question dans un sens ou dans l'autre de
+     façon vérifiable (si le signalement persiste malgré sa disparition, la cause est ailleurs
+     qu'en CSS -- rendu spécifique à un navigateur/appareil).
+  Rendu montré à l'utilisateur via le showcase avant livraison (carte de carrière nom court +
+  nom long côte à côte, écrans titre/événement/bilan avec le nouveau fond).
+  Vérifié : changement purement visuel (`card.js`, `styles.css` uniquement, aucune logique de
+  jeu touchée) -- 0% crash sur 100 carrières auditées, comme attendu pour ce type de lot.
 
 - [x] **AGD-31 — Défi entre amis** _(implémentée et vérifiée le 2026-07-27)_
   Entièrement client, sans serveur : tout l'état nécessaire (profil de départ figé, résultats

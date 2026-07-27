@@ -5,6 +5,7 @@ import { LATE_EVENTS } from '../data/events/late.js';
 import { ATTRIBUTE_EVENTS } from '../data/events/attributes.js';
 import { THREAD_EVENTS } from '../data/events/threads.js';
 import { NBA_FLAVOR_EVENTS } from '../data/events/nba_flavor.js';
+import { NBA_FRANCHISE_EVENTS } from '../data/events/nba_franchise.js';
 import { WELLBEING_EVENTS } from '../data/events/wellbeing.js';
 import { TRAITS_PAYOFF_EVENTS } from '../data/events/traits_payoff.js';
 import { careerPhase } from '../data/events/_helpers.js';
@@ -29,6 +30,7 @@ export const EVENTS = [
   ...ATTRIBUTE_EVENTS,
   ...THREAD_EVENTS,
   ...NBA_FLAVOR_EVENTS,
+  ...NBA_FRANCHISE_EVENTS,
   ...WELLBEING_EVENTS,
   ...TRAITS_PAYOFF_EVENTS,
   ...SHARED_EVENTS,

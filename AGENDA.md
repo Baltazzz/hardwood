@@ -39,6 +39,57 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Coché récemment
 
+- [x] **AGD-36 — Anecdotes NBA par franchise (23 événements, un par club demandé)** _(implémentée et vérifiée le 2026-07-28)_
+  Liste fournie par l'utilisateur en session (22 franchises + un second événement pour Miami),
+  après un premier tour bloqué faute de liste effectivement transmise (voir historique). Nouveau
+  fichier `data/events/nba_franchise.js`, agrégé dans `engine/events.js` comme tous les autres
+  lots d'événements (`NBA_FRANCHISE_EVENTS`).
+  **Règle de sécurité** (posée par l'utilisateur, respectée à la lettre) : chaque situation reste
+  au niveau de l'ambiance/du trait de personnalité générique reconnaissable par les fans du club
+  -- jamais un délit/crime attribué à une personne réelle identifiable, aucun nom réel cité.
+  Quelques formulations volontairement adoucies par rapport à la demande brute pour rester
+  strictement dans ce cadre : Memphis limité à "attitude, sorties, réseaux" (aucune référence à
+  un objet dangereux ni à un fait précis) ; Charlotte explicitement "sans gravité" (accrochages
+  de parking comiques, jamais un accident) ; Detroit formulé comme physicalité/fautes plutôt que
+  l'expression brute de la demande ("briseurs de jambes"), pour ne jamais donner l'impression
+  qu'un choix du jeu récompense l'intention de blesser un adversaire ; Chicago référencé par le
+  seul numéro de maillot (proposé tel quel par l'utilisateur), aucun nom.
+  **Gating club, analysé situation par situation avant d'écrire (cohérence d'arrivée demandée
+  explicitement)** : `p.league==='nba' && p.club==='<club exact>'` (chaînes de
+  `data/leagues.js` `LEAGUES.nba.clubs`) plus une condition de cohérence propre à chaque
+  situation -- moment d'ARRIVÉE pure (`once:true`, `clubTenure<=1` : Miami Heat Culture, San
+  Antonio, Chicago, Toronto, Philadelphie "Trust the Process") ; situation supposant une place
+  déjà ACQUISE (`clubTenure`/`reputation` minimum : Brooklyn, OKC, Milwaukee, Sacramento,
+  Portland, Memphis sur l'âge, Charlotte sur le poste de meneur, Miami bis sur l'argent
+  disponible) ; ambiance permanente du club sans condition de carrière propre (Golden State,
+  Lakers, Boston, New York, Detroit, Denver, Houston, Minnesota, Phoenix, Washington). `phase`
+  (early/mid/late) délibérément PAS utilisé : ces situations tiennent à l'ancienneté au CLUB, pas
+  à l'âge global de la carrière (arriver à Miami a le même sens en début ou fin de carrière) --
+  `clubTenure` offre une granularité plus juste que `phase` pour ce lot précis. Toutes les autres
+  conventions respectées : `cooldown` sur les situations récurrentes, `once` sur les moments
+  d'arrivée singuliers, intitulés `hint` sans indice chiffré, catégories (`cat`) réutilisées
+  parmi celles déjà existantes du moteur plutôt qu'une nouvelle taxonomie ad hoc.
+  **Vérifié directement, gating testé contre les 30 clubs NBA un par un** (pas seulement relu) :
+  script dédié construisant un joueur synthétique satisfaisant les conditions annexes de chaque
+  événement, avec son club exact -> `when()` confirmé vrai sur les 23 -- puis le MÊME joueur
+  reconstruit avec CHACUN des 29 autres clubs NBA (y compris les 8 clubs NBA absents de la
+  demande) -> `when()` confirmé faux dans tous les cas, sur les 23×29 combinaisons testées, zéro
+  faux positif. Gating ligue vérifié séparément (même club, `p.league` différent de `'nba'` ->
+  jamais déclenché). Intégration bout en bout revérifiée avec un vrai `newPlayer()` et le vrai
+  `careerPhase()`/pool `EVENTS` du moteur (pas seulement l'objet synthétique du premier test) --
+  les 23 confirmés éligibles dans le pool réel. 23 identifiants confirmés uniques dans `EVENTS`
+  (192 événements au total, aucun doublon).
+  Audit de non-régression (`scripts/deep-audit.mjs`, 300 carrières) : 0% crash, 0 violation
+  d'intégrité sur les 73 événements marqués `once` (dont les 5 nouveaux), 0 incohérence de format
+  NBA. Plusieurs événements franchise déjà vus organiquement dans l'échantillon (denver_altitude,
+  boston_crowd, chicago_legacy, lakers_hollywood, brooklyn_egos, miami_investment,
+  houston_threeball...) malgré leur rareté attendue (gatés sur 1 club parmi 30, avec seulement
+  197/300 carrières NBA dans cet échantillon -- la vérification déterminante reste le test de
+  gating ci-dessus, pas la fréquence brute observée sur un échantillon de cette taille). Taux de
+  titre élite 8.7% -- dans la bande de bruit acceptable déjà établie (7.7-21.7%), cohérent avec un
+  lot qui n'ajoute que des effets modestes sur des jauges molles (réputation/moral/coach/
+  popularité/média/fitness/argent), aucune probabilité de récompense touchée.
+
 - [x] **AGD-35 — Partage natif + audit complet de la carte de fin** _(implémentée et vérifiée le 2026-07-27)_
   Deux points, prioritaires avant une phase de diffusion.
   1. *Vrai bouton de partage natif*. Nouveau module partagé `ui/share.js` (`shareOrFallback()`/

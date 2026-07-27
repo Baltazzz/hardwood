@@ -31,8 +31,11 @@ const ZONE_TOURN = { europe:'EuroBasket', namerica:'Coupe des Amériques', samer
 export function startCareer(){
   const p=G;
   p.age=16; p.year=1;
-  trackEvent('career_start');
-  const offers = generateAcademyOffers(p.nation);
+  trackEvent('career_start', { challenge: !!p.challengeId });
+  // Défi entre amis (voir ui/challenge.js) : les offres d'académie sont FIGÉES par le défi
+  // (mêmes offres pour tous les participants) -- jamais re-générées dans ce cas, seul le CHOIX
+  // parmi ces offres reste libre pour chaque joueur (chooseAcademy() ci-après).
+  const offers = (p.challengeId && p.frozenAcademyOffers) ? p.frozenAcademyOffers : generateAcademyOffers(p.nation);
   renderAcademyChoice(offers);
 }
 // Finalise le début de carrière une fois une académie choisie : p.playNation (pays de JEU) part

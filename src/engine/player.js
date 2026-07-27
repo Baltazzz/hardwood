@@ -27,7 +27,13 @@ export function newPlayer(){
     // Anti-répétition des événements : evStats[id] = {count, lastYear, streak}. eventHistory
     // sert uniquement à l'audit de diversité (liste plate des ids tirés, dans l'ordre).
     evStats:{}, eventHistory:[], clubTenure:0,
-    tripleDoubles:0
+    tripleDoubles:0,
+    // Défi entre amis (voir engine/challenges.js/challengeCodec.js) : null hors défi. challengeId
+    // rattache le score de fin de carrière au bon défi (endCareer() dans screens.js) ;
+    // frozenAcademyOffers porte la liste d'offres D'ACADÉMIE figée à la création du défi (mêmes
+    // offres pour tous les participants) -- consommée une seule fois par startCareer() puis
+    // inutile, jamais resauvegardée.
+    challengeId:null, frozenAcademyOffers:null
   };
 }
 
@@ -152,3 +158,13 @@ function rollTalent(p){
   if(!p.name){ p.name = pick(p.nation.names)+' '+pick(p.nation.last); }
 }
 export { rollTalent };
+
+// Défi entre amis (voir engine/challenges.js) : attrs/potentiel/hype sont FIGÉS (venus du défi,
+// identiques pour tous les participants), donc jamais retirés via rollTalent() -- mais
+// l'archétype de développement (courbe de progression future) et le nom restent personnels à
+// chaque participant, au même titre que le mode de vie ou les choix en cours de carrière ("tout
+// ce qui vient après reste libre"). Factorisé à part plutôt que dupliqué dans l'appelant.
+export function rollArchetypeAndName(p){
+  p.devArchetype = pickArchetype().id;
+  if(!p.name){ p.name = pick(p.nation.names)+' '+pick(p.nation.last); }
+}

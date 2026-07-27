@@ -5,6 +5,7 @@ import { mountHomeButton } from './ui/navbar.js';
 import { screenTitle } from './ui/screens.js';
 import { mountConsentBanner } from './ui/consentBanner.js';
 import { initAnalytics } from './engine/analytics.js';
+import { handleIncomingLink } from './ui/challenge.js';
 
 // Bouton accueil persistant, accessible en permanence pendant une carrière (voir ui/navbar.js) --
 // posé une seule fois ici, en dehors de #stage, sa visibilité est ensuite pilotée par chaque écran.
@@ -33,7 +34,10 @@ document.addEventListener('click', autosaveIfActive);
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') autosaveIfActive(); });
 window.addEventListener('pagehide', autosaveIfActive);
 
-screenTitle();
+// Défi entre amis (voir ui/challenge.js) : un lien ?challenge=.../?result=... ouvert directement
+// (partagé par un ami) prend le pas sur l'écran titre normal -- handleIncomingLink() rend déjà le
+// bon écran lui-même dans ce cas et retourne true, sinon écran titre habituel.
+if (!handleIncomingLink()) screenTitle();
 
 // PWA : enregistrement du service worker (voir public/sw.js) -- app shell précaché à
 // l'installation, reste mis en cache à la volée -- pour un vrai fonctionnement hors-ligne une

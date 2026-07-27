@@ -4,7 +4,7 @@ import { POSITIONS, ATTRS } from '../data/positions.js';
 import { STYLES } from '../data/styles.js';
 import { LIFESTYLES } from '../data/lifestyles.js';
 import { LEAGUES } from '../data/leagues.js';
-import { newPlayer, rollTalent, ovr, salaryFor, clubSalaryMod, playCountry } from '../engine/player.js';
+import { newPlayer, rollTalent, rollArchetypeAndName, ovr, salaryFor, clubSalaryMod, playCountry } from '../engine/player.js';
 import { hofBest, hofAdd } from '../engine/hof.js';
 import { evaluateBadges, BADGES } from '../engine/badges.js';
 import { applyChoice, postSeason, doMove, beginSeasonKeep, draftProjection, seasonVerdict, startCareer, chooseAcademy, nextEventOrSim, beginSeason, pushTL, pickExpatNation } from '../engine/season.js';
@@ -20,6 +20,8 @@ import { stage } from './dom.js';
 import { saveGame, loadGame, hasSavedGame, clearSavedGame } from '../engine/savegame.js';
 import { trackEvent } from '../engine/analytics.js';
 import { reopenConsentBanner } from './consentBanner.js';
+import { addResult } from '../engine/challenges.js';
+import { startChallengeCreation, renderChallengeLeaderboard } from './challenge.js';
 import { setInCareer } from './navbar.js';
 
 /* ============================================================
@@ -135,6 +137,7 @@ export function screenTitle(){
       <button class="btn ${resumable?'ghost':''}" id="go">Commencer ${resumable?'une nouvelle':'ma'} carrière</button>
       <button class="btn ghost" id="hof">🏆 Panthéon</button>
       <button class="btn ghost" id="badges">🎖️ Badges</button>
+      <button class="btn ghost" id="challengeCreate">🔗 Défi entre amis</button>
     </div>
     ${best?`<div class="best-chip">🏆 Meilleur score légende : <b>${best}</b></div>`:''}
     <div class="kbd"><img class="brand-mark-mini" src="/logo-mark.png" alt="" width="18" height="18">Écris ta légende, saison après saison · <a href="#" id="welcomeReopen" class="welcome-link">comment jouer ?</a></div>
@@ -149,6 +152,11 @@ export function screenTitle(){
   };
   const resumeBtn=document.getElementById('resumeGo');
   if(resumeBtn) resumeBtn.onclick=()=>resumeCareer();
+  document.getElementById('challengeCreate').onclick=()=>{
+    if(hasSavedGame() && !confirm('Une carrière est en cours et sera définitivement écrasée si tu commences un défi. Continuer ?')) return;
+    clearSavedGame();
+    startChallengeCreation();
+  };
   document.getElementById('hof').onclick=()=>renderHallOfFame();
   document.getElementById('badges').onclick=()=>renderBadges();
   document.getElementById('welcomeReopen').onclick=(e)=>{ e.preventDefault(); screenWelcome(); };
@@ -211,7 +219,11 @@ export function screenCreate(){
     bindOpts(LIFESTYLES,(l)=>{p.life=l.id;});
   }
   else if(p.step===4){ // scouting reveal + name
-    rollTalent(p);
+    // Défi entre amis (voir ui/challenge.js) : attrs/potentiel/hype sont déjà figés par le défi
+    // (identiques pour tous les participants) -- ne JAMAIS les retirer via rollTalent(), qui les
+    // écraserait par un tirage frais. Seuls l'archétype de développement et le nom restent
+    // personnels, roulés/complétés normalement.
+    if(p.challengeId) rollArchetypeAndName(p); else rollTalent(p);
     const hypeStars = starStr(p.hype);
     const st=STYLES.find(x=>x.id===p.style);
     stage.innerHTML = wrapCreate(5,'Rapport de détection','Les recruteurs ont observé ton profil. Voici ce qu\'ils voient.',
@@ -248,7 +260,10 @@ function bindOpts(list,setter){
 }
 function wireNav(){
   const back=document.getElementById('backC'), next=document.getElementById('nextC');
-  if(back) back.onclick=()=>{ if(G.step===0){screenTitle();return;} G.step--; screenCreate(); };
+  // Défi entre amis (voir ui/challenge.js) : nation/poste/style sont figés par le défi, la
+  // création saute directement à l'étape 3 (mode de vie) -- "Retour" depuis là doit ramener à
+  // l'accueil, jamais à une étape 0-2 sans données valides pour ce joueur.
+  if(back) back.onclick=()=>{ if(G.step===0 || (G.challengeId && G.step===3)){screenTitle();return;} G.step--; screenCreate(); };
   if(next) next.onclick=()=>{
     if(G.step===4){ const inp=document.getElementById('pname'); G.name=(inp.value.trim()||G.name); startCareer(); return; }
     G.step++; screenCreate();
@@ -845,7 +860,7 @@ export function endCareer(reason){
       tripleDoubles:p.tripleDoubles||0, accolades:{...A}, tags:activeTags(p).map(t=>t.id),
       headline:(quotes[0]?quotes[0][1]:''), nation:p.nation.name, hof:p.hof, date:Date.now() };
   p.cardRec=rec; p.endReason=reason;
-  trackEvent('career_end', { reason, tier, seasons: p.seasons.length, hof: p.hof });
+  trackEvent('career_end', { reason, tier, seasons: p.seasons.length, hof: p.hof, challenge: !!p.challengeId });
   if(!p.savedHOF){ p.savedHOF=true; hofAdd(rec); }
   // Badges transversaux (voir engine/badges.js) : évalués une seule fois, à la toute fin de la
   // carrière (p.cardRec/p.hof déjà posés juste au-dessus, dont certains badges dépendent).
@@ -853,6 +868,14 @@ export function endCareer(reason){
   // depuis la carte de carrière, par exemple) sans re-déclencher l'évaluation.
   if(!p.newBadges) p.newBadges = evaluateBadges(p);
   const newBadgeDefs = p.newBadges.map(id=>BADGES.find(b=>b.id===id)).filter(Boolean);
+
+  // Défi entre amis (voir engine/challenges.js) : enregistre le score légende rattaché au défi,
+  // une seule fois -- endCareer() peut être ré-invoqué (ex. retour depuis "Ma carte", qui rappelle
+  // endCareer() comme callback), même garde-fou que p.savedHOF juste au-dessus.
+  if(p.challengeId && !p.savedChallengeResult){
+    p.savedChallengeResult = true;
+    addResult(p.challengeId, { challengeId:p.challengeId, name:p.name, score:legend, tier, seasons:p.seasons.length, hof:p.hof, date:Date.now(), mine:true });
+  }
 
   const tl = p.timeline.slice(-14);
 
@@ -909,6 +932,7 @@ export function endCareer(reason){
 
     <div style="margin-top:28px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
       <button class="btn" id="again">Nouvelle carrière</button>
+      ${p.challengeId?`<button class="btn ghost" id="challengeCompare">🔗 Comparer avec mes amis</button>`:''}
       <button class="btn ghost" id="cardBtn">🖼️ Ma carte</button>
       <button class="btn ghost" id="hofView">🏆 Panthéon</button>
       <button class="btn ghost" id="badgesView">🎖️ Badges</button>
@@ -917,6 +941,8 @@ export function endCareer(reason){
     </div>
   </div>`;
   document.getElementById('again').onclick=()=>{ setG(newPlayer()); screenCreate(); };
+  const challengeBtn=document.getElementById('challengeCompare');
+  if(challengeBtn) challengeBtn.onclick=()=>renderChallengeLeaderboard(p.challengeId);
   document.getElementById('cardBtn').onclick=()=>renderCareerCard(p.cardRec, ()=>endCareer(p.endReason));
   document.getElementById('hofView').onclick=()=>renderHallOfFame();
   document.getElementById('badgesView').onclick=()=>renderBadges();

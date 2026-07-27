@@ -26,17 +26,53 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
   **Critère** : le handle fourni apparaît accolé à la signature (ex. « Créé par Gaspard G ·
   @handle »), vérifié par rendu direct de l'écran titre.
 
-- [ ] **AGD-30 — Confirmer le mapping de l'événement "ouverture d'un défi"**
-  Ajouté au registre le 2026-07-27, en creusant AGD-29. La demande listait le suivi d'un
-  événement "ouverture d'un défi" parmi les événements analytics, mais aucune fonctionnalité
-  nommée "défi" n'existe dans HARDWOOD. Rattaché par défaut à l'ouverture de l'écran **Badges**
-  (`renderBadges()` dans `card.js`, événement `challenge_open`), les hauts faits/objectifs à
-  décrocher étant l'équivalent le plus proche d'un "défi" dans le jeu actuel.
-  **Critère** : confirmation de l'utilisateur que ce mapping est correct, ou pointeur vers
-  l'écran/la fonctionnalité réellement visée si différent -- l'événement `challenge_open` sera
-  déplacé en conséquence.
-
 ## Coché récemment
+
+- [x] **AGD-31 — Défi entre amis** _(implémentée et vérifiée le 2026-07-27)_
+  Entièrement client, sans serveur : tout l'état nécessaire (profil de départ figé, résultats
+  partagés) voyage encodé dans le lien lui-même (base64url d'un JSON compact,
+  `engine/challengeCodec.js`), le classement vit en localStorage (`engine/challenges.js`, même
+  pattern robuste que le Panthéon/les badges). Principe respecté à la lettre : SEUL le profil de
+  départ est figé, tout le reste (mode de vie, nom, choix d'académie retenu, et toute la carrière
+  ensuite) reste libre et propre à chaque participant.
+  1. *Créer un défi*. Bouton "🔗 Défi entre amis" sur l'écran titre -- génère un profil en
+     réutilisant TELLES QUELLES les règles de génération normales (`rollTalent()` sur un joueur
+     brouillon jetable, `generateAcademyOffers()`) plutôt qu'une distribution à part, donc un
+     défi reste un point de départ qu'une création normale aurait pu produire. Fige exactement ce
+     qui était demandé -- attributs initiaux, poste, style, nationalité, potentiel/hype, ET la
+     liste d'offres d'académie proposées (slimée aux seuls champs affichés, pour un lien
+     raisonnablement court) -- rien d'autre (mode de vie et archétype de développement, qui pilote
+     la suite de la trajectoire, restent tirés librement par chaque participant, cohérent avec
+     "tout ce qui vient après reste libre").
+  2. *Rejoindre un défi*. Ouvrir le lien affiche un écran dédié ("Tu rejoins le défi d'un ami !")
+     avant tout, avec le résumé du profil imposé, puis saute directement à l'étape "mode de vie"
+     de la création (nation/poste/style déjà tranchés, jamais réaffichés). Étape de révélation
+     (attributs/potentiel) affichée avec les valeurs FIGÉES, jamais retirées.
+  3. *Comparer les scores*. Score légende enregistré (`endCareer()`), rattaché à l'id du défi,
+     dès la fin d'une carrière de défi. Écran de classement dédié (triable par score), avec un
+     bouton pour partager SON résultat (génère un second type de lien, léger, qui fusionne le
+     score dans le classement local de quiconque l'ouvre -- y compris un appareil qui n'a jamais
+     vu ce défi) et un bouton pour réinviter d'autres amis sur le défi original.
+  4. *Suivi*. `challenge_open` déplacé de l'écran Badges (mapping provisoire d'AGD-30) vers la
+     VRAIE ouverture d'un défi (`joinChallenge()`) -- **AGD-30 résolu**.
+  Vérifié directement par un harnais headless dédié piloté au clic réel (pas seulement en lecture
+  de code), un process isolé par scénario : profil IDENTIQUE (attributs, potentiel/hype,
+  nation/poste/style, ET liste d'offres d'académie) confirmé pour deux participants distincts
+  rejoignant le même lien, chacun restant libre de choisir une académie différente ; lien de
+  résultat produit sur un "appareil" et consommé sur un second, n'ayant jamais vu ce défi
+  auparavant, confirmé fusionné dans son classement local sans jamais porter le flag "mine" à
+  tort (bug trouvé et corrigé en session : le flag local `mine` fuitait dans le lien de résultat
+  partagé, ce qui aurait affiché le score d'un ami comme "le mien" chez le destinataire --
+  corrigé en l'excluant explicitement de l'encodage ET en le forçant à `false` à la fusion,
+  ceinture et bretelles) ; lien corrompu confirmé sans crash, repli sur l'écran titre. Cas limite
+  supplémentaire trouvé et corrigé : l'auto-sauvegarde pouvait écrire l'état pile sur l'écran
+  d'atterrissage (avant le clic "Continuer"), ce qui aurait fait reprendre à tort sur l'étape
+  nation à la relance -- corrigé en figeant `p.step=3` dès l'ouverture du lien, pas seulement au
+  clic. Audit de non-régression (carrières normales, hors défi, deux runs) : 0% crash sur
+  100+300 carrières, 0 violation d'intégrité des événements uniques, 0 incohérence de format NBA
+  sur le run à 300. Taux de titre élite 11% sur 300 carrières -- dans la bande de bruit déjà
+  établie (7.7-21.7%), comme attendu pour un lot qui n'ajoute que des chemins de code
+  conditionnels (`if(p.challengeId)`) sans toucher la logique de jeu normale.
 
 - [x] **AGD-29 — Mesure d'audience (Google Analytics 4) sous consentement** _(implémentée et vérifiée le 2026-07-27)_
   Identifiant de mesure `G-X2Z51SZ8XK`. Point impératif de la demande (le script Google ne peut se

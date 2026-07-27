@@ -39,6 +39,58 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Coché récemment
 
+- [x] **AGD-35 — Partage natif + audit complet de la carte de fin** _(implémentée et vérifiée le 2026-07-27)_
+  Deux points, prioritaires avant une phase de diffusion.
+  1. *Vrai bouton de partage natif*. Nouveau module partagé `ui/share.js` (`shareOrFallback()`/
+     `canvasToFile()`), un seul point d'entrée réutilisé partout où le jeu propose de partager
+     quelque chose : ouvre la feuille de partage native de l'appareil (Web Share API) quand elle
+     existe, avec l'IMAGE de la carte quand c'est possible (Web Share Level 2, `canvas.toBlob()`
+     -> `File`), repli propre (copie presse-papiers du lien, ou téléchargement de l'image pour la
+     carte) UNIQUEMENT si le navigateur ne supporte pas le partage natif -- jamais les deux
+     proposés en même temps. Une annulation volontaire de la feuille de partage (`AbortError`)
+     est traitée comme un résultat silencieux, jamais une erreur ni un repli affiché à tort.
+     Câblé aux 5 boutons de partage du jeu : carte de fin de carrière (`renderCareerCard()`,
+     "📤 Partager" devient le geste principal, "⬇️ Télécharger l'image" reste en secondaire),
+     lien de défi entre amis (`startChallengeCreation()`), score + invitation dans le classement
+     d'un défi (`renderChallengeLeaderboard()`), score du défi du jour (`renderDailyLeaderboard()`).
+  2. *Audit complet du positionnement de la carte de fin*. Historique de bugs de placement jamais
+     complètement réglés (nom décentré, puis bloc profil décalé) -- cause racine : `drawCard()`
+     plaçait chaque élément à une coordonnée Y absolue codée en dur, supposant implicitement la
+     hauteur de tout ce qui précédait (ex. le bloc HOF, affiché seulement si `r.hof`, suivi d'un
+     gap fixe qui ne s'ajustait pas selon sa présence réelle -- exactement la source du décalage
+     signalé). **Réécriture complète** avec un curseur Y qui avance de la hauteur RÉELLEMENT
+     dessinée à chaque étape (`let y`; `y+=hauteurRéelle`) : plus aucune position suivante ne peut
+     se retrouver désynchronisée de ce qui la précède, quel que soit le contenu. `wrapText()`
+     modifiée pour renvoyer le nombre de lignes réellement dessinées (au lieu de `void`), tronque
+     la citation de presse avec une ellipse si l'espace restant avant le pied de carte (calculé
+     explicitement) ne suffit pas, plutôt que de risquer un débordement sur le pied de carte.
+  Rendu montré à l'utilisateur via le showcase avant livraison : 5 profils volontairement très
+  contrastés (nom court "Jo" vs nom long 21-24 caractères, carrière riche [HOF, sparkline,
+  citation, tous les accomplissements] vs pauvre [aucun optionnel, stats à zéro], plus un cas
+  limite cumulant les deux replis dynamiques de police -- sous-titre poste/style/nation ET ligne
+  stats les plus longues possibles en même temps), deux de ces profils également montrés à 360px
+  de large. Écrans de partage (carte, création de défi, classement de défi) également ajoutés au
+  showcase pour montrer les nouveaux boutons "📤".
+  **Vérifié directement** (harnais headless dédié, 6 scénarios, un process node isolé par
+  scénario) : partage réussi (texte/URL) confirmé appelé avec les bons arguments ; partage réussi
+  avec fichier image (Web Share Level 2, `navigator.canShare({files})`) confirmé utiliser les
+  fichiers plutôt que le texte ; annulation (`AbortError`) confirmée silencieuse, sans déclencher
+  aucun repli ; repli copie presse-papiers confirmé sur navigateur sans `navigator.share` ;
+  résultat `'unsupported'` confirmé quand ni partage natif ni presse-papiers ne sont disponibles ;
+  `canvasToFile()` confirmé produire un `File` `image/png` valide. Positionnement de la carte
+  vérifié par relecture explicite du calcul de curseur Y pour les 5 profils du showcase (carrière
+  pauvre : marge confortable de ~350px avant le pied de carte, aucun chevauchement ; carrière
+  riche avec citation longue : ~38px de marge restante avant le pied de carte, dans la limite
+  calculée par `remaining`/`maxLines`, jamais négative) -- rendu réel confirmé visuellement dans
+  le showcase publié (canvas exécuté par un vrai navigateur, pas par le contexte canvas factice
+  des tests headless). Effet de bord trouvé et corrigé en session sur l'infrastructure de test
+  (`tests/env.mjs`) : le contexte canvas factice ne mémorisait aucune propriété (`fillStyle`,
+  etc.) entre écriture et lecture, ce qui faisait planter tout appel réel à `renderCareerCard()`
+  en environnement headless (`x.fillStyle.addColorStop is not a function`) -- corrigé en
+  mémorisant réellement les propriétés posées, sans toucher au comportement des méthodes.
+  Audit de non-régression : 0% crash sur 150 carrières (changement purement UI/canvas + nouveau
+  module de partage, aucune logique de jeu touchée).
+
 - [x] **AGD-34 — Lot rétention (badges étendus, défi du jour, progression personnelle)** _(implémentée et vérifiée le 2026-07-27)_
   Trois points, avant une phase de partage public :
   1. *Beaucoup plus de badges (10 -> 30)*. 20 nouveaux badges (`engine/badges.js`), couvrant les

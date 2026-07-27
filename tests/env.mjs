@@ -36,19 +36,28 @@ export function setupEnvironment() {
 
   // Stubs navigateur absents de jsdom : document.fonts + contexte canvas 2D.
   window.document.fonts = { ready: Promise.resolve() };
+  // Propriétés (pas des méthodes) réellement mémorisées entre set/get -- nécessaire depuis que
+  // card.js affecte un objet dégradé à x.fillStyle puis relit x.fillStyle.addColorStop(...) juste
+  // après (avant : toute lecture d'une prop string renvoyait une fonction vide, donc
+  // `.addColorStop` plantait sur cette fonction au lieu de retrouver le dégradé posé).
+  const fakeCtxProps = {};
   const fakeCtx = new Proxy({}, {
     get(_t, prop) {
       if (prop === 'measureText') return () => ({ width: 40 });
       if (prop === 'createLinearGradient' || prop === 'createRadialGradient') {
         return () => ({ addColorStop() {} });
       }
+      if (prop in fakeCtxProps) return fakeCtxProps[prop];
       if (typeof prop === 'string') return () => {};
       return undefined;
     },
-    set() { return true; },
+    set(_t, prop, value) { fakeCtxProps[prop] = value; return true; },
   });
   window.HTMLCanvasElement.prototype.getContext = () => fakeCtx;
   window.HTMLCanvasElement.prototype.toDataURL = () => 'data:image/png;base64,';
+  // toBlob (voir ui/share.js canvasToFile(), partage natif de la carte) : jsdom ne rend rien
+  // réellement, un Blob minimal suffit pour piloter le flux de partage sans erreur.
+  window.HTMLCanvasElement.prototype.toBlob = function (cb) { cb(new window.Blob(['x'], { type: 'image/png' })); };
 
   const errors = [];
   window.addEventListener('error', (e) => errors.push(e.error || e.message));

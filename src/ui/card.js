@@ -6,6 +6,7 @@ import { renderTrophyCabinet } from './trophies.js';
 import { tagsByIds, renderTagChips } from '../engine/tags.js';
 import { setInCareer } from './navbar.js';
 import { trackEvent } from '../engine/analytics.js';
+import { shareOrFallback, canvasToFile } from './share.js';
 
 /* ============================================================
    PANTHÉON (rendu)
@@ -177,29 +178,55 @@ export function renderCareerCard(r, back){
   if(!r){ (back||screenTitle)(); return; }
   stage.innerHTML = `<div class="end" style="max-width:560px">
     <div class="eyebrow" style="text-align:center">🖼️ Ta carte de carrière</div>
-    <p class="body" style="text-align:center;color:var(--chalk-dim);font-size:13.5px;margin:6px 0 16px">Screenshote-la ou télécharge-la pour la partager avec tes potes.</p>
+    <p class="body" style="text-align:center;color:var(--chalk-dim);font-size:13.5px;margin:6px 0 16px">Partage-la directement avec tes potes.</p>
     <div style="display:flex;justify-content:center"><canvas id="careerCard" style="width:100%;max-width:380px;border-radius:16px;box-shadow:var(--shadow)"></canvas></div>
     <div style="margin-top:22px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-      <button class="btn" id="dlCard">⬇️ Télécharger l'image</button>
+      <button class="btn" id="shareCard">📤 Partager</button>
+      <button class="btn ghost" id="dlCard">⬇️ Télécharger l'image</button>
       <button class="btn ghost" id="cardBack">Retour</button>
     </div>
-    <p class="body" id="dlHint" style="text-align:center;color:var(--chalk-dim);font-size:12px;margin-top:10px;display:none">Si le téléchargement ne se lance pas, fais simplement une capture d'écran.</p>
+    <p class="body" id="dlHint" style="text-align:center;color:var(--chalk-dim);font-size:12px;margin-top:10px;display:none">Le partage direct n'est pas disponible ici -- l'image a été téléchargée à la place.</p>
   </div>`;
   const canvas=document.getElementById('careerCard');
   const draw=()=>drawCard(canvas,r);
   if(document.fonts && document.fonts.ready){ document.fonts.ready.then(draw); setTimeout(draw,300); } else draw();
   document.getElementById('cardBack').onclick=()=>(back||screenTitle)();
-  document.getElementById('dlCard').onclick=()=>{
+  const filename='hardwood_'+(r.name||'carriere').replace(/\s+/g,'_')+'.png';
+  function downloadCard(){
+    try{ const a=document.createElement('a'); a.download=filename; a.href=canvas.toDataURL('image/png'); document.body.appendChild(a); a.click(); a.remove(); }
+    catch(e){}
+  }
+  // Bouton "Partager" = le geste principal désormais (voir AGENDA.md) : ouvre la feuille de
+  // partage native de l'appareil avec l'IMAGE de la carte quand c'est possible (Web Share Level
+  // 2), texte seul sinon -- jamais de copie de lien pour une image (ça n'a pas de sens ici) :
+  // le repli propre sur un navigateur sans partage natif est le téléchargement déjà en place.
+  document.getElementById('shareCard').onclick=async()=>{
     trackEvent('card_share');
-    try{ const a=document.createElement('a'); a.download='hardwood_'+(r.name||'carriere').replace(/\s+/g,'_')+'.png'; a.href=canvas.toDataURL('image/png'); document.body.appendChild(a); a.click(); a.remove(); }
-    catch(e){ document.getElementById('dlHint').style.display='block'; }
+    const file = await canvasToFile(canvas, filename);
+    const result = await shareOrFallback({
+      title: 'Ma carte HARDWOOD',
+      text: `${r.name||'Joueur'} · ${r.tier||''} · score légende ${r.score||0}`,
+      files: file ? [file] : undefined,
+    });
+    if(result==='unsupported'){ downloadCard(); document.getElementById('dlHint').style.display='block'; }
   };
+  document.getElementById('dlCard').onclick=downloadCard;
 }
 
+// Carte de carrière (canvas) -- AUDIT COMPLET du positionnement (voir AGENDA.md) : l'ancienne
+// version plaçait chaque élément à une coordonnée Y absolue et codée en dur, en supposant
+// implicitement la hauteur de tout ce qui le précédait (notamment le bloc HOF, affiché
+// SEULEMENT si r.hof, mais suivi d'une position fixe qui ne s'ajustait pas selon sa présence
+// réelle) -- fragile par construction, un correctif ponctuel (le centrage du nom) ne pouvait pas
+// empêcher un autre décalage d'apparaître ailleurs (le bloc profil ensuite). Réécrit avec un
+// CURSEUR Y qui avance de la hauteur RÉELLEMENT dessinée à chaque étape : plus aucune position
+// suivante ne peut se retrouver désynchronisée de ce qui la précède, quel que soit le contenu
+// (nom court/long, carrière riche/pauvre en accomplissements, HOF ou non).
 function drawCard(canvas, r){
   const W=1080, H=1350, x=canvas.getContext('2d');
   canvas.width=W; canvas.height=H;
   const C={chalk:'#241813',dim:'#5C4A3E',orange:'#E0562D',orangeSoft:'#B34524',mint:'#A1821F',mintSoft:'#836919',panel:'#FFFFFF',line:'#DCC9AF'};
+  const CX=W/2, safeW=W-160; // marge sûre commune à tout le texte centré de la carte
   // fond dégradé — crème chaud Terre battue
   const g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,'#FFFFFF'); g.addColorStop(0.55,'#F8F1E4'); g.addColorStop(1,'#EEE2CC');
   x.fillStyle=g; x.fillRect(0,0,W,H);
@@ -212,72 +239,109 @@ function drawCard(canvas, r){
   // cadre
   x.strokeStyle=C.line; x.lineWidth=3; roundRect(x,28,34,W-56,H-62,26); x.stroke();
   x.textAlign='center'; x.textBaseline='alphabetic';
-  // titre HARDWOOD
+
+  let y=124; // baseline du titre -- seule coordonnée absolue de tout le dessin, tout le reste en découle
+
+  // Titre HARDWOOD
   x.font='700 46px "Bricolage Grotesque", Arial, sans-serif'; x.fillStyle=C.chalk;
-  spacedText(x,'HARDWOOD',W/2,124,8);
-  x.fillStyle=C.orange; x.fillRect(W/2-70,144,140,5);
+  spacedText(x,'HARDWOOD',CX,y,8);
+  y+=20;
+  x.fillStyle=C.orange; x.fillRect(CX-70,y,140,5);
+  y+=40;
+
   // Drapeau et nom DISSOCIÉS, sur deux lignes -- bug de centrage corrigé pour de bon : les
-  // concaténer dans une seule chaîne centrée (l'ancien code) fait dépendre le centrage du NOM de
-  // la largeur RENDUE du drapeau, or les émojis drapeau (séquences d'indicateurs régionaux) ont
-  // une largeur de rendu qui ne correspond pas toujours à celle que measureText() rapporte selon
-  // la police/l'OS -- le nom paraissait alors décalé même après la correction du débordement pur.
-  // Ici le nom est centré TOUT SEUL (jamais affecté par le drapeau), et un simple emoji seul se
-  // centre toujours correctement sur lui-même (aucune chaîne composite pour introduire un biais).
+  // concaténer dans une seule chaîne centrée fait dépendre le centrage du NOM de la largeur
+  // RENDUE du drapeau, or les émojis drapeau (séquences d'indicateurs régionaux) ont une largeur
+  // de rendu qui ne correspond pas toujours à celle que measureText() rapporte selon la police/
+  // l'OS. Un simple emoji seul se centre toujours correctement sur lui-même (aucune chaîne
+  // composite pour introduire un biais).
   x.font='700 30px "Bricolage Grotesque", Arial, sans-serif';
-  x.fillText(r.flag||'🏀', W/2, 184);
+  x.fillText(r.flag||'🏀', CX, y);
+  y+=74;
   x.font='700 76px "Bricolage Grotesque", Arial, sans-serif'; x.fillStyle=C.chalk;
-  x.fillText(truncateToWidth(x, r.name||'Joueur', W-160), W/2, 258);
+  x.fillText(truncateToWidth(x, r.name||'Joueur', safeW), CX, y);
+  y+=44;
+
   // poste / style / nation -- taille de police réduite dynamiquement si la combinaison la plus
   // longue (ex. poste + style + "République dominicaine", 23 caractères) dépasserait la largeur
-  // sûre de la carte, même principe que la ligne de stats plus bas.
+  // sûre de la carte.
   x.fillStyle=C.dim;
   const sub=[`${r.posEmoji||''} ${r.posName||''}`.trim(), r.styleName?`${r.styleEmoji||''} ${r.styleName}`.trim():'', r.nation||''].filter(Boolean).join('   ·   ');
-  const subMaxW = W-160;
-  let subSize = 30;
+  let subSize=30;
   x.font=`600 ${subSize}px "Bricolage Grotesque", Arial, sans-serif`;
-  while(subSize>18 && x.measureText(sub).width>subMaxW){ subSize-=2; x.font=`600 ${subSize}px "Bricolage Grotesque", Arial, sans-serif`; }
-  x.fillText(sub, W/2, 302);
-  // badge tier
+  while(subSize>18 && x.measureText(sub).width>safeW){ subSize-=2; x.font=`600 ${subSize}px "Bricolage Grotesque", Arial, sans-serif`; }
+  x.fillText(sub, CX, y);
+  y+=24;
+
+  // Badge palier -- hauteur de boîte fixe (88px), mais sa position de départ (badgeTop) suit
+  // désormais le curseur au lieu d'une constante absolue.
+  const badgeTop=y, badgeH=88;
   x.font='700 52px "Bricolage Grotesque", Arial, sans-serif';
   const tw=x.measureText(r.tier||'').width; const bw=Math.min(Math.max(tw+90,360),W-140);
   x.fillStyle='rgba(161,130,31,0.10)'; x.strokeStyle=C.mint; x.lineWidth=2.5;
-  roundRect(x,(W-bw)/2,326,bw,88,44); x.fill(); x.stroke();
-  x.fillStyle=C.mint; x.fillText(r.tier||'', W/2, 386);
+  roundRect(x,(W-bw)/2,badgeTop,bw,badgeH,44); x.fill(); x.stroke();
+  x.fillStyle=C.mint; x.fillText(r.tier||'', CX, badgeTop+60);
+  y=badgeTop+badgeH;
+
+  // HOF (optionnel) -- l'espace après le badge dépend maintenant de sa présence réelle, jamais
+  // un gap fixe qui suppose son affichage (c'était l'exacte source du décalage signalé : la
+  // grille de stats démarrait à une position fixe pensée pour le cas AVEC ligne HOF).
   if(r.hof){
+    y+=30;
     x.font='700 24px "Bricolage Grotesque", Arial, sans-serif'; x.fillStyle=C.mint;
     const label='HALL OF FAME', lw=x.measureText(label).width;
-    x.fillText(label, W/2, 444);
-    drawStar(x, W/2-lw/2-18, 439, 9, C.mint); drawStar(x, W/2+lw/2+18, 439, 9, C.mint);
+    x.fillText(label, CX, y);
+    drawStar(x, CX-lw/2-18, y-5, 9, C.mint); drawStar(x, CX+lw/2+18, y-5, 9, C.mint);
+    y+=50;
+  } else {
+    y+=44; // même air qu'avec la ligne HOF (30+~14 de hauteur de ligne), pas de grille collée au badge
   }
-  // grille de stats 3x2
+
+  // Grille de stats 3x2
+  const gx0=90, gw=(W-180), cwid=gw/3, chei=150, cgap=22;
+  const gy0=y;
   const cells=[['Score',r.score],['Titres',r.champs],['MVP',r.mvps],['All-Star',r.allstars],['Pic OVR',r.peak],['Clutch',r.clutch||0]];
-  const gx0=90, gy0=494, gw=(W-180), cwid=gw/3, chei=150;
-  for(let i=0;i<cells.length;i++){ const cx=gx0+(i%3)*cwid, cy=gy0+Math.floor(i/3)*(chei+22);
+  for(let i=0;i<cells.length;i++){ const cx=gx0+(i%3)*cwid, cy=gy0+Math.floor(i/3)*(chei+cgap);
     x.fillStyle='rgba(36,24,19,0.035)'; x.strokeStyle=C.line; x.lineWidth=1.5; roundRect(x,cx+10,cy,cwid-20,chei,18); x.fill(); x.stroke();
     x.fillStyle=C.chalk; x.font='700 68px "Bricolage Grotesque", Arial, sans-serif'; x.fillText(String(cells[i][1]), cx+cwid/2, cy+82);
     x.fillStyle=C.dim; x.font='600 25px "Bricolage Grotesque", Arial, sans-serif'; spacedText(x,String(cells[i][0]).toUpperCase(),cx+cwid/2,cy+122,1.5);
   }
-  // ligne saisons / âge de fin / record / nba -- taille de police réduite dynamiquement si la
+  y=gy0+2*(chei+cgap)+40;
+
+  // Ligne saisons / âge de fin / record / nba -- taille de police réduite dynamiquement si la
   // combinaison complète (carrière longue + record élevé + NBA + âge de fin) dépasserait la
-  // largeur sûre de la carte, plutôt qu'un débordement silencieux (voir le même risque corrigé
-  // sur le nom du joueur plus haut).
-  let yy=gy0+2*(chei+22)+40;
+  // largeur sûre de la carte, plutôt qu'un débordement silencieux.
   x.fillStyle=C.mint;
   const endAgeLine = r.endAge!=null ? `   ·   retraite à ${r.endAge} ans` : '';
   const statLine = `${r.seasons} saisons${endAgeLine}   ·   record ${r.bestPts} pts/match${r.nba?'   ·   🏀 NBA':''}`;
-  const statMaxW = W-160;
-  let statSize = 30;
+  let statSize=30;
   x.font=`600 ${statSize}px "Bricolage Grotesque", Arial, sans-serif`;
-  while(statSize>20 && x.measureText(statLine).width>statMaxW){ statSize-=2; x.font=`600 ${statSize}px "Bricolage Grotesque", Arial, sans-serif`; }
-  x.fillText(statLine, W/2, yy);
-  // sparkline OVR
-  if(r.ovrSeries && r.ovrSeries.length>1){ drawSpark(x, r.ovrSeries, W/2-300, yy+34, 600, 90, C); yy+=150; } else yy+=40;
-  // citation presse
-  if(r.headline){ x.fillStyle=C.dim; x.font='italic 500 30px Georgia, serif';
-    wrapText(x, r.headline, W/2, yy+50, W-200, 42); }
-  // footer
+  while(statSize>20 && x.measureText(statLine).width>safeW){ statSize-=2; x.font=`600 ${statSize}px "Bricolage Grotesque", Arial, sans-serif`; }
+  x.fillText(statLine, CX, y);
+  y+=34;
+
+  // Sparkline OVR (optionnelle)
+  if(r.ovrSeries && r.ovrSeries.length>1){ drawSpark(x, r.ovrSeries, CX-300, y, 600, 90, C); y+=90+40; }
+  else y+=16;
+
+  // Citation presse (optionnelle) -- hauteur RÉELLEMENT variable selon le nombre de lignes
+  // enveloppées, jamais une estimation fixe. Espace restant avant le pied de carte calculé
+  // explicitement : si une citation improbablement longue devait dépasser cette place, elle est
+  // tronquée avec une ellipse plutôt que d'empiéter sur le pied de carte (voir wrapText()).
+  if(r.headline){
+    const footerTop=H-110; // marge de sécurité avant "🏀 HARDWOOD" (baseline H-70)
+    const remaining=footerTop-y;
+    const maxLines=Math.max(1,Math.min(4,Math.floor(remaining/42)));
+    if(remaining>30){
+      x.fillStyle=C.dim; x.font='italic 500 30px Georgia, serif';
+      wrapText(x, r.headline, CX, y+34, W-200, 42, maxLines);
+    }
+  }
+
+  // Pied de carte -- toujours ancré au bas du cadre, jamais dépendant du curseur (indépendant du
+  // contenu au-dessus, qui ne peut plus jamais l'atteindre grâce au calcul de marge ci-dessus).
   x.fillStyle=C.dim; x.font='600 26px "Bricolage Grotesque", Arial, sans-serif';
-  spacedText(x,'🏀 HARDWOOD',W/2,H-70,2);
+  spacedText(x,'🏀 HARDWOOD',CX,H-70,2);
 }
 // Étoile dessinée (pas le glyphe unicode ★, absent de Bricolage Grotesque et sujet à un
 // repli de police imprévisible sur canvas selon le navigateur).
@@ -301,5 +365,23 @@ function truncateToWidth(x,s,maxW){
   while(s.length>1 && x.measureText(s+'…').width>maxW) s=s.slice(0,-1);
   return s+'…';
 }
-function wrapText(x,text,cx,cy,maxW,lh){ const words=String(text).split(' '); let line='',yy=cy,lines=[]; words.forEach(w=>{ const t=line?line+' '+w:w; if(x.measureText(t).width>maxW && line){ lines.push(line); line=w; } else line=t; }); if(line)lines.push(line); lines.slice(0,4).forEach((ln,i)=>x.fillText(ln,cx,yy+i*lh)); }
+// Renvoie le nombre de lignes RÉELLEMENT dessinées (pour que l'appelant avance son curseur Y
+// d'une hauteur exacte, jamais une estimation) -- borné à maxLines, la dernière ligne affichée
+// tronquée avec une ellipse si le texte devait continuer au-delà (jamais un texte qui déborde
+// silencieusement sur ce qui suit, ex. le pied de carte).
+function wrapText(x,text,cx,cy,maxW,lh,maxLines=4){
+  const words=String(text).split(' ');
+  let line='',lines=[];
+  words.forEach(w=>{ const t=line?line+' '+w:w; if(x.measureText(t).width>maxW && line){ lines.push(line); line=w; } else line=t; });
+  if(line) lines.push(line);
+  const truncated = lines.length>maxLines;
+  const shown = lines.slice(0,maxLines);
+  if(truncated){
+    let last=shown[shown.length-1];
+    while(last.length>1 && x.measureText(last+'…').width>maxW) last=last.slice(0,-1);
+    shown[shown.length-1]=last+'…';
+  }
+  shown.forEach((ln,i)=>x.fillText(ln,cx,cy+i*lh));
+  return shown.length;
+}
 function drawSpark(x,series,ox,oy,w,h,C){ const mn=Math.min(...series),mx=Math.max(...series),rng=Math.max(1,mx-mn); const n=series.length; const bw=Math.min(w/n*0.66,26); const gap=(w-bw*n)/(n+1); series.forEach((v,i)=>{ const bh=14+((v-mn)/rng)*(h-14); const bx=ox+gap+i*(bw+gap); const isPk=v===mx; x.fillStyle=isPk?C.mint:'rgba(224,86,45,0.7)'; roundRect(x,bx,oy+h-bh,bw,bh,4); x.fill(); }); }

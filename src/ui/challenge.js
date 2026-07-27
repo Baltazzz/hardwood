@@ -17,6 +17,7 @@ import { encodeChallengeDef, decodeChallengeDef, decodeResult, buildChallengeUrl
 import { ensureChallenge, getChallenge, addResult, generateChallengeDef } from '../engine/challenges.js';
 import { generateDailyDef, getTodayDateStr, getDailyBest, allDailyResults } from '../engine/dailyChallenge.js';
 import { trackEvent } from '../engine/analytics.js';
+import { shareOrFallback } from './share.js';
 import { stage } from './dom.js';
 import { setInCareer } from './navbar.js';
 import { screenTitle, screenCreate } from './screens.js';
@@ -55,7 +56,7 @@ export function startChallengeCreation() {
     <div class="field" style="margin-top:18px"><label>Lien à partager</label>
       <input id="challengeLink" value="${url}" readonly autocomplete="off"></div>
     <div style="margin-top:16px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-      <button class="btn ghost sm" id="copyChallengeLink">📋 Copier le lien</button>
+      <button class="btn ghost sm" id="copyChallengeLink">📤 Partager le lien</button>
     </div>
     <div style="margin-top:22px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
       <button class="btn" id="startMyChallenge">Commencer mon défi</button>
@@ -63,15 +64,16 @@ export function startChallengeCreation() {
     </div>
     <p class="body" id="copyHint" style="text-align:center;color:var(--chalk-dim);font-size:12px;margin-top:10px;display:none">Lien copié !</p>
   </div>`;
-  document.getElementById('copyChallengeLink').onclick = () => {
-    const input = document.getElementById('challengeLink');
-    input.select();
+  // Le partage natif est désormais le geste principal (voir AGENDA.md) : ouvre la feuille de
+  // partage de l'appareil directement avec le lien, repli copie presse-papiers uniquement si
+  // navigator.share est absent -- jamais les deux affichés en même temps.
+  document.getElementById('copyChallengeLink').onclick = async () => {
     const hint = document.getElementById('copyHint');
-    const show = () => { hint.style.display = 'block'; };
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(url).then(show).catch(() => { try { document.execCommand('copy'); show(); } catch (e) {} });
-    } else {
-      try { document.execCommand('copy'); show(); } catch (e) {}
+    const result = await shareOrFallback({ title: 'Défi HARDWOOD', text: 'Rejoins mon défi sur HARDWOOD !', url }, () => { hint.style.display = 'block'; });
+    if (result === 'unsupported') {
+      const input = document.getElementById('challengeLink');
+      input.select();
+      try { document.execCommand('copy'); hint.style.display = 'block'; } catch (e) {}
     }
   };
   document.getElementById('startMyChallenge').onclick = () => joinChallenge(def);
@@ -138,22 +140,18 @@ export function renderChallengeLeaderboard(challengeId) {
     ${entry && entry.def ? profileSummary(entry.def) : ''}
     <div class="hof-list" style="max-width:560px;margin:18px auto 0">${rows}</div>
     <div style="margin-top:24px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-      ${myResult ? `<button class="btn ghost sm" id="shareMyResult">📋 Partager mon score</button>` : ''}
-      ${entry && entry.def ? `<button class="btn ghost sm" id="inviteMore">🔗 Inviter d'autres amis</button>` : ''}
+      ${myResult ? `<button class="btn ghost sm" id="shareMyResult">📤 Partager mon score</button>` : ''}
+      ${entry && entry.def ? `<button class="btn ghost sm" id="inviteMore">📤 Inviter d'autres amis</button>` : ''}
       <button class="btn" id="leaderboardBack">Retour à l'accueil</button>
     </div>
     <p class="body" id="challengeCopyHint" style="text-align:center;color:var(--chalk-dim);font-size:12px;margin-top:10px;display:none">Lien copié !</p>
   </div>`;
   const hint = document.getElementById('challengeCopyHint');
-  const copy = (text) => {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(() => { hint.style.display = 'block'; }).catch(() => {});
-    }
-  };
+  const share = async (opts) => { await shareOrFallback(opts, () => { hint.style.display = 'block'; }); };
   const shareBtn = document.getElementById('shareMyResult');
-  if (shareBtn) shareBtn.onclick = () => copy(buildResultUrl(myResult));
+  if (shareBtn) shareBtn.onclick = () => share({ title: 'Mon score HARDWOOD', text: `${myResult.name} · ${myResult.tier} · score ${myResult.score}`, url: buildResultUrl(myResult) });
   const inviteBtn = document.getElementById('inviteMore');
-  if (inviteBtn) inviteBtn.onclick = () => copy(buildChallengeUrl(entry.def));
+  if (inviteBtn) inviteBtn.onclick = () => share({ title: 'Défi HARDWOOD', text: 'Rejoins mon défi sur HARDWOOD !', url: buildChallengeUrl(entry.def) });
   document.getElementById('leaderboardBack').onclick = () => screenTitle();
 }
 
@@ -262,18 +260,16 @@ export function renderDailyLeaderboard() {
     <h2 style="text-align:center;font-size:24px;margin:6px 0 14px">${results.length} jour${results.length>1?'s':''} joué${results.length>1?'s':''}</h2>
     <div class="hof-list" style="max-width:560px;margin:0 auto">${rows}</div>
     <div style="margin-top:24px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-      ${todayResult ? `<button class="btn ghost sm" id="shareDaily">📋 Partager mon score du jour</button>` : ''}
+      ${todayResult ? `<button class="btn ghost sm" id="shareDaily">📤 Partager mon score du jour</button>` : ''}
       <button class="btn" id="dailyLeaderboardBack">Retour à l'accueil</button>
     </div>
     <p class="body" id="dailyCopyHint" style="text-align:center;color:var(--chalk-dim);font-size:12px;margin-top:10px;display:none">Copié !</p>
   </div>`;
   const shareBtn = document.getElementById('shareDaily');
-  if (shareBtn) shareBtn.onclick = () => {
+  if (shareBtn) shareBtn.onclick = async () => {
     const text = `🏀 Défi du jour HARDWOOD (${todayResult.date}) : ${todayResult.score} de score légende (${todayResult.tier}) avec ${todayResult.name} !`;
     const hint = document.getElementById('dailyCopyHint');
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(() => { hint.style.display = 'block'; }).catch(() => {});
-    }
+    await shareOrFallback({ title: 'Défi du jour HARDWOOD', text }, () => { hint.style.display = 'block'; });
   };
   document.getElementById('dailyLeaderboardBack').onclick = () => screenTitle();
 }

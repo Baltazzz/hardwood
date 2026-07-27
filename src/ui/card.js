@@ -145,9 +145,14 @@ function drawCard(canvas, r){
   x.font='700 46px "Bricolage Grotesque", Arial, sans-serif'; x.fillStyle=C.chalk;
   spacedText(x,'HARDWOOD',W/2,124,8);
   x.fillStyle=C.orange; x.fillRect(W/2-70,144,140,5);
-  // nom + drapeau
+  // nom + drapeau -- troncature par LARGEUR RÉELLE mesurée (measureText), pas un nombre de
+  // caractères fixe : un nom de 16 caractères peut quand même déborder du cadre à cette taille de
+  // police selon les lettres (majuscules larges type M/W vs étroites type I/L) -- l'ancienne
+  // troncature fixe à 16 caractères ne le garantissait pas (bug de débordement signalé).
   x.font='700 76px "Bricolage Grotesque", Arial, sans-serif'; x.fillStyle=C.chalk;
-  x.fillText(`${r.flag||'🏀'} ${truncate(r.name||'Joueur',16)}`, W/2, 238);
+  const flagPrefix=`${r.flag||'🏀'} `;
+  const maxNameW=(W-160)-x.measureText(flagPrefix).width;
+  x.fillText(`${flagPrefix}${truncateToWidth(x, r.name||'Joueur', maxNameW)}`, W/2, 238);
   // poste / style / nation
   x.font='600 30px "Bricolage Grotesque", Arial, sans-serif'; x.fillStyle=C.dim;
   const sub=[`${r.posEmoji||''} ${r.posName||''}`.trim(), r.styleName?`${r.styleEmoji||''} ${r.styleName}`.trim():'', r.nation||''].filter(Boolean).join('   ·   ');
@@ -172,10 +177,19 @@ function drawCard(canvas, r){
     x.fillStyle=C.chalk; x.font='700 68px "Bricolage Grotesque", Arial, sans-serif'; x.fillText(String(cells[i][1]), cx+cwid/2, cy+82);
     x.fillStyle=C.dim; x.font='600 25px "Bricolage Grotesque", Arial, sans-serif'; spacedText(x,String(cells[i][0]).toUpperCase(),cx+cwid/2,cy+122,1.5);
   }
-  // ligne saisons / record / nba
+  // ligne saisons / âge de fin / record / nba -- taille de police réduite dynamiquement si la
+  // combinaison complète (carrière longue + record élevé + NBA + âge de fin) dépasserait la
+  // largeur sûre de la carte, plutôt qu'un débordement silencieux (voir le même risque corrigé
+  // sur le nom du joueur plus haut).
   let yy=gy0+2*(chei+22)+40;
-  x.fillStyle=C.mint; x.font='600 30px "Bricolage Grotesque", Arial, sans-serif';
-  x.fillText(`${r.seasons} saisons   ·   record ${r.bestPts} pts/match${r.nba?'   ·   🏀 NBA':''}`, W/2, yy);
+  x.fillStyle=C.mint;
+  const endAgeLine = r.endAge!=null ? `   ·   retraite à ${r.endAge} ans` : '';
+  const statLine = `${r.seasons} saisons${endAgeLine}   ·   record ${r.bestPts} pts/match${r.nba?'   ·   🏀 NBA':''}`;
+  const statMaxW = W-160;
+  let statSize = 30;
+  x.font=`600 ${statSize}px "Bricolage Grotesque", Arial, sans-serif`;
+  while(statSize>20 && x.measureText(statLine).width>statMaxW){ statSize-=2; x.font=`600 ${statSize}px "Bricolage Grotesque", Arial, sans-serif`; }
+  x.fillText(statLine, W/2, yy);
   // sparkline OVR
   if(r.ovrSeries && r.ovrSeries.length>1){ drawSpark(x, r.ovrSeries, W/2-300, yy+34, 600, 90, C); yy+=150; } else yy+=40;
   // citation presse
@@ -199,6 +213,13 @@ function drawStar(x,cx,cy,r,fill){
 }
 function roundRect(x,rx,ry,w,h,r){ x.beginPath(); x.moveTo(rx+r,ry); x.arcTo(rx+w,ry,rx+w,ry+h,r); x.arcTo(rx+w,ry+h,rx,ry+h,r); x.arcTo(rx,ry+h,rx,ry,r); x.arcTo(rx,ry,rx+w,ry,r); x.closePath(); }
 function spacedText(x,str,cx,cy,sp){ x.save(); const chs=[...str]; let tot=0; const ws=chs.map(c=>{const w=x.measureText(c).width;tot+=w+sp;return w;}); tot-=sp; let px=cx-tot/2; x.textAlign='left'; chs.forEach((c,i)=>{ x.fillText(c,px,cy); px+=ws[i]+sp; }); x.restore(); }
-function truncate(s,n){ s=String(s); return s.length>n?s.slice(0,n-1)+'…':s; }
+// Troncature par largeur RÉELLE (measureText), pas un nombre de caractères fixe -- suppose que
+// x.font est déjà celui utilisé pour le dessin final avant l'appel.
+function truncateToWidth(x,s,maxW){
+  s=String(s);
+  if(x.measureText(s).width<=maxW) return s;
+  while(s.length>1 && x.measureText(s+'…').width>maxW) s=s.slice(0,-1);
+  return s+'…';
+}
 function wrapText(x,text,cx,cy,maxW,lh){ const words=String(text).split(' '); let line='',yy=cy,lines=[]; words.forEach(w=>{ const t=line?line+' '+w:w; if(x.measureText(t).width>maxW && line){ lines.push(line); line=w; } else line=t; }); if(line)lines.push(line); lines.slice(0,4).forEach((ln,i)=>x.fillText(ln,cx,yy+i*lh)); }
 function drawSpark(x,series,ox,oy,w,h,C){ const mn=Math.min(...series),mx=Math.max(...series),rng=Math.max(1,mx-mn); const n=series.length; const bw=Math.min(w/n*0.66,26); const gap=(w-bw*n)/(n+1); series.forEach((v,i)=>{ const bh=14+((v-mn)/rng)*(h-14); const bx=ox+gap+i*(bw+gap); const isPk=v===mx; x.fillStyle=isPk?C.mint:'rgba(224,86,45,0.7)'; roundRect(x,bx,oy+h-bh,bw,bh,4); x.fill(); }); }

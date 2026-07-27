@@ -266,7 +266,9 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
    le thème est clair désormais, ces règles reprennent simplement les tokens standards. */
 .scout{background:linear-gradient(165deg,#FFFFFF,var(--court));border:1px solid var(--line);
   border-radius:14px;padding:20px;margin-top:6px;box-shadow:0 10px 26px rgba(36,24,19,.10)}
-.scout .hype{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+/* flex-wrap ajouté : les 5 étoiles + le libellé de style le plus long ("Slasher athlétique",
+   "Two-way polyvalent") pouvaient déborder ensemble à 360px sans repli à la ligne. */
+.scout .hype{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
 .scout .hype span{color:var(--chalk-dim);font-family:'Bricolage Grotesque'}
 .stars{display:inline-flex;align-items:center}
 .scout .attr .an{color:var(--chalk-dim)}
@@ -324,8 +326,15 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
 /* L'écusson de club (voir clubEmblemSvg() dans hud.js) est le point focal du HUD : plus de
    place que l'ancienne pastille à initiale, gap un peu plus généreux pour respirer. */
 .pc-club{padding-left:8px;margin-top:16px;display:flex;align-items:center;gap:12px}
-.pc-club .cn{font-family:'Bricolage Grotesque';font-weight:700;font-size:16px}
-.pc-club .cl{font-size:11px;color:var(--chalk-dim);font-family:'Bricolage Grotesque';font-weight:500;letter-spacing:.08em}
+/* min-width:0 nécessaire : sans lui, un enfant flex refuse par défaut de rétrécir sous la largeur
+   de son contenu non replié (piège classique flexbox) -- un nom de club long (ex. "Basketball
+   Australia Centre of Excellence U18", 46 caractères) poussait alors toute la tuile profil hors
+   de l'écran à 360px au lieu de se tronquer. */
+.pc-club-txt{min-width:0;flex:1}
+.pc-club .cn{font-family:'Bricolage Grotesque';font-weight:700;font-size:16px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc-club .cl{font-size:11px;color:var(--chalk-dim);font-family:'Bricolage Grotesque';font-weight:500;letter-spacing:.08em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* Traits de joueur (voir engine/tags.js) : quelques puces au plus à la fois par conception
    (seuil + estompage + contradiction), jamais une collection à faire défiler. */
 .tag-chips{padding-left:8px;margin-top:10px;display:flex;flex-wrap:wrap;gap:6px}
@@ -396,7 +405,10 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
   content:"";position:absolute;inset:0 0 auto 0;height:3px;border-radius:16px 16px 0 0;
   background:linear-gradient(90deg,var(--plum),var(--orange));z-index:1;pointer-events:none;
 }
-.event .season-tag{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+/* flex-wrap ajouté : sans lui, la 4e puce ("Fenêtre sélection", voir nat-window-chip) fait
+   déborder la ligne à 360px -- avec seulement 3 puces (hors fenêtre de sélection), ça passait
+   déjà de justesse, la 4e faisait basculer en overflow horizontal. */
+.event .season-tag{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
 .chip{font-family:'Bricolage Grotesque';font-weight:700;letter-spacing:.12em;text-transform:uppercase;
   font-size:11px;padding:4px 11px;border-radius:20px;background:rgba(224,86,45,.12);color:var(--orange-soft);
   border:1px solid rgba(224,86,45,.28)}
@@ -464,7 +476,10 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
 .standings-zone-bad{background:rgba(186,51,39,.10);color:var(--down)}
 .standings-rows{display:flex;flex-direction:column;gap:3px}
 .standings-row{display:flex;gap:10px;font-size:13.5px}
-.standings-row .sr-rk{color:var(--chalk-dim);min-width:26px;font-weight:600}
+.standings-row .sr-rk{color:var(--chalk-dim);min-width:26px;font-weight:600;flex:none}
+/* Même piège flexbox que .pc-club-txt : un nom de club long dans le classement (ex. "Basketball
+   Australia Centre of Excellence U18") poussait la ligne hors du cadre à 360px sans troncature. */
+.standings-row .sr-nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .standings-row.me .sr-rk{color:var(--mint-soft)}
 .standings-playoff{margin-top:9px;padding-top:9px;border-top:1px solid var(--line);font-size:13.5px}
 .accolades{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}

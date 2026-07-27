@@ -528,7 +528,7 @@ export function postSeason(){
   applyAging();
   // --- fin subie (blessure grave) ? -----------------------------------------------------
   // Uniquement possible une fois la retraite VOLONTAIRE déjà accessible (même seuil que le
-  // bouton "Raccrocher les baskets" sur le bilan de saison, p.age>=33) -- jamais sur un jeune.
+  // bouton "Tirer sa révérence" sur le bilan de saison, p.age>=33) -- jamais sur un jeune.
   // Risque faible mais réel, qui augmente avec l'âge ET l'usure réelle du corps (forme, voir
   // engine/vitals.js -- une carrière qui a beaucoup drainé sa forme est mécaniquement plus
   // exposée), encore un peu plus pour un profil déjà marqué comme fragile. Vérifié à l'audit

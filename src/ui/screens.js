@@ -414,7 +414,7 @@ export function renderSeasonResult(s, champion){
     <div class="verdict">${verdict}</div>
     ${compHtml}${accHtml}
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:18px">
-      <div>${p.age>=33?`<button class="btn ghost sm" id="retireBtn">Raccrocher les baskets</button>`:''}</div>
+      <div>${p.age>=33?`<button class="btn ghost sm" id="retireBtn">Tirer sa révérence</button>`:''}</div>
       <button class="btn" id="afterSeason">Intersaison →</button>
     </div>
   </div>`;
@@ -837,7 +837,7 @@ export function endCareer(reason){
   // --- Données de carrière (carte partageable + Panthéon) ---
   const rec={ name:p.name, flag:p.nation.flag, posEmoji:POSITIONS.find(x=>x.id===p.pos).emoji, pos:p.pos, posName:POSITIONS.find(x=>x.id===p.pos).name,
       styleName:(STYLES.find(x=>x.id===p.style)||{}).name||'', styleEmoji:(STYLES.find(x=>x.id===p.style)||{}).emoji||'',
-      tier, score:legend, champs, mvps, allstars, peak:p.peakOvr, seasons:p.seasons.length,
+      tier, score:legend, champs, mvps, allstars, peak:p.peakOvr, seasons:p.seasons.length, endAge:p.age,
       bestPts:Math.round(bestPts*10)/10, nba:reachedNBA, clutch:p.clutch||0, ovrSeries,
       tripleDoubles:p.tripleDoubles||0, accolades:{...A}, tags:activeTags(p).map(t=>t.id),
       headline:(quotes[0]?quotes[0][1]:''), nation:p.nation.name, hof:p.hof, date:Date.now() };

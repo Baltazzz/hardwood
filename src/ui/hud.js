@@ -90,7 +90,7 @@ export function renderHUD(mode='club'){
       </div>
       <div class="pc-club">
         ${clubMarkSvg(emblemPrimary, emblemSecondary, p.club)}
-        <div><div class="cn">${p.club||'Sans club'}</div>
+        <div class="pc-club-txt"><div class="cn">${p.club||'Sans club'}</div>
           <div class="cl">${lg?lg.short:''}${p.club&&p.seasons.length?` · <span style="color:var(--mint)">${roleOf(p).label}</span>`:''}</div></div>
       </div>
       ${renderTagChips(activeTags(p))}

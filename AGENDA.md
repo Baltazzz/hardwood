@@ -43,22 +43,65 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
   DevTools). Un service worker minimal (mise en cache de l'app shell) reste optionnel selon ce
   que l'utilisateur souhaite réellement (offline complet vs simple icône d'app).
 
-- [ ] **AGD-26 — Tuiles avec "tirets latéraux qui les relient" : à clarifier**
-  Ajouté au registre le 2026-07-27, à la suite d'un audit de conformité écrit. Demande de
-  l'utilisateur : retirer des tirets latéraux qui relient visuellement certaines tuiles.
-  Recherche exhaustive menée (styles.css entier, tous les `::before`/`::after`, toutes les
-  bordures `dashed`, historique git, fichier de référence `hardwood.html`) : **aucune trace
-  trouvée**, ni dans le CSS actuel ni dans l'historique des chantiers déjà cochés (AGD-09 a bien
-  adouci les bordures des tuiles — "trait plein uniforme" → bordures semi-transparentes — mais
-  rien de documenté spécifiquement comme des "tirets qui relient" plusieurs tuiles entre elles).
-  Deux hypothèses possibles, non tranchées : (a) déjà résolu incidemment par AGD-09 sans avoir
-  été nommé ainsi à l'époque ; (b) fait référence à un écran ou un composant précis pas encore
-  identifié. **À clarifier avec l'utilisateur** : quel écran, quelle tuile exactement (option de
-  création, fiche de stats, armoire à trophées, bilan de saison... ) ?
-  **Critère** : à définir une fois l'écran concerné précisé — capture avant/après montrant la
-  disparition du tiret.
-
 ## Coché récemment
+
+- [x] **AGD-28 — Lot de corrections d'affichage, suite à des tests réels** _(implémentée et vérifiée le 2026-07-27)_
+  Quatre points :
+  1. *Tuiles qui débordent*. Deux cas signalés, plus deux trouvés en creusant, tous confirmés et
+     corrigés :
+     - **Fenêtre de sélection nationale (4 puces)** : `.season-tag` (bandeau de contexte au-dessus
+       de tout événement, `screens.js`) affiche normalement 3 puces (saison, ligue/club,
+       catégorie) mais une 4e ("Fenêtre sélection") s'ajoute pendant une fenêtre de sélection
+       nationale — la règle CSS n'avait pas de `flex-wrap:wrap`, donc cette 4e puce faisait
+       déborder la ligne au lieu de passer à la ligne suivante. Corrigé (`styles.css`).
+     - **Nom de joueur sur la carte partageable** (`drawCard()` dans `card.js`) : troncature par
+       NOMBRE DE CARACTÈRES fixe (16) au lieu de largeur réellement mesurée -- un nom de 16
+       caractères en majuscules à 76px peut quand même déborder du cadre selon les lettres
+       (M/W larges vs I/L étroites). Remplacé par une troncature `measureText()`-based
+       (`truncateToWidth()`), qui garantit un ajustement réel au cadre quelle que soit la police
+       ou les lettres du nom.
+     - **Nom de club dans la fiche HUD** (`.pc-club`, visible en permanence en cours de carrière)
+       et **nom de club dans le classement** (`.standings-row .sr-nm`, écran de bilan) : piège
+       flexbox classique (`min-width:auto` par défaut) -- un nom de club long (ex. "Basketball
+       Australia Centre of Excellence U18", 46 caractères, un vrai nom du jeu) pouvait pousser la
+       tuile hors du cadre à 360px. Corrigé par troncature avec ellipse (`min-width:0` +
+       `text-overflow:ellipsis`).
+     - **Étoiles de potentiel + libellé de style** (écran de scouting, création de personnage) :
+       même risque avec les libellés de style les plus longs ("Slasher athlétique", "Two-way
+       polyvalent") combinés aux 5 étoiles sur la même ligne sans repli -- `flex-wrap:wrap` ajouté
+       par précaution.
+     Balayage plus large effectué (toutes les règles `display:flex` de `styles.css`) : les autres
+     lignes flex identifiées sont soit des paires fixes (boutons, jauges), soit du texte narratif
+     déjà censé passer à la ligne (fil d'actualité de carrière), soit déjà correctement protégées
+     (`.hof-main` avait déjà `min-width:0`) -- aucun autre risque trouvé.
+  2. *Âge de fin de carrière*. Ajouté sur la carte de carrière partageable (`endAge:p.age` dans
+     `rec`, `screens.js` `endCareer()`), affiché sur la ligne "X saisons · retraite à Y ans ·
+     record Z pts/match" (`card.js`). Cette ligne elle-même rendue résistante au débordement
+     (taille de police réduite dynamiquement si la combinaison la plus longue -- longue carrière +
+     NBA + gros scoreur -- dépasserait la largeur sûre de la carte), pour ne pas réintroduire le
+     même type de bug en ajoutant du texte.
+  3. *Phrase de fin de carrière*. « Raccrocher les baskets » -> « Tirer sa révérence » (bouton du
+     bilan de saison, `p.age>=33`). Balayage du reste du vocabulaire de fin de carrière (retraite,
+     tournée d'adieux, "la NBA t'appelle pour l'histoire", baroud d'honneur...) : rien d'autre de
+     maladroit trouvé, formulations déjà idiomatiques.
+  4. *Tuiles reliées par des tirets*. Recherche RE-CIBLÉE spécifiquement sur les deux écrans
+     désignés (choix pendant une saison : `.event`/`.choices`/`.choice` ; bilan :
+     `.scoreboard`/`.statline`/`.stat-cell`/`.statline-ctx`/`.verdict`) -- chaque règle CSS de ces
+     deux écrans relue une par une. **Aucun motif de trait/tiret reliant des tuiles entre elles
+     trouvé, confirmé une seconde fois.** Seul élément apparenté repéré dans tout le fichier : un
+     `repeating-linear-gradient` (`.stage::before`, ligne ~104) -- mais c'est un motif de
+     marquage de terrain très discret (opacité 0.07) en fond de CHAQUE écran du jeu (pas
+     spécifique aux tuiles ni positionné pour "relier" quoi que ce soit entre elles), déjà présent
+     avant même l'existence de cet AGENDA, jamais nommé comme un problème par ailleurs. Ne
+     correspond pas à la description ("tirets latéraux qui relient les tuiles entre elles") --
+     conservé tel quel plutôt que retiré sans justification. **AGD-26 clos** : confirmé absent
+     comme demandé, pas de nouvelle action.
+  Rendu montré à l'utilisateur via le showcase avant livraison (fenêtre de sélection à 360px
+  avec les 4 puces qui passent désormais à la ligne, carte de carrière avec un nom délibérément
+  long de 21 caractères + âge de fin, bilan de saison à 34 ans avec le bouton renommé).
+  Vérifié : changement purement visuel/textuel (aucune logique de jeu touchée -- `styles.css`,
+  `hud.js`, `card.js`, deux lignes de `screens.js` pour le texte et `endAge`) — 0% crash sur 100
+  carrières auditées, comme attendu pour ce type de changement.
 
 - [x] **AGD-27 — Correction des stats molles et des traits, suite à des tests réels** _(implémentée et vérifiée le 2026-07-27)_
   Quatre points, remontés après un vrai retour de test (pas seulement un audit) :

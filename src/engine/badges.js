@@ -40,7 +40,21 @@ function load() {
 function save() { try { localStorage.setItem(BADGES_KEY, JSON.stringify(mem)); } catch (e) { /* stockage indisponible : on continue en mémoire */ } }
 
 export function badgesState() { return load(); }
-export function badgesClear() { mem = { unlocked: {}, goldNations: [], stylesHof: [], positionsHof: [], startPaths: [], totalCareers: 0 }; try { localStorage.removeItem(BADGES_KEY); } catch (e) {} }
+// BUG corrigé (voir AGENDA.md) : ce bouton s'appelle "Réinitialiser les BADGES" (écran Badges) --
+// il remettait pourtant aussi à zéro `totalCareers`, un compteur de carrières jouées à VIE affiché
+// sur un écran totalement différent ("Ma progression"). Quiconque cliquait ce bouton par curiosité
+// après sa première carrière voyait ensuite le compteur "reste bloqué à 1" à chaque partie
+// suivante -- pas parce que l'incrémentation/la persistance étaient cassées (vérifié : les deux
+// fonctionnent, voir tests/audit_meta_progression.mjs), mais parce que ce total repartait de zéro
+// à chaque reset de badges. `totalCareers` n'est lié à AUCUN badge précis, il doit survivre à une
+// réinitialisation des badges -- seuls `unlocked` et les compteurs de progression PROPRES à des
+// badges cumulatifs (goldNations/stylesHof/positionsHof/startPaths, qui doivent redevenir
+// gagnables depuis zéro si on reset leur badge) sont concernés par ce bouton.
+export function badgesClear() {
+  const totalCareers = load().totalCareers || 0;
+  mem = { unlocked: {}, goldNations: [], stylesHof: [], positionsHof: [], startPaths: [], totalCareers };
+  save();
+}
 
 const TIER_RANK = ['Parcours de combattant', 'Joueur de rotation', 'All-Star', 'Superstar', 'Légende · Hall of Fame', 'G.O.A.T.'];
 

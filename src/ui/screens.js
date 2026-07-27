@@ -862,12 +862,20 @@ export function endCareer(reason){
   const bestPts = p.seasons.reduce((m,s)=>Math.max(m,s.pts),0);
   const reachedNBA = p.seasons.some(s=>s.league==='nba');
 
+  // Totaux cumulés de carrière (voir AGENDA.md) : moyenne/match de chaque saison multipliée par
+  // les matchs RÉELLEMENT joués cette saison-là (gamesPlayed, pas leagueGames -- un joueur blessé
+  // une partie de la saison n'a pas joué le calendrier complet), sommé sur toute la carrière.
+  // C'est la seule façon correcte de reconstituer un vrai total depuis des moyennes par saison.
+  const sumStat = (key) => Math.round(p.seasons.reduce((s,x)=>s+(x[key]||0)*(x.gamesPlayed||0),0));
+  const totalPts=sumStat('pts'), totalAst=sumStat('ast'), totalReb=sumStat('reb'), totalBlk=sumStat('blk'), totalStl=sumStat('stl');
+
   // --- Données de carrière (carte partageable + Panthéon) ---
   const rec={ name:p.name, flag:p.nation.flag, posEmoji:POSITIONS.find(x=>x.id===p.pos).emoji, pos:p.pos, posName:POSITIONS.find(x=>x.id===p.pos).name,
       styleName:(STYLES.find(x=>x.id===p.style)||{}).name||'', styleEmoji:(STYLES.find(x=>x.id===p.style)||{}).emoji||'',
       tier, score:legend, champs, mvps, allstars, peak:p.peakOvr, seasons:p.seasons.length, endAge:p.age,
       bestPts:Math.round(bestPts*10)/10, nba:reachedNBA, clutch:p.clutch||0, ovrSeries,
       tripleDoubles:p.tripleDoubles||0, accolades:{...A}, tags:activeTags(p).map(t=>t.id),
+      totalPts, totalAst, totalReb, totalBlk, totalStl,
       headline:(quotes[0]?quotes[0][1]:''), nation:p.nation.name, hof:p.hof, date:Date.now() };
   p.cardRec=rec; p.endReason=reason;
   trackEvent('career_end', { reason, tier, seasons: p.seasons.length, hof: p.hof, challenge: !!p.challengeId, daily: !!p.dailyDate });

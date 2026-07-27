@@ -8,6 +8,11 @@ import { setInCareer } from './navbar.js';
 import { trackEvent } from '../engine/analytics.js';
 import { shareOrFallback, canvasToFile } from './share.js';
 
+// Totaux cumulés de carrière (points/passes/rebonds/contres/interceptions) : séparateur de
+// milliers pour rester lisible sur des carrières longues (un total de 20 000+ points n'est pas
+// valorisant à lire collé en un seul bloc de chiffres).
+function fmtNum(n){ return Math.round(n||0).toLocaleString('fr-FR'); }
+
 /* ============================================================
    PANTHÉON (rendu)
 ============================================================ */
@@ -161,6 +166,16 @@ export function renderCareerDetail(r){
     ${r.headline?`<div class="recap-block"><div class="press"><div class="press-txt">${r.headline}</div></div></div>`:''}
     ${r.ovrSeries&&r.ovrSeries.length>1?`<div class="recap-block" style="text-align:center">${sparkline(r.ovrSeries)}</div>`:''}
     <div class="recap-block" style="text-align:center"><span class="hof-sub">🎯 Record de points sur une saison : <b style="color:var(--orange)">${r.bestPts}</b></span></div>
+    ${r.totalPts!=null?`<div class="recap-block" style="max-width:640px">
+      <div class="eyebrow" style="text-align:center;margin-bottom:14px">📈 Statistiques cumulées de carrière</div>
+      <div class="legend-grid">
+        <div class="lg"><div class="v">${fmtNum(r.totalPts)}</div><div class="l">Points</div></div>
+        <div class="lg"><div class="v">${fmtNum(r.totalAst)}</div><div class="l">Passes</div></div>
+        <div class="lg"><div class="v">${fmtNum(r.totalReb)}</div><div class="l">Rebonds</div></div>
+        <div class="lg"><div class="v">${fmtNum(r.totalBlk)}</div><div class="l">Contres</div></div>
+        <div class="lg"><div class="v">${fmtNum(r.totalStl)}</div><div class="l">Interceptions</div></div>
+      </div>
+    </div>`:''}
     <div class="recap-block" style="max-width:640px">
       <div class="eyebrow" style="text-align:center;margin-bottom:14px">🏆 Armoire à trophées</div>
       ${renderTrophyCabinet(r.accolades)}
@@ -319,6 +334,20 @@ function drawCard(canvas, r){
   while(statSize>20 && x.measureText(statLine).width>safeW){ statSize-=2; x.font=`600 ${statSize}px "Bricolage Grotesque", Arial, sans-serif`; }
   x.fillText(statLine, CX, y);
   y+=34;
+
+  // Totaux cumulés de carrière (optionnels -- absents sur d'anciens enregistrements du Panthéon
+  // sauvegardés avant ce lot, voir AGENDA.md) : même réduction dynamique de police que la ligne
+  // au-dessus, seule façon de garantir qu'une carrière longue (total à 5-6 chiffres sur les 5
+  // statistiques) ne déborde jamais du cadre.
+  if(r.totalPts!=null){
+    x.fillStyle=C.dim;
+    const totalsLine = `${fmtNum(r.totalPts)} PTS   ·   ${fmtNum(r.totalAst)} PAS   ·   ${fmtNum(r.totalReb)} REB   ·   ${fmtNum(r.totalBlk)} CTR   ·   ${fmtNum(r.totalStl)} INT`;
+    let totSize=22;
+    x.font=`600 ${totSize}px "Bricolage Grotesque", Arial, sans-serif`;
+    while(totSize>13 && x.measureText(totalsLine).width>safeW){ totSize-=1; x.font=`600 ${totSize}px "Bricolage Grotesque", Arial, sans-serif`; }
+    x.fillText(totalsLine, CX, y);
+    y+=28;
+  }
 
   // Sparkline OVR (optionnelle)
   if(r.ovrSeries && r.ovrSeries.length>1){ drawSpark(x, r.ovrSeries, CX-300, y, 600, 90, C); y+=90+40; }

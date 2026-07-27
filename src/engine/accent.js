@@ -126,9 +126,23 @@ function contrastRatio(hexA,hexB){
 // trop fade, pour rester vivant sur la palette Terre battue) jusqu'à un contraste suffisant sur
 // --court. Ne redescend jamais sous minRatio : c'est la seule garantie de lisibilité, pas une
 // simple recommandation.
+//
+// BUG corrigé (voir AGENDA.md, "San Antonio ressort en bleu") : le plancher de saturation
+// s'appliquait à TOUTE couleur, y compris les gris/argent/noir/blanc officiels d'un club (ex.
+// San Antonio #C4CED4, un argent réel et vérifié -- voir data/clubData.js GLOBAL_CLUB_COLORS,
+// la donnée source était déjà correcte). Un gris a une teinte RGB quasi arbitraire (un artefact
+// d'arrondi, pas une couleur de marque) ; forcer 45% de saturation dessus invente une couleur qui
+// n'existe pas -- pour l'argent des Spurs, un bleu franc, alors qu'aucune trace de bleu n'existe
+// dans leur identité (argent/noir). Sous ce seuil de saturation, la couleur est considérée
+// neutre : on ne touche plus qu'à la luminosité pour le contraste, jamais à la teinte/saturation.
+// Seuil calibré sur la distribution RÉELLE des 30 primaires NBA (voir AGENDA.md) : San Antonio
+// est un cas isolé à 15.7% de saturation (le seul gris/argent officiel du lot), la couleur
+// "colorée" la plus proche ensuite est Memphis à 30.6% (un vrai bleu, juste discret) -- 0.22 sépare
+// proprement les deux sans jamais neutraliser une couleur de marque authentique.
+const NEUTRAL_SAT_THRESHOLD = 0.22;
 export function ensureContrast(hex, minRatio=3.5){
   let [h,s,l] = rgbToHsl(...hexToRgb(hex));
-  s = Math.max(s, 0.45);
+  if (s >= NEUTRAL_SAT_THRESHOLD) s = Math.max(s, 0.45);
   let candidate = hslToHex(h,s,l);
   let iter=0;
   while(contrastRatio(candidate,BG) < minRatio && l>0.06 && iter<40){

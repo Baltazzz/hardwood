@@ -65,6 +65,61 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Coché récemment
 
+- [x] **AGD-39 — Lot données de carrière et méta-progression** _(implémentée et vérifiée le 2026-07-28)_
+  Trois points.
+  1. *Bug prioritaire -- compteur de carrières bloqué à 1*. Cause RÉELLE trouvée après reproduction
+     rigoureuse (pas une supposition) : l'incrémentation et la persistance de `totalCareers`
+     (`engine/badges.js`) fonctionnaient en réalité très bien -- vérifié par carrières enchaînées
+     en une seule session ET par simulation de rechargements de page successifs (état localStorage
+     transporté entre process Node distincts), les deux scénarios progressent correctement. Le
+     vrai coupable : le bouton **"Réinitialiser les badges"** (écran Badges) remettait AUSSI
+     `totalCareers` à zéro, alors que ce compteur n'est lié à AUCUN badge précis et s'affiche sur
+     un écran totalement différent ("Ma progression") -- quiconque cliquait ce bouton par
+     curiosité après sa première carrière voyait ensuite le compteur reparti de zéro à chaque
+     partie suivante, d'où l'impression de blocage. Corrigé : `badgesClear()` préserve désormais
+     `totalCareers` (seuls `unlocked` et les compteurs de progression propres aux badges cumulatifs
+     sont réinitialisés). **Nouveau contrôle d'audit permanent** (`tests/audit_meta_progression.mjs`,
+     `npm run audit:meta`) : joue plusieurs carrières d'affilée via le harnais partagé existant
+     (`tests/harness.mjs`), vérifie que `totalCareers` progresse strictement de 1 à chaque carrière
+     ET que le meilleur score légende (Panthéon) ne redescend jamais -- déclenche aussi un reset de
+     badges à mi-parcours pour vérifier explicitement la non-régression du bug corrigé.
+  2. *Statistiques cumulées de carrière*. Points/passes/rebonds/contres/interceptions calculés en
+     sommant, pour chaque saison, la moyenne par match × les matchs RÉELLEMENT joués cette
+     saison-là (`gamesPlayed`, pas le calendrier complet -- un joueur blessé une partie de la
+     saison n'a pas joué tous les matchs), la seule façon correcte de reconstituer un vrai total
+     depuis des moyennes. Affichées avec séparateur de milliers (lisibilité sur des carrières
+     longues) : sur la carte de fin partageable (`drawCard()`, nouvelle ligne sous saisons/record,
+     avec son propre repli dynamique de police) et dans la fiche Panthéon (`renderCareerDetail()`,
+     nouveau bloc "Statistiques cumulées de carrière"). Rétrocompatible : absent silencieusement
+     sur d'anciens enregistrements du Panthéon sauvegardés avant ce lot (`r.totalPts!=null` gate).
+  3. *Couleurs NBA encore fausses*. Cause trouvée : San Antonio (gris/argent officiel, DÉJÀ correct
+     dans `data/clubData.js` GLOBAL_CLUB_COLORS -- vérifié) ressortait en bleu vif à cause d'un
+     bug dans l'algorithme de contraste (`engine/accent.js` `ensureContrast()`), pas dans la donnée
+     source : un plancher de saturation (45%) s'appliquait à TOUTE couleur avant ajustement de
+     luminosité, y compris les gris/argents authentiques -- une teinte RGB de gris est un artefact
+     d'arrondi quasi arbitraire (celle de San Antonio pointait vers le bleu par hasard), la forcer
+     à 45% de saturation invente une couleur de marque qui n'existe pas. Corrigé par un seuil de
+     neutralité (0.22, calibré sur la distribution RÉELLE des 30 primaires NBA : San Antonio est un
+     cas isolé à 15.7% de saturation, la couleur "vraie mais discrète" la plus proche ensuite est
+     Memphis à 30.6% -- large marge des deux côtés) sous lequel seule la luminosité est ajustée,
+     jamais la teinte/saturation. **Les 29 autres franchises vérifiées une par une** contre une
+     source externe indépendante (recherche web, pas seulement la mémoire du modèle -- utile : une
+     première hypothèse d'inversion primaire/secondaire pour Memphis s'est avérée FAUSSE à la
+     vérification, la donnée déjà en base était correcte) : toutes exactes, aucun autre écart
+     trouvé. `CLUB_DOMINANT_OVERRIDE` (Charlotte teal, Utah violet -- déjà en place, décisions
+     éditoriales documentées) laissé inchangé, toujours justifié. Liste des 30 couleurs dominantes
+     retenues montrée à l'utilisateur pour validation avant `npm run ship`.
+  Rendu montré à l'utilisateur via le showcase avant livraison (carte de carrière avec la nouvelle
+  ligne de totaux sur 5 profils contrastés dont un cas limite à 5-6 chiffres, fiche Panthéon avec
+  le nouveau bloc de statistiques cumulées, tuile d'identité San Antonio recolorée).
+  Vérifié : audit standard 150 carrières (0% crash) ; nouvel audit méta-progression dédié, 15
+  carrières enchaînées (`totalCareers` strictement croissant 1→15, meilleur score jamais
+  décroissant, reset de badges confirmé sans effet sur `totalCareers`) ; calcul des totaux cumulés
+  vérifié par comparaison directe avec une somme manuelle sur une vraie carrière pilotée (match
+  exact) ; audit approfondi 300 carrières (0% crash, 0 violation d'intégrité sur les 73 événements
+  `once`, taux de titre élite 11% dans la bande normale 12-16%, aucune régression détectée sur les
+  autres indicateurs).
+
 - [x] **AGD-38 — Réécriture "plus mordante" des anecdotes NBA (AGD-36), demande partiellement refusée** _(traitée le 2026-07-28)_
   Demande : réécrire les 23 anecdotes avec plus de mordant, cadrage resserré à "aucun nom réel
   cité" comme SEULE règle stricte, et rendre le rattachement club+situation assez précis pour

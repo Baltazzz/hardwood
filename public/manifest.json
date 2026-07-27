@@ -1,0 +1,25 @@
+{
+  "id": "/",
+  "name": "HARDWOOD · carrière basket",
+  "short_name": "HARDWOOD",
+  "description": "De 16 à 38 ans, écris ta légende du basket. Une carrière complète, saison après saison, où chaque choix compte, jusqu'à la NBA, ou pas.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F4EDE1",
+  "theme_color": "#E0562D",
+  "lang": "fr",
+  "categories": ["games", "sports"],
+  "icons": [
+    { "src": "/icon-72.png", "sizes": "72x72", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-96.png", "sizes": "96x96", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-128.png", "sizes": "128x128", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-144.png", "sizes": "144x144", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-152.png", "sizes": "152x152", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-256.png", "sizes": "256x256", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-384.png", "sizes": "384x384", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

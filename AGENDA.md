@@ -26,24 +26,52 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
   **Critère** : le handle fourni apparaît accolé à la signature (ex. « Créé par Gaspard G ·
   @handle »), vérifié par rendu direct de l'écran titre.
 
-- [ ] **AGD-25 — PWA réellement installable**
-  Ajouté au registre le 2026-07-27, à la suite d'un audit de conformité écrit (aucun code
-  touché pendant cet audit). Confusion identifiée avec AGD-14 : ce lot avait ajouté un TUTO
-  expliquant le geste manuel "partager → ajouter à l'écran d'accueil" (`screenWelcome()`),
-  explicitement documenté à l'époque comme n'étant PAS une vraie PWA ("Aucun manifest/PWA
-  ajouté", voir entrée AGD-14 ci-dessous). Vérifié à nouveau pendant cet audit : toujours aucun
-  `manifest.json` nulle part dans le dépôt, aucune balise `<link rel="manifest">` dans
-  `index.html`, aucun service worker, aucune dépendance `vite-plugin-pwa` dans `package.json`.
-  Sans manifest (icônes déclarées, `display:standalone`, couleur de thème) ni service worker,
-  Chrome/Android ne propose pas le vrai prompt d'installation natif ; seul le raccourci
-  navigateur manuel fonctionne (iOS Safari uniquement, partiellement).
-  **Critère** : `manifest.json` présent et lié dans `index.html`, contenant au minimum
-  nom/icônes/`display:standalone`/couleur de thème ; testable par l'apparition du prompt
-  d'installation natif Chrome/Android (ou au minimum absence d'erreur de manifest dans les
-  DevTools). Un service worker minimal (mise en cache de l'app shell) reste optionnel selon ce
-  que l'utilisateur souhaite réellement (offline complet vs simple icône d'app).
-
 ## Coché récemment
+
+- [x] **AGD-25 — PWA réellement installable** _(implémentée et vérifiée le 2026-07-27)_
+  Comblait un manque réel confirmé par l'audit de conformité (session précédente) : AGD-14
+  n'avait ajouté qu'un TUTO texte pour le geste manuel "partager → écran d'accueil", explicitement
+  documenté à l'époque comme n'étant PAS une vraie PWA. Quatre pièces, toutes faites main (pas de
+  `vite-plugin-pwa`/Workbox, cohérent avec le reste du projet qui évite les dépendances externes) :
+  1. *`public/manifest.json`*. `name`/`short_name`/`description` alignés sur `index.html`,
+     `start_url`/`scope` sur `/`, `display:standalone`, `background_color`/`theme_color` repris
+     de la palette Terre battue (`--court`/`--orange`), `lang:fr`, `categories`. 9 tailles
+     d'icônes déclarées (72 à 512px), toutes `purpose:any` -- volontairement PAS `maskable` : le
+     logo source a des coins transparents (forme "squircle" déjà dessinée dedans), le déclarer
+     maskable aurait risqué un rendu cassé si l'OS applique son propre masque par-dessus.
+  2. *Jeu d'icônes dérivé du logo*. 9 PNG (`public/icon-{72,96,128,144,152,192,256,384,512}.png`)
+     générés par redimensionnement direct de `public/logo.png` (1254×1254, la source la plus
+     nette disponible) -- même identité visuelle que le favicon/apple-touch-icon existants,
+     aucun nouvel asset dessiné.
+  3. *Balises `index.html`*. `<link rel="manifest">` + `theme-color`. Balises spécifiques iOS
+     ajoutées en plus (Safari n'utilise pas `manifest.json` pour l'icône/le mode standalone) :
+     `apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style`,
+     `apple-mobile-web-app-title`, `mobile-web-app-capable`.
+  4. *Service worker (`public/sw.js`)*. App shell (fichiers stables de `public/`, jamais hashés)
+     précaché à l'installation. Reste same-origin : cache-first pour les assets buildés hashés
+     sous `/assets/` (un hash donné ne change jamais de contenu -- correct ET plus rapide),
+     réseau-d'abord-repli-cache pour la navigation HTML et le reste. Polices Google Fonts
+     (cross-origin, utilisées par tout le jeu) mises en cache opportunément dès la 1re visite en
+     ligne, pour un rendu hors-ligne fidèle plutôt qu'un repli sur une police système. Cache
+     versionné (`hardwood-v1-*`), anciennes versions nettoyées à l'activation. Enregistré dans
+     `main.js` après `load`, derrière `if('serviceWorker' in navigator)` -- jamais bloquant si
+     indisponible (contexte non sécurisé, navigateur restreint).
+  Vérifié en build de production réel (pas seulement en lecture de code) : `npm run build` puis
+  `vite preview` servant `dist/` sur HTTP local -- `manifest.json` (200, `Content-Type:
+  application/json`), `sw.js` (200, `Content-Type: text/javascript` -- type MIME correct requis
+  par la spec Service Worker), les 9 icônes (200) tous confirmés réellement servis, pas juste
+  présents sur disque. `<link rel="manifest">` confirmé présent dans le HTML tel que servi, code
+  d'enregistrement du service worker confirmé présent dans le bundle JS buildé. `manifest.json`
+  validé JSON strict (`JSON.parse` sans erreur) avec les critères d'installabilité Chrome/Android
+  réunis (nom, icônes 192+512, `start_url`, `display:standalone`, service worker actif avec
+  gestionnaire `fetch`). `node --check` sans erreur sur `sw.js`/`main.js`. Audit de non-régression
+  à 100 carrières : 0% crash (le garde-fou `if('serviceWorker' in navigator)` évite bien tout
+  souci avec l'environnement jsdom des tests, qui n'expose pas cette API).
+  **Limite assumée, hors périmètre de la demande** : pas de test sur un vrai appareil physique
+  (prompt d'installation natif effectivement affiché à l'écran, coupure réseau réelle après
+  installation) -- vérifié par tous les moyens statiques/serveur disponibles dans cet
+  environnement, mais une confirmation sur un téléphone/ordinateur réel reste la validation
+  ultime si l'utilisateur veut la faire lui-même.
 
 - [x] **AGD-28 — Lot de corrections d'affichage, suite à des tests réels** _(implémentée et vérifiée le 2026-07-27)_
   Quatre points :

@@ -24,3 +24,16 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 window.addEventListener('pagehide', autosaveIfActive);
 
 screenTitle();
+
+// PWA : enregistrement du service worker (voir public/sw.js) -- app shell précaché à
+// l'installation, reste mis en cache à la volée -- pour un vrai fonctionnement hors-ligne une
+// fois l'appli installée/déjà visitée en ligne. Après le chargement (`load`), comme recommandé,
+// pour ne jamais retarder le premier rendu du jeu.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      // Enregistrement impossible (navigateur restreint, contexte non sécurisé...) : le jeu
+      // reste pleinement jouable en ligne, seul le mode hors-ligne n'est pas disponible.
+    });
+  });
+}

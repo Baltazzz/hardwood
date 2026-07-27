@@ -8,6 +8,17 @@
     <title>HARDWOOD · carrière basket</title>
     <meta name="description" content="De 16 à 38 ans, écris ta légende du basket. Une carrière complète, saison après saison, où chaque choix compte, jusqu'à la NBA, ou pas." />
 
+    <!-- PWA : manifest + icônes (voir public/manifest.json, public/sw.js) -- installation native
+         proposée par le navigateur, fonctionnement hors-ligne une fois installé/déjà visité. -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#E0562D" />
+    <!-- iOS Safari n'utilise pas manifest.json pour l'icône/le mode standalone -- ses propres
+         balises restent nécessaires pour un "Ajouter à l'écran d'accueil" de qualité. -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="HARDWOOD" />
+
     <meta property="og:type" content="website" />
     <meta property="og:title" content="HARDWOOD · carrière basket" />
     <meta property="og:description" content="De 16 à 38 ans, écris ta légende du basket. Une carrière complète, saison après saison, où chaque choix compte, jusqu'à la NBA, ou pas." />

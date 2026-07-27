@@ -1,4 +1,4 @@
-import { hofLoad, hofClear } from '../engine/hof.js';
+import { hofLoad, hofBest, hofClear } from '../engine/hof.js';
 import { BADGES, badgesState, badgesClear } from '../engine/badges.js';
 import { stage } from './dom.js';
 import { screenTitle, sparkline } from './screens.js';
@@ -57,12 +57,23 @@ export function renderBadges(){
   setInCareer(false);
   const state = badgesState();
   const unlockedCount = Object.keys(state.unlocked).length;
-  const tiles = BADGES.map(b=>badgeTile(b, state.unlocked[b.id])).join('');
+  const pct = BADGES.length ? Math.round(unlockedCount/BADGES.length*100) : 0;
+  // Débloqués d'abord (fierté, effet "vitrine de trophées"), à décrocher ensuite (objectif
+  // suivant toujours visible) -- plutôt que l'ordre de définition, arbitraire pour le joueur.
+  const unlocked = BADGES.filter(b=>state.unlocked[b.id]);
+  const locked = BADGES.filter(b=>!state.unlocked[b.id]);
+  const section = (list, label) => !list.length ? '' : `
+    <div class="badge-section-h">${label}</div>
+    <div class="badge-grid">${list.map(b=>badgeTile(b, state.unlocked[b.id])).join('')}</div>`;
   stage.innerHTML = `<div class="end" style="text-align:left">
     <div class="eyebrow" style="text-align:center">🎖️ Hauts faits</div>
     <h2 style="text-align:center;font-size:26px;margin:6px 0 4px">Badges</h2>
-    <p class="body" style="text-align:center;color:var(--chalk-dim);margin-bottom:18px;font-size:13.5px">${unlockedCount}/${BADGES.length} débloqués, à travers toutes tes carrières.</p>
-    <div class="badge-grid">${tiles}</div>
+    <p class="body" style="text-align:center;color:var(--chalk-dim);margin-bottom:10px;font-size:13.5px">${unlockedCount}/${BADGES.length} débloqués, à travers toutes tes carrières.</p>
+    <div class="badge-progress" style="max-width:420px;margin:0 auto 22px">
+      <div class="badge-progress-bar"><i style="width:${pct}%"></i></div>
+    </div>
+    ${section(unlocked, `🏆 Débloqués (${unlocked.length})`)}
+    ${section(locked, `🔒 À décrocher (${locked.length})`)}
     <div style="margin-top:26px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
       <button class="btn" id="badgesBack">Retour</button>
       ${unlockedCount?`<button class="btn ghost" id="badgesClear">Réinitialiser les badges</button>`:''}
@@ -70,6 +81,64 @@ export function renderBadges(){
   </div>`;
   document.getElementById('badgesBack').onclick=()=>screenTitle();
   const bc=document.getElementById('badgesClear'); if(bc) bc.onclick=()=>{ if(confirm('Réinitialiser tous les badges débloqués ?')){ badgesClear(); renderBadges(); } };
+}
+
+/* ============================================================
+   MA PROGRESSION — récapitulatif cumulé à travers toutes les
+   carrières (voir AGENDA.md, lot rétention) : nombre de carrières
+   jouées (compteur dédié, engine/badges.js -- le Panthéon ne garde
+   que les 12 meilleures), meilleur score légende, badges débloqués,
+   et quelques records personnels tirés du Panthéon.
+============================================================ */
+function recordRow(label, value) {
+  return `<div class="lg"><div class="v">${value}</div><div class="l">${label}</div></div>`;
+}
+export function renderProgress(){
+  setInCareer(false);
+  const list = hofLoad();
+  const state = badgesState();
+  const totalCareers = state.totalCareers || 0;
+  const best = hofBest();
+  const badgeCount = Object.keys(state.unlocked).length;
+  // Records tirés du Panthéon (les 12 meilleures carrières) : suffisant pour des "records
+  // marquants" -- une carrière plus modeste qu'aucune des 12 meilleures n'a de toute façon pas
+  // battu de record personnel.
+  const maxSeasons = list.length ? Math.max(...list.map(r=>r.seasons||0)) : 0;
+  const maxPeak = list.length ? Math.max(...list.map(r=>r.peak||0)) : 0;
+  const maxChamps = list.length ? Math.max(...list.map(r=>r.champs||0)) : 0;
+  const maxMvps = list.length ? Math.max(...list.map(r=>r.mvps||0)) : 0;
+  const maxPts = list.length ? Math.max(...list.map(r=>r.bestPts||0)) : 0;
+  const maxTd = list.length ? Math.max(...list.map(r=>r.tripleDoubles||0)) : 0;
+  stage.innerHTML = `<div class="end" style="text-align:left">
+    <div class="eyebrow" style="text-align:center">📊 Ma progression</div>
+    <h2 style="text-align:center;font-size:26px;margin:6px 0 4px">Ton palmarès grandit</h2>
+    <p class="body" style="text-align:center;color:var(--chalk-dim);margin-bottom:18px;font-size:13.5px">${totalCareers?`${totalCareers} carrière${totalCareers>1?'s':''} menée${totalCareers>1?'s':''} à terme.`:'Aucune carrière terminée pour l\'instant -- la première est toujours la plus marquante.'}</p>
+    <div class="legend-grid" style="max-width:560px">
+      ${recordRow('Carrières jouées', totalCareers)}
+      ${recordRow('Meilleur score légende', best)}
+      ${recordRow('Badges débloqués', `${badgeCount}/${BADGES.length}`)}
+      ${recordRow('Plus longue carrière', maxSeasons?`${maxSeasons} saisons`:'--')}
+    </div>
+    ${list.length?`
+    <div class="recap-block" style="max-width:640px">
+      <div class="eyebrow" style="text-align:center;margin-bottom:14px">🌟 Records personnels</div>
+      <div class="legend-grid">
+        ${recordRow('Pic OVR le plus haut', maxPeak||'--')}
+        ${recordRow('Titres (une carrière)', maxChamps)}
+        ${recordRow('MVP (une carrière)', maxMvps)}
+        ${recordRow('Meilleur record pts/match', maxPts||'--')}
+        ${recordRow('Triple-doubles (une carrière)', maxTd)}
+      </div>
+    </div>`:''}
+    <div style="margin-top:26px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn" id="progressBack">Retour</button>
+      <button class="btn ghost" id="progressHof">🏆 Voir le Panthéon</button>
+      <button class="btn ghost" id="progressBadges">🎖️ Voir les badges</button>
+    </div>
+  </div>`;
+  document.getElementById('progressBack').onclick=()=>screenTitle();
+  document.getElementById('progressHof').onclick=()=>renderHallOfFame();
+  document.getElementById('progressBadges').onclick=()=>renderBadges();
 }
 
 export function renderCareerDetail(r){

@@ -39,6 +39,62 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Coché récemment
 
+- [x] **AGD-34 — Lot rétention (badges étendus, défi du jour, progression personnelle)** _(implémentée et vérifiée le 2026-07-27)_
+  Trois points, avant une phase de partage public :
+  1. *Beaucoup plus de badges (10 -> 30)*. 20 nouveaux badges (`engine/badges.js`), couvrant les
+     familles demandées et au-delà : parcours atypiques (`no_home_league_success` -- Superstar+
+     depuis un continent sans championnat local ; `late_bloomer`/`wonderkid_debut` -- débuts NBA
+     tardifs/précoces ; `underdog_champion` -- titre avec un club faible), longévité/résilience
+     (`iron_man_career` -- 10+ saisons sans blessure ; `last_dance` -- carrière jusqu'à 37+ ans),
+     sélection nationale (`world_champion`, `olympic_medalist`, `grand_slam_nation` -- 3 tournois
+     médaillés en une carrière ; `nation_pillar`), records personnels (`goat_status` -- palier
+     G.O.A.T. ; `multi_mvp` -- 3+ MVP en une carrière), identité/image (`media_icon`,
+     `redeemed_image`, `captain_legend`, `bench_legend`), et 3 badges CUMULATIFS "collection"
+     (`style_collector`/`position_collector`/`path_collector` -- Superstar+ avec chaque style/
+     poste/voie de départ, toutes carrières confondues, même mécanique que l'`multi_nation_gold`
+     déjà existant). Chaque check() vérifié contre les champs réels de fin de carrière (aucun
+     champ inventé), persistant et robuste comme avant (même stockage `hardwood_badges_v1`,
+     repli mémoire). Écran dédié retravaillé : barre de progression globale + sections
+     "Débloqués"/"À décrocher" séparées (vitrine de trophées d'abord, objectifs ensuite) plutôt
+     qu'une grille plate, pour donner une vraie sensation d'avancement sur 30 badges.
+  2. *Défi du jour*, distinct du défi entre amis (AGD-31) comme demandé. Profil de départ
+     DÉTERMINISTE dérivé de la date (UTC, pour que tout le monde ait le même jour au même instant
+     réel) : un PRNG déterministe fait maison (mulberry32 + hash de date, `engine/dailyChallenge.js`)
+     remplace temporairement `Math.random()` le temps de l'appel à `generateChallengeDef()`
+     (réutilisée telle quelle, déjà partagée avec le défi entre amis -- déplacée dans
+     `engine/challenges.js` pour être accessible aux deux), puis restaure `Math.random` dans un
+     `finally` -- jamais de générateur déterministe qui fuiterait vers le reste du jeu. Meilleur
+     score du jour mémorisé localement (`hardwood_daily_v1`, écrase seulement si meilleur),
+     classement PERSONNEL (historique de tous les jours joués, pas de fusion multi-appareils
+     contrairement au défi entre amis) avec partage texte du score du jour.
+  3. *Écran "Ma progression"*, accessible depuis l'accueil. Carrières jouées (nouveau compteur
+     dédié dans `engine/badges.js` -- le Panthéon ne garde que les 12 meilleures, ne suffisait
+     pas pour un vrai total), meilleur score légende, badges débloqués/total, et des records
+     personnels tirés du Panthéon (plus longue carrière, pic OVR, titres/MVP en une carrière,
+     record pts/match, triple-doubles).
+  Rendu montré à l'utilisateur via le showcase avant livraison (écran badges à 30 entrées avec
+  barre de progression, écran de progression peuplé, lancement + historique du défi du jour).
+  **Vérifié directement** (harnais headless dédié, piloté au clic réel) : le point explicitement
+  demandé -- même date -> même profil -- confirmé bit à bit (nation, poste, style, TOUS les
+  attributs, potentiel/hype, ET la liste d'offres d'académie strictement identiques sur deux
+  appels indépendants pour la même date ; date différente -> profil différent ; `Math.random()`
+  confirmé restauré après l'appel, jamais figé pour le reste du jeu). Flux de jeu complet du défi
+  du jour vérifié de bout en bout (atterrissage -> mode de vie -> révélation avec attributs figés
+  -> académies figées -> carrière jouée -> historique avec score enregistré) sans crash.
+  `evaluateBadges()` confirmé sans erreur sur les 30 badges, y compris sur un joueur minimal
+  synthétique. Audit de non-régression : 0% crash sur 100+300+300+1000 carrières (plusieurs runs).
+  **Signal transitoire investigué avec rigueur** : les deux premiers runs à 300 carrières
+  affichaient un taux de titre élite bas (8%, 7%), sous la bande "normale" 12-16% -- plutôt que de
+  l'écarter par supposition, chaque diff a été relue ligne à ligne (aucun changement de code ne
+  touche la simulation pour une carrière normale : `challengeId`/`dailyDate` restent `null`, tous
+  les nouveaux branchements sont conditionnels dessus). Une tentative de vérification à 1000
+  carrières a d'abord buté sur une limite mémoire Node (`--max-old-space-size` par défaut) --
+  **confirmée PRÉ-EXISTANTE** en reproduisant le même plantage sur le dernier commit livré AVANT
+  ce chantier (`git stash` le temps du test), donc sans rapport avec ce lot. Relancée avec un tas
+  élargi (8 Go), 1000 carrières se sont déroulées sans un seul crash, avec un taux de titre élite
+  de **9.5%** -- dans la bande de bruit établie, confirmant que 7-8% n'était que le bruit
+  d'échantillonnage attendu à 300 carrières autour de cette vraie valeur.
+
 - [x] **AGD-32 — Lot de finitions visuelles** _(implémentée et vérifiée le 2026-07-27, aucun changement de gameplay)_
   Trois points :
   1. *Nom mal centré sur la carte à partager, pour de bon cette fois*. Cause racine trouvée :

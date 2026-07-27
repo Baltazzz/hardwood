@@ -9,8 +9,47 @@
    Forme : { [challengeId]: { def, results: [{name,score,tier,
    seasons,hof,date}, ...] } } -- results trié par score décroissant.
 ============================================================ */
+import { newPlayer, rollTalent } from './player.js';
+import { NATIONS } from '../data/nations.js';
+import { POSITIONS } from '../data/positions.js';
+import { STYLES } from '../data/styles.js';
+import { generateAcademyOffers } from './academies.js';
+import { genChallengeId } from './challengeCodec.js';
+
 const KEY = 'hardwood_challenges_v1';
 let mem = null;
+
+// Ne garde des offres d'académie que ce qui est réellement affiché/consommé (voir
+// renderAcademyChoice()/chooseAcademy() dans screens.js/season.js) -- un lien de défi n'a pas
+// besoin de porter les listes de prénoms de la nation ou les couleurs de club, inutiles ici et
+// qui alourdiraient le lien pour rien.
+function slimOffers(offers) {
+  return offers.map(o => ({
+    id: o.id, flag: o.flag, name: o.name, path: o.path,
+    club: { name: o.club.name, linkedClub: o.club.linkedClub || null, category: o.club.category || null, comment: o.club.comment || null },
+  }));
+}
+
+// Génère un profil de départ en réutilisant TELLES QUELLES les règles de génération normales
+// (rollTalent()/generateAcademyOffers()) sur un joueur "brouillon" jetable -- un défi doit être un
+// point de départ qu'une création de personnage normale aurait pu produire, jamais une distribution
+// à part. Purement engine (aucun DOM) : réutilisable à la fois par le défi entre amis (ui/challenge.js,
+// tirage libre) et le défi du jour (engine/dailyChallenge.js, RNG déterministe substituée le temps
+// de l'appel -- voir ce module pour le détail).
+export function generateChallengeDef() {
+  const scratch = newPlayer();
+  scratch.nation = NATIONS[Math.floor(Math.random() * NATIONS.length)];
+  scratch.pos = POSITIONS[Math.floor(Math.random() * POSITIONS.length)].id;
+  scratch.style = STYLES[Math.floor(Math.random() * STYLES.length)].id;
+  rollTalent(scratch);
+  const academyOffers = slimOffers(generateAcademyOffers(scratch.nation));
+  return {
+    id: genChallengeId(),
+    nationId: scratch.nation.id, pos: scratch.pos, style: scratch.style,
+    attrs: { ...scratch.attrs }, potential: scratch.potential, hype: scratch.hype,
+    academyOffers,
+  };
+}
 
 function load() {
   if (mem !== null) return mem;

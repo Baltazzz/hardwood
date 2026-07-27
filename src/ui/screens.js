@@ -12,7 +12,7 @@ import { catTag } from '../engine/events.js';
 import { pickClub, pickClubName, pickClubs, clubInfo } from '../engine/clubs.js';
 import { renderHUD, animateStats } from './hud.js';
 import { resetAccent } from '../engine/accent.js';
-import { renderHallOfFame, renderCareerCard, renderBadges } from './card.js';
+import { renderHallOfFame, renderCareerCard, renderBadges, renderProgress } from './card.js';
 import { renderTrophyCabinet, medalIcon } from './trophies.js';
 import { activeTags, renderTagChips, renderTraitUnlockCard } from '../engine/tags.js';
 import { pick, clamp, money, ordinal, ri } from '../engine/utils.js';
@@ -21,7 +21,8 @@ import { saveGame, loadGame, hasSavedGame, clearSavedGame } from '../engine/save
 import { trackEvent } from '../engine/analytics.js';
 import { reopenConsentBanner } from './consentBanner.js';
 import { addResult } from '../engine/challenges.js';
-import { startChallengeCreation, renderChallengeLeaderboard } from './challenge.js';
+import { recordDailyResult } from '../engine/dailyChallenge.js';
+import { startChallengeCreation, renderChallengeLeaderboard, startDailyChallenge, renderDailyLeaderboard } from './challenge.js';
 import { setInCareer } from './navbar.js';
 
 /* ============================================================
@@ -138,6 +139,8 @@ export function screenTitle(){
       <button class="btn ghost" id="hof">🏆 Panthéon</button>
       <button class="btn ghost" id="badges">🎖️ Badges</button>
       <button class="btn ghost" id="challengeCreate">🔗 Défi entre amis</button>
+      <button class="btn ghost" id="dailyChallenge">📅 Défi du jour</button>
+      <button class="btn ghost" id="progress">📊 Ma progression</button>
     </div>
     ${best?`<div class="best-chip">🏆 Meilleur score légende : <b>${best}</b></div>`:''}
     <div class="kbd"><img class="brand-mark-mini" src="/logo-mark.png" alt="" width="18" height="18">Écris ta légende, saison après saison · <a href="#" id="welcomeReopen" class="welcome-link">comment jouer ?</a></div>
@@ -159,6 +162,12 @@ export function screenTitle(){
   };
   document.getElementById('hof').onclick=()=>renderHallOfFame();
   document.getElementById('badges').onclick=()=>renderBadges();
+  document.getElementById('dailyChallenge').onclick=()=>{
+    if(hasSavedGame() && !confirm('Une carrière est en cours et sera définitivement écrasée si tu commences le défi du jour. Continuer ?')) return;
+    clearSavedGame();
+    startDailyChallenge();
+  };
+  document.getElementById('progress').onclick=()=>renderProgress();
   document.getElementById('welcomeReopen').onclick=(e)=>{ e.preventDefault(); screenWelcome(); };
   document.getElementById('cookieReopen').onclick=(e)=>{ e.preventDefault(); reopenConsentBanner(); };
 }
@@ -219,11 +228,11 @@ export function screenCreate(){
     bindOpts(LIFESTYLES,(l)=>{p.life=l.id;});
   }
   else if(p.step===4){ // scouting reveal + name
-    // Défi entre amis (voir ui/challenge.js) : attrs/potentiel/hype sont déjà figés par le défi
-    // (identiques pour tous les participants) -- ne JAMAIS les retirer via rollTalent(), qui les
-    // écraserait par un tirage frais. Seuls l'archétype de développement et le nom restent
-    // personnels, roulés/complétés normalement.
-    if(p.challengeId) rollArchetypeAndName(p); else rollTalent(p);
+    // Défi entre amis OU défi du jour (voir ui/challenge.js / engine/dailyChallenge.js) :
+    // attrs/potentiel/hype sont déjà figés par le défi (identiques pour tous les participants)
+    // -- ne JAMAIS les retirer via rollTalent(), qui les écraserait par un tirage frais. Seuls
+    // l'archétype de développement et le nom restent personnels, roulés/complétés normalement.
+    if(p.challengeId || p.dailyDate) rollArchetypeAndName(p); else rollTalent(p);
     const hypeStars = starStr(p.hype);
     const st=STYLES.find(x=>x.id===p.style);
     stage.innerHTML = wrapCreate(5,'Rapport de détection','Les recruteurs ont observé ton profil. Voici ce qu\'ils voient.',
@@ -260,10 +269,11 @@ function bindOpts(list,setter){
 }
 function wireNav(){
   const back=document.getElementById('backC'), next=document.getElementById('nextC');
-  // Défi entre amis (voir ui/challenge.js) : nation/poste/style sont figés par le défi, la
-  // création saute directement à l'étape 3 (mode de vie) -- "Retour" depuis là doit ramener à
-  // l'accueil, jamais à une étape 0-2 sans données valides pour ce joueur.
-  if(back) back.onclick=()=>{ if(G.step===0 || (G.challengeId && G.step===3)){screenTitle();return;} G.step--; screenCreate(); };
+  // Défi entre amis OU défi du jour (voir ui/challenge.js / engine/dailyChallenge.js) :
+  // nation/poste/style sont figés par le défi, la création saute directement à l'étape 3 (mode
+  // de vie) -- "Retour" depuis là doit ramener à l'accueil, jamais à une étape 0-2 sans données
+  // valides pour ce joueur.
+  if(back) back.onclick=()=>{ if(G.step===0 || ((G.challengeId||G.dailyDate) && G.step===3)){screenTitle();return;} G.step--; screenCreate(); };
   if(next) next.onclick=()=>{
     if(G.step===4){ const inp=document.getElementById('pname'); G.name=(inp.value.trim()||G.name); startCareer(); return; }
     G.step++; screenCreate();
@@ -860,7 +870,7 @@ export function endCareer(reason){
       tripleDoubles:p.tripleDoubles||0, accolades:{...A}, tags:activeTags(p).map(t=>t.id),
       headline:(quotes[0]?quotes[0][1]:''), nation:p.nation.name, hof:p.hof, date:Date.now() };
   p.cardRec=rec; p.endReason=reason;
-  trackEvent('career_end', { reason, tier, seasons: p.seasons.length, hof: p.hof, challenge: !!p.challengeId });
+  trackEvent('career_end', { reason, tier, seasons: p.seasons.length, hof: p.hof, challenge: !!p.challengeId, daily: !!p.dailyDate });
   if(!p.savedHOF){ p.savedHOF=true; hofAdd(rec); }
   // Badges transversaux (voir engine/badges.js) : évalués une seule fois, à la toute fin de la
   // carrière (p.cardRec/p.hof déjà posés juste au-dessus, dont certains badges dépendent).
@@ -875,6 +885,12 @@ export function endCareer(reason){
   if(p.challengeId && !p.savedChallengeResult){
     p.savedChallengeResult = true;
     addResult(p.challengeId, { challengeId:p.challengeId, name:p.name, score:legend, tier, seasons:p.seasons.length, hof:p.hof, date:Date.now(), mine:true });
+  }
+  // Défi du jour (voir engine/dailyChallenge.js) : distinct du défi entre amis -- son propre
+  // stockage, ne garde que le MEILLEUR score du jour, jamais un simple historique de tentatives.
+  if(p.dailyDate && !p.savedDailyResult){
+    p.savedDailyResult = true;
+    recordDailyResult(p.dailyDate, { date:p.dailyDate, name:p.name, score:legend, tier, seasons:p.seasons.length, hof:p.hof });
   }
 
   const tl = p.timeline.slice(-14);
@@ -933,6 +949,7 @@ export function endCareer(reason){
     <div style="margin-top:28px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
       <button class="btn" id="again">Nouvelle carrière</button>
       ${p.challengeId?`<button class="btn ghost" id="challengeCompare">🔗 Comparer avec mes amis</button>`:''}
+      ${p.dailyDate?`<button class="btn ghost" id="dailyCompare">📅 Mon historique quotidien</button>`:''}
       <button class="btn ghost" id="cardBtn">🖼️ Ma carte</button>
       <button class="btn ghost" id="hofView">🏆 Panthéon</button>
       <button class="btn ghost" id="badgesView">🎖️ Badges</button>
@@ -943,6 +960,8 @@ export function endCareer(reason){
   document.getElementById('again').onclick=()=>{ setG(newPlayer()); screenCreate(); };
   const challengeBtn=document.getElementById('challengeCompare');
   if(challengeBtn) challengeBtn.onclick=()=>renderChallengeLeaderboard(p.challengeId);
+  const dailyBtn=document.getElementById('dailyCompare');
+  if(dailyBtn) dailyBtn.onclick=()=>renderDailyLeaderboard();
   document.getElementById('cardBtn').onclick=()=>renderCareerCard(p.cardRec, ()=>endCareer(p.endReason));
   document.getElementById('hofView').onclick=()=>renderHallOfFame();
   document.getElementById('badgesView').onclick=()=>renderBadges();

@@ -9,47 +9,19 @@
    localStorage (voir engine/challenges.js), jamais de serveur.
 ============================================================ */
 import { G, setG } from '../engine/state.js';
-import { newPlayer, rollTalent, rollArchetypeAndName } from '../engine/player.js';
+import { newPlayer, rollArchetypeAndName } from '../engine/player.js';
 import { NATIONS } from '../data/nations.js';
 import { POSITIONS } from '../data/positions.js';
 import { STYLES } from '../data/styles.js';
-import { generateAcademyOffers } from '../engine/academies.js';
-import { genChallengeId, encodeChallengeDef, decodeChallengeDef, decodeResult, buildChallengeUrl, buildResultUrl } from '../engine/challengeCodec.js';
-import { ensureChallenge, getChallenge, addResult } from '../engine/challenges.js';
+import { encodeChallengeDef, decodeChallengeDef, decodeResult, buildChallengeUrl, buildResultUrl } from '../engine/challengeCodec.js';
+import { ensureChallenge, getChallenge, addResult, generateChallengeDef } from '../engine/challenges.js';
+import { generateDailyDef, getTodayDateStr, getDailyBest, allDailyResults } from '../engine/dailyChallenge.js';
 import { trackEvent } from '../engine/analytics.js';
 import { stage } from './dom.js';
 import { setInCareer } from './navbar.js';
 import { screenTitle, screenCreate } from './screens.js';
 
-// Ne garde des offres d'académie que ce qui est réellement affiché/consommé (voir
-// renderAcademyChoice()/chooseAcademy() dans screens.js/season.js) -- un lien de défi n'a pas
-// besoin de porter les listes de prénoms de la nation ou les couleurs de club, inutiles ici et
-// qui alourdiraient le lien pour rien.
-function slimOffers(offers) {
-  return offers.map(o => ({
-    id: o.id, flag: o.flag, name: o.name, path: o.path,
-    club: { name: o.club.name, linkedClub: o.club.linkedClub || null, category: o.club.category || null, comment: o.club.comment || null },
-  }));
-}
-
-// Génère un profil de départ en réutilisant TELLES QUELLES les règles de génération normales
-// (rollTalent()/generateAcademyOffers()) sur un joueur "brouillon" jetable -- un défi doit être un
-// point de départ qu'une création de personnage normale aurait pu produire, jamais une distribution
-// à part.
-function generateChallengeDef() {
-  const scratch = newPlayer();
-  scratch.nation = NATIONS[Math.floor(Math.random() * NATIONS.length)];
-  scratch.pos = POSITIONS[Math.floor(Math.random() * POSITIONS.length)].id;
-  scratch.style = STYLES[Math.floor(Math.random() * STYLES.length)].id;
-  rollTalent(scratch);
-  const academyOffers = slimOffers(generateAcademyOffers(scratch.nation));
-  return {
-    id: genChallengeId(),
-    nationId: scratch.nation.id, pos: scratch.pos, style: scratch.style,
-    attrs: { ...scratch.attrs }, potential: scratch.potential, hype: scratch.hype,
-    academyOffers,
-  };
-}
+export { generateChallengeDef };
 
 function nationOf(def) { return NATIONS.find(n => n.id === def.nationId) || NATIONS[0]; }
 function posOf(def) { return POSITIONS.find(x => x.id === def.pos) || POSITIONS[0]; }
@@ -207,4 +179,101 @@ export function handleIncomingLink() {
   addResult(res.challengeId, { ...res, mine: false });
   renderChallengeLeaderboard(res.challengeId);
   return true;
+}
+
+/* ============================================================
+   DÉFI DU JOUR — distinct du défi entre amis ci-dessus (voir
+   engine/dailyChallenge.js pour le détail du tirage déterministe).
+   Rendez-vous personnel : pas de lien à ouvrir, pas de classement
+   partagé -- un profil du jour, un historique de SES propres scores.
+============================================================ */
+function joinDaily(def) {
+  setG(newPlayer());
+  const p = G;
+  p.nation = nationOf(def);
+  p.pos = def.pos;
+  p.style = def.style;
+  p.attrs = { ...def.attrs };
+  p.potential = def.potential;
+  p.hype = def.hype;
+  p.dailyDate = def.date;
+  p.frozenAcademyOffers = def.academyOffers;
+  p.step = 3; // même raison qu'en défi entre amis : robuste à une sauvegarde pile sur l'atterrissage
+  renderDailyLanding(def);
+}
+
+// Point d'entrée depuis l'écran titre.
+export function startDailyChallenge() {
+  const def = generateDailyDef();
+  const best = getDailyBest(def.date);
+  setInCareer(false);
+  stage.innerHTML = `<div class="end" style="max-width:520px">
+    <div class="eyebrow" style="text-align:center">📅 Défi du jour</div>
+    <h2 style="text-align:center;font-size:24px;margin:6px 0 4px">${def.date}</h2>
+    <p class="body" style="text-align:center;color:var(--chalk-dim);font-size:13.5px;margin-bottom:14px">Le même profil de départ pour tout le monde aujourd'hui, sans exception -- calculé depuis la date, jamais deux fois pareil d'un jour à l'autre.</p>
+    ${profileSummary(def)}
+    ${best ? `<p class="body" style="text-align:center;color:var(--chalk-dim);font-size:13px;margin-top:14px">Ton meilleur score aujourd'hui : <b style="color:var(--mint)">${best.score}</b> (${best.tier})</p>` : ''}
+    <div style="margin-top:22px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn" id="playDaily">${best ? 'Retenter le défi du jour' : 'Jouer le défi du jour'}</button>
+      <button class="btn ghost" id="dailyHistory">📅 Mon historique</button>
+      <button class="btn ghost" id="dailyBack">Retour</button>
+    </div>
+  </div>`;
+  document.getElementById('playDaily').onclick = () => joinDaily(def);
+  document.getElementById('dailyHistory').onclick = () => renderDailyLeaderboard();
+  document.getElementById('dailyBack').onclick = () => screenTitle();
+}
+
+function renderDailyLanding(def) {
+  setInCareer(false);
+  stage.innerHTML = `<div class="end" style="max-width:520px">
+    <div class="eyebrow" style="text-align:center">📅 Défi du jour -- ${def.date}</div>
+    <h2 style="text-align:center;font-size:24px;margin:6px 0 4px">Départ imposé, carrière libre</h2>
+    <p class="body" style="text-align:center;color:var(--chalk-dim);font-size:13.5px;margin-bottom:14px">Le profil est identique pour tout le monde aujourd'hui. À partir de là, tes choix et ton aléatoire n'appartiennent qu'à toi.</p>
+    ${profileSummary(def)}
+    <div style="margin-top:22px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn" id="continueDaily">Continuer</button>
+      <button class="btn ghost" id="declineDaily">Plutôt une carrière libre</button>
+    </div>
+  </div>`;
+  document.getElementById('continueDaily').onclick = () => screenCreate();
+  document.getElementById('declineDaily').onclick = () => { setG(newPlayer()); screenTitle(); };
+}
+
+// Classement PERSONNEL (pas de fusion multi-appareils, contrairement au défi entre amis) : ton
+// historique de scores quotidiens, un par jour joué.
+export function renderDailyLeaderboard() {
+  setInCareer(false);
+  const results = allDailyResults();
+  const today = getTodayDateStr();
+  const todayResult = results.find(r => r.date === today);
+  const rows = results.length ? results.map((r, i) => `
+    <div class="hof-row${i === 0 ? ' top' : ''}">
+      <span class="rk">${r.date}</span>
+      <span class="hof-main">
+        <span class="hof-name">${r.name}${r.hof ? ' 🏛️' : ''}</span>
+        <span class="hof-sub">${r.tier} · ${r.seasons} saisons</span>
+      </span>
+      <span class="hof-score"><b>${r.score}</b><small>score</small></span>
+    </div>`).join('')
+    : `<p class="body" style="text-align:center;color:var(--chalk-dim);margin:20px 0">Aucun défi du jour joué pour l'instant.</p>`;
+  stage.innerHTML = `<div class="end" style="text-align:left">
+    <div class="eyebrow" style="text-align:center">📅 Mon historique quotidien</div>
+    <h2 style="text-align:center;font-size:24px;margin:6px 0 14px">${results.length} jour${results.length>1?'s':''} joué${results.length>1?'s':''}</h2>
+    <div class="hof-list" style="max-width:560px;margin:0 auto">${rows}</div>
+    <div style="margin-top:24px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      ${todayResult ? `<button class="btn ghost sm" id="shareDaily">📋 Partager mon score du jour</button>` : ''}
+      <button class="btn" id="dailyLeaderboardBack">Retour à l'accueil</button>
+    </div>
+    <p class="body" id="dailyCopyHint" style="text-align:center;color:var(--chalk-dim);font-size:12px;margin-top:10px;display:none">Copié !</p>
+  </div>`;
+  const shareBtn = document.getElementById('shareDaily');
+  if (shareBtn) shareBtn.onclick = () => {
+    const text = `🏀 Défi du jour HARDWOOD (${todayResult.date}) : ${todayResult.score} de score légende (${todayResult.tier}) avec ${todayResult.name} !`;
+    const hint = document.getElementById('dailyCopyHint');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => { hint.style.display = 'block'; }).catch(() => {});
+    }
+  };
+  document.getElementById('dailyLeaderboardBack').onclick = () => screenTitle();
 }

@@ -703,7 +703,13 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
 .trophy-cabinet.compact .trophy-label{display:none}
 
 /* ---------- Badges (hauts faits transversaux, voir engine/badges.js + card.js renderBadges()) :
-   obtenus et à décrocher affichés dans la même grille, seul l'état visuel change. ---------- */
+   débloqués et à décrocher désormais en deux sections distinctes (vitrine de trophées d'abord,
+   objectifs ensuite), avec une barre de progression globale -- ~30 badges à présenter, l'écran
+   doit donner une vraie sensation d'avancement, pas juste une grille plate. ---------- */
+.badge-progress-bar{height:10px;border-radius:6px;background:var(--panel2);border:1px solid var(--line);overflow:hidden}
+.badge-progress-bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--orange),var(--mint));border-radius:6px;transition:width .5s ease}
+.badge-section-h{font-family:'Bricolage Grotesque';font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  font-size:12px;color:var(--chalk-dim);text-align:center;margin:24px 0 12px}
 .badge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:12px;max-width:780px;margin:0 auto}
 .badge-tile{background:var(--panel);border:1px solid rgba(220,201,175,.55);border-radius:16px;padding:16px 12px 14px;
   display:flex;flex-direction:column;align-items:center;text-align:center;gap:5px;transition:.16s;box-shadow:var(--tile-shadow)}

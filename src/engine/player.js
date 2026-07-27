@@ -33,7 +33,12 @@ export function newPlayer(){
     // frozenAcademyOffers porte la liste d'offres D'ACADÉMIE figée à la création du défi (mêmes
     // offres pour tous les participants) -- consommée une seule fois par startCareer() puis
     // inutile, jamais resauvegardée.
-    challengeId:null, frozenAcademyOffers:null
+    challengeId:null, frozenAcademyOffers:null,
+    // Défi du jour (voir engine/dailyChallenge.js) : distinct du défi entre amis -- date (YYYY-MM-DD)
+    // du défi en cours, null hors défi du jour. Le profil figé lui-même réutilise
+    // p.attrs/p.pos/p.style/p.nation/p.potential/p.hype/p.frozenAcademyOffers, exactement comme
+    // le défi entre amis (même mécanique de départ figé, seule la provenance du profil diffère).
+    dailyDate:null
   };
 }
 

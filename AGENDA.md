@@ -26,7 +26,66 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
   **Critère** : le handle fourni apparaît accolé à la signature (ex. « Créé par Gaspard G ·
   @handle »), vérifié par rendu direct de l'écran titre.
 
+- [ ] **AGD-30 — Confirmer le mapping de l'événement "ouverture d'un défi"**
+  Ajouté au registre le 2026-07-27, en creusant AGD-29. La demande listait le suivi d'un
+  événement "ouverture d'un défi" parmi les événements analytics, mais aucune fonctionnalité
+  nommée "défi" n'existe dans HARDWOOD. Rattaché par défaut à l'ouverture de l'écran **Badges**
+  (`renderBadges()` dans `card.js`, événement `challenge_open`), les hauts faits/objectifs à
+  décrocher étant l'équivalent le plus proche d'un "défi" dans le jeu actuel.
+  **Critère** : confirmation de l'utilisateur que ce mapping est correct, ou pointeur vers
+  l'écran/la fonctionnalité réellement visée si différent -- l'événement `challenge_open` sera
+  déplacé en conséquence.
+
 ## Coché récemment
+
+- [x] **AGD-29 — Mesure d'audience (Google Analytics 4) sous consentement** _(implémentée et vérifiée le 2026-07-27)_
+  Identifiant de mesure `G-X2Z51SZ8XK`. Point impératif de la demande (le script Google ne peut se
+  charger qu'après consentement, aucune requête vers Google sans accord) traité comme la
+  contrainte structurante du chantier, pas un détail :
+  1. *Script JAMAIS en dur*. `index.html` ne contient AUCUNE référence à Google/gtag -- vérifié
+     par grep sur le HTML buildé, l'identifiant de mesure n'existe que dans le bundle JS,
+     derrière la logique de consentement (`engine/analytics.js`). Le tag `<script src=".../
+     gtag/js?id=...">` n'est construit et injecté dans le DOM QUE par `injectScript()`, appelée
+     UNIQUEMENT depuis `acceptAnalytics()` (clic "Accepter") ou `initAnalytics()` si un
+     consentement `'accepted'` a déjà été mémorisé lors d'une visite précédente -- jamais par
+     défaut au chargement de page.
+  2. *Bandeau cookies* (`ui/consentBanner.js`). Bande fine en pied d'écran (pas un overlay plein
+     écran), posée en dehors de `#stage` (même convention que le bouton accueil) donc survit à
+     tout changement d'écran. Deux boutons de poids visuel équivalent ("Refuser" en style ghost,
+     "Accepter" en style plein -- mise en avant habituelle du bouton principal, jamais un choix
+     rendu difficile à trouver ou à lire), palette Terre battue (`--panel`/`--chalk-dim`), aucune
+     case pré-cochée. N'apparaît que si aucun choix n'a encore été mémorisé.
+  3. *Mémorisation + respect du refus* (`engine/consent.js`, stockage `hardwood_consent_v1`, même
+     pattern robuste que le Panthéon/les badges -- localStorage + repli mémoire, jamais d'erreur).
+     Un choix déjà fait n'est jamais redemandé à la visite suivante. Un refus est respecté même
+     en cas de revirement APRÈS un accord dans la même session (lien de réouverture) : le flag
+     d'opt-out officiel `ga-disable-G-X2Z51SZ8XK` est posé, respecté par gtag.js même si le
+     script est déjà chargé en mémoire -- vérifié qu'aucun événement ne part plus après un
+     "Refuser" tardif.
+  4. *Lien de réouverture*. « Gérer les cookies » en pied de l'écran titre, à côté de la
+     signature auteur (`.credit`) -- rouvre le bandeau à tout moment, sans avoir à vider le
+     stockage du navigateur soi-même.
+  5. *Événements suivis, uniquement si consentement accordé* (`trackEvent()`, revérifié à CHAQUE
+     appel, pas seulement au chargement) : `career_start` (`startCareer()`, season.js),
+     `career_end` (`endCareer()`, screens.js, avec raison/palier/nb saisons), `card_share` (clic
+     "Télécharger l'image" sur la carte de carrière, card.js). **Interprétation à confirmer avec
+     l'utilisateur** : "ouverture d'un défi" n'a pas d'équivalent exact dans le jeu actuel (aucune
+     fonctionnalité nommée "défi") -- rattaché à l'ouverture de l'écran **Badges** (`renderBadges()`,
+     card.js, événement `challenge_open`), les hauts faits/objectifs à décrocher étant l'écran le
+     plus proche d'un "défi" dans HARDWOOD. À corriger si une autre interprétation était visée.
+  Vérifié directement (pas seulement en lecture de code), via un harnais headless dédié piloté
+  au clic réel sur les boutons (7 scénarios, un process node isolé par scénario pour éviter tout
+  état de module qui fuiterait entre "rechargements" simulés) : **sans consentement, aucun script
+  Google n'apparaît dans le DOM et `window.gtag` reste indéfini, y compris après un appel à
+  `trackEvent()`** ; après clic "Accepter", le script est bien injecté et `trackEvent()`
+  déclenche réellement `gtag('event', ...)` ; après clic "Refuser", toujours aucun script ;
+  revirement accepter->refuser en cours de session confirmé respecté ; visiteur revenant ayant
+  déjà accepté/refusé ne revoit pas le bandeau et le script se (re)charge ou reste absent en
+  conséquence ; lien "Gérer les cookies" confirmé présent et fonctionnel. Build de production
+  vérifié : `index.html` buildé ne contient aucune référence Google (grep négatif), l'identifiant
+  n'existe que dans le bundle JS. Audit de non-régression à 100 carrières : 0% crash (les appels
+  `trackEvent()` ajoutés dans le flux de jeu ne perturbent jamais la progression, no-op silencieux
+  tant qu'aucun consentement n'est accordé).
 
 - [x] **AGD-25 — PWA réellement installable** _(implémentée et vérifiée le 2026-07-27)_
   Comblait un manque réel confirmé par l'audit de conformité (session précédente) : AGD-14

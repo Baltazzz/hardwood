@@ -3,10 +3,20 @@ import { G } from './engine/state.js';
 import { saveGame } from './engine/savegame.js';
 import { mountHomeButton } from './ui/navbar.js';
 import { screenTitle } from './ui/screens.js';
+import { mountConsentBanner } from './ui/consentBanner.js';
+import { initAnalytics } from './engine/analytics.js';
 
 // Bouton accueil persistant, accessible en permanence pendant une carrière (voir ui/navbar.js) --
 // posé une seule fois ici, en dehors de #stage, sa visibilité est ensuite pilotée par chaque écran.
 mountHomeButton(() => screenTitle());
+
+// Mesure d'audience (Google Analytics 4) sous consentement -- voir engine/consent.js/analytics.js.
+// initAnalytics() ne charge RIEN par défaut : le script gtag.js n'est injecté que si un
+// consentement 'accepted' a déjà été mémorisé lors d'une visite précédente. mountConsentBanner()
+// n'affiche le bandeau que si aucun choix n'a encore été fait -- jamais les deux en même temps
+// pour un même visiteur (soit le choix est déjà connu et appliqué, soit on le lui demande).
+initAnalytics();
+mountConsentBanner();
 
 // Sauvegarde automatique (voir engine/savegame.js) : toute la logique de jeu est pilotée par des
 // clics (aucune mutation d'état hors interaction), donc un simple écouteur global en phase de

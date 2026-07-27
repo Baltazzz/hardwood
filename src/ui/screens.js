@@ -18,6 +18,8 @@ import { activeTags, renderTagChips, renderTraitUnlockCard } from '../engine/tag
 import { pick, clamp, money, ordinal, ri } from '../engine/utils.js';
 import { stage } from './dom.js';
 import { saveGame, loadGame, hasSavedGame, clearSavedGame } from '../engine/savegame.js';
+import { trackEvent } from '../engine/analytics.js';
+import { reopenConsentBanner } from './consentBanner.js';
 import { setInCareer } from './navbar.js';
 
 /* ============================================================
@@ -136,7 +138,7 @@ export function screenTitle(){
     </div>
     ${best?`<div class="best-chip">🏆 Meilleur score légende : <b>${best}</b></div>`:''}
     <div class="kbd"><img class="brand-mark-mini" src="/logo-mark.png" alt="" width="18" height="18">Écris ta légende, saison après saison · <a href="#" id="welcomeReopen" class="welcome-link">comment jouer ?</a></div>
-    <div class="credit">Créé par Gaspard G</div>
+    <div class="credit">Créé par Gaspard G · <a href="#" id="cookieReopen" class="credit-link">Gérer les cookies</a></div>
   </div>`;
   document.getElementById('go').onclick=()=>{
     // Garde-fou : commencer une nouvelle carrière écraserait la sauvegarde en cours -- confirmation
@@ -150,6 +152,7 @@ export function screenTitle(){
   document.getElementById('hof').onclick=()=>renderHallOfFame();
   document.getElementById('badges').onclick=()=>renderBadges();
   document.getElementById('welcomeReopen').onclick=(e)=>{ e.preventDefault(); screenWelcome(); };
+  document.getElementById('cookieReopen').onclick=(e)=>{ e.preventDefault(); reopenConsentBanner(); };
 }
 
 // Reprise de partie (voir engine/savegame.js) : recharge l'état complet, puis ré-affiche EXACTEMENT
@@ -842,6 +845,7 @@ export function endCareer(reason){
       tripleDoubles:p.tripleDoubles||0, accolades:{...A}, tags:activeTags(p).map(t=>t.id),
       headline:(quotes[0]?quotes[0][1]:''), nation:p.nation.name, hof:p.hof, date:Date.now() };
   p.cardRec=rec; p.endReason=reason;
+  trackEvent('career_end', { reason, tier, seasons: p.seasons.length, hof: p.hof });
   if(!p.savedHOF){ p.savedHOF=true; hofAdd(rec); }
   // Badges transversaux (voir engine/badges.js) : évalués une seule fois, à la toute fin de la
   // carrière (p.cardRec/p.hof déjà posés juste au-dessus, dont certains badges dépendent).

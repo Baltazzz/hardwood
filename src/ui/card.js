@@ -5,6 +5,7 @@ import { screenTitle, sparkline } from './screens.js';
 import { renderTrophyCabinet } from './trophies.js';
 import { tagsByIds, renderTagChips } from '../engine/tags.js';
 import { setInCareer } from './navbar.js';
+import { trackEvent } from '../engine/analytics.js';
 
 /* ============================================================
    PANTHÉON (rendu)
@@ -54,6 +55,10 @@ function badgeTile(b, entry){
 }
 export function renderBadges(){
   setInCareer(false);
+  // "Ouverture d'un défi" (voir AGENDA.md) : les badges sont les hauts faits/objectifs à
+  // décrocher du jeu -- l'équivalent le plus proche d'un "défi" dans HARDWOOD, aucun autre écran
+  // ne portant ce nom. Suivi à l'ouverture de l'écran, pas au déblocage d'un badge précis.
+  trackEvent('challenge_open');
   const state = badgesState();
   const unlockedCount = Object.keys(state.unlocked).length;
   const tiles = BADGES.map(b=>badgeTile(b, state.unlocked[b.id])).join('');
@@ -120,6 +125,7 @@ export function renderCareerCard(r, back){
   if(document.fonts && document.fonts.ready){ document.fonts.ready.then(draw); setTimeout(draw,300); } else draw();
   document.getElementById('cardBack').onclick=()=>(back||screenTitle)();
   document.getElementById('dlCard').onclick=()=>{
+    trackEvent('card_share');
     try{ const a=document.createElement('a'); a.download='hardwood_'+(r.name||'carriere').replace(/\s+/g,'_')+'.png'; a.href=canvas.toDataURL('image/png'); document.body.appendChild(a); a.click(); a.remove(); }
     catch(e){ document.getElementById('dlHint').style.display='block'; }
   };

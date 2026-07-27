@@ -14,6 +14,7 @@ import { applyTagEffects, checkTraitUnlocks, OPPOSES } from './tags.js';
 import { applyFatigue, applyRecovery, applySoftStatDrift } from './vitals.js';
 import { simulateStandings, simulatePlayoffs, checkClubMovement, clubPercentile, simulateNbaStandings, simulateNbaPlayoffs } from './competition.js';
 import { renderEvent, showDeltaFlash, renderSeasonResult, renderMoveScreen, renderAcademyChoice, renderNationalResult, renderForcedRetirement, endCareer } from '../ui/screens.js';
+import { trackEvent } from './analytics.js';
 
 // Tournoi de zone continentale de la sélection nationale, par continent réel (p.nation.continent
 // -- voir data/nations.js). L'Océanie rejoint la zone Asie (FIBA Asia Cup, comme dans la réalité
@@ -30,6 +31,7 @@ const ZONE_TOURN = { europe:'EuroBasket', namerica:'Coupe des Amériques', samer
 export function startCareer(){
   const p=G;
   p.age=16; p.year=1;
+  trackEvent('career_start');
   const offers = generateAcademyOffers(p.nation);
   renderAcademyChoice(offers);
 }

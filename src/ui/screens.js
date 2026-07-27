@@ -263,8 +263,11 @@ export function renderAcademyChoice(offers){
   // compris un éventuel second appel -- toujours la dernière liste réellement affichée.
   p.pendingAcademyOffers = offers;
   const cards = offers.map((n,i)=>{
-    const club = pickClub('academy', n.id);
-    const fl = flavor(club);
+    // Le club affiché ici EST le club de départ réel si cette offre est retenue (voir
+    // generateAcademyOffers() dans engine/academies.js -- tiré une seule fois, attaché à
+    // l'offre, jamais re-tiré au clic).
+    const club = n.club;
+    const fl = academyFlavor(club);
     const abroad = n.id !== p.nation.id;
     return `<button class="opt academy-opt" data-i="${i}">
       <div class="flag">${n.flag}</div><div class="ttl">${club.name}</div>
@@ -513,6 +516,18 @@ function renderCompetitionContext(s, lg, p){
 function flavor(clubInfoObj){
   if(!clubInfoObj || !clubInfoObj.category) return null;
   return `${clubInfoObj.category}${clubInfoObj.comment ? ' · '+clubInfoObj.comment : ''}`;
+}
+// Variante pour les académies : deux formats coexistent dans clubData.js selon la source Excel
+// d'origine -- FR/DE/GR/RS/SI/US portent `linkedClub` (club pro affilié) + `category:null`,
+// AU porte un `category` classique (ex. "Talent Factory") sans `linkedClub`. On assemble tout
+// ce qui est disponible plutôt que de supposer un seul format.
+function academyFlavor(clubInfoObj){
+  if(!clubInfoObj) return null;
+  const bits = [];
+  if(clubInfoObj.linkedClub) bits.push(`Filière ${clubInfoObj.linkedClub}`);
+  if(clubInfoObj.category) bits.push(clubInfoObj.category);
+  if(clubInfoObj.comment) bits.push(clubInfoObj.comment);
+  return bits.length ? bits.join(' · ') : null;
 }
 
 /* Écran de transfert / promotion / draft avec choix */

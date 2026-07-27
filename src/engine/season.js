@@ -41,12 +41,17 @@ export function chooseAcademy(academyNation){
   p.playNation = academyNation.id;
   p.startPath = academyNation.path;
   p.league = p.startPath==='us' ? 'college' : 'academy';
-  p.club = pickClubName(p.league, playCountry(p));
+  // Le club de départ est EXACTEMENT celui affiché sur la carte choisie (voir
+  // generateAcademyOffers() dans engine/academies.js) -- jamais un second tirage indépendant
+  // dans le pays de l'académie, qui déconnectait le club réellement affecté de celui montré au
+  // joueur au moment du choix.
+  p.club = academyNation.club.name;
   p.contractY = 2; p.salary = p.league==='college'?0:ri(20,60);
   const abroad = academyNation.id !== p.nation.id;
+  const linkedNote = academyNation.club.linkedClub ? ` · filière ${academyNation.club.linkedClub}` : '';
   pushTL(abroad
-    ? `Quitte ${p.nation.name} pour l'académie de <b>${p.club}</b> (${academyNation.name}, ${LEAGUES[p.league].short}).`
-    : `Débuts à <b>${p.club}</b> (${LEAGUES[p.league].short}).`);
+    ? `Quitte ${p.nation.name} pour l'académie de <b>${p.club}</b> (${academyNation.name}, ${LEAGUES[p.league].short}${linkedNote}).`
+    : `Débuts à <b>${p.club}</b> (${LEAGUES[p.league].short}${linkedNote}).`);
   beginSeason();
 }
 export function pushTL(html){ G.timeline.push({age:G.age, html}); }

@@ -27,6 +27,10 @@ function hashStrength(name) {
 }
 function clubStrength(tierKey, clubName, clubDataEntry) {
   if (clubDataEntry && typeof clubDataEntry.strength === 'number') return clubDataEntry.strength;
+  // Les académies FR/DE/GR/RS/SI/US (source Excel dédiée) notent le niveau via `rating`, pas
+  // `strength` (voir clubData.js) -- sans ce repli, le niveau réel d'une académie n'avait
+  // aucune influence sur la force d'équipe/percentile de départ, malgré la donnée disponible.
+  if (clubDataEntry && typeof clubDataEntry.rating === 'number') return clubDataEntry.rating;
   if (tierKey === 'nba' && NBA_STRENGTH[clubName] != null) return NBA_STRENGTH[clubName];
   if (tierKey === 'euro' && EURO_STRENGTH[clubName] != null) return EURO_STRENGTH[clubName];
   return hashStrength(clubName);

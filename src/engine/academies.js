@@ -3,6 +3,7 @@
 // nationale") -- la nationalité n'a plus aucune influence sur le point de départ sportif.
 import { NATIONS } from '../data/nations.js';
 import { pick, ri } from './utils.js';
+import { pickClub } from './clubs.js';
 
 // Nations dont clubData.js modélise vraiment un centre de formation (donc une vraie voie de
 // départ jouable : collège US, académie EU, académie AU) -- les seules pouvant apparaître comme
@@ -61,5 +62,10 @@ export function generateAcademyOffers(playerNation){
   } else {
     fillRandomly();
   }
-  return offers;
+  // Le vrai club d'académie (nom, niveau, prestige, club pro lié -- voir clubData.js) est tiré
+  // UNE FOIS ici et attaché à l'offre elle-même : c'est ce même objet, jamais un second tirage
+  // indépendant, qui doit être affiché sur la carte de choix ET devenir le point de départ réel
+  // si l'offre est retenue (voir chooseAcademy() dans season.js). Copie superficielle de la
+  // nation (jamais de mutation des objets partagés de NATIONS).
+  return offers.map(n => ({ ...n, club: pickClub('academy', n.id) }));
 }

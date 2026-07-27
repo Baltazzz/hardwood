@@ -20,6 +20,59 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Coché récemment
 
+- [x] **AGD-22 — Correction du rattachement d'académie** _(implémenté et vérifié le 2026-07-27)_
+  Bug de fond identifié : le choix d'académie fonctionnait à l'écran (5-6 offres affichées avec
+  un vrai nom de club) mais ne déterminait jamais réellement le point de départ. Deux tirages
+  indépendants et non synchronisés : `renderAcademyChoice()` (`screens.js`) appelait
+  `pickClub('academy', n.id)` à l'AFFICHAGE pour montrer une carte, puis `chooseAcademy()`
+  (`season.js`) appelait un second `pickClubName(p.league, playCountry(p))` complètement
+  indépendant au clic -- le joueur démarrait donc systématiquement dans un club différent (tiré
+  au hasard dans le même pays) de celui affiché sur la carte qu'il avait choisie.
+  Corrigé en 3 points :
+  1. *Un seul tirage, attaché à l'offre*. `generateAcademyOffers()` (`engine/academies.js`) tire
+     désormais le vrai club UNE FOIS à la génération des offres et l'attache à chaque offre
+     (`{...nation, club}`, copie superficielle -- jamais de mutation des objets partagés de
+     `NATIONS`). `renderAcademyChoice()` affiche ce club déjà tiré (plus de second tirage à
+     l'affichage) ; `chooseAcademy()` fixe `p.club` sur ce même objet au clic. Le club affiché
+     EST désormais, à coup sûr, le club de départ réel.
+  2. *Niveau et prestige réellement pris en compte*. Bug annexe trouvé en creusant : les
+     académies FR/DE/GR/RS/SI/US (source Excel dédiée) notent leur niveau via un champ `rating`
+     (et non `strength` comme les autres paliers) -- `clubStrength()` (`engine/competition.js`)
+     ne reconnaissait que `strength`, ignorait donc silencieusement `rating` et retombait sur une
+     force dérivée du nom (`hashStrength`, 58-95 pseudo-aléatoire stable), sans aucun rapport
+     avec le niveau réel défini dans l'Excel. Corrigé par un repli explicite sur `rating` quand
+     `strength` est absent -- le niveau/prestige réel de l'académie choisie influence désormais
+     vraiment le classement/percentile de la première saison.
+  3. *Club pro lié, jusque-là invisible*. Le champ `linkedClub` (ex. `Cholet Formation` ->
+     `linkedClub:'Cholet'`) existait dans les données depuis leur ingestion mais n'était utilisé
+     nulle part dans le jeu (recherche exhaustive : zéro référence hors `clubData.js`) --
+     `flavor()` (`screens.js`) exigeait un `category` non nul pour afficher quoi que ce soit, or
+     les académies à `linkedClub` ont justement `category:null`, donc leur texte de couleur
+     (`comment`, ex. "Référence nationale") n'apparaissait JAMAIS non plus, en plus du club lié.
+     Nouvelle fonction `academyFlavor()`, tolérante aux deux formats de source coexistant dans
+     `clubData.js` (FR/DE/GR/RS/SI/US : `linkedClub`+`category:null` ; AU : `category` classique
+     sans `linkedClub`) : affiche désormais "Filière {club pro}" quand disponible, sinon la
+     catégorie, plus le commentaire dans tous les cas. Répercuté aussi dans le message de début
+     de carrière (`pushTL` dans `chooseAcademy()`).
+  Rendu montré à l'utilisateur via le showcase avant livraison (carte d'académie avec le texte
+  "Filière {club}" désormais visible).
+  **Vérifié directement, pas seulement par audit statistique** : script dédié pilotant le DOM
+  (lecture du nom affiché sur CHAQUE carte avant clic, comparaison stricte avec `p.club` après
+  clic) sur 8 cas -- France/USA/Australie (voie locale garantie), **Sénégal/Chine/RD Congo
+  (aucune voie locale dans les données, tirage d'académie 100% aléatoire -- le cas explicitement
+  demandé)**, plus 2 nations aléatoires : **8/8 correspondance exacte**, aucun repli "Club
+  libre". Exemples observés : Sénégal -> "Perth Wildcats Academy" (Australie, affiché ET réel),
+  Chine -> "Spartak Subotica Youth" (Serbie, affiché ET réel), RD Congo -> "FMP Youth Program"
+  (Serbie, affiché ET réel) -- confirme qu'un prospect africain/asiatique atterrit bien sur
+  l'académie précise qu'il a choisie, à l'étranger, jamais sur un club générique de son pays.
+  Audit de non-régression (deux runs indépendants de 300 carrières, ce changement touchant le
+  calcul de force de club dès la première saison) : 0% crash, 0% repli "Club libre", 0 violation
+  d'intégrité des événements uniques, 0 incohérence de format NBA sur les deux runs. Taux de
+  titre élite 16% puis 10.7% sur les deux runs -- moyenne ~13.4%, dans la bande "normale" déjà
+  établie (12-16%), confirmé stable (pas de dérive causée par la prise en compte du vrai niveau
+  d'académie). Corrélation force de club -> résultat toujours monotone après le changement
+  (vérifiée sur les deux runs, NBA et toutes ligues).
+
 - [x] **AGD-21 — Lot sélection nationale, temps fort de carrière** _(implémenté et vérifié le 2026-07-27)_
   Demande en 4 points. Vérification directe du code AVANT tout ajout (conformément à la
   consigne de ne jamais se fier à une impression) : 3 des 4 points étaient déjà entièrement

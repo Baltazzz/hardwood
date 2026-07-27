@@ -5,6 +5,8 @@ import { LATE_EVENTS } from '../data/events/late.js';
 import { ATTRIBUTE_EVENTS } from '../data/events/attributes.js';
 import { THREAD_EVENTS } from '../data/events/threads.js';
 import { NBA_FLAVOR_EVENTS } from '../data/events/nba_flavor.js';
+import { WELLBEING_EVENTS } from '../data/events/wellbeing.js';
+import { TRAITS_PAYOFF_EVENTS } from '../data/events/traits_payoff.js';
 import { careerPhase } from '../data/events/_helpers.js';
 
 /* ============================================================
@@ -27,6 +29,8 @@ export const EVENTS = [
   ...ATTRIBUTE_EVENTS,
   ...THREAD_EVENTS,
   ...NBA_FLAVOR_EVENTS,
+  ...WELLBEING_EVENTS,
+  ...TRAITS_PAYOFF_EVENTS,
   ...SHARED_EVENTS,
 ];
 
@@ -38,7 +42,7 @@ const CAT_TAG={injury:'🩹 Pépin physique',training:'🎯 Travail',form:'🧊 
   social:'📱 Réseaux',contract:'📝 Contrat',media:'🎤 Médias',business:'💼 Business',
   locker:'🚪 Vestiaire',nation:'🌍 Sélection',youth:'🌱 Jeunesse',lifestyle:'🌙 Hygiène de vie',nightlife:'🌙 Sortie',
   clutch:'🎯 Money-time',defense:'🛡️ Stop décisif',duel:'⚔️ Duel',finals:'🏆 Finale',presser:'🎤 Conférence',
-  review:'🔍 Vidéo-arbitrage',
+  review:'🔍 Vidéo-arbitrage', morale:'🌧️ Moral en berne', fame:'🌟 Notoriété',
   payoff:'⭐ Aura',wakeup:'🌙 Coup de semonce',chem:'🤝 Vestiaire',
   allstar:'🌟 All-Star',modern:'📺 Débat ligue',superteam:'🌟 Super-groupe',homecoming:'🏠 Retour aux sources',interview:'🎤 Grand entretien'};
 

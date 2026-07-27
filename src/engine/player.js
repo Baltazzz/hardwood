@@ -19,7 +19,7 @@ export function newPlayer(){
     natCap:0, retired:false, hof:false,
     nbaStruggle:0, draftPos:null, draftEntered:false, declined:{}, firstNbaAge:null,
     pendingFA:false, riskMod:1, swanOffered:false, earlyBet:false,
-    flags:{}, flagYear:{}, clutch:0,
+    flags:{}, flagYear:{}, clutch:0, lastActiveTagIds:[],
     // Anti-répétition des événements : evStats[id] = {count, lastYear, streak}. eventHistory
     // sert uniquement à l'audit de diversité (liste plate des ids tirés, dans l'ordre).
     evStats:{}, eventHistory:[], clubTenure:0,

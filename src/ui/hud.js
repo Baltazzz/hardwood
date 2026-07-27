@@ -5,6 +5,7 @@ import { ovr, roleOf } from '../engine/player.js';
 import { clamp, money, reducedMotion, easeOut, clubInitials } from '../engine/utils.js';
 import { applyAccent, emblemColors, textColorOn, hexToRgba } from '../engine/accent.js';
 import { activeTags, renderTagChips } from '../engine/tags.js';
+import { statContextLine } from '../engine/vitals.js';
 import { stage } from './dom.js';
 
 /* ============================================================
@@ -67,6 +68,9 @@ export function renderHUD(mode='club'){
   const accentHex = applyAccent(p, mode);
   const { primary: emblemPrimary, secondary: emblemSecondary } = emblemColors(p, mode);
   const ficheOpen = getFicheOpen();
+  // Ligne de contexte (voir statContextLine() dans engine/vitals.js) : commente la stat molle
+  // la plus notable du moment (une seule, pour rester lisible), rien si tout reste dans la norme.
+  const statCtx = statContextLine(p);
   const attrsHtml = ATTRS.map(a=>`
     <div class="attr"><div class="arow"><span class="an">${a.name}</span>
       <span class="av" id="av-${a.id}">${p.attrs[a.id]}</span></div>
@@ -95,6 +99,7 @@ export function renderHUD(mode='club'){
         ${meter('Moral',p.morale,'linear-gradient(90deg,var(--mint-soft),var(--mint))')}
         ${meter('Forme',p.fitness,'linear-gradient(90deg,var(--chalk-dim),var(--chalk))')}
       </div>
+      ${statCtx?`<div class="stat-context">${statCtx}</div>`:''}
     </div>
     <div class="card">
       <button type="button" id="ficheToggle" class="eyebrow fiche-toggle" aria-expanded="${ficheOpen}" aria-controls="ficheBody">

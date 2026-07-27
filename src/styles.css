@@ -312,12 +312,30 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
 .pc-club{padding-left:8px;margin-top:16px;display:flex;align-items:center;gap:12px}
 .pc-club .cn{font-family:'Bricolage Grotesque';font-weight:700;font-size:16px}
 .pc-club .cl{font-size:11px;color:var(--chalk-dim);font-family:'Bricolage Grotesque';font-weight:500;letter-spacing:.08em}
-/* Étiquettes de joueur (voir engine/tags.js) : quelques puces au plus à la fois par conception
-   (seuil + estompage), jamais une collection à faire défiler. */
+/* Traits de joueur (voir engine/tags.js) : quelques puces au plus à la fois par conception
+   (seuil + estompage + contradiction), jamais une collection à faire défiler. */
 .tag-chips{padding-left:8px;margin-top:10px;display:flex;flex-wrap:wrap;gap:6px}
 .tag-chips.center{padding-left:0;justify-content:center;margin:14px auto 0}
 .tag-chip{display:inline-flex;align-items:center;gap:5px;font-family:'Bricolage Grotesque';font-weight:600;
   font-size:11px;letter-spacing:.02em;padding:3px 9px;border-radius:20px;border:1px solid;background:var(--panel2)}
+/* Ligne de contexte (voir statContextLine() dans engine/vitals.js) : commente la stat molle la
+   plus notable du moment, une seule à la fois -- sobre, pas de nouvelle jauge ni de nouvel écran. */
+.stat-context{padding-left:8px;margin-top:8px;font-family:'Bricolage Grotesque';font-size:12px;
+  font-style:italic;color:var(--chalk-dim)}
+/* Carte "Trait débloqué" (voir renderTraitUnlockCard() dans engine/tags.js, consommée par
+   showDeltaFlash() dans screens.js) : même mise en scène d'entrée que .nation-announce/
+   .grand-moment-announce (réutilisation assumée, cohérence sur toute l'appli), posée dans le même
+   bandeau que le retour de choix habituel -- jamais un écran/clic supplémentaire. */
+.trait-unlock{display:flex;gap:12px;align-items:center;background:var(--data-wash);border:1px solid var(--data-line);
+  border-radius:12px;padding:12px 14px;margin-bottom:12px;animation:natAnnounce .5s cubic-bezier(.2,.7,.2,1) both}
+.trait-unlock .tu-icon{flex:none;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  border:2px solid;background:var(--panel)}
+.trait-unlock .tu-eyebrow{font-family:'Bricolage Grotesque';font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  font-size:10px;color:var(--orange-soft)}
+.trait-unlock .tu-name{font-family:'Bricolage Grotesque';font-weight:700;font-size:16px;color:var(--chalk);margin-top:1px}
+.trait-unlock .tu-procon{display:flex;gap:12px;flex-wrap:wrap;margin-top:3px;font-family:'Bricolage Grotesque';font-size:11.5px}
+.trait-unlock .tu-pro{color:var(--up)}
+.trait-unlock .tu-con{color:var(--down)}
 /* Jauges = donnée qui évolue : sortent du fond "décor" du profil pour former leur propre panneau
    (lavis or discret, bordure -- data), au lieu de flotter directement sur le lavis terracotta
    du reste de la tuile. Concrétise la séparation décor/donnée demandée y compris à l'intérieur
@@ -381,6 +399,10 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
   box-shadow:0 8px 18px rgba(36,24,19,.12), inset 0 1px 0 rgba(255,255,255,.5)}
 .choice .pip{width:9px;height:9px;border-radius:50%;background:var(--orange);margin-top:7px;flex:none;box-shadow:0 0 10px rgba(224,86,45,.45)}
 .choice .ct{font-family:'Bricolage Grotesque';font-weight:600;font-size:16.5px;line-height:1.25}
+/* Indice discret de stat molle en lien avec un choix (voir statHintDots() dans screens.js) :
+   simples puces de couleur, jamais de texte -- l'info complète reste dans le hint existant. */
+.stat-hints{display:inline-flex;gap:3px;margin-left:7px;vertical-align:middle}
+.stat-hint{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--dot-color)}
 .choice .cd{font-family:'Bricolage Grotesque';font-size:12.5px;color:var(--chalk-dim);margin-top:2px}
 .choice:focus-visible{outline:3px solid var(--mint);outline-offset:2px}
 

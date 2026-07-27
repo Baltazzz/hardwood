@@ -1,11 +1,15 @@
-// Étiquettes de joueur : transforment les flags narratifs (déjà posés par les choix d'événements,
-// voir applyChoice() dans season.js) en identité visible et vivante. Une étiquette s'active à
-// partir d'un seuil de flag, puis s'ESTOMPE si elle n'est plus nourrie par de nouveaux choix
-// pendant plusieurs saisons (p.flagYear, voir applyChoice()) : elle peut donc se perdre, pas
-// seulement s'accumuler. Chaque étiquette porte un effet mesuré et volontairement modeste
-// (appliqué une fois par saison dans postSeason()) : jamais de quoi peser sur les probabilités
-// de récompense (MVP/titre/HOF), seulement une légère inflexion de trajectoire de stats molles,
-// cohérente avec ce que l'étiquette raconte.
+// Traits de joueur (anciennement "étiquettes" en interne -- même système, présentation
+// gratifiante) : transforment les flags narratifs (déjà posés par les choix d'événements, voir
+// applyChoice() dans season.js) en identité visible et vivante. Un trait s'active à partir d'un
+// seuil de flag -- moment marqué par une animation "Trait débloqué" (voir renderTraitUnlockCard()
+// plus bas, consommée par showDeltaFlash() dans screens.js) -- puis s'ESTOMPE s'il n'est plus
+// nourri par de nouveaux choix pendant plusieurs saisons (p.flagYear), ou se perd plus vite si un
+// choix ultérieur le CONTREDIT directement (voir OPPOSES ci-dessous, appliqué dans applyChoice()) :
+// il peut donc bien se perdre, pas seulement s'accumuler. Chaque trait porte un vrai couple
+// avantage/inconvénient, mécanique (effect(), appliqué une fois par saison dans postSeason()) et
+// pas seulement narratif -- volontairement modeste, jamais de quoi peser sur les probabilités de
+// récompense (MVP/titre/HOF), seulement une inflexion de trajectoire de stats molles cohérente
+// avec ce que le trait raconte.
 import { clamp } from './utils.js';
 
 const DECAY_SEASONS = 5;
@@ -15,15 +19,15 @@ export const TAG_DEFS = [
   { id: 'clutch', label: 'Clutch', registry: 'jeu', flag: 'clutchHero', threshold: 2,
     pro: 'Sang-froid reconnu dans les money-times', con: 'La pression retombe toujours sur toi',
     icon: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18ZM12 7v5l3.5 2',
-    effect: (p) => { p.reputation = clamp(p.reputation + 1, 0, 100); } },
+    effect: (p) => { p.reputation = clamp(p.reputation + 1, 0, 100); p.fitness = clamp(p.fitness - 1, 0, 100); } },
   { id: 'lockdown', label: 'Verrou défensif', registry: 'jeu', flag: 'lockdown', threshold: 2,
     pro: 'Le staff te confie les missions les plus dures', con: 'Toujours sur le pire attaquant adverse',
     icon: 'M6 11V8a6 6 0 0 1 12 0v3M5 11h14v9H5z',
-    effect: (p) => { p.coach = clamp(p.coach + 1, 0, 100); } },
+    effect: (p) => { p.coach = clamp(p.coach + 1, 0, 100); p.fitness = clamp(p.fitness - 1, 0, 100); } },
   { id: 'fragile', label: 'Fragile', registry: 'jeu', flag: 'injuryProne', threshold: 2,
     pro: 'Le staff médical veille sur toi en priorité', con: 'Le corps qui lâche plus souvent qu\'à ton tour',
     icon: 'M12 21C7 17 3 13.5 3 9.5A4.5 4.5 0 0 1 12 8a4.5 4.5 0 0 1 9 1.5C21 13.5 17 17 12 21ZM9 12h2l1-2 2 4 1-2h2',
-    effect: (p) => { p.fitness = clamp(p.fitness - 1, 0, 100); } },
+    effect: (p) => { p.coach = clamp(p.coach + 1, 0, 100); p.fitness = clamp(p.fitness - 1, 0, 100); } },
   // ---- Mental / vestiaire ----
   { id: 'leader', label: 'Leader', registry: 'mental', flag: 'leaderRep', threshold: 2,
     pro: 'Le vestiaire se range naturellement derrière toi', con: 'Chaque défaite retombe un peu plus sur toi',
@@ -53,9 +57,16 @@ export const TAG_DEFS = [
     effect: (p) => { p.money = p.money + 15; p.popularity = clamp(p.popularity - 1, 0, 100); } },
 ];
 
-// Une étiquette est active si son flag a atteint le seuil ET a été nourri il y a moins de
-// DECAY_SEASONS saisons -- silencieuse plus longtemps que ça, elle s'efface (peut donc bien
-// "se perdre", pas seulement s'accumuler).
+// Paires de traits directement OPPOSÉS (par nom de FLAG, pas d'id -- c'est sur ce nom que
+// applyChoice() opère) : un choix qui nourrit l'un affaiblit activement l'autre s'il est en
+// cours, plutôt que d'attendre la seule décroissance par oubli (DECAY_SEASONS). Un trait peut
+// donc bien se perdre parce que la carrière prend le contrepied de ce qu'il racontait, pas
+// seulement parce qu'il n'a plus été nourri depuis longtemps.
+export const OPPOSES = { spender: 'saver', saver: 'spender', controversial: 'mediaFriend', mediaFriend: 'controversial' };
+
+// Un trait est actif si son flag a atteint le seuil ET a été nourri il y a moins de
+// DECAY_SEASONS saisons -- silencieux plus longtemps que ça, il s'efface (peut donc bien "se
+// perdre", pas seulement s'accumuler).
 export function activeTags(p) {
   const flags = p.flags || {}, flagYear = p.flagYear || {}, year = p.year || 0;
   return TAG_DEFS.filter(t => {
@@ -66,6 +77,24 @@ export function activeTags(p) {
   });
 }
 
+// Un trait actif donné, par id -- pour gater/pondérer des événements sur la présence d'un trait
+// (voir data/events/traits_payoff.js), la version "influence certains choix et certaines
+// situations" demandée en plus du simple affichage.
+export function hasTrait(p, id) { return activeTags(p).some(t => t.id === id); }
+
+// Détecte les traits qui viennent de passer actifs POUR LA PREMIÈRE FOIS depuis le dernier
+// contrôle (comparé à p.lastActiveTagIds, mis à jour ici) -- appelé depuis applyChoice() juste
+// après application des effets d'un choix, pour déclencher l'animation "Trait débloqué"
+// (renderTraitUnlockCard(), voir showDeltaFlash() dans screens.js) au moment précis où ça arrive,
+// pas seulement de façon rétrospective à l'affichage.
+export function checkTraitUnlocks(p) {
+  const current = new Set(activeTags(p).map(t => t.id));
+  const before = new Set(p.lastActiveTagIds || []);
+  const newly = [...current].filter(id => !before.has(id));
+  p.lastActiveTagIds = [...current];
+  return newly.map(id => TAG_DEFS.find(t => t.id === id)).filter(Boolean);
+}
+
 // Reconstitue les définitions complètes à partir d'une liste d'id sauvegardés (voir rec.tags
 // dans endCareer()/hof.js) -- une carrière du Panthéon ne garde que les id, pas les objets.
 export function tagsByIds(ids) {
@@ -73,7 +102,7 @@ export function tagsByIds(ids) {
   return TAG_DEFS.filter(t => ids.includes(t.id));
 }
 
-// Effet de saison, appelé une fois par postSeason() pour chaque étiquette active. Volontairement
+// Effet de saison, appelé une fois par postSeason() pour chaque trait actif. Volontairement
 // petit et borné (voir commentaire d'en-tête) : jamais appliqué aux attributs ni aux probabilités
 // de récompense, seulement à des jauges molles déjà sujettes à bien plus de variance via les
 // choix d'événements eux-mêmes.
@@ -86,8 +115,22 @@ function tagIcon(t) {
 }
 const REGISTRY_COLOR = { jeu: 'var(--orange-soft)', mental: 'var(--plum)', media: 'var(--mint-soft)', finance: 'var(--chalk-dim)' };
 
-// Puces d'étiquette, pour la fiche HUD en cours de carrière et le récap de fin de carrière.
+// Puces de trait, pour la fiche HUD en cours de carrière et le récap de fin de carrière.
 export function renderTagChips(tags, extraClass = '') {
   if (!tags || !tags.length) return '';
   return `<div class="tag-chips${extraClass ? ' ' + extraClass : ''}">${tags.map(t => `<span class="tag-chip" style="color:${REGISTRY_COLOR[t.registry]};border-color:${REGISTRY_COLOR[t.registry]}" title="${t.pro} · ${t.con}">${tagIcon(t)}${t.label}</span>`).join('')}</div>`;
+}
+
+// Carte "Trait débloqué" (voir showDeltaFlash() dans screens.js, checkTraitUnlocks() ci-dessus) :
+// icône dans la couleur de son registre + nom + le vrai couple avantage/inconvénient, jamais
+// juste le bonus -- le joueur voit tout de suite ce qu'il gagne ET ce qu'il concède.
+export function renderTraitUnlockCard(t) {
+  return `<div class="trait-unlock">
+    <div class="tu-icon" style="color:${REGISTRY_COLOR[t.registry]};border-color:${REGISTRY_COLOR[t.registry]}">${tagIcon(t)}</div>
+    <div class="tu-body">
+      <div class="tu-eyebrow">🔓 Trait débloqué</div>
+      <div class="tu-name">${t.label}</div>
+      <div class="tu-procon"><span class="tu-pro">+ ${t.pro}</span><span class="tu-con">− ${t.con}</span></div>
+    </div>
+  </div>`;
 }

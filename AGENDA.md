@@ -20,6 +20,67 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Coché récemment
 
+- [x] **AGD-19 — Rendre les stats et les traits vivants** _(implémenté et vérifié le 2026-07-27)_
+  Deux chantiers liés (les stats molles doivent se sentir à l'écran, pas seulement tourner en
+  coulisses) :
+  1. *Stats molles vivantes*. Nouveau module `engine/vitals.js`. La forme (fitness) ne récupérait
+     avant ce lot qu'à la hausse en début de saison (+8 à +20, plancher 30) sans aucun coût réel
+     lié à la charge de jeu -- elle plafonnait donc quasiment tout le temps près de 100,
+     spécialement en milieu/fin de carrière (le bug signalé). Remplacé par une vraie fatigue :
+     `applyFatigue()` (fin de saison, dans `postSeason()`) draine la forme proportionnellement à
+     la charge RÉELLE encaissée (minutes x proportion de matchs joués, ramené à la référence d'un
+     titulaire à plein temps ; blessure = facture alourdie) ; `applyRecovery()` (début de saison)
+     ne restaure plus qu'une récupération modeste et de moins en moins efficace avec l'âge. Moral/
+     popularité/médias reçoivent une dérive douce vers une base neutre à chaque intersaison
+     (`applySoftStatDrift()`) pour ne plus seulement monter au fil des choix narratifs -- les
+     médias suivent une base DYNAMIQUE (notoriété réelle : popularité x0.6 + réputation x0.4,
+     pas une base fixe, qui laissait la jauge quasi immobile à l'essai, écart-type 2.2 seulement).
+     Lisibilité sans complexité ajoutée, comme demandé : ligne de contexte sous les jauges du HUD
+     qui commente la stat la plus notable du moment (`statContextLine()`, une seule à la fois --
+     "Corps à plat...", "Vestiaire tendu...", etc.) ; puce discrète sur un choix d'événement dont
+     l'effet touche une des 4 stats molles (`statHintDots()` dans `screens.js`) ; 4 nouveaux
+     événements de réaction à un seuil marquant (`data/events/wellbeing.js` : crise de forme,
+     coup de mou, explosion de popularité, surexposition médiatique).
+     **Rééquilibrage nécessaire en session** : le premier calage (forme moyenne ~49, très
+     dispersée) a fait chuter le taux de titre élite à 6-8%, sous la bande établie -- la
+     sensibilité de `form` à la forme dans `simulateSeason()` (coefficient 0.85) supposait une
+     forme quasi toujours proche de 100 ; avec la forme redevenue réellement volatile, cette
+     pente donnait un `form` moyen très inférieur à avant, ce qui écrasait la production ET,
+     via `growthFactor` (`applyAging()`), la progression d'attributs sur toute la carrière.
+     Corrigé en réduisant la sensibilité de `form` à la forme (0.85 -> 0.4, base 0.15 -> 0.6) :
+     la jauge affichée reste très vivante, sa traduction mécanique reste contenue.
+  2. *Traits visibles et animés*. Unifie le système d'étiquettes déjà en place (`engine/tags.js`,
+     4 registres jeu/mental/média/finance, déjà avec seuil + décroissance + couple avantage/
+     inconvénient) plutôt que d'en créer un second. Ajouts : `checkTraitUnlocks()` détecte le
+     moment précis où un trait franchit son seuil (comparaison avec `p.lastActiveTagIds`),
+     déclenchant une animation "Trait débloqué" (`renderTraitUnlockCard()`, même mise en scène
+     d'entrée que `.nation-announce`/`.grand-moment-announce` -- réutilisation assumée) dans le
+     même bandeau que le retour de choix habituel, jamais un écran/clic supplémentaire. Un trait
+     peut désormais se perdre parce qu'un choix suivant le CONTREDIT directement, pas seulement
+     par oubli : table `OPPOSES` (bling/saver, sulfureux/chouchou des médias), un flag qui nourrit
+     l'un affaiblit activement l'autre s'il est en cours. Trois traits (clutch/verrou défensif/
+     fragile) qui n'avaient qu'un effet mécanique à sens unique malgré un couple avantage/
+     inconvénient affiché ont été corrigés pour vraiment coûter quelque chose (fitness-1 à chaque
+     fois, cohérent avec leur "con"). Effet durable sur la suite de la carrière : 4 nouveaux
+     événements gatés sur un trait ACTIF (`data/events/traits_payoff.js`, via `hasTrait()`, pas le
+     compteur de flag brut -- un trait perdu ne rouvre plus ces situations) : offre
+     d'investissement réservée aux Économes, pression de train de vie pour les Bling, brassard
+     officiel pour les Leaders, crise médiatique récurrente pour les Sulfureux.
+  Rendu montré à l'utilisateur via le showcase avant livraison (ligne de contexte + puce de choix,
+  animation "Trait débloqué", 4 nouveaux événements de seuil).
+  Vérifié (300 carrières) : 0% crash, 0% repli "Club libre", 0 violation d'intégrité des
+  événements uniques, 0 incohérence de format NBA. **Taux de titre élite 15.7%** -- dans la bande
+  "normale" déjà établie (12-16%), confirmé après le rééquilibrage. **Dispersion des stats
+  molles (6697 instantanés de fin de saison)** : forme moyenne 52.5 (écart-type 29.2, min 0, max
+  100, seulement 11.2% des saisons quasi au plafond -- contre quasiment 100% avant ce lot) ;
+  moral moyenne 78.1 (écart-type 17.5) ; popularité moyenne 44.5 (écart-type 22.5) ; médias
+  moyenne 41.1 (écart-type 15.3, contre 2.2 à l'essai initial avec une base fixe). **Sobriété des
+  traits** : 0.3 trait actif en moyenne simultanément, 97.3% des instantanés à 0 ou 1 trait, 4
+  traits actifs en même temps observés seulement 2 fois sur 6697 -- reste bien "quelques traits à
+  la fois". Les 8 nouveaux événements confirmés reachable sur un run dédié de 200 carrières
+  (`fitness_crisis` 97x, `bling_lifestyle_pressure` 25x, `saver_investment_offer` 28x,
+  `media_saturation` 9x après ajustement de seuil -- 0x à l'essai initial, trop haut --, etc.).
+
 - [x] **AGD-18 — Ajustement dominante Charlotte/Utah + re-vérification AGD-06** _(implémenté et vérifié le 2026-07-27)_
   Deux points, le premier déjà satisfait avant cette session (re-vérifié plutôt que refait) :
   1. *AGD-06 (animations des moments forts côté club)* : déjà implémenté et coché lors d'un

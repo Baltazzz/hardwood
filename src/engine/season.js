@@ -10,7 +10,8 @@ import { EVENTS, careerPhase } from './events.js';
 import { pickClubName, clubInfo } from './clubs.js';
 import { generateAcademyOffers } from './academies.js';
 import { rnd, ri, pick, clamp, round, jit, capitalize, money } from './utils.js';
-import { applyTagEffects } from './tags.js';
+import { applyTagEffects, checkTraitUnlocks, OPPOSES } from './tags.js';
+import { applyFatigue, applyRecovery, applySoftStatDrift } from './vitals.js';
 import { simulateStandings, simulatePlayoffs, checkClubMovement, clubPercentile, simulateNbaStandings, simulateNbaPlayoffs } from './competition.js';
 import { renderEvent, showDeltaFlash, renderSeasonResult, renderMoveScreen, renderAcademyChoice, renderNationalResult, endCareer } from '../ui/screens.js';
 
@@ -65,10 +66,11 @@ export function beginSeason(){
   // seulement l'écran de résultat final. Figée dès le départ pour éviter qu'un petit
   // mouvement de réputation en cours de saison ne fasse changer le thème en plein milieu.
   p.seasonMods.natWindow = p.reputation>=45 && p.year%2===0;
-  // recharge de forme en intersaison : de moins en moins efficace avec l'âge, la forme
-  // s'use sur la durée d'une carrière plutôt que de repartir à l'identique chaque année
-  const ageWear = clamp((p.age-27)*0.6, 0, 10);
-  p.fitness = clamp(p.fitness + clamp(ri(8,20)-ageWear, 3, 20), 30, 100);
+  // Récupération d'intersaison (voir engine/vitals.js) : modeste et de moins en moins
+  // efficace avec l'âge -- la fatigue accumulée (drainée en fin de saison précédente dans
+  // postSeason(), proportionnellement à la charge réellement encaissée) ne s'efface plus
+  // systématiquement, la forme peut donc réellement rester basse plusieurs saisons de suite.
+  applyRecovery(p);
   // 2 événements narratifs par saison : moins de choix, mais plus de poids
   const n = 2;
   p.curEvents = drawEvents(n);
@@ -148,14 +150,21 @@ export function applyChoice(choice, ctx){
     // ("tir de la gagne pour le titre"), son issue doit déterminer le vrai résultat de la
     // saison — pas une simple couleur narrative découplée du palmarès (voir simulateSeason).
     if(k==='forceFinals'){ p.seasonMods.forceFinals=eff[k]; continue; }
-    // p.flagYear alimente le système d'étiquettes de joueur (voir engine/tags.js) : une
-    // étiquette s'estompe si son flag n'a plus été nourri depuis plusieurs saisons. flag accepte
-    // une chaîne (cas courant) ou un tableau, pour les choix qui nourrissent deux récits à la fois
-    // (ex. devenir leader du vestiaire = à la fois mentorLegacy et leaderRep).
+    // p.flagYear alimente le système de traits de joueur (voir engine/tags.js) : un trait
+    // s'estompe si son flag n'a plus été nourri depuis plusieurs saisons. flag accepte une
+    // chaîne (cas courant) ou un tableau, pour les choix qui nourrissent deux récits à la fois
+    // (ex. devenir leader du vestiaire = à la fois mentorLegacy et leaderRep). Un flag qui
+    // s'oppose directement à un autre (voir OPPOSES) affaiblit ce dernier au lieu d'attendre sa
+    // seule décroissance par oubli -- un trait peut donc se perdre parce que la carrière prend
+    // le contrepied de ce qu'il racontait, pas seulement par manque d'usage.
     if(k==='flag'){
       const names = Array.isArray(eff[k]) ? eff[k] : [eff[k]];
       p.flagYear=p.flagYear||{};
-      names.forEach(name=>{ p.flags[name]=(p.flags[name]||0)+1; p.flagYear[name]=p.year; });
+      names.forEach(name=>{
+        p.flags[name]=(p.flags[name]||0)+1; p.flagYear[name]=p.year;
+        const opp = OPPOSES[name];
+        if(opp && p.flags[opp]>0) p.flags[opp] = p.flags[opp]-1;
+      });
       continue;
     }
     if(k==='clutch'){ p.clutch=(p.clutch||0)+eff[k]; continue; }
@@ -171,8 +180,11 @@ export function applyChoice(choice, ctx){
     else if(k in p){ const jv=jit(eff[k]); p[k]=clamp(p[k]+jv,0,100); deltas.push({k:capitalize(k),v:jv}); }
   }
   if(choice.tl) pushTL(typeof choice.tl==='function'?choice.tl(ctx):choice.tl);
-  // petit retour visuel via bandeau
-  showDeltaFlash(choice.outcome?(typeof choice.outcome==='function'?choice.outcome(ctx):choice.outcome):null, deltas);
+  // Détecte un éventuel trait qui vient de passer actif suite à CE choix (voir
+  // checkTraitUnlocks() dans engine/tags.js) : déclenche l'animation "Trait débloqué" dans le
+  // même bandeau que le retour visuel habituel, au moment précis où ça arrive.
+  const newTraits = checkTraitUnlocks(p);
+  showDeltaFlash(choice.outcome?(typeof choice.outcome==='function'?choice.outcome(ctx):choice.outcome):null, deltas, newTraits);
   p.evIndex++;
 }
 
@@ -237,7 +249,13 @@ export function simulateSeason(){
   // poussent plus tôt sur le terrain — ne concerne qu'une frange infime de la population.
   if(p.age<=20 && p.potential>=95 && p.devArchetype==='precocious'){ minutes += ri(4,7); }
   minutes = clamp(minutes, 3, 36);
-  const form = clamp((p.fitness/100)*0.85 + 0.15 + (p.morale-50)/130, 0.6, 1.2); // le moral pèse nettement plus qu'avant
+  // Sensibilité à la forme volontairement réduite (0.85 -> 0.5, base 0.15 -> 0.5) depuis que la
+  // forme oscille vraiment (voir engine/vitals.js -- fatigue réelle, moyenne carrière ~50 au
+  // lieu de ~100 quasi systématique avant ce lot) : la jauge affichée doit vraiment bouger pour
+  // se sentir vivante, mais sa traduction mécanique en production/progression reste contenue --
+  // sous-caler cette sensibilité aurait fait chuter tout l'équilibrage des récompenses (vérifié
+  // à l'audit : titre élite tombé à 6% avec la seule ancienne pente, hors bande établie).
+  const form = clamp((p.fitness/100)*0.4 + 0.6 + (p.morale-50)/130, 0.6, 1.2); // le moral pèse nettement plus qu'avant
   // L'argent accumulé finance un meilleur suivi médical : réduit (dans une mesure raisonnable)
   // le temps perdu à cause des blessures de la saison.
   const medicalCare = clamp(1 - Math.min(p.money,3000)/3000*0.25, 0.75, 1);
@@ -469,7 +487,14 @@ export function postSeason(){
   // transfert suit dans la foulée) — sert de garde-fou de cohérence pour les événements de statut
   // "acquis" (leader du vestiaire, etc.) qui ne doivent pas sortir dès la signature.
   p.clubTenure = (p.clubTenure||0) + 1;
-  // Effets mesurés des étiquettes de joueur actives (voir engine/tags.js) : volontairement
+  // Fatigue réelle + dérive des stats molles vers une base neutre (voir engine/vitals.js) :
+  // la forme encaisse le coût de la saison qui vient de se jouer (minutes + matchs, blessure),
+  // moral/popularité/médias reviennent doucement vers un point neutre plutôt que de ne monter
+  // qu'un sens. Avant applyTagEffects/applyAging pour que les effets de traits et la
+  // progression de la saison suivante voient déjà ces jauges à jour.
+  applyFatigue(p);
+  applySoftStatDrift(p);
+  // Effets mesurés des traits de joueur actifs (voir engine/tags.js) : volontairement
   // petits, jamais sur les attributs ni les probabilités de récompense.
   applyTagEffects(p);
   // --- progression / déclin ---

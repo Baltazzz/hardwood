@@ -14,7 +14,7 @@ import { renderHUD, animateStats } from './hud.js';
 import { resetAccent } from '../engine/accent.js';
 import { renderHallOfFame, renderCareerCard, renderBadges } from './card.js';
 import { renderTrophyCabinet, medalIcon } from './trophies.js';
-import { activeTags, renderTagChips } from '../engine/tags.js';
+import { activeTags, renderTagChips, renderTraitUnlockCard } from '../engine/tags.js';
 import { pick, clamp, money, ordinal, ri } from '../engine/utils.js';
 import { stage } from './dom.js';
 
@@ -254,6 +254,24 @@ function starStr(n){ // n 1..5
   let s=''; for(let i=1;i<=5;i++){ s+= starSvg(i<=n); } return s;
 }
 
+// Indice discret de stat molle affectée par un choix (voir demande "rendre les stats vivantes
+// lisibles") : n'introspecte que les effets en objet PLAIN (la majorité des choix) -- les effets
+// en fonction (résolution aléatoire/actionRoll) restent silencieux ici, ce indice est du "best
+// effort", pas une garantie universelle. Au plus 2 puces, pour rester discret.
+const STAT_HINT_META = {
+  fitness: { label:'Forme', color:'var(--chalk-dim)' },
+  morale: { label:'Moral', color:'var(--mint)' },
+  popularity: { label:'Popularité', color:'var(--orange)' },
+  media: { label:'Médias', color:'var(--plum)' },
+};
+function statHintDots(effect){
+  if(typeof effect !== 'object' || effect===null) return '';
+  const keys = Object.keys(STAT_HINT_META).filter(k=>k in effect);
+  if(!keys.length) return '';
+  return `<span class="stat-hints">${keys.slice(0,2).map(k=>
+    `<span class="stat-hint" style="--dot-color:${STAT_HINT_META[k].color}" title="Affecte : ${STAT_HINT_META[k].label}"></span>`).join('')}</span>`;
+}
+
 /* ---- Rendu d'un événement ---- */
 export function renderEvent(ev){
   const p=G, lg=LEAGUES[p.league];
@@ -285,21 +303,27 @@ export function renderEvent(ev){
     <div class="body">${body}</div>
     <div class="choices">${choices.map((c,i)=>`
       <button class="choice" data-i="${i}"><span class="pip"></span>
-        <span><span class="ct">${c.label}</span>${c.hint?`<span class="cd">${c.hint}</span>`:''}</span></button>`).join('')}
+        <span><span class="ct">${c.label}${statHintDots(c.effect)}</span>${c.hint?`<span class="cd">${c.hint}</span>`:''}</span></button>`).join('')}
     </div></div>`;
   stage.querySelectorAll('.choice').forEach(el=>{
     el.onclick=()=>{ const c=choices[+el.dataset.i]; applyChoice(c,ctx); };
   });
 }
-export function showDeltaFlash(outcome, deltas){
+export function showDeltaFlash(outcome, deltas, newTraits){
   const mini = deltas.filter(d=>d.v!==0).map(d=>{
     if(d.money) return `<span>${d.k} <b class="${d.v<0?'dn':''}">${d.v>0?'+':''}${money(Math.abs(d.v)).replace(' €','')}</b></span>`;
     const cls = d.v<0?'dn':''; const sign=d.v>0?'+':'';
     return `<span>${d.k} <b class="${cls}">${sign}${d.v}</b></span>`;
   }).join('');
+  // Traits nouvellement débloqués par CE choix (voir checkTraitUnlocks() dans engine/tags.js) :
+  // mis en avant AVANT le reste du bandeau, mise en scène marquante (icône, couple avantage/
+  // inconvénient, entrée animée -- voir .trait-unlock dans styles.css), mais toujours dans le
+  // même bandeau/même clic "Suite" que d'habitude pour ne jamais casser le rythme.
+  const traitsHtml = (newTraits && newTraits.length) ? newTraits.map(renderTraitUnlockCard).join('') : '';
   const card=document.createElement('div');
   card.className='card'; card.style.marginTop='12px'; card.style.borderLeft='3px solid var(--orange)';
-  card.innerHTML = `${outcome?`<div class="body" style="font-size:14.5px">${outcome}</div>`:''}
+  card.innerHTML = `${traitsHtml}
+    ${outcome?`<div class="body" style="font-size:14.5px">${outcome}</div>`:''}
     ${mini?`<div class="inline-mini">${mini}</div>`:''}
     <div style="text-align:right;margin-top:14px"><button class="btn sm" id="contBtn">Suite</button></div>`;
   stage.querySelector('.event').replaceWith(card);

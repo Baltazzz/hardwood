@@ -18,7 +18,7 @@ function pickRandomEl(list) {
 }
 function clickId(document, id) { document.getElementById(id).click(); }
 
-function driveOneCareer(document, errors, state) {
+function driveOneCareer(document, errors, state, activeTags) {
   const errorsBefore = errors.length;
   for (let step = 0; step < 4; step++) {
     pickRandomEl(document.querySelectorAll('.opt')).click();
@@ -28,6 +28,10 @@ function driveOneCareer(document, errors, state) {
   pickRandomEl(document.querySelectorAll('.academy-opt')).click();
 
   let arrivalPath = null, reachedNBA = false;
+  // Instantané des stats molles (voir engine/vitals.js) + nombre de traits actifs (voir
+  // engine/tags.js) à chaque fin de saison réellement vécue -- sert à vérifier que la forme
+  // n'est plus collée à 100 et que les traits restent sobres (sections j/k plus bas).
+  const vitals = [];
   for (let i = 0; i < 1200; i++) {
     if (errors.length > errorsBefore) return { crashed: true };
     if (document.getElementById('again')) break;
@@ -42,7 +46,11 @@ function driveOneCareer(document, errors, state) {
       else if (h2.includes('fenêtre') && h2.includes('NBA')) candidate = 'nbaWindow';
       else if (h2.includes("t'appelle")) candidate = 'nbaSwan';
     }
-    if (document.getElementById('afterSeason')) clickId(document, 'afterSeason');
+    if (document.getElementById('afterSeason')) {
+      const p = state.G;
+      vitals.push({ fitness: p.fitness, morale: p.morale, popularity: p.popularity, media: p.media, activeTraits: activeTags(p).length });
+      clickId(document, 'afterSeason');
+    }
     else if (document.getElementById('natContinue')) clickId(document, 'natContinue');
     else if (document.querySelector('.choice')) {
       pickRandomEl(document.querySelectorAll('.choice')).click();
@@ -88,6 +96,7 @@ function driveOneCareer(document, errors, state) {
     tags: rec.tags || [],
     nbaSeasons,
     allSeasons,
+    vitals,
   };
   clickId(document, 'again');
   return result;
@@ -115,6 +124,7 @@ async function main() {
   const state = await import('../src/engine/state.js');
   const player = await import('../src/engine/player.js');
   const { EVENTS } = await import('../src/engine/events.js');
+  const { activeTags } = await import('../src/engine/tags.js');
 
   screens.screenTitle();
   document.getElementById('go').click();
@@ -124,7 +134,7 @@ async function main() {
 
   for (let i = 0; i < N; i++) {
     let r;
-    try { r = driveOneCareer(document, errors, state); }
+    try { r = driveOneCareer(document, errors, state, activeTags); }
     catch (e) { r = { crashed: true }; }
     if (r.crashed) {
       crashed++;
@@ -422,6 +432,42 @@ async function main() {
     console.log(`  Club ${t.padEnd(7)} : ${cells}`);
   });
 
+  // j) Vivacité des stats molles (voir engine/vitals.js) : la forme ne doit plus rester collée
+  // à 100 -- moyenne, part des instantanés quasi au plafond (>=97), et écart-type comme mesure
+  // directe de dispersion réelle sur la carrière plutôt qu'un simple minimum/maximum anecdotique.
+  const allVitals = [];
+  results.forEach(r => (r.vitals || []).forEach(v => allVitals.push(v)));
+  function stats(key) {
+    const vals = allVitals.map(v => v[key]);
+    const n = vals.length;
+    if (!n) return { avg: 0, stdev: 0, pctCapped: 0, min: 0, max: 0 };
+    const avg = vals.reduce((s, v) => s + v, 0) / n;
+    const variance = vals.reduce((s, v) => s + (v - avg) * (v - avg), 0) / n;
+    const stdev = Math.sqrt(variance);
+    const pctCapped = round1(vals.filter(v => v >= 97).length / n * 100);
+    return { avg: round1(avg), stdev: round1(stdev), pctCapped, min: Math.min(...vals), max: Math.max(...vals) };
+  }
+  const fitnessStats = stats('fitness'), moraleStats = stats('morale'), popularityStats = stats('popularity'), mediaStats = stats('media');
+  console.log(`\n-- j) Vivacité des stats molles (${allVitals.length} instantanés de fin de saison) --`);
+  console.log(`Forme       : moyenne ${fitnessStats.avg}, écart-type ${fitnessStats.stdev}, min ${fitnessStats.min}, max ${fitnessStats.max}, quasi-plafond (>=97) ${fitnessStats.pctCapped}% des saisons`);
+  console.log(`Moral       : moyenne ${moraleStats.avg}, écart-type ${moraleStats.stdev}, min ${moraleStats.min}, max ${moraleStats.max}`);
+  console.log(`Popularité  : moyenne ${popularityStats.avg}, écart-type ${popularityStats.stdev}, min ${popularityStats.min}, max ${popularityStats.max}`);
+  console.log(`Médias      : moyenne ${mediaStats.avg}, écart-type ${mediaStats.stdev}, min ${mediaStats.min}, max ${mediaStats.max}`);
+
+  // k) Sobriété des traits actifs (voir engine/tags.js) : combien en simultané, en moyenne et au
+  // maximum observé -- doit rester "quelques traits à la fois", jamais une accumulation.
+  const traitCounts = allVitals.map(v => v.activeTraits || 0);
+  const avgActiveTraits = traitCounts.length ? round1(traitCounts.reduce((s, v) => s + v, 0) / traitCounts.length) : 0;
+  const maxActiveTraits = traitCounts.length ? Math.max(...traitCounts) : 0;
+  const traitCountFreq = {};
+  traitCounts.forEach(c => { traitCountFreq[c] = (traitCountFreq[c] || 0) + 1; });
+  console.log(`\n-- k) Sobriété des traits actifs (mêmes ${allVitals.length} instantanés) --`);
+  console.log(`Nombre moyen de traits actifs simultanés : ${avgActiveTraits} (maximum observé : ${maxActiveTraits})`);
+  console.log('Répartition (% des instantanés par nombre de traits actifs) :');
+  Object.keys(traitCountFreq).sort((a, b) => a - b).forEach(c => {
+    console.log(`  ${c} trait(s) : ${round1(traitCountFreq[c] / traitCounts.length * 100)}%`);
+  });
+
   console.log('\nRÉSULTATS BRUTS (JSON) :');
   console.log(JSON.stringify({ N, crashed, completed, freeClubCareers, freeClubSeasonsTotal, withTitle, withEliteTitle, withMVP, withAllStar, withHOF, withPhenom, tierCounts, nbaCount: nbaResults.length, median, pathTotals, byBracket,
     tags: { avgTagCount, tagFreq: tagFreqSorted },
@@ -429,7 +475,9 @@ async function main() {
     onceIntegrity: { onceCount: onceIds.size, careersWithViolation, violations: onceViolationsSorted.map(([id, v]) => ({ id, ...v })) },
     nbaFormat: { totalSeasons: allNba.length, confCount, forcedFinalSeasons, violations: gViolations, zoneDirect, zonePlayIn, zoneOut },
     nbaStrengthCorrelation: { strengthStats, crossTab },
-    globalStrengthCorrelation: { n: allSeasonsFlat.length, strengthStats: globalStrengthStats, crossTab: globalCrossTab } }, null, 0));
+    globalStrengthCorrelation: { n: allSeasonsFlat.length, strengthStats: globalStrengthStats, crossTab: globalCrossTab },
+    vitalsHealth: { n: allVitals.length, fitness: fitnessStats, morale: moraleStats, popularity: popularityStats, media: mediaStats },
+    traitSobriety: { avgActiveTraits, maxActiveTraits, traitCountFreq } }, null, 0));
 }
 
 main().catch(err => { console.error('DEEP AUDIT ÉCHOUÉ :', err); process.exitCode = 1; });

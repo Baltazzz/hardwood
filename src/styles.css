@@ -153,6 +153,10 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
 .brand-mark-mini{width:18px;height:18px;vertical-align:-4px;margin-right:6px;border-radius:5px}
 .welcome-link{color:var(--mint-soft);text-decoration:none;border-bottom:1px dashed rgba(161,130,31,.5)}
 .welcome-link:hover{color:var(--orange-soft)}
+/* Signature auteur : ligne distincte sous le pied de l'écran titre, volontairement plus discrète
+   que .kbd (opacité réduite) -- jamais entre le wordmark et le reste, pour ne pas concurrencer
+   le titre du jeu. Emplacement prêt pour un handle/@ (à ajouter après "Gaspard G" quand fourni). */
+.credit{font-family:'Bricolage Grotesque';font-weight:500;font-size:11px;color:var(--chalk-dim);opacity:.65;margin-top:10px;letter-spacing:.04em}
 
 /* ---------- Écran de bienvenue plein écran (1re carrière) ---------- */
 .welcome-screen{padding:54px 30px 50px;max-width:640px;margin:0 auto;position:relative;text-align:left;overflow:hidden}

@@ -18,7 +18,44 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
   l'historique — à clarifier avec l'utilisateur : qu'est-ce qui manque concrètement ?
   **Critère** : à définir avec l'utilisateur une fois le manque précisé.
 
+- [ ] **AGD-24 — Handle/@ à ajouter à la signature auteur**
+  Ajouté au registre le 2026-07-27, en creusant AGD-23 point 1. La signature « Créé par
+  Gaspard G » est en place en pied de l'écran titre (`.credit` dans `styles.css`,
+  `screenTitle()` dans `screens.js`), mais l'utilisateur a explicitement indiqué vouloir y
+  accoler un handle/@ qu'il préciserait plus tard — jamais fourni dans la session AGD-23.
+  **Critère** : le handle fourni apparaît accolé à la signature (ex. « Créé par Gaspard G ·
+  @handle »), vérifié par rendu direct de l'écran titre.
+
 ## Coché récemment
+
+- [x] **AGD-23 — Lot identité et partage** _(implémenté et vérifié le 2026-07-27)_
+  Demande en 3 points. Vérification directe du code AVANT tout ajout (conformément à la
+  consigne de ne jamais se fier à une impression) : les points 2 et 3 étaient déjà entièrement
+  en place depuis un chantier antérieur (`ffe3bda`, avant l'ouverture de cet AGENDA), reconfirmés
+  plutôt que refaits ; seul le point 1 était un vrai manque, comblé cette session.
+  1. *Signature auteur*. Nouvelle ligne `.credit` en pied de l'écran titre (`screenTitle()`
+     dans `screens.js`), sous la ligne `.kbd` existante ("comment jouer ?") — jamais entre le
+     wordmark et le reste, opacité réduite (0.65) pour rester nettement plus discrète que le
+     reste du pied de page, cohérente avec la palette Terre battue (`--chalk-dim`,
+     'Bricolage Grotesque'). Texte actuel : « Créé par Gaspard G » — **handle/@ pas encore
+     fourni par l'utilisateur, voir AGD-24 ci-dessus, laissé ouvert plutôt que d'inventer un
+     placeholder visible**.
+  2. *Métadonnées Open Graph*. Déjà entièrement en place dans `index.html` (balises
+     `og:title`/`og:description`/`og:image`/`og:image:width`/`og:image:height` +
+     `twitter:card=summary_large_image`/`twitter:title`/`twitter:description`/`twitter:image`)
+     et l'image `public/og-image.png` déjà générée (visuel fait maison, logo + wordmark +
+     accroche, sans dépendance externe) — vérifié aux dimensions exactes demandées, **1200×630
+     confirmé par lecture directe des pixels**. Aucun changement de code nécessaire.
+  3. *Titre et méta-description d'onglet*. Déjà en place et déjà de bonne qualité : `<title>HARDWOOD
+     · carrière basket</title>`, meta description vendeuse et distincte du tag de l'écran titre
+     ("De 16 à 38 ans, écris ta légende du basket. Une carrière complète, saison après saison,
+     où chaque choix compte, jusqu'à la NBA, ou pas."). Aucun changement de code nécessaire.
+  Rendu montré à l'utilisateur via le showcase avant livraison (écran titre avec la nouvelle
+  signature, nouvelle section dédiée à la vignette de partage affichant `og-image.png` en
+  taille réelle).
+  Vérifié : changement purement cosmétique/textuel (aucune logique de jeu touchée, seuls
+  `styles.css` et `screens.js` modifiés, uniquement le pied de l'écran titre) — 0% crash sur
+  100 carrières auditées, comme attendu pour ce type de changement.
 
 - [x] **AGD-22 — Correction du rattachement d'académie** _(implémenté et vérifié le 2026-07-27)_
   Bug de fond identifié : le choix d'académie fonctionnait à l'écran (5-6 offres affichées avec

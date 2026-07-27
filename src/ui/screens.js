@@ -136,6 +136,7 @@ export function screenTitle(){
     </div>
     ${best?`<div class="best-chip">🏆 Meilleur score légende : <b>${best}</b></div>`:''}
     <div class="kbd"><img class="brand-mark-mini" src="/logo-mark.png" alt="" width="18" height="18">Écris ta légende, saison après saison · <a href="#" id="welcomeReopen" class="welcome-link">comment jouer ?</a></div>
+    <div class="credit">Créé par Gaspard G</div>
   </div>`;
   document.getElementById('go').onclick=()=>{
     // Garde-fou : commencer une nouvelle carrière écraserait la sauvegarde en cours -- confirmation

@@ -52,6 +52,7 @@ function driveOneCareer(document, errors, state, activeTags) {
       clickId(document, 'afterSeason');
     }
     else if (document.getElementById('natContinue')) clickId(document, 'natContinue');
+    else if (document.getElementById('forcedEndContinue')) clickId(document, 'forcedEndContinue'); // fin subie (blessure grave)
     else if (document.querySelector('.choice')) {
       pickRandomEl(document.querySelectorAll('.choice')).click();
       const cont = document.getElementById('contBtn');
@@ -97,6 +98,8 @@ function driveOneCareer(document, errors, state, activeTags) {
     nbaSeasons,
     allSeasons,
     vitals,
+    endReason: G.endReason || null,
+    endAge: G.age,
   };
   clickId(document, 'again');
   return result;
@@ -468,8 +471,22 @@ async function main() {
     console.log(`  ${c} trait(s) : ${round1(traitCountFreq[c] / traitCounts.length * 100)}%`);
   });
 
+  // l) Fréquence des fins de carrière SUBIES (blessure grave, voir le jet dans postSeason()) :
+  // doit rester rare (le risque n'existe qu'à partir de p.age>=33, jamais sur un jeune) -- objectif
+  // "rare mais possible", pas un mode de fin dominant. Comparé aux fins choisies/déclin/normales.
+  const endReasonCounts = {};
+  results.forEach(r => { const k = r.endReason || 'choice'; endReasonCounts[k] = (endReasonCounts[k] || 0) + 1; });
+  const injuryEnds = endReasonCounts.injury || 0;
+  const injuryAges = results.filter(r => r.endReason === 'injury').map(r => r.endAge);
+  console.log(`\n-- l) Fréquence des fins de carrière subies (blessure grave) --`);
+  console.log(`Fins subies sur blessure : ${pct(injuryEnds)}% (${injuryEnds}/${completed})`);
+  if (injuryAges.length) console.log(`Âge à la fin subie : ${Math.min(...injuryAges)}-${Math.max(...injuryAges)} ans (moyenne ${round1(injuryAges.reduce((s,v)=>s+v,0)/injuryAges.length)})`);
+  console.log('Répartition de toutes les raisons de fin :');
+  Object.entries(endReasonCounts).sort((a,b)=>b[1]-a[1]).forEach(([k,v]) => console.log(`  ${k.padEnd(10)} : ${pct(v)}% (${v})`));
+
   console.log('\nRÉSULTATS BRUTS (JSON) :');
   console.log(JSON.stringify({ N, crashed, completed, freeClubCareers, freeClubSeasonsTotal, withTitle, withEliteTitle, withMVP, withAllStar, withHOF, withPhenom, tierCounts, nbaCount: nbaResults.length, median, pathTotals, byBracket,
+    endReasons: { counts: endReasonCounts, injuryPct: pct(injuryEnds), injuryAges },
     tags: { avgTagCount, tagFreq: tagFreqSorted },
     diversity: { totalDefined, avgDistinct, avgTotal, neverSeenPct, neverSeenCount, top10, bottom10 },
     onceIntegrity: { onceCount: onceIds.size, careersWithViolation, violations: onceViolationsSorted.map(([id, v]) => ({ id, ...v })) },

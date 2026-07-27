@@ -20,6 +20,71 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Coché récemment
 
+- [x] **AGD-20 — Lot confort et fin de carrière** _(implémenté et vérifié le 2026-07-27)_
+  Trois volets :
+  1. *Navigation et reprise de partie*. Bouton accueil persistant (`ui/navbar.js`) : posé UNE
+     SEULE fois en dehors de `#stage` (position fixe, coin haut-gauche), survit à chaque
+     `stage.innerHTML = ...` au lieu d'avoir besoin d'être réinjecté par chaque écran -- ne casse
+     donc jamais la mise en page. Visible uniquement pendant une carrière (`setInCareer()`, posé
+     dans les écrans concernés). Sauvegarde automatique persistante (`engine/savegame.js`, même
+     stockage robuste que le Panthéon/les badges : localStorage + repli mémoire). Déclenchée par
+     un unique écouteur de clic global (`main.js`) plutôt que d'instrumenter chaque point de
+     mutation -- tout le jeu étant piloté par clics, ce point d'ancrage couvre fidèlement toute
+     la progression -- complété par `visibilitychange`/`pagehide` en filet de sécurité. **Piège
+     trouvé et corrigé en session** : `p.curEvents` contient des RÉFÉRENCES aux objets du
+     catalogue d'événements, dont `choices`/`body`/`when`/`weight` sont des fonctions --
+     `JSON.stringify` les supprime silencieusement (aucune erreur, juste des événements cassés au
+     réveil, `ev.choices is not a function`). Corrigé en sauvegardant leurs id et en les
+     ré-résolvant dans `EVENTS` au chargement -- vérifié qu'aucun autre champ de l'état joueur ne
+     porte de fonction imbriquée (recherche exhaustive sur une carrière complète pilotée).
+     Reprise EXACTE de l'écran en pause (`resumeCareer()`) : décision de mouvement/académie en
+     attente en priorité (mémorisée telle quelle via `p.pendingMove`/`p.pendingAcademyOffers`,
+     posée à l'affichage et effacée au prochain `beginSeason()` -- seul point de sortie commun à
+     tous les chemins de résolution), sinon l'événement courant (`p.curEvents`/`p.evIndex`, déjà
+     persistants), sinon le bilan de la dernière saison jouée. Bouton "🖊 Reprendre ma carrière"
+     sur le titre (principal dès qu'une sauvegarde existe). Deux garde-fous vérifiés : la
+     sauvegarde survit à un retour à l'accueil (rien n'est perdu par accident) ; commencer une
+     nouvelle carrière quand une sauvegarde existe demande confirmation (`confirm()`) avant de
+     l'écraser, annulable. Repli mémoire vérifié directement (stockage localStorage cassé simulé,
+     0 erreur levée).
+  2. *Fin de carrière anticipée et forcée*. Nouveau risque probabiliste de fin SUBIE (blessure
+     grave), distinct du déclin déjà existant (`p.age>=34` + OVR trop bas) : uniquement
+     `p.age>=33`, le même seuil que le bouton de retraite volontaire -- jamais sur un jeune.
+     Probabilité faible, qui augmente avec l'âge ET l'usure réelle du corps (forme, voir
+     `engine/vitals.js` -- une carrière qui a beaucoup drainé sa forme est mécaniquement plus
+     exposée), un peu plus pour un profil déjà marqué "fragile". **Rééquilibrage nécessaire en
+     session** : un premier calage donnait 30% des carrières terminées ainsi (bien trop, "rare"
+     doit rester rare) -- magnitudes réduites d'un facteur ~2,5, reconfirmé à 12%. Mise en scène
+     dédiée (`renderForcedRetirement()`), sobre et sombre, volontairement à l'opposé du ton
+     festif de la fin volontaire -- un vrai moment, pas une ligne noyée dans le bilan habituel.
+     **Bug trouvé et corrigé en session** : ni `tests/harness.mjs` ni `scripts/deep-audit.mjs` ne
+     connaissaient ce nouvel écran -- toute occurrence était comptée à tort comme un crash
+     (`tests/audit.mjs` levait "État d'écran non reconnu"). Corrigé dans les deux harnais.
+  3. *Vocabulaire basket*. Balayage complet du texte à la recherche de résidus football :
+     "Raccrocher les crampons" -> "Raccrocher les baskets" (bouton + narration en `late.js`),
+     "l'attaquant qui déboule" -> "l'adversaire qui déboule" (`attributes.js`), "le pire
+     attaquant adverse" -> "le meilleur scoreur adverse" (`tags.js`, trait verrou défensif),
+     "les attaquants adverses" -> "les attaques adverses" / "les meilleurs scoreurs adverses"
+     (`attributes.js`/`threads.js`). Vérifié négatif sur un large balayage de termes football
+     classiques (pénalty, hors-jeu, carton, gardien, mi-temps, tacle, banc de touche...) --
+     aucun autre résidu trouvé. "Milieu de terrain" (position sur le terrain, buzzer-beater),
+     "corner" (tir de coin, vocabulaire basket réel), "prolongation" (overtime, existe aussi en
+     basket) et "maillot"/"sélectionneur" (universels tous sports) confirmés légitimes, non
+     modifiés.
+  Rendu montré à l'utilisateur via le showcase avant livraison (titre avec reprise, écran de fin
+  subie).
+  Vérifié (300 carrières) : 0% crash, 0% repli "Club libre", 0 violation d'intégrité des
+  événements uniques, 0 incohérence de format NBA. Taux de titre élite 15% -- dans la bande
+  "normale" déjà établie (12-16%), aucune dérive causée par ce lot. **Fréquence des fins subies
+  sur blessure : 12% (36/300)**, âge 33-38 ans (moyenne 35.8) -- jamais avant le seuil de
+  retraite volontaire, confirmé rare après rééquilibrage (mesuré dans des conditions
+  délibérément défavorables : l'audit pilote au hasard et ne clique jamais la retraite
+  volontaire, donc chaque carrière testée va au bout de la zone à risque -- le taux réel en jeu,
+  où un joueur choisirait souvent de partir avant, sera plus bas encore). Reprise de partie
+  vérifiée directement sur les 4 points de pause possibles (événement en cours, bilan de saison,
+  offre de transfert en attente, choix d'académie en attente) : dans chaque cas, sauvegarde puis
+  rechargement reproduit exactement le même écran, avec les mêmes options.
+
 - [x] **AGD-19 — Rendre les stats et les traits vivants** _(implémenté et vérifié le 2026-07-27)_
   Deux chantiers liés (les stats molles doivent se sentir à l'écran, pas seulement tourner en
   coulisses) :

@@ -4,11 +4,13 @@ import { stage } from './dom.js';
 import { screenTitle, sparkline } from './screens.js';
 import { renderTrophyCabinet } from './trophies.js';
 import { tagsByIds, renderTagChips } from '../engine/tags.js';
+import { setInCareer } from './navbar.js';
 
 /* ============================================================
    PANTHÉON (rendu)
 ============================================================ */
 export function renderHallOfFame(){
+  setInCareer(false);
   const list=hofLoad();
   const rows = list.length ? list.map((r,i)=>`
     <div class="hof-row ${i===0?'top':''}" data-i="${i}" style="cursor:pointer">
@@ -51,6 +53,7 @@ function badgeTile(b, entry){
   </div>`;
 }
 export function renderBadges(){
+  setInCareer(false);
   const state = badgesState();
   const unlockedCount = Object.keys(state.unlocked).length;
   const tiles = BADGES.map(b=>badgeTile(b, state.unlocked[b.id])).join('');
@@ -70,6 +73,7 @@ export function renderBadges(){
 
 export function renderCareerDetail(r){
   if(!r){ renderHallOfFame(); return; }
+  setInCareer(false);
   stage.innerHTML = `<div class="end">
     <div class="eyebrow">Carrière au Panthéon</div>
     <div class="legend-title" style="font-size:30px">${r.tier}</div>

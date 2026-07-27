@@ -122,7 +122,7 @@ export const ATTRIBUTE_EVENTS = [
   {id:'rim_protection', cat:'defense', phase:null, cooldown:2,
     when:(p,lg)=>p.pos==='C' && attrOf(p,'def')>=76 && attrOf(p,'reb')>=72,
     title:'Protéger le cercle, envers et contre tout',
-    body:()=>`<i>(Raquette bondée, les attaquants adverses s'enchaînent à la file.)</i> Le coach compte sur toi comme dernier rempart. Chaque incursion adverse doit se heurter à ta présence.`,
+    body:()=>`<i>(Raquette bondée, les attaques adverses s'enchaînent à la file.)</i> Le coach compte sur toi comme dernier rempart. Chaque incursion adverse doit se heurter à ta présence.`,
     weight:clutchWeight(0.85),
     choices:({p})=>[
       {label:'Contester chaque tir près du cercle', hint:'Aucune incursion ne doit passer',
@@ -240,7 +240,7 @@ export const ATTRIBUTE_EVENTS = [
   {id:'charge_taking', cat:'defense', phase:null, cooldown:2,
     when:(p,lg)=>attrOf(p,'def')>=72 && attrOf(p,'qi')>=68,
     title:'Le sacrifice du corps pour une faute offensive',
-    body:()=>`<i>(Position prise à l'avance, les pieds ancrés au sol, l'attaquant qui déboule à pleine vitesse.)</i> L'occasion se présente de prendre une faute offensive, au prix d'un vrai choc physique.`,
+    body:()=>`<i>(Position prise à l'avance, les pieds ancrés au sol, l'adversaire qui déboule à pleine vitesse.)</i> L'occasion se présente de prendre une faute offensive, au prix d'un vrai choc physique.`,
     weight:()=>0.6,
     choices:()=>[
       {label:'Prendre le charge, sans hésiter', hint:'Le sacrifice physique assumé',

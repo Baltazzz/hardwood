@@ -17,6 +17,8 @@ import { renderTrophyCabinet, medalIcon } from './trophies.js';
 import { activeTags, renderTagChips, renderTraitUnlockCard } from '../engine/tags.js';
 import { pick, clamp, money, ordinal, ri } from '../engine/utils.js';
 import { stage } from './dom.js';
+import { saveGame, loadGame, hasSavedGame, clearSavedGame } from '../engine/savegame.js';
+import { setInCareer } from './navbar.js';
 
 /* ============================================================
    ÉCRANS : TITRE + CRÉATION
@@ -72,6 +74,7 @@ function homeScreenStrip(){
 // un vrai écran (comme screenTitle/screenCreate), pas une tuile, pour pouvoir structurer le
 // propos en sections qu'on parcourt plutôt qu'un pavé de texte compressé dans un coin.
 export function screenWelcome(){
+  setInCareer(false);
   stage.innerHTML = `<div class="welcome-screen">
     <button class="welcome-skip" id="wSkip">Passer →</button>
     <div class="eyebrow" style="text-align:left">Avant de te lancer</div>
@@ -115,28 +118,63 @@ export function screenWelcome(){
 
 export function screenTitle(){
   resetAccent(); // pas d'accent de club/nation hérité de la carrière précédente sur le titre
+  setInCareer(false);
   if(!welcomeSeen()){ screenWelcome(); return; }
   const best=hofBest();
+  // Reprise de partie (voir engine/savegame.js) : bouton principal quand une carrière est en
+  // pause, "Commencer" repasse alors en secondaire -- reprendre est l'intention la plus probable.
+  const resumable = hasSavedGame();
   stage.innerHTML = `<div class="title-screen">
     <div class="eyebrow">Carrière · saison après saison</div>
     <h1>HARD<span class="o">W</span>OOD</h1>
     <p class="tag">De 16 à 38 ans, écris ta légende du basket. Chaque choix pèse : le talent ouvre des portes, les décisions décident du reste. La NBA est le sommet, encore faut-il y arriver.</p>
     <div style="margin-top:28px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-      <button class="btn" id="go">Commencer ma carrière</button>
+      ${resumable?`<button class="btn" id="resumeGo">▶️ Reprendre ma carrière</button>`:''}
+      <button class="btn ${resumable?'ghost':''}" id="go">Commencer ${resumable?'une nouvelle':'ma'} carrière</button>
       <button class="btn ghost" id="hof">🏆 Panthéon</button>
       <button class="btn ghost" id="badges">🎖️ Badges</button>
     </div>
     ${best?`<div class="best-chip">🏆 Meilleur score légende : <b>${best}</b></div>`:''}
     <div class="kbd"><img class="brand-mark-mini" src="/logo-mark.png" alt="" width="18" height="18">Écris ta légende, saison après saison · <a href="#" id="welcomeReopen" class="welcome-link">comment jouer ?</a></div>
   </div>`;
-  document.getElementById('go').onclick=()=>{ setWelcomeSeen(); setG(newPlayer()); screenCreate(); };
+  document.getElementById('go').onclick=()=>{
+    // Garde-fou : commencer une nouvelle carrière écraserait la sauvegarde en cours -- confirmation
+    // explicite avant de perdre cette reprise possible (jamais silencieux).
+    if(hasSavedGame() && !confirm('Une carrière est en cours et sera définitivement écrasée si tu en commences une nouvelle. Continuer ?')) return;
+    clearSavedGame();
+    setWelcomeSeen(); setG(newPlayer()); screenCreate();
+  };
+  const resumeBtn=document.getElementById('resumeGo');
+  if(resumeBtn) resumeBtn.onclick=()=>resumeCareer();
   document.getElementById('hof').onclick=()=>renderHallOfFame();
   document.getElementById('badges').onclick=()=>renderBadges();
   document.getElementById('welcomeReopen').onclick=(e)=>{ e.preventDefault(); screenWelcome(); };
 }
 
+// Reprise de partie (voir engine/savegame.js) : recharge l'état complet, puis ré-affiche EXACTEMENT
+// l'écran où la carrière était en pause -- décision de mouvement/académie en attente en priorité
+// (mémorisées telles quelles, voir renderMoveScreen()/renderAcademyChoice() ci-dessous), sinon
+// l'événement courant, sinon le bilan de la dernière saison jouée (seul point d'arrêt "stable"
+// entre deux saisons). Repli sur l'écran de création si la partie a été interrompue avant même
+// d'avoir un club (p.club encore vide).
+export function resumeCareer(){
+  const loaded = loadGame();
+  if(!loaded){ screenTitle(); return; }
+  setG(loaded);
+  const p = G;
+  resetAccent();
+  if(p.pendingAcademyOffers){ renderAcademyChoice(p.pendingAcademyOffers); return; }
+  if(p.pendingMove){ renderMoveScreen(p.pendingMove); return; }
+  if(!p.club){ screenCreate(); return; }
+  if(p.curEvents && p.evIndex < p.curEvents.length){ renderEvent(p.curEvents[p.evIndex]); return; }
+  const lastSeason = p.seasons.length ? p.seasons[p.seasons.length-1] : null;
+  if(lastSeason){ renderSeasonResult(lastSeason, !!lastSeason.champion); return; }
+  screenCreate();
+}
+
 export function screenCreate(){
   const p=G;
+  setInCareer(true);
   if(p.step===0){ // nation
     // Grille compacte dédiée (voir .nation-grid/.nation-opt dans styles.css) : à la différence
     // des autres étapes (4-8 choix), les nations sont ~35 -- la carte pleine taille générique
@@ -220,6 +258,10 @@ function wireNav(){
 const ACADEMY_PATH_LABEL = { us:'Voie US · lycée → université → draft', eu:'Voie Europe · académie → clubs pro', au:'Voie Australie · académie → NBL1 → NBL' };
 export function renderAcademyChoice(offers){
   const p = G;
+  setInCareer(true);
+  // Mémorisé pour la reprise de partie (voir engine/savegame.js) : reflété à chaque appel, y
+  // compris un éventuel second appel -- toujours la dernière liste réellement affichée.
+  p.pendingAcademyOffers = offers;
   const cards = offers.map((n,i)=>{
     const club = pickClub('academy', n.id);
     const fl = flavor(club);
@@ -275,6 +317,7 @@ function statHintDots(effect){
 /* ---- Rendu d'un événement ---- */
 export function renderEvent(ev){
   const p=G, lg=LEAGUES[p.league];
+  setInCareer(true);
   const ctx={p,lg};
   const body = typeof ev.body==='function'?ev.body(ctx):ev.body;
   const title= typeof ev.title==='function'?ev.title(ctx):ev.title;
@@ -332,6 +375,7 @@ export function showDeltaFlash(outcome, deltas, newTraits){
 
 export function renderSeasonResult(s, champion){
   const p=G, lg=LEAGUES[p.league];
+  setInCareer(true);
   const gpLabel = (s.leagueGames!=null) ? `${s.gamesPlayed}/${s.leagueGames}` : '·';
   // Stats de jeu (perf, la vraie ligne de score) vs contexte de saison (MIN/MJ/VIC, un cadre
   // d'information, pas une performance) : deux blocs distincts côté rendu (voir .statline vs
@@ -366,7 +410,7 @@ export function renderSeasonResult(s, champion){
     <div class="verdict">${verdict}</div>
     ${compHtml}${accHtml}
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:18px">
-      <div>${p.age>=33?`<button class="btn ghost sm" id="retireBtn">Raccrocher les crampons</button>`:''}</div>
+      <div>${p.age>=33?`<button class="btn ghost sm" id="retireBtn">Raccrocher les baskets</button>`:''}</div>
       <button class="btn" id="afterSeason">Intersaison →</button>
     </div>
   </div>`;
@@ -386,6 +430,7 @@ const NAT_MEDAL_COPY = {
 };
 export function renderNationalResult(natLine, onContinue){
   const p = G;
+  setInCareer(true);
   const won = !!natLine.medal;
   stage.innerHTML = renderHUD('nation') + `<div class="card nat-result ${won?'celebrate':'quick'}">
     <div class="nat-result-flag">${p.nation.flag}</div>
@@ -473,6 +518,11 @@ function flavor(clubInfoObj){
 /* Écran de transfert / promotion / draft avec choix */
 export function renderMoveScreen(move){
   const p=G, o=ovr(p);
+  setInCareer(true);
+  // Mémorisé pour la reprise de partie (voir engine/savegame.js) : ce même appel se ré-exécute
+  // parfois en cascade (ex. draftDecl -> draft/undrafted) -- toujours le dernier move réellement
+  // affiché, effacé au prochain beginSeason() (voir season.js), quel que soit le chemin de sortie.
+  p.pendingMove = move;
   let title,body,choices;
   const toLg = move.to?LEAGUES[move.to]:null;
   // dernier rung avant la NBA selon le chemin du joueur (miroir de season.js)
@@ -706,8 +756,32 @@ export function sparkline(series){
     return `<span class="spark-bar ${isPeak?'pk':''}" style="height:${h}px" title="OVR ${v}"></span>`; }).join('');
   return `<div class="spark">${bars}</div><div class="spark-cap">Évolution OVR · pic ${mx}</div>`;
 }
+// Fin de carrière SUBIE (blessure grave, voir le jet dans postSeason()) : mise en scène dédiée,
+// un vrai moment narratif marquant plutôt qu'une ligne noyée dans le bilan habituel -- jamais sur
+// un jeune (le jet ne s'exécute qu'à partir du seuil où la retraite volontaire est déjà
+// disponible), rare mais réelle. Un seul bouton, puis retour vers le récap normal de fin de
+// carrière (endCareer('injury')) une fois le moment digéré -- pas un écran qu'on peut relire.
+export function renderForcedRetirement(onContinue){
+  stage.innerHTML = `<div class="card forced-end">
+    <div class="forced-end-icon">
+      <svg viewBox="0 0 24 24" width="42" height="42"><path d="M12 21C7 17 3 13.5 3 9.5A4.5 4.5 0 0 1 12 8a4.5 4.5 0 0 1 9 1.5C21 13.5 17 17 12 21ZM9 12h2l1-2 2 4 1-2h2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="eyebrow" style="text-align:center">Fin de carrière</div>
+    <h2 style="text-align:center;margin:8px 0 4px">Le corps a dit stop</h2>
+    <p class="body" style="max-width:480px;margin:0 auto;text-align:center">Une blessure grave, le genre qui ne pardonne pas à cet âge, referme la porte du terrain pour de bon. Pas de dernier match choisi, pas de tournée d'adieux préparée à l'avance -- juste ce diagnostic, un soir, qui met un point final à tout.</p>
+    <div style="text-align:center;margin-top:26px">
+      <button class="btn" id="forcedEndContinue">Découvrir le bilan de ta carrière</button>
+    </div>
+  </div>`;
+  document.getElementById('forcedEndContinue').onclick=()=>onContinue();
+}
 export function endCareer(reason){
   const p=G; p.retired=true;
+  setInCareer(false);
+  // La carrière est terminée : plus rien à reprendre (elle est déjà préservée à part, dans le
+  // Panthéon -- voir hofAdd() plus bas). Efface la sauvegarde plutôt que de la laisser pointer
+  // vers une carrière désormais close.
+  clearSavedGame();
   const A=p.accolades;
   const cnt=(k)=>A[k]||0;
   // les titres au sommet (NBA/EuroLeague/NBL) comptent nettement plus que les titres de paliers
@@ -770,6 +844,7 @@ export function endCareer(reason){
 
   stage.innerHTML = `<div class="end">
     <div class="eyebrow">Fin de carrière · ${p.name}</div>
+    ${reason==='injury'?`<div class="forced-end-tag">Retraite forcée sur blessure</div>`:''}
     <div class="legend-title">${tier}</div>
     <p class="subline">${p.nation.flag} ${POSITIONS.find(x=>x.id===p.pos).emoji} ${POSITIONS.find(x=>x.id===p.pos).name} · ${p.seasons.length} saisons · pic à ${p.peakOvr} OVR${p.hof?' · <b style="color:var(--mint)">Hall of Fame</b>':''}</p>
     <p class="body" style="max-width:520px;margin:14px auto 0;text-align:center">${blurb}</p>

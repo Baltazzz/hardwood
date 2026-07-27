@@ -13,7 +13,7 @@ import { rnd, ri, pick, clamp, round, jit, capitalize, money } from './utils.js'
 import { applyTagEffects, checkTraitUnlocks, OPPOSES } from './tags.js';
 import { applyFatigue, applyRecovery, applySoftStatDrift } from './vitals.js';
 import { simulateStandings, simulatePlayoffs, checkClubMovement, clubPercentile, simulateNbaStandings, simulateNbaPlayoffs } from './competition.js';
-import { renderEvent, showDeltaFlash, renderSeasonResult, renderMoveScreen, renderAcademyChoice, renderNationalResult, endCareer } from '../ui/screens.js';
+import { renderEvent, showDeltaFlash, renderSeasonResult, renderMoveScreen, renderAcademyChoice, renderNationalResult, renderForcedRetirement, endCareer } from '../ui/screens.js';
 
 // Tournoi de zone continentale de la sélection nationale, par continent réel (p.nation.continent
 // -- voir data/nations.js). L'Océanie rejoint la zone Asie (FIBA Asia Cup, comme dans la réalité
@@ -56,6 +56,10 @@ export function pushTL(html){ G.timeline.push({age:G.age, html}); }
 ============================================================ */
 export function beginSeason(){
   const p=G;
+  // Toute décision en attente (offre d'académie, offre de transfert -- voir renderMoveScreen()/
+  // renderAcademyChoice() dans screens.js) est désormais résolue : on entre dans le flux
+  // événements/saison, plus rien à reprendre de ce côté (voir engine/savegame.js).
+  p.pendingMove = null; p.pendingAcademyOffers = null;
   p.seasonMods={ tir:0,adr3:0,dribble:0,passe:0,def:0,reb:0,ath:0,qi:0,
                  reputation:0,morale:0,coach:0,media:0,popularity:0,money:0,fitness:0,
                  perfBonus:0, injuryGames:0, forceMove:null, forceFinals:null, clubMovement:null,
@@ -499,7 +503,24 @@ export function postSeason(){
   applyTagEffects(p);
   // --- progression / déclin ---
   applyAging();
-  // --- retraite ? ---
+  // --- fin subie (blessure grave) ? -----------------------------------------------------
+  // Uniquement possible une fois la retraite VOLONTAIRE déjà accessible (même seuil que le
+  // bouton "Raccrocher les baskets" sur le bilan de saison, p.age>=33) -- jamais sur un jeune.
+  // Risque faible mais réel, qui augmente avec l'âge ET l'usure réelle du corps (forme, voir
+  // engine/vitals.js -- une carrière qui a beaucoup drainé sa forme est mécaniquement plus
+  // exposée), encore un peu plus pour un profil déjà marqué comme fragile. Vérifié à l'audit
+  // (scripts/deep-audit.mjs) pour rester rare sur l'ensemble d'un run, jamais dominant.
+  if(p.age>=33){
+    const ageRisk = clamp((p.age-32)*0.004, 0, 0.025);
+    const wearRisk = clamp((100-p.fitness)/100, 0, 1) * 0.015;
+    const fragileMult = ((p.flags&&p.flags.injuryProne)||0)>=1 ? 1.3 : 1;
+    const injuryRetireChance = clamp((ageRisk+wearRisk)*fragileMult, 0, 0.05);
+    if(Math.random() < injuryRetireChance){
+      renderForcedRetirement(()=>endCareer('injury'));
+      return;
+    }
+  }
+  // --- retraite forcée (déclin) ? ---
   if(p.age>=34){
     const oNow=ovr(p);
     if(p.age>=38 || (oNow < lg.starter-10) ){ return endCareer('forced'); }

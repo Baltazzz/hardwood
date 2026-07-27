@@ -20,6 +20,10 @@ export function newPlayer(){
     nbaStruggle:0, draftPos:null, draftEntered:false, declined:{}, firstNbaAge:null,
     pendingFA:false, riskMod:1, swanOffered:false, earlyBet:false,
     flags:{}, flagYear:{}, clutch:0, lastActiveTagIds:[],
+    // Bookkeeping de reprise (voir engine/savegame.js + resumeCareer() dans ui/screens.js) :
+    // l'offre/le mouvement affiché à l'écran au moment d'une éventuelle sauvegarde, pour pouvoir
+    // ré-afficher EXACTEMENT le même choix en attente plutôt qu'un tirage différent au retour.
+    pendingMove:null, pendingAcademyOffers:null,
     // Anti-répétition des événements : evStats[id] = {count, lastYear, streak}. eventHistory
     // sert uniquement à l'audit de diversité (liste plate des ids tirés, dans l'ordre).
     evStats:{}, eventHistory:[], clubTenure:0,

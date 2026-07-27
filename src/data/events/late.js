@@ -105,7 +105,7 @@ export const LATE_EVENTS = [
   {id:'assistant_coach_offer', cat:'twilight', phase:'late', once:true,
     when:(p,lg)=>p.age>=35 && p.coach>=65,
     title:'Le club te propose déjà un rôle d\'après-carrière',
-    body:()=>`<i>(Réunion avec la direction sportive, dossier de reconversion sur la table.)</i> Le club t'imagine bien rester dans la structure une fois les crampons raccrochés : assistant-coach, ou un rôle au sein du front office.`,
+    body:()=>`<i>(Réunion avec la direction sportive, dossier de reconversion sur la table.)</i> Le club t'imagine bien rester dans la structure une fois les baskets raccrochées : assistant-coach, ou un rôle au sein du front office.`,
     weight:()=>0.55,
     choices:()=>[
       {label:'Accepter le principe, y réfléchir sérieusement', hint:'Se projeter concrètement dans ce futur rôle',

@@ -27,6 +27,12 @@ export function setupEnvironment() {
     if (window[key]) global[key] = window[key];
   }
   global.matchMedia = window.matchMedia || (() => ({ matches: false }));
+  // jsdom n'implémente pas window.confirm/alert (dialogues natifs) : par défaut on accepte,
+  // cohérent avec un pilotage automatique qui doit pouvoir traverser les garde-fous de
+  // confirmation (nouvelle carrière qui écraserait une sauvegarde, vidage du Panthéon/des
+  // badges) sans lever d'erreur ni bloquer la conduite de carrières.
+  global.confirm = window.confirm = () => true;
+  global.alert = window.alert = () => {};
 
   // Stubs navigateur absents de jsdom : document.fonts + contexte canvas 2D.
   window.document.fonts = { ready: Promise.resolve() };

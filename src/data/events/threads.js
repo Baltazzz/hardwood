@@ -130,7 +130,7 @@ export const THREAD_EVENTS = [
   {id:'lockdown_legacy', cat:'payoff', phase:'mid', once:true,
     when:(p,lg)=>((p.flags&&p.flags.lockdown)||0)>=2 && lg.tier<=2,
     title:'Ta réputation de verrou défensif',
-    body:()=>`Les attaquants adverses préparent désormais des plans spécifiques rien que pour contourner ta défense. Ce genre de réputation ne se construit pas en un match.`,
+    body:()=>`Les meilleurs scoreurs adverses préparent désormais des plans spécifiques rien que pour contourner ta défense. Ce genre de réputation ne se construit pas en un match.`,
     weight:()=>1.1,
     choices:()=>[
       {label:'En faire ton identité de carrière', hint:'Embrasser durablement ce statut de référence défensive',

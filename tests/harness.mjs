@@ -53,6 +53,8 @@ export function driveOneCareer({ document, errors, state, ATTRS }) {
       clickId(document, 'afterSeason');
     } else if (document.getElementById('natContinue')) {
       clickId(document, 'natContinue'); // résultat de tournoi national -> retour au bilan de club
+    } else if (document.getElementById('forcedEndContinue')) {
+      clickId(document, 'forcedEndContinue'); // fin subie (blessure grave) -> bilan de fin de carrière
     } else if (document.querySelector('.choice')) {
       const choice = pickRandomEl(document.querySelectorAll('.choice'));
       choice.click();

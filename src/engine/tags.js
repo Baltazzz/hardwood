@@ -21,7 +21,7 @@ export const TAG_DEFS = [
     icon: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18ZM12 7v5l3.5 2',
     effect: (p) => { p.reputation = clamp(p.reputation + 1, 0, 100); p.fitness = clamp(p.fitness - 1, 0, 100); } },
   { id: 'lockdown', label: 'Verrou défensif', registry: 'jeu', flag: 'lockdown', threshold: 2,
-    pro: 'Le staff te confie les missions les plus dures', con: 'Toujours sur le pire attaquant adverse',
+    pro: 'Le staff te confie les missions les plus dures', con: 'Toujours sur le meilleur scoreur adverse',
     icon: 'M6 11V8a6 6 0 0 1 12 0v3M5 11h14v9H5z',
     effect: (p) => { p.coach = clamp(p.coach + 1, 0, 100); p.fitness = clamp(p.fitness - 1, 0, 100); } },
   { id: 'fragile', label: 'Fragile', registry: 'jeu', flag: 'injuryProne', threshold: 2,

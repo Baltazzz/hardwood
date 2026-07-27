@@ -20,6 +20,55 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Coché récemment
 
+- [x] **AGD-21 — Lot sélection nationale, temps fort de carrière** _(implémenté et vérifié le 2026-07-27)_
+  Demande en 4 points. Vérification directe du code AVANT tout ajout (conformément à la
+  consigne de ne jamais se fier à une impression) : 3 des 4 points étaient déjà entièrement
+  satisfaits par le chantier AGD-12 (même session, précédent), reconfirmés plutôt que refaits ;
+  un seul point avait un vrai manque, comblé cette session.
+  1. *Bascule visuelle complète* : déjà en place (AGD-12) via `p.seasonMods.natWindow` (fixé en
+     tête de saison, `beginSeason()` dans `season.js` : `p.reputation>=45 && p.year%2===0`),
+     classe `.nation-window` (liseré + motif à l'accent DYNAMIQUE du pays, `engine/accent.js`,
+     `NATION_ACCENT`), mode HUD dédié (`renderHUD('nation')`) et chip "Fenêtre sélection" avec
+     drapeau -- contraste net avec les écrans de club confirmé par lecture directe de
+     `renderEvent()` (`screens.js`). Aucun changement de code nécessaire.
+  2. *Animation d'annonce* : déjà en place et déjà GÉNÉRIQUE (AGD-12/AGD-06), pas seulement
+     câblée à la première convocation -- `isNatAnnounce = ev.cat==='nation'` dans `renderEvent()`
+     applique automatiquement `.nation-announce` (réutilise `@keyframes natAnnounce`) à TOUT
+     événement de cette catégorie. Confirmé réutilisable pour les grands rendez-vous
+     internationaux : 5 événements `cat:'nation'` en bénéficient déjà, le nouvel événement de
+     rivalité (point 3) en hérite automatiquement sans câblage supplémentaire (vérifié par rendu
+     forcé). Aucun changement de code nécessaire.
+  3. *Choix contextuels* : 3 des 4 thèmes demandés déjà couverts (AGD-12 et sessions antérieures)
+     -- statut dans le groupe (`nation_stakes`, star attendue vs role player), pression du pays
+     (`nation_stakes`, `nation_leader`), fatigue club/sélection (`federation_club_conflict`,
+     `youth_national_call`). Manquait : rivalité INTERNE au groupe (deux joueurs de la même
+     sélection visant le même rôle) -- distinct des événements de rivalité existants
+     (`rivalry`/`rival_duel`), qui opposent à un adversaire, jamais rencontré en club. Nouvel
+     événement `nation_rivalry` (`data/events/shared.js`), gated sur `natWindow` + `p.natCap`
+     (déjà été convoqué), résolution `actionRoll` cohérente avec `nation_stakes` (imposer son
+     rapport de force, risqué, vs répartition diplomatique des rôles, plus sûre), aucun indice
+     chiffré dans les intitulés, `natBonus` en jeu (enjeu mécanique réel sur le résultat du
+     tournoi, pas seulement narratif) -- toutes les conventions du moteur respectées.
+  4. *Séquence de fin de compétition graduée* : déjà en place (AGD-12) via
+     `renderNationalResult()` (écran dédié, `screens.js`), variante `.quick` sobre en quelques
+     lignes si élimination, variante `.celebrate` (médaille agrandie animée, halo, mention MVP)
+     si médaille -- `NAT_MEDAL_COPY` avec un texte distinct par palier (Or/Argent/Bronze).
+     Palmarès national déjà distinct du palmarès club (`classifyAccolade()` dans `trophies.js`).
+     Aucun changement de code nécessaire.
+  Rendu montré à l'utilisateur via le showcase avant livraison (annonce de convocation,
+  bascule de thème fenêtre de sélection, nouveau choix de rivalité interne, résultat rapide
+  élimination, résultat célébration or, résultat célébration bronze).
+  Vérifié (300 carrières, deux runs indépendants) : 0% crash, 0 violation d'intégrité des
+  événements uniques (69 événements marqués `once` désormais, +1), 0 incohérence de format NBA.
+  **`nation_rivalry` confirmé reachable et non-dominant** : run dédié de 300 carrières pilotées,
+  vu dans 12% des carrières (36/300), sur 71/300 carrières ayant vécu au moins un événement de
+  fenêtre nationale -- fréquence cohérente avec son double verrou (`natWindow` + `natCap`).
+  Taux de titre élite : 9.7% sur le premier run à 300 (sous la bande "normale" 12-16% mais dans
+  la bande de bruit acceptable 7.7-21.7%), **12.7% sur un second run indépendant à 300** --
+  confirme qu'il s'agissait de bruit d'échantillonnage, pas d'une dérive : le seul ajout de
+  code de ce lot est un événement narratif à effets modestes (`natBonus`/`reputation`/`coach`
+  ±2 à ±6), sans logique de récompense touchée.
+
 - [x] **AGD-20 — Lot confort et fin de carrière** _(implémenté et vérifié le 2026-07-27)_
   Trois volets :
   1. *Navigation et reprise de partie*. Bouton accueil persistant (`ui/navbar.js`) : posé UNE

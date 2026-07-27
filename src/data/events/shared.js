@@ -118,6 +118,22 @@ export const SHARED_EVENTS = [
         effect:{natBonus:+3, morale:+2}, outcome:'Tu restes toi-même. Un groupe qui tient sur la durée se construit aussi comme ça.'}
     ]},
 
+  // Rivalité INTERNE au groupe (contrairement à "rivalry"/"rival_duel", qui opposent à un
+  // adversaire) : deux joueurs de la même sélection qui visent le même rôle dans le cinq --
+  // un ressort propre à la sélection nationale, jamais rencontré en club.
+  {id:'nation_rivalry', cat:'nation', cooldown:3,
+    when:(p,lg)=>!!(p.seasonMods && p.seasonMods.natWindow) && p.natCap,
+    title:'Le même poste, deux prétendants',
+    body:({p})=>`<i>(À l'entraînement, le sélectionneur ${p.nation.flag} observe en silence, carnet à la main.)</i> Un autre joueur du groupe vise exactement le même rôle que toi dans le cinq de départ. Une seule place à prendre, et le sélectionneur regarde de près qui la mérite.`,
+    weight:()=>0.9,
+    choices:({p})=>[
+      {label:'Hausser le ton à l\'entraînement pour t\'imposer', hint:'Le rapport de force, quitte à tendre le groupe',
+        effect:(ctx)=>{ const ok=actionRoll(ovr(p),70); ctx.ok=ok; return ok?{natBonus:+6, reputation:+3, coach:-2}:{natBonus:-3, coach:-3}; },
+        outcome:(ctx)=> ctx.ok?'Le sélectionneur tranche en ta faveur. La place est à toi, la relation avec ton rival un peu plus froide.':'Le message ne passe pas comme prévu. Le sélectionneur préfère calmer le jeu... en te laissant sur le banc.'},
+      {label:'Proposer une répartition claire des rôles', hint:'La diplomatie, pour préserver le collectif',
+        effect:{natBonus:+2, morale:+3, coach:+2}, outcome:'Le sélectionneur salue ta maturité. Le groupe reste soudé, même si le temps de jeu se partage.'}
+    ]},
+
   {id:'extension', cat:'contract', cooldown:3,
     when:(p,lg)=>p.contractY<=1 && ovr(p)>=lg.starter,
     title:'Ton club propose une prolongation',

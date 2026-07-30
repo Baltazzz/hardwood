@@ -6,6 +6,13 @@ import { screenTitle } from './ui/screens.js';
 import { mountConsentBanner } from './ui/consentBanner.js';
 import { initAnalytics } from './engine/analytics.js';
 import { handleIncomingLink } from './ui/challenge.js';
+import { applyEquippedTheme } from './engine/cosmetics.js';
+
+// Thème de boutique équipé (voir engine/cosmetics.js, AGENDA.md AGD-41) : posé une seule fois au
+// chargement, AVANT le premier écran -- persiste ensuite pour toute la session via les variables
+// CSS globales, sans avoir besoin d'être réappliqué à chaque changement d'écran (contrairement à
+// l'accent de club/nation, remis à zéro par chaque écran via resetAccent()).
+applyEquippedTheme();
 
 // Bouton accueil persistant, accessible en permanence pendant une carrière (voir ui/navbar.js) --
 // posé une seule fois ici, en dehors de #stage, sa visibilité est ensuite pilotée par chaque écran.

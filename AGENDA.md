@@ -9,41 +9,6 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Ouvert
 
-- [ ] **AGD-41 — Boutique (nouvel écran, portée non précisée)**
-  Ajouté au registre le 2026-07-28, mentionné en passant par l'utilisateur comme justification du
-  lot AGD-40 ("l'accueil doit rester clair même avec plus d'entrées à l'avenir, boutique
-  notamment") -- pas une demande à traiter maintenant, mais une entrée à venir prévue par le
-  nouveau design de l'accueil (le groupe "Suivi & records" en puces compactes est justement conçu
-  pour l'absorber sans rien bousculer, voir AGD-40). Contenu/mécanique de la boutique non précisés.
-  **Critère** : à définir avec l'utilisateur au moment de la demande (quoi acheter/débloquer,
-  avec quelle monnaie -- `p.money` existe déjà côté carrière -- persistant ou par carrière, etc.).
-
-- [ ] **AGD-37 — Iconographie premium SVG (écran titre + écran de création)**
-  Ajouté au registre le 2026-07-28. Remplacer les emojis par des icônes SVG faites maison,
-  uniquement sur l'écran titre (menu principal) et l'écran de création (poste, style de jeu) --
-  drapeaux nationaux non touchés. Exigences : famille visuelle unifiée (même épaisseur de trait,
-  même langage visuel), du caractère plutôt que des formes géométriques froides, couleurs
-  strictement issues de la palette Terre battue, zéro coquille d'alignement/proportion/centrage,
-  net à 360px comme en grand.
-  17 icônes conçues (`src/ui/icons.js`, nouveau module, pas encore branché sur les écrans) : 5
-  postes, 6 styles de jeu, 6 éléments du menu titre (Reprendre/Panthéon/Badges/Défi entre amis/
-  Défi du jour/Ma progression). Glyphe "ballon" unique réutilisé partout où un ballon apparaît,
-  trait `currentColor` uniforme (hérite la couleur du conteneur -- suit nativement les états déjà
-  existants du jeu : `.opt.pick` en accent terracotta, `.btn.ghost` en accent au survol -- sans
-  dupliquer cette logique en dur dans les SVG).
-  **Étape impérative respectée avant toute intégration** (consigne explicite de l'utilisateur) :
-  aperçu publié pour validation avant tout branchement sur le vrai jeu --
-  https://claude.ai/code/artifact/301710e5-aff9-4ea4-b115-10c8f4f392cc -- planche complète des 17
-  icônes (emoji actuel → nouvelle icône), rendu en contexte réel (mêmes classes CSS que le jeu :
-  `.opt`/`.abbr`/`.ttl`, `.btn.ghost`), test dédié à 360px, test de netteté aux tailles réelles
-  d'affichage (13/16/20px).
-  **Bloqué en attente de l'accord explicite de l'utilisateur sur le style** avant intégration --
-  aucun fichier du jeu modifié à ce stade (seul `src/ui/icons.js` existe, non importé ailleurs).
-  **Critère** : accord explicite obtenu sur l'aperçu (ou itération jusqu'à accord), puis icônes
-  effectivement branchées sur `screenTitle()`/`screenCreate()` dans `src/ui/screens.js` (import
-  de `icons.js`, emojis retirés des zones concernées), rendu vérifié à 360px et en grand,
-  audit de non-régression standard, puis `npm run ship`.
-
 - [ ] **AGD-07 — Enrichissement de la carte de fin et du Panthéon**
   Ajouté au registre le 2026-07-26 (mêmes réserves de provenance que AGD-06). État actuel déjà
   substantiel : citations de presse (`pressReview()`), courbe d'évolution OVR (`sparkline()`),
@@ -73,6 +38,89 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
   les écrans vus souvent, un peu plus affirmé sur ceux vus rarement).
 
 ## Coché récemment
+
+- [x] **AGD-41 — Cagnotte persistante + boutique cosmétique** _(implémentée et vérifiée le 2026-07-30)_
+  Placeholder réservé depuis AGD-40 (groupe "Suivi & records" de l'accueil, conçu pour l'absorber
+  sans rien bousculer), jamais commencé avant cette session -- premier diagnostic de session
+  confirmé qu'aucun code de boutique/cagnotte n'existait, malgré une session utilisateur évoquant
+  un chantier "cagnotte et boutique cosmétique" interrompu : aucune trace trouvée nulle part
+  (AGENDA, code, historique git), on est reparti de zéro sur la base d'AGD-41. Portée cadrée par
+  l'utilisateur en session : purement cosmétique, aucun effet sur gameplay/équilibrage/défis.
+  1. *Cagnotte* (`engine/wallet.js`, stockage `hardwood_wallet_v1`, même robustesse localStorage
+     + repli mémoire que le Panthéon/les badges). Convertit la trésorerie de fin de carrière
+     (`p.money`, k€) en jetons via une courbe SUR-linéaire (exposant 1.5), volontairement exigeante
+     comme demandé ("mieux vaut trop dur que trop facile") -- calibrée sur un échantillon RÉEL de
+     300 carrières pilotées (pas une estimation) : carrière médiocre médiane -> ~5 jetons, All-Star
+     -> ~88, Hall of Fame -> ~184, meilleure carrière observée sur l'échantillon (G.O.A.T.,
+     89 200 k€) -> ~280. Créditée une fois par carrière terminée (`endCareer()` dans `screens.js`),
+     avec le même garde-fou anti-double-comptage que `p.savedHOF` (endCareer() peut être
+     ré-invoqué, ex. retour depuis "Ma carte") -- vérifié directement, pas supposé. Affichée dans
+     le menu (écran titre, chip `.wallet-chip`) comme demandé.
+  2. *Boutique* (`engine/cosmetics.js` + `ui/shop.js`), 3 familles strictement décoratives (aucune
+     ne touche un champ lu par la simulation -- vérifié structurellement : `challengeCodec.js`/
+     `challenges.js`/`dailyChallenge.js`/`season.js`/`player.js` n'importent jamais wallet.js ni
+     cosmetics.js) :
+     - *Thèmes de couleur d'interface* : reskinne les variables CSS d'accent (`--orange`/`--mint`
+       et leurs nuances, + nouvelle `--btn-glow` extraite d'un literal rgba en dur pour que la
+       lueur des boutons suive le thème) -- décision de scope assumée : le fond/panneaux
+       (`--court`/`--panel`) et les ~25 lavis décoratifs `rgba()` en dur dispersés dans
+       `styles.css` restent inchangés quel que soit le thème (ambiance de fond, pas l'identité de
+       marque ; les retoucher tous aurait multiplié le risque de régression visuelle pour un gain
+       marginal). 6 palettes originales + 10 thèmes de grandes franchises NBA réutilisant
+       `GLOBAL_CLUB_COLORS` tel quel (`data/clubData.js`, sans logo ni marque) + 1 thème prestige
+       ("Or Champion"). Génération de palette réutilisant les primitives de contraste déjà
+       éprouvées d'`engine/accent.js` (`ensureContrast`/`deriveSecondary`, exportées pour
+       l'occasion) plutôt que de les dupliquer -- les 17 thèmes vérifiés par script dédié contre
+       les mêmes seuils de contraste AA que la palette d'origine. Bug trouvé et corrigé en session
+       sur une couleur de marque proche du noir pur (Brooklyn) : `--orange-deep`/
+       `--orange-deep-hover` convergeaient tous deux vers #000000 (survol de bouton sans aucun
+       effet visuel) -- corrigé par un plancher de luminosité avant dérivation.
+     - *Styles de carte de fin de carrière* (`CARD_STYLES` dans `card.js`) : 5 variantes + 1
+       prestige ("Édition Légende", fond or + ornements d'angle). Implémentées en ne touchant
+       QUE les couleurs/décors (fond, cadre, motif) -- le curseur Y qui positionne tout le texte
+       (audité et sécurisé lors d'AGD-32/35) reste identique caractère pour caractère, aucune
+       position ni aucun contenu ne change avec le style.
+     - *Cadres + titres honorifiques de profil* : affichés sur "Ma progression" (`.profile-header`,
+       nouveau bloc), 5 cadres + 1 prestige ("Cadre des Légendes"), 8 titres. Emplacements
+       indépendants, "aucun équipé" par défaut, jamais aucune donnée de carrière associée.
+  3. *Économie à deux vitesses* comme demandé : cosmétiques réguliers 10-45 jetons (accessibles
+     dès une carrière décente), 3 items prestige à 420-520 jetons chacun (aucune carrière unique
+     observée sur l'échantillon de calibration n'y suffit seule -- réclame plusieurs bonnes
+     carrières ou une carrière exceptionnelle, comme demandé).
+  4. *Intégration accueil* : bouton "🛍️ Boutique" ajouté au groupe "Suivi & records", exactement
+     la place réservée par AGD-40/AGD-41, aucune réorganisation nécessaire.
+  Rendu vérifié en conditions réelles (pas seulement en tests headless) : serveur de dev +
+  Chromium piloté (Playwright), captures d'écran de l'accueil, des 3 onglets de la boutique,
+  d'un thème NBA équipé en direct (reskin confirmé propagé immédiatement à toute l'interface,
+  y compris après retour à l'écran d'accueil), d'un cadre + titre équipés sur "Ma progression",
+  et d'une vraie carrière jouée de bout en bout jusqu'à la carte de fin en style "Édition
+  Légende" (fond or + étoiles d'angle, layout intact) -- zéro erreur JS sur l'ensemble du
+  parcours cliqué.
+  **Vérifié directement** (`tests/audit_cosmetics.mjs`, nouveau, `npm run audit:cosmetics`) :
+  formule de conversion monotone/jamais négative ; carrière pilotée réelle (harnais partagé)
+  confirmée créditer exactement `tokensFromMoney(p.money)` jetons, solde localStorage cohérent ;
+  ré-invocation d'`endCareer()` confirmée ne PAS recréditer (garde-fou testé, pas supposé) ;
+  achat refusé si solde insuffisant (rien débité/possédé) ; rachat d'un item déjà possédé refusé ;
+  `equip()` refuse une mauvaise famille et un item non possédé ; les 36 items payants du
+  catalogue s'achètent et s'équipent tous sans exception ; état localStorage inspecté
+  directement (pas seulement l'état mémoire) après achat/équipement ; les 6 styles de carte se
+  dessinent sans exception sur un vrai contexte canvas ; aucune fuite structurelle vers les
+  modules de défi/simulation (grep positif recherché, zéro trouvé) ; parcours cliqué complet
+  écran titre -> boutique -> onglets -> achat -> équipement -> retour sans crash.
+  Audit de non-régression : `npm run audit` 150 carrières (0% crash) ; `scripts/deep-audit.mjs`
+  300 carrières (0% crash, 0 violation d'intégrité sur les 73 événements `once`, taux de titre
+  élite 14.3% -- dans la bande normale 12-16%, cohérent avec un lot qui ne touche aucune logique
+  de jeu).
+
+- [x] **AGD-37 — Iconographie premium SVG (écran titre + écran de création)** _(ABANDONNÉ le 2026-07-30, jamais intégré)_
+  Ajouté au registre le 2026-07-28. Remplacer les emojis par des icônes SVG faites maison,
+  uniquement sur l'écran titre (menu principal) et l'écran de création (poste, style de jeu) --
+  drapeaux nationaux non touchés.
+  17 icônes conçues (`src/ui/icons.js`), jamais branchées sur les écrans -- restées bloquées en
+  attente de l'accord explicite de l'utilisateur sur le style (aperçu publié pour validation,
+  jamais confirmé). Décision explicite de l'utilisateur le 2026-07-30 : chantier abandonné avant
+  d'avoir jamais commencé côté jeu (aucun fichier du jeu n'avait été modifié). `src/ui/icons.js`
+  supprimé -- aucune trace à conserver, ce n'était qu'un brouillon non branché.
 
 - [x] **AGD-40 — Refonte accueil et palmarès** _(implémentée et vérifiée le 2026-07-28)_
   Trois points.

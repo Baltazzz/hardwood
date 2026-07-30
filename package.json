@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "audit": "node tests/audit.mjs",
     "audit:meta": "node tests/audit_meta_progression.mjs",
+    "audit:cosmetics": "node tests/audit_cosmetics.mjs",
     "gen:data": "node scripts/gen-club-data.mjs",
     "ship": "node scripts/ship.mjs"
   },

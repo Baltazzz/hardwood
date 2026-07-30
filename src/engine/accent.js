@@ -71,13 +71,17 @@ const NATION_ACCENT = {
 const FALLBACK_ACCENT = '#E0562D'; // = --orange : repli si aucune donnée de club/nation exploitable
 const BG = '#F4EDE1'; // = --court : fond clair sur lequel le contraste est garanti
 
+// Exportées pour engine/cosmetics.js (thèmes de couleur de la boutique) : mêmes primitives
+// colorimétriques que l'accent dynamique de carrière, pour générer une palette accessible à
+// partir d'une simple couleur de marque (club NBA ou teinte originale) sans dupliquer cette
+// logique de conversion/contraste ailleurs.
 function hashHue(str){
   let h = 0;
   for(let i=0;i<str.length;i++){ h = (h*31 + str.charCodeAt(i)) >>> 0; }
   return h % 360;
 }
 function clamp01(v){ return Math.max(0, Math.min(1, v)); }
-function hslToHex(h,s,l){
+export function hslToHex(h,s,l){
   s=clamp01(s); l=clamp01(l);
   const c=(1-Math.abs(2*l-1))*s, x=c*(1-Math.abs((h/60)%2-1)), m=l-c/2;
   let r,g,b;
@@ -86,7 +90,7 @@ function hslToHex(h,s,l){
   const to255=v=>Math.round((v+m)*255);
   return '#'+[to255(r),to255(g),to255(b)].map(v=>v.toString(16).padStart(2,'0')).join('');
 }
-function hexToRgb(hex){
+export function hexToRgb(hex){
   const h=hex.replace('#','');
   return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16));
 }
@@ -99,7 +103,7 @@ export function hexToRgba(hex, alpha){
   const [r,g,b] = hexToRgb(hex);
   return `rgba(${r},${g},${b},${alpha})`;
 }
-function rgbToHsl(r,g,b){
+export function rgbToHsl(r,g,b){
   r/=255; g/=255; b/=255;
   const mx=Math.max(r,g,b), mn=Math.min(r,g,b), l=(mx+mn)/2;
   if(mx===mn) return [0,0,l];
@@ -116,7 +120,7 @@ function relLuminance(hex){
   const [r,g,b]=hexToRgb(hex).map(v=>{ v/=255; return v<=0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055,2.4); });
   return 0.2126*r+0.7152*g+0.0722*b;
 }
-function contrastRatio(hexA,hexB){
+export function contrastRatio(hexA,hexB){
   const a=relLuminance(hexA)+0.05, b=relLuminance(hexB)+0.05;
   return a>b ? a/b : b/a;
 }
@@ -167,14 +171,14 @@ function nationAccentRaw(nationId){
 // algorithmiquement de la primaire plutôt que curatée, pour ne jamais présenter une seconde
 // couleur de marque inventée comme authentique. Teinte voisine (+32°), plus claire et un peu
 // moins saturée : lit comme un vrai "second ton" d'écusson plutôt qu'une couleur au hasard.
-function deriveSecondary(primaryHex){
+export function deriveSecondary(primaryHex){
   let [h,s,l] = rgbToHsl(...hexToRgb(primaryHex));
   const h2 = (h+32) % 360;
   return hslToHex(h2, Math.max(0.35, s*0.7), Math.min(0.84, l+0.22));
 }
 // La secondaire n'est qu'un aplat décoratif (jamais du texte) : contraste minimal juste pour
 // qu'elle reste visible sur crème, bien moins strict que pour l'accent principal.
-function ensureVisible(hex, minRatio=1.6){
+export function ensureVisible(hex, minRatio=1.6){
   let [h,s,l] = rgbToHsl(...hexToRgb(hex));
   let candidate = hslToHex(h,s,l);
   let iter=0;

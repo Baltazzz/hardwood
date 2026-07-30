@@ -24,6 +24,8 @@ import { addResult } from '../engine/challenges.js';
 import { recordDailyResult } from '../engine/dailyChallenge.js';
 import { startChallengeCreation, renderChallengeLeaderboard, startDailyChallenge, renderDailyLeaderboard } from './challenge.js';
 import { setInCareer } from './navbar.js';
+import { walletBalance, earnFromCareer } from '../engine/wallet.js';
+import { renderShop } from './shop.js';
 
 /* ============================================================
    ÉCRANS : TITRE + CRÉATION
@@ -126,6 +128,7 @@ export function screenTitle(){
   setInCareer(false);
   if(!welcomeSeen()){ screenWelcome(); return; }
   const best=hofBest();
+  const wallet=walletBalance();
   // Reprise de partie (voir engine/savegame.js) : bouton principal quand une carrière est en
   // pause, "Commencer" repasse alors en secondaire -- reprendre est l'intention la plus probable.
   const resumable = hasSavedGame();
@@ -140,7 +143,10 @@ export function screenTitle(){
       <button class="btn home-cta" id="${resumable?'resumeGo':'go'}">${resumable?'▶️ Reprendre ma carrière':'Commencer ma carrière'}</button>
       ${resumable?`<button class="btn ghost sm" id="go">Commencer une nouvelle carrière</button>`:''}
     </div>
-    ${best?`<div class="best-chip">🏆 Meilleur score légende : <b>${best}</b></div>`:''}
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      ${best?`<div class="best-chip">🏆 Meilleur score légende : <b>${best}</b></div>`:''}
+      <div class="wallet-chip">🪙 Cagnotte : <b>${wallet}</b></div>
+    </div>
 
     <!-- Modes de jeu : cartes (forme distincte des puces ci-dessous), une teinte propre à
          chacune -- le geste "lancer une partie", groupé et mis en avant. -->
@@ -159,13 +165,15 @@ export function screenTitle(){
     </div>
 
     <!-- Suivi & records : puces compactes, format le plus scalable des trois groupes (voir
-         styles.css) -- c'est ici que rejoindra la future Boutique, sans rien bousculer. -->
+         styles.css) -- la Boutique rejoint ce groupe comme prévu par sa conception (voir
+         AGENDA.md AGD-41), sans rien bousculer. -->
     <div class="home-group home-meta">
       <div class="eyebrow home-group-label">Suivi &amp; records</div>
       <div class="home-meta-row">
         <button class="btn ghost sm" id="hof">🏆 Panthéon</button>
         <button class="btn ghost sm" id="badges">🎖️ Hauts faits</button>
         <button class="btn ghost sm" id="progress">📊 Ma progression</button>
+        <button class="btn ghost sm" id="shop">🛍️ Boutique</button>
       </div>
     </div>
 
@@ -194,6 +202,7 @@ export function screenTitle(){
     startDailyChallenge();
   };
   document.getElementById('progress').onclick=()=>renderProgress();
+  document.getElementById('shop').onclick=()=>renderShop();
   document.getElementById('welcomeReopen').onclick=(e)=>{ e.preventDefault(); screenWelcome(); };
   document.getElementById('cookieReopen').onclick=(e)=>{ e.preventDefault(); reopenConsentBanner(); };
 }
@@ -913,6 +922,12 @@ export function endCareer(reason){
   if(!p.newBadges) p.newBadges = evaluateBadges(p);
   const newBadgeDefs = p.newBadges.map(id=>BADGES.find(b=>b.id===id)).filter(Boolean);
 
+  // Cagnotte (voir engine/wallet.js, AGENDA.md AGD-41) : une part de la trésorerie de fin de
+  // carrière convertie en jetons de boutique, une seule fois -- même garde-fou que p.savedHOF
+  // juste au-dessus (endCareer() peut être ré-invoqué). Purement cosmétique en aval (engine/
+  // cosmetics.js) : jamais relu par la simulation, aucun risque d'affecter le gameplay.
+  if(!p.savedWallet){ p.savedWallet=true; p.walletEarned=earnFromCareer(p); }
+
   // Défi entre amis (voir engine/challenges.js) : enregistre le score légende rattaché au défi,
   // une seule fois -- endCareer() peut être ré-invoqué (ex. retour depuis "Ma carte", qui rappelle
   // endCareer() comme callback), même garde-fou que p.savedHOF juste au-dessus.
@@ -942,6 +957,7 @@ export function endCareer(reason){
     <p class="subline">${p.nation.flag} ${POSITIONS.find(x=>x.id===p.pos).emoji} ${POSITIONS.find(x=>x.id===p.pos).name} · ${p.seasons.length} saisons · pic à ${p.peakOvr} OVR${p.hof?' · <b style="color:var(--mint)">Hall of Fame</b>':''}</p>
     <p class="body" style="max-width:520px;margin:14px auto 0;text-align:center">${blurb}</p>
     ${renderTagChips(activeTags(p), 'center')}
+    ${p.walletEarned?`<div style="text-align:center;margin-top:14px"><div class="wallet-chip">🪙 +${p.walletEarned} jetons gagnés pour la boutique</div></div>`:''}
     ${newBadgeDefs.length?`<div class="recap-block new-badges-block">
       <div class="eyebrow" style="text-align:center;margin-bottom:10px">🎖️ ${newBadgeDefs.length>1?'Nouveaux hauts faits débloqués':'Nouveau haut fait débloqué'}</div>
       <div class="badge-grid compact">${newBadgeDefs.map(b=>`<div class="badge-tile unlocked" style="--badge-color:${b.color}">

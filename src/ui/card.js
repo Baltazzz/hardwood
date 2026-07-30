@@ -7,6 +7,10 @@ import { tagsByIds, renderTagChips } from '../engine/tags.js';
 import { setInCareer } from './navbar.js';
 import { trackEvent } from '../engine/analytics.js';
 import { shareOrFallback, canvasToFile } from './share.js';
+import { hexToRgba } from '../engine/accent.js';
+import { walletBalance } from '../engine/wallet.js';
+import { equippedCardStyleId, equippedFrameId, equippedTitleId, cosmeticById } from '../engine/cosmetics.js';
+import { renderShop } from './shop.js';
 
 // Totaux cumulés de carrière (points/passes/rebonds/contres/interceptions) : séparateur de
 // milliers pour rester lisible sur des carrières longues (un total de 20 000+ points n'est pas
@@ -126,10 +130,19 @@ export function renderProgress(){
   const maxMvps = list.length ? Math.max(...list.map(r=>r.mvps||0)) : 0;
   const maxPts = list.length ? Math.max(...list.map(r=>r.bestPts||0)) : 0;
   const maxTd = list.length ? Math.max(...list.map(r=>r.tripleDoubles||0)) : 0;
+  // Profil cosmétique (voir engine/cosmetics.js) : cadre + titre honorifique équipés depuis la
+  // boutique, purement décoratifs -- aucun des deux n'entre dans un calcul, tous deux optionnels
+  // (aucun équipé par défaut).
+  const frameId = equippedFrameId();
+  const titleItem = cosmeticById(equippedTitleId());
+  const profileHeader = (frameId || titleItem) ? `<div class="profile-header ${frameId?`frame-${frameId.replace('frame_','')}`:''}">
+      ${titleItem?`<span class="profile-title-chip">${titleItem.name}</span>`:'<span class="profile-title-chip" style="color:var(--chalk-dim)">Aucun titre équipé</span>'}
+    </div>` : '';
   stage.innerHTML = `<div class="end" style="text-align:left">
     <div class="eyebrow" style="text-align:center">📊 Ma progression</div>
     <h2 style="text-align:center;font-size:26px;margin:6px 0 4px">Ta légende grandit</h2>
     <p class="body" style="text-align:center;color:var(--chalk-dim);margin-bottom:18px;font-size:13.5px">${totalCareers?`${totalCareers} carrière${totalCareers>1?'s':''} menée${totalCareers>1?'s':''} à terme.`:'Aucune carrière terminée pour l\'instant -- la première est toujours la plus marquante.'}</p>
+    ${profileHeader}
     <div class="legend-grid" style="max-width:560px">
       ${recordRow('Carrières jouées', totalCareers)}
       ${recordRow('Meilleur score légende', best)}
@@ -151,11 +164,13 @@ export function renderProgress(){
       <button class="btn" id="progressBack">Retour</button>
       <button class="btn ghost" id="progressHof">🏆 Voir le Panthéon</button>
       <button class="btn ghost" id="progressBadges">🎖️ Voir mes hauts faits</button>
+      <button class="btn ghost" id="progressShop">🛍️ Boutique (🪙 ${walletBalance()})</button>
     </div>
   </div>`;
   document.getElementById('progressBack').onclick=()=>screenTitle();
   document.getElementById('progressHof').onclick=()=>renderHallOfFame();
   document.getElementById('progressBadges').onclick=()=>renderBadges();
+  document.getElementById('progressShop').onclick=()=>renderShop();
 }
 
 // rank : index dans le Panthéon (0-based, voir renderHallOfFame()) -- optionnel, absent quand la
@@ -222,7 +237,7 @@ export function renderCareerCard(r, back){
     <p class="body" id="dlHint" style="text-align:center;color:var(--chalk-dim);font-size:12px;margin-top:10px;display:none">Le partage direct n'est pas disponible ici -- l'image a été téléchargée à la place.</p>
   </div>`;
   const canvas=document.getElementById('careerCard');
-  const draw=()=>drawCard(canvas,r);
+  const draw=()=>drawCard(canvas,r,equippedCardStyleId());
   if(document.fonts && document.fonts.ready){ document.fonts.ready.then(draw); setTimeout(draw,300); } else draw();
   document.getElementById('cardBack').onclick=()=>(back||screenTitle)();
   const filename='hardwood_'+(r.name||'carriere').replace(/\s+/g,'_')+'.png';
@@ -247,6 +262,25 @@ export function renderCareerCard(r, back){
   document.getElementById('dlCard').onclick=downloadCard;
 }
 
+// Styles de carte de la boutique cosmétique (voir engine/cosmetics.js, AGENDA.md AGD-41) --
+// STRICTEMENT décoratif : seules les couleurs/le décor du cadre changent d'un style à l'autre,
+// jamais une position ou un contenu (le curseur Y ci-dessous reste identique quel que soit le
+// style équipé). `classic` reproduit exactement les couleurs d'origine de la carte.
+export const CARD_STYLES = {
+  classic:{ name:'Classique', C:{chalk:'#241813',dim:'#5C4A3E',orange:'#E0562D',mint:'#A1821F',line:'#DCC9AF'},
+    bg:['#FFFFFF','#F8F1E4','#EEE2CC'], frameWidth:3 },
+  noir:{ name:'Carte Nuit', C:{chalk:'#F4EDE1',dim:'#C9B8A1',orange:'#F06A3E',mint:'#E3C15A',line:'#4A3A2E'},
+    bg:['#2A211A','#1C1712','#100C09'], frameWidth:3 },
+  parquet:{ name:'Fond Parquet', C:{chalk:'#241813',dim:'#5C4A3E',orange:'#E0562D',mint:'#A1821F',line:'#DCC9AF'},
+    bg:['#FFFFFF','#F8F1E4','#EEE2CC'], frameWidth:3, pattern:'lattes' },
+  vintage:{ name:'Bandeau Vintage', C:{chalk:'#241813',dim:'#6B5842',orange:'#B3541F',mint:'#8A731F',line:'#B8A583'},
+    bg:['#F7EFDD','#F0E4C8','#E4D3A8'], frameWidth:3, doubleFrame:true },
+  gold_frame:{ name:'Cadre Or', C:{chalk:'#241813',dim:'#5C4A3E',orange:'#E0562D',mint:'#A1821F',line:'#A1821F'},
+    bg:['#FFFFFF','#F8F1E4','#EEE2CC'], frameWidth:7 },
+  legend_foil:{ name:'Édition Légende', C:{chalk:'#2A1F12',dim:'#5C4A2E',orange:'#B8860B',mint:'#4A3F1C',line:'#B8860B'},
+    bg:['#FFF8E1','#F3E2AE','#D9BD6E'], frameWidth:5, ornate:true },
+};
+
 // Carte de carrière (canvas) -- AUDIT COMPLET du positionnement (voir AGENDA.md) : l'ancienne
 // version plaçait chaque élément à une coordonnée Y absolue et codée en dur, en supposant
 // implicitement la hauteur de tout ce qui le précédait (notamment le bloc HOF, affiché
@@ -256,22 +290,41 @@ export function renderCareerCard(r, back){
 // CURSEUR Y qui avance de la hauteur RÉELLEMENT dessinée à chaque étape : plus aucune position
 // suivante ne peut se retrouver désynchronisée de ce qui la précède, quel que soit le contenu
 // (nom court/long, carrière riche/pauvre en accomplissements, HOF ou non).
-function drawCard(canvas, r){
+// Exportée uniquement pour le test dédié (tests/audit_cosmetics.mjs, styles de carte de la
+// boutique) -- jamais utilisée ailleurs dans le jeu, toujours appelée via renderCareerCard().
+export function drawCard(canvas, r, styleId){
   const W=1080, H=1350, x=canvas.getContext('2d');
   canvas.width=W; canvas.height=H;
-  const C={chalk:'#241813',dim:'#5C4A3E',orange:'#E0562D',orangeSoft:'#B34524',mint:'#A1821F',mintSoft:'#836919',panel:'#FFFFFF',line:'#DCC9AF'};
+  const S = CARD_STYLES[styleId] || CARD_STYLES.classic;
+  const C = S.C;
   const CX=W/2, safeW=W-160; // marge sûre commune à tout le texte centré de la carte
-  // fond dégradé — crème chaud Terre battue
-  const g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,'#FFFFFF'); g.addColorStop(0.55,'#F8F1E4'); g.addColorStop(1,'#EEE2CC');
+  // fond dégradé -- couleurs propres au style équipé (voir engine/cosmetics.js "styles de carte",
+  // AGENDA.md AGD-41) ; par défaut, exactement le dégradé crème chaud Terre battue d'origine.
+  const g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,S.bg[0]); g.addColorStop(0.55,S.bg[1]); g.addColorStop(1,S.bg[2]);
   x.fillStyle=g; x.fillRect(0,0,W,H);
-  // halo chaud en haut, très léger (un halo aussi marqué que sur fond sombre écraserait le blanc)
-  const rg=x.createRadialGradient(W/2,-120,60,W/2,-120,760); rg.addColorStop(0,'rgba(224,86,45,0.10)'); rg.addColorStop(1,'rgba(224,86,45,0)');
+  // Motif "parquet" optionnel (lattes diagonales, très discret) -- posé APRÈS le fond mais AVANT
+  // le halo/la bande signature, jamais au-dessus du texte.
+  if(S.pattern==='lattes'){
+    x.save(); x.strokeStyle=hexToRgba(C.chalk,0.045); x.lineWidth=2;
+    for(let lx=-H; lx<W+H; lx+=34){ x.beginPath(); x.moveTo(lx,0); x.lineTo(lx+H,H); x.stroke(); }
+    x.restore();
+  }
+  // halo chaud en haut, très léger (un halo aussi marqué que sur fond sombre écraserait le fond) --
+  // dérivé de la couleur d'accent du style, jamais une teinte terracotta fixe qui jurerait sur un
+  // fond sombre ou doré.
+  const rg=x.createRadialGradient(W/2,-120,60,W/2,-120,760); rg.addColorStop(0,hexToRgba(C.orange,0.10)); rg.addColorStop(1,hexToRgba(C.orange,0));
   x.fillStyle=rg; x.fillRect(0,0,W,700);
   // bande signature terracotta -> or
   x.fillStyle=x.createLinearGradient(0,0,W,0); x.fillStyle.addColorStop(0,C.orange); x.fillStyle.addColorStop(1,C.mint);
   x.fillRect(0,0,W,6);
-  // cadre
-  x.strokeStyle=C.line; x.lineWidth=3; roundRect(x,28,34,W-56,H-62,26); x.stroke();
+  // cadre -- épaisseur propre au style (ex. "Cadre Or" plus épais), second liseré inséré pour le
+  // style "vintage", ornements d'angle pour le style prestige "Édition Légende".
+  x.strokeStyle=C.line; x.lineWidth=S.frameWidth; roundRect(x,28,34,W-56,H-62,26); x.stroke();
+  if(S.doubleFrame){ x.lineWidth=1.5; roundRect(x,38,44,W-76,H-82,20); x.stroke(); }
+  if(S.ornate){
+    const fx=28, fy=34, fw=W-56, fh=H-62;
+    [[fx+16,fy+16],[fx+fw-16,fy+16],[fx+16,fy+fh-16],[fx+fw-16,fy+fh-16]].forEach(([ox,oy])=>drawStar(x,ox,oy,8,C.mint));
+  }
   x.textAlign='center'; x.textBaseline='alphabetic';
 
   let y=124; // baseline du titre -- seule coordonnée absolue de tout le dessin, tout le reste en découle
@@ -312,7 +365,7 @@ function drawCard(canvas, r){
   const badgeTop=y, badgeH=88;
   x.font='700 52px "Bricolage Grotesque", Arial, sans-serif';
   const tw=x.measureText(r.tier||'').width; const bw=Math.min(Math.max(tw+90,360),W-140);
-  x.fillStyle='rgba(161,130,31,0.10)'; x.strokeStyle=C.mint; x.lineWidth=2.5;
+  x.fillStyle=hexToRgba(C.mint,0.10); x.strokeStyle=C.mint; x.lineWidth=2.5;
   roundRect(x,(W-bw)/2,badgeTop,bw,badgeH,44); x.fill(); x.stroke();
   x.fillStyle=C.mint; x.fillText(r.tier||'', CX, badgeTop+60);
   y=badgeTop+badgeH;
@@ -336,7 +389,7 @@ function drawCard(canvas, r){
   const gy0=y;
   const cells=[['Score',r.score],['Titres',r.champs],['MVP',r.mvps],['All-Star',r.allstars],['Pic OVR',r.peak],['Clutch',r.clutch||0]];
   for(let i=0;i<cells.length;i++){ const cx=gx0+(i%3)*cwid, cy=gy0+Math.floor(i/3)*(chei+cgap);
-    x.fillStyle='rgba(36,24,19,0.035)'; x.strokeStyle=C.line; x.lineWidth=1.5; roundRect(x,cx+10,cy,cwid-20,chei,18); x.fill(); x.stroke();
+    x.fillStyle=hexToRgba(C.chalk,0.035); x.strokeStyle=C.line; x.lineWidth=1.5; roundRect(x,cx+10,cy,cwid-20,chei,18); x.fill(); x.stroke();
     x.fillStyle=C.chalk; x.font='700 68px "Bricolage Grotesque", Arial, sans-serif'; x.fillText(String(cells[i][1]), cx+cwid/2, cy+82);
     x.fillStyle=C.dim; x.font='600 25px "Bricolage Grotesque", Arial, sans-serif'; spacedText(x,String(cells[i][0]).toUpperCase(),cx+cwid/2,cy+122,1.5);
   }
@@ -432,4 +485,4 @@ function wrapText(x,text,cx,cy,maxW,lh,maxLines=4){
   shown.forEach((ln,i)=>x.fillText(ln,cx,cy+i*lh));
   return shown.length;
 }
-function drawSpark(x,series,ox,oy,w,h,C){ const mn=Math.min(...series),mx=Math.max(...series),rng=Math.max(1,mx-mn); const n=series.length; const bw=Math.min(w/n*0.66,26); const gap=(w-bw*n)/(n+1); series.forEach((v,i)=>{ const bh=14+((v-mn)/rng)*(h-14); const bx=ox+gap+i*(bw+gap); const isPk=v===mx; x.fillStyle=isPk?C.mint:'rgba(224,86,45,0.7)'; roundRect(x,bx,oy+h-bh,bw,bh,4); x.fill(); }); }
+function drawSpark(x,series,ox,oy,w,h,C){ const mn=Math.min(...series),mx=Math.max(...series),rng=Math.max(1,mx-mn); const n=series.length; const bw=Math.min(w/n*0.66,26); const gap=(w-bw*n)/(n+1); series.forEach((v,i)=>{ const bh=14+((v-mn)/rng)*(h-14); const bx=ox+gap+i*(bw+gap); const isPk=v===mx; x.fillStyle=isPk?C.mint:hexToRgba(C.orange,0.7); roundRect(x,bx,oy+h-bh,bw,bh,4); x.fill(); }); }

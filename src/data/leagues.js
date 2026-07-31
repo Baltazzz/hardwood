@@ -8,6 +8,10 @@
 // retenue par palier plutôt qu'une valeur par nation.
 export const LEAGUES = {
   academy:  {tier:5,   emoji:'🌱', name:'Centre de formation', short:'FORMATION', color:'#7d8794', starter:46, star:60, prestige:1, games:26},
+  // Voie US uniquement : le lycée (high school) précède désormais la fac (NCAA) comme deux
+  // étapes distinctes du parcours, plus fidèle à la réalité du basket américain (voir AGENDA.md)
+  // -- auparavant un joueur US démarrait directement en NCAA, sans jamais passer par le lycée.
+  highschool: {tier:5, emoji:'🏫', name:'Lycée (High School US)', short:'LYCÉE', color:'#5c8ac9', starter:42, star:56, prestige:1, games:26},
   college:  {tier:5,   emoji:'🎓', name:'NCAA (université US)', short:'NCAA', color:'#7a5cff', starter:48, star:62, prestige:2, games:31},
   third:    {tier:4.5, emoji:'🔹', name:'Division régionale', short:'3E DIV.', color:'#6d5a3b', starter:53, star:65, prestige:2, games:28},
   second:   {tier:4,   emoji:'🔷', name:'2e division pro', short:'PRO 2', color:'#8a6d3b', starter:60, star:71, prestige:3, games:32},

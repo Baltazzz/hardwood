@@ -9,6 +9,23 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Ouvert
 
+- [ ] **AGD-46 — Traduction anglaise du corpus narratif (~200 événements de carrière)**
+  Ajouté au registre le 2026-07-31, suite explicite d'AGD-44 : l'utilisateur a choisi lui-même le
+  périmètre de cette session ("Interface + données d'abord, narratif ensuite") -- ce ticket
+  couvre le "ensuite". Concerne `data/events/early.js`, `mid.js`, `late.js`, `shared.js`,
+  `attributes.js`, `threads.js`, `traits_payoff.js`, `wellbeing.js`, `nba_flavor.js`,
+  `nba_franchise.js` (~2600 lignes, plusieurs milliers de chaînes titre/corps/choix/indice/
+  résultat, dont beaucoup en fonctions dynamiques mêlant logique et texte). L'infrastructure
+  (`engine/i18n.js`, `i18n/fr.js`/`en.js`) est prête à les recevoir -- repli automatique sur le
+  français déjà en place (jamais de texte cassé/manquant en attendant), donc aucune urgence
+  technique, seulement un volume de traduction restant. Les commentaires/flaveur des clubs dans
+  `data/clubData.js` (noms réels + commentaires en français) restent également hors périmètre de
+  ce ticket, à traiter à part si demandé.
+  **Critère** : chaque fichier ci-dessus a ses clés `events.<id>.*` dans `i18n/fr.js`/`en.js`,
+  chaque événement lit son texte via `t()` au lieu d'un littéral, `npm run audit:i18n` étendu pour
+  vérifier qu'aucune clé `events.*` n'est manquante côté anglais, une carrière pilotée en anglais
+  ne montre plus aucun texte français dans le corps des événements.
+
 - [ ] **AGD-07 — Enrichissement de la carte de fin et du Panthéon**
   Ajouté au registre le 2026-07-26 (mêmes réserves de provenance que AGD-06). État actuel déjà
   substantiel : citations de presse (`pressReview()`), courbe d'évolution OVR (`sparkline()`),
@@ -38,6 +55,154 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
   les écrans vus souvent, un peu plus affirmé sur ceux vus rarement).
 
 ## Coché récemment
+
+- [x] **AGD-47 — Refonte économie boutique (monnaie réelle, primes de titres, descriptifs, onglet Collection)** _(implémenté et vérifié le 2026-07-31)_
+  Cinq points, en creusant AGD-41 juste après sa livraison.
+  1. *Abandon des jetons*. `engine/wallet.js` réécrit : la cagnotte cumule DIRECTEMENT la
+     trésorerie de fin de carrière (`p.money`, même unité k€ que partout ailleurs dans le jeu --
+     salaire/fortune du HUD, totaux de la carte), sans plus aucune courbe de conversion opaque.
+     `tokensFromMoney()` supprimée. Icône remplacée : 🪙 (jugée trop proche d'une lune) -> 💰
+     partout (accueil, boutique, fin de carrière, Ma progression) -- réutilise l'emoji déjà présent
+     ailleurs dans le jeu pour l'argent (`💰 ${money(p.salary)}/an`, season.js), pas un nouveau
+     symbole. Affichage systématiquement formaté via `money()` (déjà utilisé par le HUD/la carte --
+     "X k€"/"X M€"), plus jamais un entier brut.
+  2. *Prix recalibrés*. Les ~50 cosmétiques passent d'une échelle de jetons abstraite à des prix en
+     k€, calibrés sur la distribution RÉELLE de trésorerie déjà mesurée cette session (médiane
+     ~13 900 k€, p90 ~54 300 k€, max observé sur 300 carrières ~89 200 k€) : cosmétiques réguliers
+     1 500-8 000 k€ (accessibles dès une carrière correcte), prestige 150 000-260 000 k€. Calibrage
+     RE-VÉRIFIÉ par une simulation dédiée de 30 vraies carrières enchaînées (pas une estimation) :
+     médiane par carrière ~15 800 k€ (largement au-dessus du cosmétique le plus cher hors
+     prestige), cumul après 30 carrières ~881 M€, ~14 carrières médianes ou ~2-3 très bonnes
+     carrières pour un item prestige à 220 000 k€ -- cohérent avec "plusieurs grosses carrières,
+     au besoin des centaines de millions" demandé.
+  3. *Primes de titres*. Nouvelle fonction `titleBonusFor(accolades)` (`engine/wallet.js`) : chaque
+     trophée/titre de la carrière qui vient de se terminer ajoute un montant modéré à la cagnotte
+     (barème par type d'accolade -- Champion NBA 3 000 k€, MVP 2 500 k€, All-Star 250 k€, médaille
+     d'or 1 000 k€, etc., paliers mineurs à un tarif réduit), lu directement depuis `p.accolades`
+     déjà calculé par `endCareer()`. Volontairement mesuré : même une carrière très décorée reste
+     dominée par la trésorerie de base (vérifié -- la prime cumulée d'un profil élite type reste
+     sous la médiane de trésorerie d'une carrière, jamais la source dominante).
+  4. *Descriptifs réécrits*. Les ~50 descriptions de cosmétiques (thèmes, cartes, titres, cadres)
+     réécrites avec du ton et de l'humour cohérent avec le reste du jeu (registre déjà utilisé
+     dans les événements narratifs -- adresse directe "tu", private jokes basket : "Prévois de
+     shooter à 3 points depuis le parking" pour le thème Warriors, "Trust the process, même pour
+     choisir un thème d'interface" pour Philadelphie, etc.), en français ET en anglais (paires
+     traduites, pas juste transposées littéralement).
+  5. *Onglet Collection*. Quatrième onglet de la boutique (`ui/shop.js`), nouvelle famille
+     `collection` dans le catalogue (`engine/cosmetics.js`, `comingSoon:true`) : 4 emplacements
+     "carte" + 2 "maillot", jamais achetables/équipables tant qu'aucun visuel réel n'est fourni
+     (refusés explicitement par `purchase()`/`equip()`, pas juste cachés). Rendu volontairement
+     "propre mais en attente" (bordure pointillée, silhouette SVG faite maison, badge "Bientôt
+     disponible") plutôt qu'un onglet vide ou une erreur -- prêt à recevoir les vrais visuels
+     (cartes/maillots) sans reprendre la structure.
+  Rendu vérifié en navigateur réel (Playwright) : accueil avec la nouvelle icône et le nouveau
+  format M€, onglet Thèmes avec prix/descriptions recalibrés, onglet Collection avec les 6
+  emplacements réservés correctement affichés.
+  **Vérifié directement** (`tests/audit_cosmetics.mjs`, réécrit) : `earnFromCareer()` confirmé
+  égal à trésorerie + primes exactement (formule directe, plus de courbe) sur une vraie carrière
+  pilotée ; primes de titres calculées et strictement positives, différenciées majeur/mineur,
+  restent modérées ; ré-invocation d'`endCareer()` ne recrédite pas ; les 36 items achetables
+  (hors Collection) s'achètent/s'équipent tous ; les 6 emplacements Collection refusés à l'achat
+  ET à l'équipement (`reason:'coming_soon'`) ; état localStorage inspecté directement ; parcours
+  cliqué réel couvrant les 4 onglets, y compris Collection (aucun bouton acheter/équiper actif
+  dedans) ; aucune fuite vers les défis/classements (structurel, inchangé) ; les 6 styles de carte
+  se dessinent toujours sans exception. Audit de non-régression : `npm run audit` 150 carrières
+  et `scripts/deep-audit.mjs` 300 carrières, 0% crash, 0 violation d'intégrité `once`, taux de
+  titre élite 10.7% (bande normale).
+
+- [x] **AGD-42 — Lien de défi entre amis trop long** _(implémenté et vérifié le 2026-07-31)_
+  Le lien encodait tout le profil complet (attributs + offres d'académie) en JSON+base64
+  (~1200 caractères de JSON, ~1600 caractères encodés, mesuré directement). Remplacé par
+  l'encodage d'une simple GRAINE (`engine/challenges.js generateChallengeDef(seed)` +
+  `engine/prng.js`, même mécanisme déterministe que le défi du jour) : le profil complet est
+  régénéré à l'identique côté destinataire à partir de cette seule graine, jamais transmis.
+  Lien de résultat compacté en tableau positionnel + palier réduit à un index (`engine/badges.js`
+  `TIER_RANK`, déjà existant, exporté pour l'occasion) plutôt qu'un objet à clés nommées.
+  **Vérifié** : lien de défi réel créé via le vrai flux UI = 34 caractères (contre ~1600 avant,
+  calculé sur le même profil) ; deux décodages indépendants de la même graine produisent un
+  profil strictement identique (attributs + offres d'académie inclus) ; lien corrompu/vide/non-
+  string -> `null` sans exception ; lien de résultat décodé fidèlement, `mine` toujours exclu.
+  Script dédié permanent `tests/audit_challenge_link.mjs` (`npm run audit:link`).
+
+- [x] **AGD-43 — Développer le système de traits** _(implémenté et vérifié le 2026-07-31)_
+  9 -> 17 traits (`engine/tags.js`). Six proviennent de flags narratifs déjà nourris par de
+  nombreux événements existants mais jamais promus en trait visible (Noctambule/Héros des
+  finales/Mentor/Grande rivalité/Chasseur de bagues/Loyaliste) -- chacun avait déjà son propre
+  "fil narratif" de paiement dans `data/events/threads.js`, parfois sur plusieurs paliers
+  (ex. `clutch_payoff` puis `clutch_legend_status`) : les rendre visibles leur donne une vraie
+  identité de trait sans dupliquer le travail narratif déjà écrit. Deux entièrement nouveaux
+  (Showman/Bosseur) avec leurs propres événements nourriciers (`highlight_reel`/
+  `brand_highlight_deal`/`extra_reps`/`preserve_you`, `data/events/shared.js`). Comblé les deux
+  seuls traits d'origine sans AUCUN scénario dédié (Tête brûlée, Chouchou des médias) avec un
+  vrai arc en deux temps (événement récurrent `hasTrait()`-gated dans `traits_payoff.js` + palier
+  "légende" `once:true` à seuil élevé dans `threads.js`), même structure que les traits
+  historiques les mieux dotés. Couple avantage/inconvénient conservé pour les 8 nouveaux, jamais
+  d'effet sur les attributs/probabilités de récompense (jauges molles seulement, comme les 9
+  d'origine). Nouvelle opposition thématique `ringChaser`/`loyalOne` dans `OPPOSES`.
+  **Vérifié** : `scripts/deep-audit.mjs` 300 carrières confirme les 17 traits actifs avec des
+  fréquences de déblocage mesurées (5%-37% pour la plupart, quelques traits volontairement rares
+  comme les 3 traits d'origine déjà connus pour l'être) ; script dédié confirme les 17 ids
+  uniques, couple pro/con non vide pour chacun, et qu'aucun flag de trait n'est orphelin (nourri
+  par au moins un événement réel du jeu) ; 0% crash, 0 violation d'intégrité `once`.
+
+- [x] **AGD-44 — Réglages + traduction anglaise (interface et données)** _(implémenté et vérifié le 2026-07-31, périmètre narratif restant : voir AGD-46)_
+  Infrastructure i18n complète et extensible (`engine/i18n.js` + `i18n/fr.js`/`en.js`,
+  dictionnaires imbriqués en miroir) : `t(clé, variables)` résout dans la langue courante, retombe
+  TOUJOURS sur le français si la clé manque côté anglais (jamais de texte cassé/clé brute
+  affichée), langue persistée comme le Panthéon/les badges (`hardwood_locale_v1`), français par
+  défaut tant qu'aucun choix explicite n'a été fait (décision utilisateur en session). Écran
+  Réglages (`ui/settings.js`) accessible depuis l'accueil (groupe "Suivi & records"), sélecteur de
+  langue FR/EN, note explicite sur le périmètre narratif restant.
+  **Portée de session, choisie explicitement par l'utilisateur** ("Interface + données d'abord,
+  narratif ensuite") : traduction à 100% de tout ce qui n'est pas narratif -- écran titre,
+  bienvenue, création de personnage (5 étapes + choix d'académie), fin de carrière, Panthéon,
+  fiche carrière, hauts faits, Ma progression, boutique (catalogue complet), carte de carrière
+  (canvas ET partage), armoire à trophées, HUD (jauges/attributs), bandeau cookies, bouton
+  accueil, écrans de défi (profil/palier). Catalogues de données traduits : postes, attributs,
+  styles, modes de vie, 35 nations, ligues (dont le nouveau palier lycée), paliers de score
+  (`TIER_RANK`), 30 hauts faits, ~50 cosmétiques, libellés de trophées/accolades (y compris les
+  titres/MVP de palier mineur, un par palier de `leagues.js`). Cette dernière catégorie
+  (accolades) reste stockée en français en interne (format de sauvegarde partagé avec le
+  Panthéon/les défis, jamais changé) -- traduite uniquement à l'affichage via un index stable
+  (même principe que `TIER_RANK`), jamais en touchant les enregistrements déjà sauvegardés.
+  **Non couvert cette session** (voir AGD-46) : les ~200 événements narratifs de carrière, les
+  commentaires/flaveur des clubs (`clubData.js`), quelques écrans secondaires (résultat de saison,
+  transferts/draft, tournoi national) -- tous restent en français quelle que soit la langue
+  choisie, sans casser l'affichage (repli français déjà démontré fonctionnel).
+  **Vérifié directement** (`tests/audit_i18n.mjs`, nouveau, `npm run audit:i18n`) : les deux
+  dictionnaires sont parfaitement en miroir (0 clé manquante des deux côtés) ; `t()` résout
+  correctement en anglais et retombe sur le français pour une clé absente ; langue persistée en
+  localStorage ; parcours cliqué réel accueil -> réglages -> anglais -> retour accueil (bouton
+  Boutique confirmé traduit) -> re-français, sans erreur JS ; **une carrière complète pilotée
+  entièrement en anglais de bout en bout, sans exception**. Rendu vérifié en navigateur réel
+  (Playwright) : écran Réglages, accueil et étape "Ton pays" (35 nations) confirmés visuellement
+  corrects en anglais. Audit de non-régression standard : 0% crash.
+
+- [x] **AGD-45 — Retours de testeurs américains** _(implémenté et vérifié le 2026-07-31)_
+  Deux points.
+  1. *Stats non traduites*. Résolu comme conséquence directe d'AGD-44 : toutes les statistiques et
+     libellés (attributs, postes, styles, paliers, trophées, cagnotte, cadres de boutique) passent
+     désormais par `t()`. Vérification ciblée : recherche de tout affichage direct de `.name`/
+     `.desc` de catalogue sans passer par `t()` dans les écrans touchés -- aucun trouvé.
+  2. *Lycée distinct de l'université pour la voie US*. Cause trouvée : `chooseAcademy()`
+     (`engine/season.js`) plaçait un joueur US directement en `college` (NCAA) dès la première
+     saison, sans jamais passer par le lycée -- confirmé par un `CLUB_DATA.US.academy` existant
+     mais mal aligné (10 entrées "pipeline" haut-prestige jamais utilisées par le moteur,
+     reliquat d'un ancien lot). Nouveau palier `highschool` (`data/leagues.js`, tier 5, seuils
+     sous ceux de la NCAA) avec un vrai roster de 14 lycées (programmes réels reconnus -- Montverde,
+     IMG, Oak Hill, Sierra Canyon... -- plus deux lycées publics génériques pour la texture),
+     `CLUB_DATA.US.highschool`. `generateAcademyOffers()` route désormais les offres US vers ce
+     palier (`engine/academies.js`), `chooseAcademy()` démarre un joueur US en lycée (salaire 0,
+     amateur), nouvelle promotion lycée -> NCAA en jeu (`engine/season.js`, seuil de niveau OU âge
+     18 ans, jamais éligible à la draft directement depuis le lycée). Bug latent corrigé au
+     passage : le compteur de saisons "à la fac" pour l'éligibilité anticipée à la draft comptait
+     PAR ERREUR les saisons de lycée (`p.seasons.length` au lieu d'un filtre par ligue) -- aurait
+     rendu un joueur éligible après une seule vraie saison de fac.
+  **Vérifié** : script dédié forçant la voie US sur 60 carrières pilotées -- 54/54 carrières ayant
+  choisi une offre US confirmées passer par `highschool` PUIS `college` dans cet ordre exact,
+  jamais l'inverse, jamais `college` sans `highschool` au préalable ; 0 crash ; progression
+  observée jusqu'en NBA/G League/EuroLeague sans accroc. Audit de non-régression standard (150
+  carrières) et approfondi (300 carrières) : 0% crash, 0 violation d'intégrité `once`.
 
 - [x] **AGD-41 — Cagnotte persistante + boutique cosmétique** _(implémentée et vérifiée le 2026-07-30)_
   Placeholder réservé depuis AGD-40 (groupe "Suivi & records" de l'accueil, conçu pour l'absorber

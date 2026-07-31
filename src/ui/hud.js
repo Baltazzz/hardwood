@@ -7,6 +7,7 @@ import { applyAccent, emblemColors, textColorOn, hexToRgba } from '../engine/acc
 import { activeTags, renderTagChips } from '../engine/tags.js';
 import { statContextLine } from '../engine/vitals.js';
 import { stage } from './dom.js';
+import { t } from '../engine/i18n.js';
 
 /* ============================================================
    RENDU HUD
@@ -72,7 +73,7 @@ export function renderHUD(mode='club'){
   // la plus notable du moment (une seule, pour rester lisible), rien si tout reste dans la norme.
   const statCtx = statContextLine(p);
   const attrsHtml = ATTRS.map(a=>`
-    <div class="attr"><div class="arow"><span class="an">${a.name}</span>
+    <div class="attr"><div class="arow"><span class="an">${t('attrs.'+a.id)}</span>
       <span class="av" id="av-${a.id}">${p.attrs[a.id]}</span></div>
       <div class="abar"><i style="width:${p.attrs[a.id]}%"></i></div></div>`).join('');
   // Lavis dynamique de la tuile profil (voir .player-card dans styles.css) : rgba() pré-calculés
@@ -85,25 +86,25 @@ export function renderHUD(mode='club'){
       <div class="club-stripe"></div>
       <div class="pc-top">
         <div><div class="pc-name">${p.name}</div>
-          <div class="pc-meta">${p.nation.flag} ${pos.emoji} ${pos.name} · ${p.age} ans</div></div>
+          <div class="pc-meta">${p.nation.flag} ${pos.emoji} ${t('positions.'+pos.id+'.name')} · ${p.age} ${t('common.years')}</div></div>
         <div class="ovr-badge" style="--pct:${o}"><div class="n" id="ovrN">${o}</div><div class="l">OVR</div></div>
       </div>
       <div class="pc-club">
         ${clubMarkSvg(emblemPrimary, emblemSecondary, p.club)}
-        <div class="pc-club-txt"><div class="cn">${p.club||'Sans club'}</div>
+        <div class="pc-club-txt"><div class="cn">${p.club||t('hud.noClub')}</div>
           <div class="cl">${lg?lg.short:''}${p.club&&p.seasons.length?` · <span style="color:var(--mint)">${roleOf(p).label}</span>`:''}</div></div>
       </div>
       ${renderTagChips(activeTags(p))}
       <div class="meters">
-        ${meter('Réputation',p.reputation,'linear-gradient(90deg,var(--orange-soft),var(--orange))')}
-        ${meter('Moral',p.morale,'linear-gradient(90deg,var(--mint-soft),var(--mint))')}
-        ${meter('Forme',p.fitness,'linear-gradient(90deg,var(--chalk-dim),var(--chalk))')}
+        ${meter(t('hud.reputation'),p.reputation,'linear-gradient(90deg,var(--orange-soft),var(--orange))')}
+        ${meter(t('hud.morale'),p.morale,'linear-gradient(90deg,var(--mint-soft),var(--mint))')}
+        ${meter(t('hud.fitness'),p.fitness,'linear-gradient(90deg,var(--chalk-dim),var(--chalk))')}
       </div>
       ${statCtx?`<div class="stat-context">${statCtx}</div>`:''}
     </div>
     <div class="card">
       <button type="button" id="ficheToggle" class="eyebrow fiche-toggle" aria-expanded="${ficheOpen}" aria-controls="ficheBody">
-        <span>Fiche technique</span><span class="fiche-chevron${ficheOpen?' open':''}" id="ficheChevron">
+        <span>${t('hud.ficheTech')}</span><span class="fiche-chevron${ficheOpen?' open':''}" id="ficheChevron">
           <svg viewBox="0 0 24 24" width="12" height="12"><path d="M5 9L12 16L19 9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </span>
       </button>
@@ -111,10 +112,10 @@ export function renderHUD(mode='club'){
         <div class="fiche-inner">
           <div class="attrs" style="margin-top:12px">${attrsHtml}</div>
           <div style="display:flex;gap:18px;margin-top:16px;flex-wrap:wrap">
-            ${miniStat('Coach',p.coach)} ${miniStat('Médias',p.media)} ${miniStat('Popularité',p.popularity)}
-            <div><div class="an" style="font-size:11px;color:var(--chalk-dim);text-transform:uppercase;letter-spacing:.06em;font-family:'Bricolage Grotesque'">Salaire/an</div>
+            ${miniStat(t('hud.coach'),p.coach)} ${miniStat(t('hud.media'),p.media)} ${miniStat(t('hud.popularity'),p.popularity)}
+            <div><div class="an" style="font-size:11px;color:var(--chalk-dim);text-transform:uppercase;letter-spacing:.06em;font-family:'Bricolage Grotesque'">${t('hud.salaryPerYear')}</div>
               <div class="av" style="font-family:'Bricolage Grotesque';font-weight:700;font-size:15px;color:var(--up)">${p.salary?money(p.salary):'·'}</div></div>
-            <div style="margin-left:auto"><div class="an" style="font-size:11px;color:var(--chalk-dim);text-transform:uppercase;letter-spacing:.06em;font-family:'Bricolage Grotesque'">Fortune</div>
+            <div style="margin-left:auto"><div class="an" style="font-size:11px;color:var(--chalk-dim);text-transform:uppercase;letter-spacing:.06em;font-family:'Bricolage Grotesque'">${t('hud.fortune')}</div>
               <div class="av" style="font-family:'Bricolage Grotesque';font-weight:700;font-size:15px;color:var(--mint)">${money(p.money)}</div></div>
           </div>
         </div>

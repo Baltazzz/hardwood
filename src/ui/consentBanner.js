@@ -9,32 +9,37 @@
 ============================================================ */
 import { getConsent, setConsent } from '../engine/consent.js';
 import { acceptAnalytics, refuseAnalytics } from '../engine/analytics.js';
+import { t } from '../engine/i18n.js';
 
 let el = null;
 
+// Le CONTENU (texte) est reconstruit à CHAQUE appel de render() -- pas seulement à la création du
+// conteneur -- pour rester à jour si la langue a changé depuis la dernière fois que ce bandeau a
+// été affiché (voir ui/settings.js) : seul l'élément DOM lui-même (et son ajout au document) est
+// mis en cache, jamais son texte.
 function render() {
   if (!el) {
     el = document.createElement('div');
     el.id = 'consentBanner';
     el.className = 'consent-banner';
-    el.innerHTML = `
-      <p class="consent-txt">Ce jeu utilise une mesure d'audience anonyme (Google Analytics) pour comprendre son usage. Rien n'est chargé sans ton accord.</p>
-      <div class="consent-actions">
-        <button type="button" class="btn ghost sm" id="consentRefuse">Refuser</button>
-        <button type="button" class="btn sm" id="consentAccept">Accepter</button>
-      </div>`;
     document.body.appendChild(el);
-    el.querySelector('#consentAccept').onclick = () => {
-      setConsent('accepted');
-      acceptAnalytics();
-      hide();
-    };
-    el.querySelector('#consentRefuse').onclick = () => {
-      setConsent('refused');
-      refuseAnalytics();
-      hide();
-    };
   }
+  el.innerHTML = `
+      <p class="consent-txt">${t('consent.text')}</p>
+      <div class="consent-actions">
+        <button type="button" class="btn ghost sm" id="consentRefuse">${t('consent.refuse')}</button>
+        <button type="button" class="btn sm" id="consentAccept">${t('consent.accept')}</button>
+      </div>`;
+  el.querySelector('#consentAccept').onclick = () => {
+    setConsent('accepted');
+    acceptAnalytics();
+    hide();
+  };
+  el.querySelector('#consentRefuse').onclick = () => {
+    setConsent('refused');
+    refuseAnalytics();
+    hide();
+  };
   el.classList.add('visible');
 }
 function hide() { if (el) el.classList.remove('visible'); }

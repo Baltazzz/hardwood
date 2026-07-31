@@ -160,6 +160,54 @@ export const SHARED_EVENTS = [
         effect:{def:+3, ath:+2, reb:+1}, outcome:'Plus dur à passer, plus dur à bouger.'}
     ]},
 
+  // ---- Nourrit les traits Showman/Bosseur (voir engine/tags.js, AGENDA.md "étoffer les
+  // traits") : deux traits entièrement nouveaux, avec leurs propres événements dédiés plutôt
+  // qu'une simple promotion d'un flag narratif déjà existant. ----
+  {id:'highlight_reel', cat:'social', cooldown:3,
+    when:(p,lg)=>p.age<=33 && p.popularity>=10,
+    title:'Un geste qui enflamme les réseaux',
+    body:`Une action spectaculaire de ton dernier match tourne en boucle. Le public en redemande -- à toi de voir si tu joues le jeu du spectacle.`,
+    weight:()=>0.7,
+    choices:()=>[
+      {label:'Retenter le geste spectaculaire au prochain match', hint:'Le style avant tout, quitte à déplaire au staff',
+        effect:{popularity:+5, coach:-1, flag:'showman'}, outcome:'Tu en redonnes. Les réseaux adorent, le coach un peu moins.'},
+      {label:'Rester sobre, l\'efficacité d\'abord', hint:'Le collectif avant le show',
+        effect:{coach:+2, qi:+1}, outcome:'Tu restes concentré sur l\'essentiel. Moins viral, plus utile.'}
+    ]},
+  {id:'brand_highlight_deal', cat:'business', cooldown:5,
+    when:(p,lg)=>p.popularity>=30,
+    title:'Une marque veut construire une pub autour de ton style',
+    body:`Ton sens du spectacle a tapé dans l'œil d'un sponsor, qui veut faire de toi le visage d'une campagne "highlights".`,
+    weight:()=>0.6,
+    choices:()=>[
+      {label:'Signer et jouer le jeu du spectacle', hint:'Assumer pleinement l\'image de showman',
+        effect:{popularity:+6, money:+40, flag:'showman'}, outcome:'La campagne cartonne. Ton image de showman s\'installe pour de bon.'},
+      {label:'Décliner, préférer une image plus sobre', hint:'Garder une image de joueur sérieux',
+        effect:{coach:+2, reputation:+1}, outcome:'Tu déclines poliment. Une image plus classique, assumée.'}
+    ]},
+  {id:'extra_reps', cat:'training', cooldown:3,
+    when:(p,lg)=>p.age<=32,
+    title:'Encore une série avant de rentrer',
+    body:`L'entraînement officiel est terminé, mais la salle est encore ouverte. Rien ne t'oblige à y retourner.`,
+    weight:()=>0.7,
+    choices:()=>[
+      {label:'Y retourner, comme toujours', hint:'La régularité comme identité',
+        effect:{coach:+2, fitness:-1, flag:'workhorse'}, outcome:'Tu y retournes, encore. Le staff commence à s\'en rendre compte.'},
+      {label:'Rentrer, le corps a aussi besoin de repos', hint:'Écouter ton corps',
+        effect:{fitness:+2}, outcome:'Tu rentres tôt, pour une fois. Le corps te dira merci demain.'}
+    ]},
+  {id:'preserve_you', cat:'training', cooldown:4,
+    when:(p,lg)=>p.age<=33,
+    title:'Le staff veut te faire souffler',
+    body:`Le staff médical propose de lever le pied sur une séance pour te préserver. Ce n'est pas franchement dans tes habitudes.`,
+    weight:()=>0.6,
+    choices:()=>[
+      {label:'Refuser, insister pour t\'entraîner à fond', hint:'Ne jamais lever le pied',
+        effect:{coach:+1, fitness:-2, flag:'workhorse'}, outcome:'Tu insistes, comme toujours. Le staff finit par céder.'},
+      {label:'Accepter la pause, pour une fois', hint:'La prudence, pour durer plus longtemps',
+        effect:{fitness:+5}, outcome:'Tu acceptes de lever le pied. Une prudence qui n\'est pas dans tes habitudes.'}
+    ]},
+
   {id:'slump', cat:'form', cooldown:3,
     when:(p,lg)=>p.reputation>=30,
     title:'Passage à vide',

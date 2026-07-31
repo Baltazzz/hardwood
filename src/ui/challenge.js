@@ -21,6 +21,12 @@ import { shareOrFallback } from './share.js';
 import { stage } from './dom.js';
 import { setInCareer } from './navbar.js';
 import { screenTitle, screenCreate } from './screens.js';
+import { t } from '../engine/i18n.js';
+import { TIER_RANK } from '../engine/badges.js';
+
+// `tier` est stocké en français (voir endCareer() dans screens.js) -- traduit uniquement à
+// l'affichage, jamais dans le stockage (même principe que ui/card.js).
+function tierLabel(tier) { const i = TIER_RANK.indexOf(tier); return t('tierRank.'+(i>=0?i:0)); }
 
 export { generateChallengeDef };
 
@@ -36,8 +42,8 @@ function starStrInline(n) {
 function profileSummary(def) {
   const nation = nationOf(def), pos = posOf(def), style = styleOf(def);
   return `<div class="challenge-profile">
-    <div class="challenge-profile-row"><span class="flag">${nation.flag}</span><b>${nation.name}</b></div>
-    <div class="challenge-profile-row">${pos.emoji} ${pos.name} · ${style.emoji} ${style.name}</div>
+    <div class="challenge-profile-row"><span class="flag">${nation.flag}</span><b>${t('nations.'+nation.id)}</b></div>
+    <div class="challenge-profile-row">${pos.emoji} ${t('positions.'+pos.id+'.name')} · ${style.emoji} ${t('styles.'+style.id+'.name')}</div>
     <div class="challenge-profile-row">${starStrInline(def.hype)}</div>
   </div>`;
 }
@@ -128,7 +134,7 @@ export function renderChallengeLeaderboard(challengeId) {
       <span class="rk">${i + 1}</span>
       <span class="hof-main">
         <span class="hof-name">${r.name}${r.hof ? ' 🏛️' : ''}</span>
-        <span class="hof-sub">${r.tier} · ${r.seasons} saisons</span>
+        <span class="hof-sub">${tierLabel(r.tier)} · ${r.seasons} ${t('hof.seasons')}</span>
       </span>
       <span class="hof-score"><b>${r.score}</b><small>score</small></span>
     </div>`).join('')
@@ -149,7 +155,7 @@ export function renderChallengeLeaderboard(challengeId) {
   const hint = document.getElementById('challengeCopyHint');
   const share = async (opts) => { await shareOrFallback(opts, () => { hint.style.display = 'block'; }); };
   const shareBtn = document.getElementById('shareMyResult');
-  if (shareBtn) shareBtn.onclick = () => share({ title: 'Mon score HARDWOOD', text: `${myResult.name} · ${myResult.tier} · score ${myResult.score}`, url: buildResultUrl(myResult) });
+  if (shareBtn) shareBtn.onclick = () => share({ title: 'Mon score HARDWOOD', text: `${myResult.name} · ${tierLabel(myResult.tier)} · score ${myResult.score}`, url: buildResultUrl(myResult) });
   const inviteBtn = document.getElementById('inviteMore');
   if (inviteBtn) inviteBtn.onclick = () => share({ title: 'Défi HARDWOOD', text: 'Rejoins mon défi sur HARDWOOD !', url: buildChallengeUrl(entry.def) });
   document.getElementById('leaderboardBack').onclick = () => screenTitle();
@@ -210,7 +216,7 @@ export function startDailyChallenge() {
     <h2 style="text-align:center;font-size:24px;margin:6px 0 4px">${def.date}</h2>
     <p class="body" style="text-align:center;color:var(--chalk-dim);font-size:13.5px;margin-bottom:14px">Le même profil de départ pour tout le monde aujourd'hui, sans exception -- calculé depuis la date, jamais deux fois pareil d'un jour à l'autre.</p>
     ${profileSummary(def)}
-    ${best ? `<p class="body" style="text-align:center;color:var(--chalk-dim);font-size:13px;margin-top:14px">Ton meilleur score aujourd'hui : <b style="color:var(--mint)">${best.score}</b> (${best.tier})</p>` : ''}
+    ${best ? `<p class="body" style="text-align:center;color:var(--chalk-dim);font-size:13px;margin-top:14px">Ton meilleur score aujourd'hui : <b style="color:var(--mint)">${best.score}</b> (${tierLabel(best.tier)})</p>` : ''}
     <div style="margin-top:22px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
       <button class="btn" id="playDaily">${best ? 'Retenter le défi du jour' : 'Jouer le défi du jour'}</button>
       <button class="btn ghost" id="dailyHistory">📅 Mon historique</button>
@@ -250,7 +256,7 @@ export function renderDailyLeaderboard() {
       <span class="rk">${r.date}</span>
       <span class="hof-main">
         <span class="hof-name">${r.name}${r.hof ? ' 🏛️' : ''}</span>
-        <span class="hof-sub">${r.tier} · ${r.seasons} saisons</span>
+        <span class="hof-sub">${tierLabel(r.tier)} · ${r.seasons} ${t('hof.seasons')}</span>
       </span>
       <span class="hof-score"><b>${r.score}</b><small>score</small></span>
     </div>`).join('')
@@ -267,7 +273,7 @@ export function renderDailyLeaderboard() {
   </div>`;
   const shareBtn = document.getElementById('shareDaily');
   if (shareBtn) shareBtn.onclick = async () => {
-    const text = `🏀 Défi du jour HARDWOOD (${todayResult.date}) : ${todayResult.score} de score légende (${todayResult.tier}) avec ${todayResult.name} !`;
+    const text = `🏀 Défi du jour HARDWOOD (${todayResult.date}) : ${todayResult.score} de score légende (${tierLabel(todayResult.tier)}) avec ${todayResult.name} !`;
     const hint = document.getElementById('dailyCopyHint');
     await shareOrFallback({ title: 'Défi du jour HARDWOOD', text }, () => { hint.style.display = 'block'; });
   };

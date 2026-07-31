@@ -67,5 +67,7 @@ export function generateAcademyOffers(playerNation){
   // indépendant, qui doit être affiché sur la carte de choix ET devenir le point de départ réel
   // si l'offre est retenue (voir chooseAcademy() dans season.js). Copie superficielle de la
   // nation (jamais de mutation des objets partagés de NATIONS).
-  return offers.map(n => ({ ...n, club: pickClub('academy', n.id) }));
+  // Voie US : lycée (highschool), jamais directement la fac (college) -- deux étapes distinctes
+  // du parcours (voir AGENDA.md), la promotion vers la NCAA se gagne en jeu (season.js).
+  return offers.map(n => ({ ...n, club: pickClub(n.path==='us' ? 'highschool' : 'academy', n.id) }));
 }

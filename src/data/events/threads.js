@@ -189,4 +189,52 @@ export const THREAD_EVENTS = [
       {label:'Continuer comme si de rien n\'était', hint:'Rester le même, malgré le statut acquis',
         effect:{coach:+4, perfBonus:+3}, outcome:'Tu ne changes rien à ton approche. Le statut est là, mais l\'humilité aussi.'}
     ]},
+
+  // ---- Dernier palier d'arc pour les traits du lot d'extension (voir AGENDA.md) : comme
+  // clutch_legend_status ci-dessus, un seuil élevé (>=4) plutôt que le simple seuil d'activation
+  // (2) du trait -- une vraie trajectoire en plusieurs temps, pas un simple aller-retour. ----
+  {id:'hothead_infamous', cat:'payoff', phase:'late', once:true,
+    when:(p,lg)=>((p.flags&&p.flags.hothead)||0)>=4,
+    title:'Le tempérament qui te précède partout',
+    body:()=>`Les recruteurs et les médias parlent de toi avant même de t'avoir vu jouer : "attention, sale caractère". Le récit autour de toi s'est figé depuis longtemps.`,
+    weight:()=>0.9,
+    choices:()=>[
+      {label:'Assumer pleinement cette réputation', hint:'En faire une force d\'intimidation, jusqu\'au bout',
+        effect:{popularity:+8, reputation:+3, coach:-3}, outcome:'Tu assumes jusqu\'au bout. Ton nom seul suffit désormais à mettre certains adversaires mal à l\'aise.'},
+      {label:'Tout faire pour changer cette image, pour de bon', hint:'Le vrai tournant, cette fois',
+        effect:{coach:+6, morale:+4, flag:'reformed'}, outcome:'Tu prends enfin ce virage pour de bon. Le récit autour de toi commence, lentement, à changer.'}
+    ]},
+  {id:'media_friend_icon', cat:'interview', phase:'late', once:true,
+    when:(p,lg)=>((p.flags&&p.flags.mediaFriend)||0)>=4,
+    title:'Le visage préféré de la presse sportive',
+    body:()=>`Après des années de relation impeccable avec les médias, ton nom revient systématiquement pour incarner la discipline auprès du grand public.`,
+    weight:()=>0.85,
+    choices:()=>[
+      {label:'Accepter de devenir une vraie icône médiatique', hint:'Construire un vrai second métier autour de ton image',
+        effect:{popularity:+7, money:+50, media:+4}, outcome:'Tu deviens une référence médiatique à part entière, bien au-delà des seuls résultats sportifs.'},
+      {label:'Rester focalisé sur le jeu, sans plus', hint:'Le terrain avant tout le reste, jusqu\'au bout',
+        effect:{coach:+4, reputation:+2}, outcome:'Tu restes concentré sur le terrain. La presse t\'apprécie, tu ne lui donnes jamais plus que ça.'}
+    ]},
+  {id:'showman_icon_status', cat:'payoff', phase:'late', once:true,
+    when:(p,lg)=>((p.flags&&p.flags.showman)||0)>=4,
+    title:'La référence du spectacle',
+    body:()=>`Tes highlights tournent en boucle depuis des années. Pour toute une génération de fans, ton nom est devenu SYNONYME de spectacle.`,
+    weight:()=>0.85,
+    choices:()=>[
+      {label:'Savourer ce statut construit sur des années de spectacle', hint:'Reconnaître le chemin parcouru',
+        effect:{popularity:+8, reputation:+3, morale:+3}, outcome:'Tu savoures un statut rare. Peu de joueurs marquent les esprits à ce point.'},
+      {label:'Rappeler que le jeu collectif t\'a aussi porté', hint:'Partager le mérite, malgré le statut',
+        effect:{coach:+5, qi:+2}, outcome:'Tu rappelles que rien ne s\'est fait seul. Le vestiaire apprécie la nuance.'}
+    ]},
+  {id:'workhorse_legend', cat:'payoff', phase:'late', once:true,
+    when:(p,lg)=>((p.flags&&p.flags.workhorse)||0)>=4,
+    title:'L\'exemple qu\'on cite au vestiaire',
+    body:()=>`Ta régularité au travail est devenue légendaire. Les jeunes joueurs qui veulent percer se voient répéter ton exemple, saison après saison.`,
+    weight:()=>0.85,
+    choices:()=>[
+      {label:'En faire le cœur de ton discours d\'adieu', hint:'Mettre l\'éthique de travail au centre de ton histoire',
+        effect:{popularity:+6, reputation:+4, morale:+4}, outcome:'Ton discours d\'adieu marque les esprits. Le travail, encore et toujours, comme message final.'},
+      {label:'Rester discret sur le sujet', hint:'Laisser ce parcours parler de lui-même',
+        effect:{coach:+4, morale:+2}, outcome:'Tu n\'en fais pas des tonnes. Ceux qui t\'ont côtoyé savent très bien ce que ça t\'a coûté.'}
+    ]},
 ];

@@ -1,5 +1,5 @@
 import { hofLoad, hofBest, hofClear } from '../engine/hof.js';
-import { BADGES, badgesState, badgesClear } from '../engine/badges.js';
+import { BADGES, TIER_RANK, badgesState, badgesClear } from '../engine/badges.js';
 import { stage } from './dom.js';
 import { screenTitle, sparkline } from './screens.js';
 import { renderTrophyCabinet, crownIcon, medalIcon } from './trophies.js';
@@ -9,13 +9,26 @@ import { trackEvent } from '../engine/analytics.js';
 import { shareOrFallback, canvasToFile } from './share.js';
 import { hexToRgba } from '../engine/accent.js';
 import { walletBalance } from '../engine/wallet.js';
+import { money } from '../engine/utils.js';
 import { equippedCardStyleId, equippedFrameId, equippedTitleId, cosmeticById } from '../engine/cosmetics.js';
 import { renderShop } from './shop.js';
+import { t } from '../engine/i18n.js';
 
 // Totaux cumulés de carrière (points/passes/rebonds/contres/interceptions) : séparateur de
 // milliers pour rester lisible sur des carrières longues (un total de 20 000+ points n'est pas
 // valorisant à lire collé en un seul bloc de chiffres).
 function fmtNum(n){ return Math.round(n||0).toLocaleString('fr-FR'); }
+// Le palier ("tier") d'un enregistrement de carrière (Panthéon, carte de fin) est stocké tel
+// quel EN FRANÇAIS (voir endCareer() dans screens.js -- changer ça toucherait au format de
+// sauvegarde) : traduit uniquement à l'affichage via son index dans TIER_RANK (voir i18n/fr.js/
+// en.js tierRank), jamais en touchant la donnée stockée elle-même.
+function tierIndex(tier){ const i = TIER_RANK.indexOf(tier); return i>=0 ? i : 0; }
+// Même principe que tierIndex() ci-dessus, pour poste/style/nation d'un enregistrement de
+// carrière : traduit via l'id quand il est disponible (voir rec dans endCareer(), screens.js),
+// repli sur le libellé français déjà stocké pour un ancien enregistrement du Panthéon sans id.
+function recPosName(r){ return r.pos ? t('positions.'+r.pos+'.name') : (r.posName||''); }
+function recStyleName(r){ return r.style ? t('styles.'+r.style+'.name') : (r.styleName||''); }
+function recNationName(r){ return r.nationId ? t('nations.'+r.nationId) : (r.nation||''); }
 
 /* ============================================================
    PANTHÉON (rendu) — refonte (voir AGENDA.md "palmarès peu flatteur") :
@@ -26,9 +39,9 @@ function fmtNum(n){ return Math.round(n||0).toLocaleString('fr-FR'); }
 // Glyphe de rang : couronne pour le n°1, médaille or/argent pour les 2e/3e (même langage SVG que
 // l'armoire à trophées), chiffre net et centré au-delà -- jamais un simple numéro pour un podium.
 function rankGlyph(i){
-  if(i===0) return `<span class="rk-medal" title="1re place">${crownIcon(30)}</span>`;
-  if(i===1) return `<span class="rk-medal" title="2e place">${medalIcon('Argent',28)}</span>`;
-  if(i===2) return `<span class="rk-medal" title="3e place">${medalIcon('Bronze',28)}</span>`;
+  if(i===0) return `<span class="rk-medal" title="${t('hof.rank1')}">${crownIcon(30)}</span>`;
+  if(i===1) return `<span class="rk-medal" title="${t('hof.rank2')}">${medalIcon('Argent',28)}</span>`;
+  if(i===2) return `<span class="rk-medal" title="${t('hof.rank3')}">${medalIcon('Bronze',28)}</span>`;
   return `<span class="rk">${i+1}</span>`;
 }
 export function renderHallOfFame(){
@@ -39,25 +52,25 @@ export function renderHallOfFame(){
       ${rankGlyph(i)}
       <span class="hof-main">
         <span class="hof-name">${r.flag||'🏀'} ${r.name} ${r.posEmoji||''}</span>
-        <span class="hof-sub">${r.tier} · ${r.seasons} saisons · pic ${r.peak} OVR${r.nba?' · 🏀 passé par la NBA':''}</span>
-        <span class="hof-sub">🏆 ${r.champs} titre${r.champs>1?'s':''} · ⭐ ${r.mvps} MVP · 🌟 ${r.allstars} All-Star · 🎯 record ${r.bestPts} pts</span>
+        <span class="hof-sub">${t('tierRank.'+tierIndex(r.tier))} · ${r.seasons} ${t('hof.seasons')} · pic ${r.peak} OVR${r.nba?t('hof.nbaSuffix'):''}</span>
+        <span class="hof-sub">🏆 ${r.champs} ${t('hof.titlesLabel')}${r.champs>1?'s':''} · ⭐ ${r.mvps} MVP · 🌟 ${r.allstars} All-Star · 🎯 record ${r.bestPts} pts</span>
       </span>
-      <span class="hof-score"><b>${r.score}</b><small>score</small></span>
+      <span class="hof-score"><b>${r.score}</b><small>${t('hof.score')}</small></span>
     </div>`).join('')
-    : `<p class="body" style="text-align:center;color:var(--chalk-dim);margin:34px 0">🏀 Aucune carrière enregistrée pour l'instant.<br>Termine une carrière pour entrer au Panthéon.</p>`;
+    : `<p class="body" style="text-align:center;color:var(--chalk-dim);margin:34px 0">${t('hof.empty')}</p>`;
   stage.innerHTML = `<div class="end" style="text-align:left">
-    <div class="eyebrow" style="text-align:center">🏆 Panthéon</div>
-    <h2 style="text-align:center;font-size:26px;margin:6px 0 4px">Tes plus grandes carrières</h2>
-    <p class="body" style="text-align:center;color:var(--chalk-dim);margin-bottom:18px;font-size:13.5px">Classées par score légende. Clique une carrière pour la revoir. Bats ton record.</p>
+    <div class="eyebrow" style="text-align:center">${t('hof.eyebrow')}</div>
+    <h2 style="text-align:center;font-size:26px;margin:6px 0 4px">${t('hof.title')}</h2>
+    <p class="body" style="text-align:center;color:var(--chalk-dim);margin-bottom:18px;font-size:13.5px">${t('hof.subtitle')}</p>
     <div class="hof-list" style="max-width:660px;margin:0 auto">${rows}</div>
     <div style="margin-top:26px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-      <button class="btn" id="hofBack">Retour</button>
-      ${list.length?`<button class="btn ghost" id="hofClear">Vider le Panthéon</button>`:''}
+      <button class="btn" id="hofBack">${t('common.back')}</button>
+      ${list.length?`<button class="btn ghost" id="hofClear">${t('hof.clear')}</button>`:''}
     </div>
   </div>`;
   document.getElementById('hofBack').onclick=()=>screenTitle();
   stage.querySelectorAll('.hof-row').forEach(el=>{ el.onclick=()=>renderCareerDetail(list[+el.dataset.i], +el.dataset.i); });
-  const hc=document.getElementById('hofClear'); if(hc) hc.onclick=()=>{ if(confirm('Effacer toutes les carrières du Panthéon ?')){ hofClear(); renderHallOfFame(); } };
+  const hc=document.getElementById('hofClear'); if(hc) hc.onclick=()=>{ if(confirm(t('hof.confirmClear'))){ hofClear(); renderHallOfFame(); } };
 }
 
 /* ============================================================
@@ -69,9 +82,9 @@ function badgeTile(b, entry){
   const unlocked = !!entry;
   return `<div class="badge-tile ${unlocked?'unlocked':'locked'}" style="--badge-color:${b.color}">
     <div class="bt-icon">${b.emoji}</div>
-    <div class="bt-name">${b.name}</div>
-    <div class="bt-desc">${b.desc}</div>
-    <span class="bt-status">${unlocked?'Débloqué':'À décrocher'}</span>
+    <div class="bt-name">${t('badges.'+b.id+'.name')}</div>
+    <div class="bt-desc">${t('badges.'+b.id+'.desc')}</div>
+    <span class="bt-status">${unlocked?t('badgesScreen.unlocked'):t('badgesScreen.toUnlock')}</span>
   </div>`;
 }
 export function renderBadges(){
@@ -87,21 +100,21 @@ export function renderBadges(){
     <div class="badge-section-h">${label}</div>
     <div class="badge-grid">${list.map(b=>badgeTile(b, state.unlocked[b.id])).join('')}</div>`;
   stage.innerHTML = `<div class="end" style="text-align:left">
-    <div class="eyebrow" style="text-align:center">🎖️ Hauts faits</div>
-    <h2 style="text-align:center;font-size:26px;margin:6px 0 4px">Ta collection d'exploits</h2>
-    <p class="body" style="text-align:center;color:var(--chalk-dim);margin-bottom:10px;font-size:13.5px">${unlockedCount}/${BADGES.length} hauts faits débloqués, à travers toutes tes carrières.</p>
+    <div class="eyebrow" style="text-align:center">${t('badgesScreen.eyebrow')}</div>
+    <h2 style="text-align:center;font-size:26px;margin:6px 0 4px">${t('badgesScreen.title')}</h2>
+    <p class="body" style="text-align:center;color:var(--chalk-dim);margin-bottom:10px;font-size:13.5px">${t('badgesScreen.subtitle',{count:unlockedCount,total:BADGES.length})}</p>
     <div class="badge-progress" style="max-width:420px;margin:0 auto 22px">
       <div class="badge-progress-bar"><i style="width:${pct}%"></i></div>
     </div>
-    ${section(unlocked, `🏆 Débloqués (${unlocked.length})`)}
-    ${section(locked, `🔒 À décrocher (${locked.length})`)}
+    ${section(unlocked, t('badgesScreen.unlockedSection',{count:unlocked.length}))}
+    ${section(locked, t('badgesScreen.lockedSection',{count:locked.length}))}
     <div style="margin-top:26px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-      <button class="btn" id="badgesBack">Retour</button>
-      ${unlockedCount?`<button class="btn ghost" id="badgesClear">Réinitialiser mes hauts faits</button>`:''}
+      <button class="btn" id="badgesBack">${t('common.back')}</button>
+      ${unlockedCount?`<button class="btn ghost" id="badgesClear">${t('badgesScreen.reset')}</button>`:''}
     </div>
   </div>`;
   document.getElementById('badgesBack').onclick=()=>screenTitle();
-  const bc=document.getElementById('badgesClear'); if(bc) bc.onclick=()=>{ if(confirm('Réinitialiser tous les hauts faits débloqués ?')){ badgesClear(); renderBadges(); } };
+  const bc=document.getElementById('badgesClear'); if(bc) bc.onclick=()=>{ if(confirm(t('badgesScreen.confirmReset'))){ badgesClear(); renderBadges(); } };
 }
 
 /* ============================================================
@@ -136,35 +149,35 @@ export function renderProgress(){
   const frameId = equippedFrameId();
   const titleItem = cosmeticById(equippedTitleId());
   const profileHeader = (frameId || titleItem) ? `<div class="profile-header ${frameId?`frame-${frameId.replace('frame_','')}`:''}">
-      ${titleItem?`<span class="profile-title-chip">${titleItem.name}</span>`:'<span class="profile-title-chip" style="color:var(--chalk-dim)">Aucun titre équipé</span>'}
+      ${titleItem?`<span class="profile-title-chip">${t('cosmetics.'+titleItem.id+'.name')}</span>`:`<span class="profile-title-chip" style="color:var(--chalk-dim)">${t('progress.noTitleEquipped')}</span>`}
     </div>` : '';
   stage.innerHTML = `<div class="end" style="text-align:left">
-    <div class="eyebrow" style="text-align:center">📊 Ma progression</div>
-    <h2 style="text-align:center;font-size:26px;margin:6px 0 4px">Ta légende grandit</h2>
-    <p class="body" style="text-align:center;color:var(--chalk-dim);margin-bottom:18px;font-size:13.5px">${totalCareers?`${totalCareers} carrière${totalCareers>1?'s':''} menée${totalCareers>1?'s':''} à terme.`:'Aucune carrière terminée pour l\'instant -- la première est toujours la plus marquante.'}</p>
+    <div class="eyebrow" style="text-align:center">${t('progress.eyebrow')}</div>
+    <h2 style="text-align:center;font-size:26px;margin:6px 0 4px">${t('progress.title')}</h2>
+    <p class="body" style="text-align:center;color:var(--chalk-dim);margin-bottom:18px;font-size:13.5px">${totalCareers?t('progress.subtitleWithCareers',{n:totalCareers,s:totalCareers>1?'s':''}):t('progress.subtitleEmpty')}</p>
     ${profileHeader}
     <div class="legend-grid" style="max-width:560px">
-      ${recordRow('Carrières jouées', totalCareers)}
-      ${recordRow('Meilleur score légende', best)}
-      ${recordRow('Hauts faits débloqués', `${badgeCount}/${BADGES.length}`)}
-      ${recordRow('Plus longue carrière', maxSeasons?`${maxSeasons} saisons`:'--')}
+      ${recordRow(t('progress.careersPlayed'), totalCareers)}
+      ${recordRow(t('progress.bestScore'), best)}
+      ${recordRow(t('progress.badgesUnlocked'), `${badgeCount}/${BADGES.length}`)}
+      ${recordRow(t('progress.longestCareer'), maxSeasons?`${maxSeasons} ${t('hof.seasons')}`:'--')}
     </div>
     ${list.length?`
     <div class="recap-block" style="max-width:640px">
-      <div class="eyebrow" style="text-align:center;margin-bottom:14px">🌟 Records personnels</div>
+      <div class="eyebrow" style="text-align:center;margin-bottom:14px">${t('progress.personalRecords')}</div>
       <div class="legend-grid">
-        ${recordRow('Pic OVR le plus haut', maxPeak||'--')}
-        ${recordRow('Titres (une carrière)', maxChamps)}
-        ${recordRow('MVP (une carrière)', maxMvps)}
-        ${recordRow('Meilleur record pts/match', maxPts||'--')}
-        ${recordRow('Triple-doubles (une carrière)', maxTd)}
+        ${recordRow(t('progress.highestPeak'), maxPeak||'--')}
+        ${recordRow(t('progress.titlesOneCareer'), maxChamps)}
+        ${recordRow(t('progress.mvpOneCareer'), maxMvps)}
+        ${recordRow(t('progress.bestPtsRecord'), maxPts||'--')}
+        ${recordRow(t('progress.tripleDoublesOneCareer'), maxTd)}
       </div>
     </div>`:''}
     <div style="margin-top:26px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-      <button class="btn" id="progressBack">Retour</button>
-      <button class="btn ghost" id="progressHof">🏆 Voir le Panthéon</button>
-      <button class="btn ghost" id="progressBadges">🎖️ Voir mes hauts faits</button>
-      <button class="btn ghost" id="progressShop">🛍️ Boutique (🪙 ${walletBalance()})</button>
+      <button class="btn" id="progressBack">${t('common.back')}</button>
+      <button class="btn ghost" id="progressHof">${t('progress.viewHof')}</button>
+      <button class="btn ghost" id="progressBadges">${t('progress.viewBadges')}</button>
+      <button class="btn ghost" id="progressShop">${t('progress.shopBtn',{balance:money(walletBalance())})}</button>
     </div>
   </div>`;
   document.getElementById('progressBack').onclick=()=>screenTitle();
@@ -179,44 +192,44 @@ export function renderProgress(){
 export function renderCareerDetail(r, rank){
   if(!r){ renderHallOfFame(); return; }
   setInCareer(false);
-  const rankFlag = rank===0 ? `<div class="hof-rank-flag">${crownIcon(20)} 1re place au Panthéon</div>`
-    : rank===1 ? `<div class="hof-rank-flag">${medalIcon('Argent',18)} 2e place au Panthéon</div>`
-    : rank===2 ? `<div class="hof-rank-flag">${medalIcon('Bronze',18)} 3e place au Panthéon</div>`
+  const rankFlag = rank===0 ? `<div class="hof-rank-flag">${crownIcon(20)} ${t('careerDetail.hofFlag1')}</div>`
+    : rank===1 ? `<div class="hof-rank-flag">${medalIcon('Argent',18)} ${t('careerDetail.hofFlag2')}</div>`
+    : rank===2 ? `<div class="hof-rank-flag">${medalIcon('Bronze',18)} ${t('careerDetail.hofFlag3')}</div>`
     : '';
   stage.innerHTML = `<div class="end">
-    <div class="eyebrow">Carrière au Panthéon</div>
+    <div class="eyebrow">${t('careerDetail.eyebrow')}</div>
     ${rankFlag}
-    <div class="legend-title" style="font-size:30px">${r.tier}</div>
-    <p class="subline">${r.flag||'🏀'} ${r.posEmoji||''} ${r.posName||''} · ${r.seasons} saisons · pic ${r.peak} OVR${r.nba?' · 🏀 passé par la NBA':''}</p>
+    <div class="legend-title" style="font-size:30px">${t('tierRank.'+tierIndex(r.tier))}</div>
+    <p class="subline">${r.flag||'🏀'} ${r.posEmoji||''} ${recPosName(r)} · ${r.seasons} ${t('hof.seasons')} · pic ${r.peak} OVR${r.nba?t('hof.nbaSuffix'):''}</p>
     ${renderTagChips(tagsByIds(r.tags), 'center')}
     <div class="legend-grid">
-      <div class="lg"><div class="v">${r.score}</div><div class="l">Score légende</div></div>
-      <div class="lg"><div class="v">${r.champs}</div><div class="l">Titres</div></div>
-      <div class="lg"><div class="v">${r.mvps}</div><div class="l">MVP</div></div>
-      <div class="lg"><div class="v">${r.allstars}</div><div class="l">All-Star</div></div>
-      <div class="lg"><div class="v">${r.clutch||0}</div><div class="l">Clutch</div></div>
-      ${r.tripleDoubles?`<div class="lg"><div class="v">${r.tripleDoubles}</div><div class="l">Triple-doubles</div></div>`:''}
+      <div class="lg"><div class="v">${r.score}</div><div class="l">${t('stats.legendScore')}</div></div>
+      <div class="lg"><div class="v">${r.champs}</div><div class="l">${t('stats.titles')}</div></div>
+      <div class="lg"><div class="v">${r.mvps}</div><div class="l">${t('stats.mvp')}</div></div>
+      <div class="lg"><div class="v">${r.allstars}</div><div class="l">${t('stats.allstar')}</div></div>
+      <div class="lg"><div class="v">${r.clutch||0}</div><div class="l">${t('stats.clutch')}</div></div>
+      ${r.tripleDoubles?`<div class="lg"><div class="v">${r.tripleDoubles}</div><div class="l">${t('stats.tripleDoubles')}</div></div>`:''}
     </div>
     ${r.headline?`<div class="recap-block"><div class="press"><div class="press-txt">${r.headline}</div></div></div>`:''}
     ${r.ovrSeries&&r.ovrSeries.length>1?`<div class="recap-block" style="text-align:center">${sparkline(r.ovrSeries)}</div>`:''}
-    <div class="recap-block" style="text-align:center"><span class="hof-sub">🎯 Record de points sur une saison : <b style="color:var(--orange)">${r.bestPts}</b></span></div>
+    <div class="recap-block" style="text-align:center"><span class="hof-sub">${t('careerDetail.seasonBestPts',{pts:`<b style="color:var(--orange)">${r.bestPts}</b>`})}</span></div>
     ${r.totalPts!=null?`<div class="recap-block" style="max-width:640px">
-      <div class="eyebrow" style="text-align:center;margin-bottom:14px">📈 Statistiques cumulées de carrière</div>
+      <div class="eyebrow" style="text-align:center;margin-bottom:14px">${t('stats.careerCumulated')}</div>
       <div class="legend-grid">
-        <div class="lg"><div class="v">${fmtNum(r.totalPts)}</div><div class="l">Points</div></div>
-        <div class="lg"><div class="v">${fmtNum(r.totalAst)}</div><div class="l">Passes</div></div>
-        <div class="lg"><div class="v">${fmtNum(r.totalReb)}</div><div class="l">Rebonds</div></div>
-        <div class="lg"><div class="v">${fmtNum(r.totalBlk)}</div><div class="l">Contres</div></div>
-        <div class="lg"><div class="v">${fmtNum(r.totalStl)}</div><div class="l">Interceptions</div></div>
+        <div class="lg"><div class="v">${fmtNum(r.totalPts)}</div><div class="l">${t('stats.points')}</div></div>
+        <div class="lg"><div class="v">${fmtNum(r.totalAst)}</div><div class="l">${t('stats.assists')}</div></div>
+        <div class="lg"><div class="v">${fmtNum(r.totalReb)}</div><div class="l">${t('stats.rebounds')}</div></div>
+        <div class="lg"><div class="v">${fmtNum(r.totalBlk)}</div><div class="l">${t('stats.blocks')}</div></div>
+        <div class="lg"><div class="v">${fmtNum(r.totalStl)}</div><div class="l">${t('stats.steals')}</div></div>
       </div>
     </div>`:''}
     <div class="recap-block" style="max-width:640px">
-      <div class="eyebrow" style="text-align:center;margin-bottom:14px">🏆 Armoire à trophées</div>
+      <div class="eyebrow" style="text-align:center;margin-bottom:14px">${t('careerDetail.trophyCase')}</div>
       ${renderTrophyCabinet(r.accolades)}
     </div>
     <div style="margin-top:26px;text-align:center;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-      <button class="btn ghost" id="cardBtn2">🖼️ Ma carte</button>
-      <button class="btn" id="detBack">Retour au Panthéon</button>
+      <button class="btn ghost" id="cardBtn2">${t('careerDetail.myCard')}</button>
+      <button class="btn" id="detBack">${t('careerDetail.backToHof')}</button>
     </div>
   </div>`;
   document.getElementById('cardBtn2').onclick=()=>renderCareerCard(r, ()=>renderCareerDetail(r, rank));
@@ -226,15 +239,15 @@ export function renderCareerDetail(r, rank){
 export function renderCareerCard(r, back){
   if(!r){ (back||screenTitle)(); return; }
   stage.innerHTML = `<div class="end" style="max-width:560px">
-    <div class="eyebrow" style="text-align:center">🖼️ Ta carte de carrière</div>
-    <p class="body" style="text-align:center;color:var(--chalk-dim);font-size:13.5px;margin:6px 0 16px">Partage-la directement avec tes potes.</p>
+    <div class="eyebrow" style="text-align:center">${t('careerCard.eyebrow')}</div>
+    <p class="body" style="text-align:center;color:var(--chalk-dim);font-size:13.5px;margin:6px 0 16px">${t('careerCard.subtitle')}</p>
     <div style="display:flex;justify-content:center"><canvas id="careerCard" style="width:100%;max-width:380px;border-radius:16px;box-shadow:var(--shadow)"></canvas></div>
     <div style="margin-top:22px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-      <button class="btn" id="shareCard">📤 Partager</button>
-      <button class="btn ghost" id="dlCard">⬇️ Télécharger l'image</button>
-      <button class="btn ghost" id="cardBack">Retour</button>
+      <button class="btn" id="shareCard">${t('careerCard.share')}</button>
+      <button class="btn ghost" id="dlCard">${t('careerCard.download')}</button>
+      <button class="btn ghost" id="cardBack">${t('common.back')}</button>
     </div>
-    <p class="body" id="dlHint" style="text-align:center;color:var(--chalk-dim);font-size:12px;margin-top:10px;display:none">Le partage direct n'est pas disponible ici -- l'image a été téléchargée à la place.</p>
+    <p class="body" id="dlHint" style="text-align:center;color:var(--chalk-dim);font-size:12px;margin-top:10px;display:none">${t('careerCard.shareUnavailable')}</p>
   </div>`;
   const canvas=document.getElementById('careerCard');
   const draw=()=>drawCard(canvas,r,equippedCardStyleId());
@@ -253,8 +266,8 @@ export function renderCareerCard(r, back){
     trackEvent('card_share');
     const file = await canvasToFile(canvas, filename);
     const result = await shareOrFallback({
-      title: 'Ma carte HARDWOOD',
-      text: `${r.name||'Joueur'} · ${r.tier||''} · score légende ${r.score||0}`,
+      title: t('careerCard.shareTitle'),
+      text: t('careerCard.shareText',{name:r.name||t('cardCanvas.defaultName'),tier:t('tierRank.'+tierIndex(r.tier)),score:r.score||0}),
       files: file ? [file] : undefined,
     });
     if(result==='unsupported'){ downloadCard(); document.getElementById('dlHint').style.display='block'; }
@@ -346,14 +359,15 @@ export function drawCard(canvas, r, styleId){
   x.fillText(r.flag||'🏀', CX, y);
   y+=74;
   x.font='700 76px "Bricolage Grotesque", Arial, sans-serif'; x.fillStyle=C.chalk;
-  x.fillText(truncateToWidth(x, r.name||'Joueur', safeW), CX, y);
+  x.fillText(truncateToWidth(x, r.name||t('cardCanvas.defaultName'), safeW), CX, y);
   y+=44;
 
   // poste / style / nation -- taille de police réduite dynamiquement si la combinaison la plus
   // longue (ex. poste + style + "République dominicaine", 23 caractères) dépasserait la largeur
   // sûre de la carte.
   x.fillStyle=C.dim;
-  const sub=[`${r.posEmoji||''} ${r.posName||''}`.trim(), r.styleName?`${r.styleEmoji||''} ${r.styleName}`.trim():'', r.nation||''].filter(Boolean).join('   ·   ');
+  const posLabel=recPosName(r), styleLabel=recStyleName(r), nationLabel=recNationName(r);
+  const sub=[`${r.posEmoji||''} ${posLabel}`.trim(), styleLabel?`${r.styleEmoji||''} ${styleLabel}`.trim():'', nationLabel].filter(Boolean).join('   ·   ');
   let subSize=30;
   x.font=`600 ${subSize}px "Bricolage Grotesque", Arial, sans-serif`;
   while(subSize>18 && x.measureText(sub).width>safeW){ subSize-=2; x.font=`600 ${subSize}px "Bricolage Grotesque", Arial, sans-serif`; }
@@ -363,11 +377,12 @@ export function drawCard(canvas, r, styleId){
   // Badge palier -- hauteur de boîte fixe (88px), mais sa position de départ (badgeTop) suit
   // désormais le curseur au lieu d'une constante absolue.
   const badgeTop=y, badgeH=88;
+  const tierLabel=t('tierRank.'+tierIndex(r.tier));
   x.font='700 52px "Bricolage Grotesque", Arial, sans-serif';
-  const tw=x.measureText(r.tier||'').width; const bw=Math.min(Math.max(tw+90,360),W-140);
+  const tw=x.measureText(tierLabel).width; const bw=Math.min(Math.max(tw+90,360),W-140);
   x.fillStyle=hexToRgba(C.mint,0.10); x.strokeStyle=C.mint; x.lineWidth=2.5;
   roundRect(x,(W-bw)/2,badgeTop,bw,badgeH,44); x.fill(); x.stroke();
-  x.fillStyle=C.mint; x.fillText(r.tier||'', CX, badgeTop+60);
+  x.fillStyle=C.mint; x.fillText(tierLabel, CX, badgeTop+60);
   y=badgeTop+badgeH;
 
   // HOF (optionnel) -- l'espace après le badge dépend maintenant de sa présence réelle, jamais
@@ -376,7 +391,7 @@ export function drawCard(canvas, r, styleId){
   if(r.hof){
     y+=30;
     x.font='700 24px "Bricolage Grotesque", Arial, sans-serif'; x.fillStyle=C.mint;
-    const label='HALL OF FAME', lw=x.measureText(label).width;
+    const label=t('cardCanvas.hallOfFame'), lw=x.measureText(label).width;
     x.fillText(label, CX, y);
     drawStar(x, CX-lw/2-18, y-5, 9, C.mint); drawStar(x, CX+lw/2+18, y-5, 9, C.mint);
     y+=50;
@@ -387,7 +402,7 @@ export function drawCard(canvas, r, styleId){
   // Grille de stats 3x2
   const gx0=90, gw=(W-180), cwid=gw/3, chei=150, cgap=22;
   const gy0=y;
-  const cells=[['Score',r.score],['Titres',r.champs],['MVP',r.mvps],['All-Star',r.allstars],['Pic OVR',r.peak],['Clutch',r.clutch||0]];
+  const cells=[[t('cardCanvas.scoreShort'),r.score],[t('stats.titles'),r.champs],[t('stats.mvp'),r.mvps],[t('stats.allstar'),r.allstars],[t('stats.peakOvr'),r.peak],[t('stats.clutch'),r.clutch||0]];
   for(let i=0;i<cells.length;i++){ const cx=gx0+(i%3)*cwid, cy=gy0+Math.floor(i/3)*(chei+cgap);
     x.fillStyle=hexToRgba(C.chalk,0.035); x.strokeStyle=C.line; x.lineWidth=1.5; roundRect(x,cx+10,cy,cwid-20,chei,18); x.fill(); x.stroke();
     x.fillStyle=C.chalk; x.font='700 68px "Bricolage Grotesque", Arial, sans-serif'; x.fillText(String(cells[i][1]), cx+cwid/2, cy+82);
@@ -399,8 +414,8 @@ export function drawCard(canvas, r, styleId){
   // combinaison complète (carrière longue + record élevé + NBA + âge de fin) dépasserait la
   // largeur sûre de la carte, plutôt qu'un débordement silencieux.
   x.fillStyle=C.mint;
-  const endAgeLine = r.endAge!=null ? `   ·   retraite à ${r.endAge} ans` : '';
-  const statLine = `${r.seasons} saisons${endAgeLine}   ·   record ${r.bestPts} pts/match${r.nba?'   ·   🏀 NBA':''}`;
+  const endAgeLine = r.endAge!=null ? t('cardCanvas.retiredAt',{age:r.endAge}) : '';
+  const statLine = `${r.seasons} ${t('hof.seasons')}${endAgeLine}   ·   ${t('cardCanvas.recordPtsPerGame',{pts:r.bestPts})}${r.nba?t('cardCanvas.nbaSuffix'):''}`;
   let statSize=30;
   x.font=`600 ${statSize}px "Bricolage Grotesque", Arial, sans-serif`;
   while(statSize>20 && x.measureText(statLine).width>safeW){ statSize-=2; x.font=`600 ${statSize}px "Bricolage Grotesque", Arial, sans-serif`; }
@@ -413,7 +428,7 @@ export function drawCard(canvas, r, styleId){
   // statistiques) ne déborde jamais du cadre.
   if(r.totalPts!=null){
     x.fillStyle=C.dim;
-    const totalsLine = `${fmtNum(r.totalPts)} PTS   ·   ${fmtNum(r.totalAst)} PAS   ·   ${fmtNum(r.totalReb)} REB   ·   ${fmtNum(r.totalBlk)} CTR   ·   ${fmtNum(r.totalStl)} INT`;
+    const totalsLine = `${fmtNum(r.totalPts)} ${t('cardCanvas.ptsAbbr')}   ·   ${fmtNum(r.totalAst)} ${t('cardCanvas.astAbbr')}   ·   ${fmtNum(r.totalReb)} ${t('cardCanvas.rebAbbr')}   ·   ${fmtNum(r.totalBlk)} ${t('cardCanvas.blkAbbr')}   ·   ${fmtNum(r.totalStl)} ${t('cardCanvas.stlAbbr')}`;
     let totSize=22;
     x.font=`600 ${totSize}px "Bricolage Grotesque", Arial, sans-serif`;
     while(totSize>13 && x.measureText(totalsLine).width>safeW){ totSize-=1; x.font=`600 ${totSize}px "Bricolage Grotesque", Arial, sans-serif`; }

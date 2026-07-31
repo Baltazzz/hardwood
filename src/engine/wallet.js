@@ -1,13 +1,19 @@
 /* ============================================================
-   CAGNOTTE — monnaie persistante de la boutique cosmétique (voir AGENDA.md AGD-41), qui cumule
-   une part de la trésorerie gagnée À TRAVERS TOUTES LES CARRIÈRES. Même stockage robuste que
-   hof.js/badges.js : localStorage quand disponible, repli mémoire sinon -- jamais d'erreur si le
-   stockage est indisponible/plein/bloqué.
+   CAGNOTTE — monnaie persistante de la boutique cosmétique (voir AGENDA.md AGD-41/AGD-47), qui
+   cumule DIRECTEMENT la trésorerie gagnée en carrière (même unité que p.money -- k€, voir
+   engine/utils.js money()) À TRAVERS TOUTES LES CARRIÈRES, plus des primes de titres modérées.
+   Même stockage robuste que hof.js/badges.js : localStorage quand disponible, repli mémoire
+   sinon -- jamais d'erreur si le stockage est indisponible/plein/bloqué.
 
    Volontairement DÉCONNECTÉE de p (le joueur) une fois la carrière terminée : cette monnaie ne
    sert qu'à acheter des cosmétiques (engine/cosmetics.js), jamais relue par la simulation d'une
    carrière -- aucun risque d'affecter le gameplay, l'équilibrage, ou un score de classement/défi
    (voir engine/challenges.js/dailyChallenge.js, qui n'importent jamais ce module).
+
+   AGD-47 (voir AGENDA.md) a remplacé l'ancien système de jetons (courbe de conversion opaque,
+   monnaie abstraite) : la cagnotte EST désormais la trésorerie de carrière elle-même, cumulée
+   sans transformation -- "le joueur dépense ses gains réels". La seule exigence de progression
+   vient maintenant du CALIBRAGE DES PRIX (voir engine/cosmetics.js), pas d'une courbe de gain.
 ============================================================ */
 const WALLET_KEY = 'hardwood_wallet_v1';
 let mem = null;
@@ -25,35 +31,47 @@ function load() {
 function save() { try { localStorage.setItem(WALLET_KEY, JSON.stringify(mem)); } catch (e) { /* stockage indisponible : on continue en mémoire */ } }
 
 export function walletState() { return load(); }
+// En k€ (même unité que p.money -- voir engine/utils.js money() pour le formatage "X k€"/"X M€").
 export function walletBalance() { return load().balance; }
 
-// Conversion trésorerie -> jetons, volontairement EXIGEANTE ("mieux vaut trop dur que trop
-// facile", consigne explicite). p.money est la trésorerie de fin de carrière en k€ (voir
-// engine/player.js/season.js) -- calibrée sur un échantillon RÉEL de 300 carrières pilotées par
-// le harnais de test (aléatoire, non trié par qualité) plutôt que sur une estimation :
-//   médiane toutes carrières confondues : ~13 900 k€ (~13.9 M€)
-//   médiane par palier atteint : Parcours de combattant ~6 300 · Joueur de rotation ~15 500 ·
-//     All-Star ~41 300 · Superstar ~56 400 · Hall of Fame ~67 200 · G.O.A.T. (1 seul cas) ~77 600
-//   maximum observé sur l'échantillon : ~89 200 k€
-// Courbe SUR-linéaire (exposant 1.5, pas une simple proportion) : une carrière médiocre ne
-// rapporte presque rien (quelques jetons), une grande carrière rapporte largement plus que
-// proportionnellement plus -- empêche de "farmer" la cagnotte en enchaînant des carrières
-// médiocres, force à viser une vraie bonne carrière pour progresser dans la boutique. Avec cette
-// formule : carrière "Parcours de combattant" médiane -> ~5 jetons, "Joueur de rotation" -> ~20,
-// "All-Star" -> ~88, "Superstar" -> ~141, "Hall of Fame" -> ~184, la meilleure carrière observée
-// sur 300 (G.O.A.T., 89 200 k€) -> ~280. Les récompenses les plus chères de la boutique (400+
-// jetons) réclament donc bien plusieurs bonnes carrières, jamais une seule carrière moyenne.
-export function tokensFromMoney(money) {
-  const m = Math.max(0, money || 0) / 1000; // k€ -> M€
-  return Math.floor(Math.pow(m, 1.5) / 3);
+// Primes de titres modérées (voir AGENDA.md AGD-47, point 3) : chaque trophée/titre gagné en
+// carrière alimente aussi le pouvoir d'achat en boutique, en plus de la trésorerie déjà comptée
+// via le salaire/les bonus (engine/season.js). Volontairement mesuré -- même pour une carrière
+// G.O.A.T. couverte de titres, la prime totale reste une fraction de la trésorerie déjà gagnée
+// (quelques M€ de plus sur des dizaines à centaines de M€), jamais la source dominante.
+// Clés identiques à celles utilisées comme accolades (voir engine/season.js A('...')) -- montants
+// en k€. Une clé de palier mineur non listée explicitement ("Champion <ligue mineure>"/
+// "MVP <ligue mineure>") retombe sur un montant plus modeste (MINOR_*_BONUS ci-dessous).
+const TITLE_BONUS = {
+  'Champion NBA': 3000, 'Champion EuroLeague': 1800, 'Champion NBL': 1200,
+  'MVP': 2500, 'MVP EuroLeague': 1200, 'MVP des finales': 1500,
+  'Meilleur défenseur': 800, "Rookie de l'année": 600, 'Meilleur jeune': 400,
+  'All-Star': 250, 'All-EuroLeague': 200, 'Meilleur marqueur': 500,
+};
+const MINOR_CHAMPION_BONUS = 400, MINOR_MVP_BONUS = 300;
+const MEDAL_BONUS = { '🥇': 1000, '🥈': 500, '🥉': 250 };
+
+export function titleBonusFor(accolades) {
+  let bonus = 0;
+  for (const [key, count] of Object.entries(accolades || {})) {
+    if (!count) continue;
+    if (key in TITLE_BONUS) { bonus += TITLE_BONUS[key] * count; continue; }
+    if (key.startsWith('Champion ')) { bonus += MINOR_CHAMPION_BONUS * count; continue; }
+    if (key.startsWith('MVP ')) { bonus += MINOR_MVP_BONUS * count; continue; }
+    if (key.startsWith('🥇')) { bonus += MEDAL_BONUS['🥇'] * count; continue; }
+    if (key.startsWith('🥈')) { bonus += MEDAL_BONUS['🥈'] * count; continue; }
+    if (key.startsWith('🥉')) { bonus += MEDAL_BONUS['🥉'] * count; continue; }
+  }
+  return Math.round(bonus);
 }
 
 // Appelé une fois par carrière terminée (voir endCareer() dans ui/screens.js), avec le MÊME
 // garde-fou anti-double-comptage que p.savedHOF/p.savedChallengeResult (endCareer() peut être
-// ré-invoqué, ex. retour depuis "Ma carte"). Retourne le nombre de jetons gagnés (pour un
-// éventuel message de félicitations), 0 si la carrière n'a rien rapporté.
+// ré-invoqué, ex. retour depuis "Ma carte"). Retourne le montant gagné en k€ (trésorerie de fin
+// de carrière + primes de titres), pour un éventuel message de félicitations -- 0 si la carrière
+// n'a rien rapporté.
 export function earnFromCareer(p) {
-  const earned = tokensFromMoney(p.money);
+  const earned = Math.max(0, Math.round(p.money || 0)) + titleBonusFor(p.accolades);
   if (earned > 0) {
     const w = load();
     w.balance += earned;

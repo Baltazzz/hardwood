@@ -20,14 +20,16 @@ export const EARLY_EVENTS = [
     ]},
 
   {id:'early_pro', cat:'youth', phase:'early', once:true,
-    when:(p,lg)=>lg.tier===5 && p.age>=17 && p.age<=19,
+    // 'academy' (voie eu/au) et 'college' (voie us) seulement -- PAS 'highschool' (lycée) : un
+    // lycéen n'a pas encore de vraie offre pro à considérer, sa seule vraie étape suivante est la
+    // fac (promotion automatique en jeu, voir season.js), jamais un saut direct en G League.
+    when:(p,lg)=>(p.league==='academy'||p.league==='college') && p.age>=17 && p.age<=19,
     title:'Un club pro te fait les yeux doux',
     body:({p})=>`Un club de division inférieure te propose de signer pro tout de suite. Plus d'argent, mais moins de temps de jeu garanti face à des adultes. La formation, elle, te laisserait dominer ta catégorie encore un an.`,
     weight:()=>1.4,
     choices:()=>[
       {label:'Signer pro maintenant', hint:'Le grand saut, tout de suite',
-        // lg.tier===5 couvre 'academy' (voie eu/au) ET 'college' (voie us) : la voie us n'a pas
-        // de "2e division" domestique, le grand saut équivalent y est la G League.
+        // la voie us n'a pas de "2e division" domestique, le grand saut équivalent y est la G League.
         effect:({p})=>({forceMove:{type:'promo', to:p.startPath==='au'?'nbl1':p.startPath==='us'?'gleague':'second'}, morale:+4, money:+30}),
         outcome:'Tu franchis le pas vers le monde pro plus tôt que prévu.'},
       {label:'Rester en formation encore un an', hint:'Dominer avant de monter',

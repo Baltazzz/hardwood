@@ -58,4 +58,56 @@ export const TRAITS_PAYOFF_EVENTS = [
       {label:'Publier un communiqué apaisant', hint:'Calmer le jeu, façon service de communication',
         effect:{coach:+3, popularity:-2, media:+2}, outcome:'Le communiqué calme un peu les choses. Sobre, efficace, pas franchement toi.'}
     ]},
+
+  // ---- Lot d'extension (voir AGENDA.md, "étoffer les traits") : comble les deux traits qui
+  // n'avaient encore AUCUN scénario dédié (Tête brûlée/Chouchou des médias -- nourris par de
+  // nombreux événements, mais jamais "vécus" une fois actifs), et donne à Showman/Bosseur (traits
+  // entièrement nouveaux) leur propre moment récurrent -- pas seulement le paiement final de
+  // data/events/threads.js. ----
+  {id:'hothead_incident', cat:'locker', phase:null, cooldown:4,
+    when:(p,lg)=>hasTrait(p,'hothead'),
+    title:'Encore un accrochage',
+    body:()=>`Une nouvelle altercation sur le terrain fait parler après le match. Ta réputation de tempérament chaud te précède désormais, partout où tu joues.`,
+    weight:()=>1.0,
+    choices:()=>[
+      {label:'Assumer, tu ne changeras pas', hint:'En faire une force plutôt qu\'un défaut',
+        effect:()=>(Math.random()<0.5)?{popularity:+6, reputation:+2}:{coach:-4, reputation:-3},
+        outcome:'Tu assumes, comme toujours. Selon les soirs, ton public adore ou le staff s\'arrache les cheveux.'},
+      {label:'Travailler avec un préparateur mental', hint:'Apprendre à canaliser, sans perdre ce qui te fait jouer',
+        effect:{coach:+4, qi:+2, morale:+2}, outcome:'Le travail commence à payer. Le tempérament est toujours là, mais mieux dirigé.'}
+    ]},
+  {id:'media_friend_deal', cat:'media', phase:null, cooldown:5,
+    when:(p,lg)=>hasTrait(p,'mediaFriend'),
+    title:'Une chaîne te propose une chronique régulière',
+    body:()=>`Ton aisance avec la presse a été remarquée : une émission te propose une place récurrente, entre analyses et coulisses.`,
+    weight:()=>0.9,
+    choices:()=>[
+      {label:'Accepter, devenir une vraie voix médiatique', hint:'Construire ta marque personnelle au-delà du terrain',
+        effect:{popularity:+6, money:+30, media:+3}, outcome:'La chronique cartonne. Ton nom circule désormais bien au-delà des seuls résultats sportifs.'},
+      {label:'Décliner, rester concentré sur le terrain', hint:'Le jeu d\'abord, le reste peut attendre',
+        effect:{coach:+3, qi:+1}, outcome:'Tu déclines poliment. Le terrain reste ta seule vraie priorité.'}
+    ]},
+  {id:'showman_encore', cat:'social', phase:null, cooldown:4,
+    when:(p,lg)=>hasTrait(p,'showman'),
+    title:'Le public attend le prochain geste',
+    body:()=>`À chaque match, une partie du public vient maintenant spécifiquement pour TON style. La pression du spectacle ne retombe jamais vraiment.`,
+    weight:()=>0.9,
+    choices:()=>[
+      {label:'Livrer le spectacle, encore et encore', hint:'Ne jamais décevoir le public venu pour ça',
+        effect:()=>(Math.random()<0.55)?{popularity:+6, morale:+3}:{coach:-2, perfBonus:-2},
+        outcome:'Tu essaies de livrer, comme toujours. Ce soir-là, le geste passe ou casse.'},
+      {label:'Rappeler que tu sais aussi juste bien jouer', hint:'Varier le registre, sans perdre l\'identité',
+        effect:{qi:+2, coach:+2}, outcome:'Tu montres un visage plus complet. Le public s\'habitue à cette nouvelle facette.'}
+    ]},
+  {id:'workhorse_checkup', cat:'training', phase:null, cooldown:4,
+    when:(p,lg)=>hasTrait(p,'workhorse'),
+    title:'Le bilan physique de mi-saison',
+    body:()=>`Le staff médical fait le point : ton éthique de travail est citée en exemple, mais la charge accumulée commence sérieusement à inquiéter.`,
+    weight:()=>0.9,
+    choices:()=>[
+      {label:'Continuer sur le même rythme', hint:'La charge de travail comme identité, quel qu\'en soit le prix',
+        effect:{coach:+3, fitness:-3}, outcome:'Tu ne changes rien. Le staff s\'incline devant ton éthique de travail, un peu inquiet quand même.'},
+      {label:'Accepter un vrai programme de charge maîtrisée', hint:'Travailler intelligemment, pas seulement beaucoup',
+        effect:{fitness:+4, qi:+1}, outcome:'Tu acceptes d\'encadrer ta charge de travail. Toujours aussi sérieux, un peu plus durable.'}
+    ]},
 ];

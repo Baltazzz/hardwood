@@ -1,6 +1,7 @@
 /* ============================================================
-   BOUTIQUE COSMÉTIQUE (voir AGENDA.md AGD-41) — catalogue + état d'achat/équipement, payé en
-   jetons de la cagnotte (engine/wallet.js). STRICTEMENT décoratif par construction : chaque
+   BOUTIQUE COSMÉTIQUE (voir AGENDA.md AGD-41/AGD-47) — catalogue + état d'achat/équipement, payé
+   directement en k€ de la cagnotte (engine/wallet.js -- la trésorerie de carrière cumulée, plus
+   jetons abstraits). STRICTEMENT décoratif par construction : chaque
    famille ne touche que du rendu (variables CSS, palette de la carte canvas, classes CSS d'un
    cadre de profil, texte d'un titre honorifique) -- rien ici ne lit ni n'écrit jamais un champ du
    joueur `p` utilisé par la simulation (attrs/ovr/salaire/reputation/...), aucun de ces modules
@@ -121,55 +122,75 @@ export function themePreviewColors(id) {
 }
 
 /* ------------------------------------------------------------
-   Catalogue -- chaque item : id stable, family, name/desc affichés, price en jetons, tier
-   ('cheap'|'prestige', purement indicatif pour le regroupement d'affichage).
+   Catalogue -- chaque item : id stable, family, name/desc affichés, price EN K€ (voir AGENDA.md
+   AGD-47 -- la cagnotte est directement la trésorerie de carrière cumulée, plus jetons abstraits),
+   tier ('cheap'|'prestige', purement indicatif pour le regroupement d'affichage).
+
+   Calibrage (voir engine/wallet.js) : distribution RÉELLE de trésorerie de fin de carrière
+   mesurée sur 300 carrières pilotées (médiane ~13 900 k€, p90 ~54 300 k€, max observé sur
+   l'échantillon ~89 200 k€, sur UNE SEULE carrière). La cagnotte cumule cette trésorerie À TRAVERS
+   toutes les carrières (jamais remise à zéro) : les prix "cheap" (1 500-8 000 k€) restent
+   accessibles dès une carrière correcte à moyenne, les prix "prestige" (150 000-260 000 k€)
+   réclament plusieurs grosses carrières cumulées, jamais une seule -- même la meilleure carrière
+   observée sur l'échantillon (89 200 k€) n'y suffit pas seule.
 ------------------------------------------------------------ */
 export const COSMETICS = [
   // ---- Thèmes de couleur d'interface ----
-  { id: 'terre_battue', family: 'theme', name: 'Terre battue', desc: 'La palette d\'origine du jeu.', price: 0, tier: 'default' },
-  { id: 'ocean', family: 'theme', name: 'Bleu Océan', desc: 'Un bleu profond et posé.', price: 30, tier: 'cheap' },
-  { id: 'forest', family: 'theme', name: 'Vert Forêt', desc: 'Un vert soutenu, discret et net.', price: 30, tier: 'cheap' },
-  { id: 'royal', family: 'theme', name: 'Violet Royal', desc: 'Une teinte affirmée, chic.', price: 30, tier: 'cheap' },
-  { id: 'brick', family: 'theme', name: 'Rouge Brique', desc: 'Un rouge sourd, plus grave que le terracotta d\'origine.', price: 30, tier: 'cheap' },
-  { id: 'slate', family: 'theme', name: 'Gris Ardoise', desc: 'Sobre et neutre, jamais criard.', price: 30, tier: 'cheap' },
-  { id: 'amber', family: 'theme', name: 'Ambre', desc: 'Un doré chaud, plus clair que l\'or d\'origine.', price: 30, tier: 'cheap' },
-  { id: 'boston', family: 'theme', name: 'Vert Celtique', desc: 'Vert et or, l\'identité d\'une grande franchise historique de Boston.', price: 45, tier: 'cheap' },
-  { id: 'lakers', family: 'theme', name: 'Pourpre & Or', desc: 'Violet et or, l\'identité d\'une grande franchise de Los Angeles.', price: 45, tier: 'cheap' },
-  { id: 'warriors', family: 'theme', name: 'Baie Dorée', desc: 'Bleu et or, l\'identité d\'une grande franchise de la baie de San Francisco.', price: 45, tier: 'cheap' },
-  { id: 'heat', family: 'theme', name: 'Chaleur Tropicale', desc: 'Grenat et orange, l\'identité d\'une grande franchise de Miami.', price: 45, tier: 'cheap' },
-  { id: 'bulls', family: 'theme', name: 'Rouge Taureau', desc: 'Rouge et noir, l\'identité d\'une grande franchise de Chicago.', price: 45, tier: 'cheap' },
-  { id: 'knicks', family: 'theme', name: 'Bleu & Orange', desc: 'Bleu et orange, l\'identité d\'une grande franchise de New York.', price: 45, tier: 'cheap' },
-  { id: 'nets', family: 'theme', name: 'Noir & Blanc', desc: 'Minimaliste, l\'identité d\'une grande franchise de Brooklyn.', price: 45, tier: 'cheap' },
-  { id: 'spurs', family: 'theme', name: 'Argent Sobre', desc: 'Argent et noir, l\'identité d\'une grande franchise de San Antonio.', price: 45, tier: 'cheap' },
-  { id: 'sixers', family: 'theme', name: 'Étoile de Philadelphie', desc: 'Bleu et rouge, l\'identité d\'une grande franchise de Philadelphie.', price: 45, tier: 'cheap' },
-  { id: 'raptors', family: 'theme', name: 'Griffe du Nord', desc: 'Rouge et noir, l\'identité d\'une grande franchise de Toronto.', price: 45, tier: 'cheap' },
-  { id: 'champion_gold', family: 'theme', name: 'Or Champion', desc: 'Or vieilli et noir profond -- le thème le plus prestigieux de la boutique.', price: 480, tier: 'prestige' },
+  { id: 'terre_battue', family: 'theme', name: 'Terre battue', desc: 'La palette d\'origine du jeu. Un classique ne se démode pas.', price: 0, tier: 'default' },
+  { id: 'ocean', family: 'theme', name: 'Bleu Océan', desc: 'Le genre de bleu qui inspire confiance en interview, même après une défaite de 40 points.', price: 4000, tier: 'cheap' },
+  { id: 'forest', family: 'theme', name: 'Vert Forêt', desc: 'Discret, efficace, jamais le sujet de la conversation -- comme ce pivot qui fait juste son travail.', price: 4000, tier: 'cheap' },
+  { id: 'royal', family: 'theme', name: 'Violet Royal', desc: 'Pour te sentir en contrat max, même en G League.', price: 4000, tier: 'cheap' },
+  { id: 'brick', family: 'theme', name: 'Rouge Brique', desc: 'Sérieux, presque menaçant. Le coach adverse s\'inquiète avant même le tip-off.', price: 4000, tier: 'cheap' },
+  { id: 'slate', family: 'theme', name: 'Gris Ardoise', desc: 'Sobre et neutre, comme ce coéquipier qui ne parle jamais mais fait toujours le bon appel défensif.', price: 4000, tier: 'cheap' },
+  { id: 'amber', family: 'theme', name: 'Ambre', desc: 'Moins m\'as-tu-vu que l\'or classique, tout aussi doré sur les bords.', price: 4000, tier: 'cheap' },
+  { id: 'boston', family: 'theme', name: 'Vert Celtique', desc: 'Vert et or, l\'ADN d\'une grande franchise historique de Boston. Dix-sept banderoles ne rentrent pas dans cette description, mais l\'esprit y est.', price: 7000, tier: 'cheap' },
+  { id: 'lakers', family: 'theme', name: 'Pourpre & Or', desc: 'Violet et or, showtime garanti même si tu joues en G League.', price: 7000, tier: 'cheap' },
+  { id: 'warriors', family: 'theme', name: 'Baie Dorée', desc: 'Bleu et or de la Baie. Prévois de shooter à 3 points depuis le parking.', price: 7000, tier: 'cheap' },
+  { id: 'heat', family: 'theme', name: 'Chaleur Tropicale', desc: 'Grenat et orange. Culture, intensité, et une irrépressible envie de jouer un match blanc en playoffs.', price: 7000, tier: 'cheap' },
+  { id: 'bulls', family: 'theme', name: 'Rouge Taureau', desc: 'Rouge et noir. Six bagues d\'écart avec le reste du monde, ambiance comprise.', price: 7000, tier: 'cheap' },
+  { id: 'knicks', family: 'theme', name: 'Bleu & Orange', desc: 'Le Madison Square Garden hurle dans ton interface, gratuitement.', price: 7000, tier: 'cheap' },
+  { id: 'nets', family: 'theme', name: 'Noir & Blanc', desc: 'Minimaliste jusqu\'à l\'os, pour ceux qui trouvent que le reste du jeu a déjà trop de couleurs.', price: 7000, tier: 'cheap' },
+  { id: 'spurs', family: 'theme', name: 'Argent Sobre', desc: 'Système, discipline, zéro esbroufe -- Pop approuverait.', price: 7000, tier: 'cheap' },
+  { id: 'sixers', family: 'theme', name: 'Étoile de Philadelphie', desc: '"Trust the process", même pour choisir un thème d\'interface.', price: 7000, tier: 'cheap' },
+  { id: 'raptors', family: 'theme', name: 'Griffe du Nord', desc: 'Le seul thème du jeu avec un passeport.', price: 7000, tier: 'cheap' },
+  { id: 'champion_gold', family: 'theme', name: 'Or Champion', desc: 'Or vieilli, noir profond. Réservé à ceux qui ont vraiment gagné quelque chose -- littéralement, regarde le prix.', price: 220000, tier: 'prestige' },
 
   // ---- Styles de carte de fin de carrière ----
-  { id: 'classic', family: 'card', name: 'Classique', desc: 'Le style d\'origine de la carte.', price: 0, tier: 'default' },
-  { id: 'noir', family: 'card', name: 'Carte Nuit', desc: 'Fond sombre, contraste inversé.', price: 35, tier: 'cheap' },
-  { id: 'parquet', family: 'card', name: 'Fond Parquet', desc: 'Lattes de parquet en fond, la signature du jeu.', price: 30, tier: 'cheap' },
-  { id: 'vintage', family: 'card', name: 'Bandeau Vintage', desc: 'Cadre double liseré, esprit journal d\'époque.', price: 30, tier: 'cheap' },
-  { id: 'gold_frame', family: 'card', name: 'Cadre Or', desc: 'Un double cadre or épais, plus cérémonial.', price: 30, tier: 'cheap' },
-  { id: 'legend_foil', family: 'card', name: 'Édition Légende', desc: 'Bandeau or profond et ornements d\'angle -- la carte la plus prestigieuse.', price: 420, tier: 'prestige' },
+  { id: 'classic', family: 'card', name: 'Classique', desc: 'La carte telle qu\'elle a toujours été.', price: 0, tier: 'default' },
+  { id: 'noir', family: 'card', name: 'Carte Nuit', desc: 'Fond noir, contraste inversé. Pour une carrière qu\'on prend très, très au sérieux.', price: 6000, tier: 'cheap' },
+  { id: 'parquet', family: 'card', name: 'Fond Parquet', desc: 'Le parquet en fond, la maison. Rien de plus logique pour finir là où tout a commencé.', price: 5000, tier: 'cheap' },
+  { id: 'vintage', family: 'card', name: 'Bandeau Vintage', desc: 'Cadre double liseré, esprit une du journal du lendemain matin. Ta carrière, imprimée comme en 1998.', price: 5000, tier: 'cheap' },
+  { id: 'gold_frame', family: 'card', name: 'Cadre Or', desc: 'Un cadre or bien épais, cérémonie des retraités incluse.', price: 5000, tier: 'cheap' },
+  { id: 'legend_foil', family: 'card', name: 'Édition Légende', desc: 'Bandeau or, ornements d\'angle, le tout. La carte que tu montres à tes petits-enfants.', price: 180000, tier: 'prestige' },
 
   // ---- Titres honorifiques (profil, "Ma progression") ----
-  { id: 'title_hope', family: 'title', name: 'Espoir du parquet', desc: 'Un titre pour bien commencer.', price: 10, tier: 'cheap' },
-  { id: 'title_vet', family: 'title', name: 'Vétéran respecté', desc: '', price: 15, tier: 'cheap' },
-  { id: 'title_strategist', family: 'title', name: 'Stratège du jeu', desc: '', price: 15, tier: 'cheap' },
-  { id: 'title_wall', family: 'title', name: 'Mur défensif', desc: '', price: 15, tier: 'cheap' },
-  { id: 'title_showman', family: 'title', name: 'Showman', desc: '', price: 20, tier: 'cheap' },
-  { id: 'title_clutch', family: 'title', name: 'Clutch Player', desc: '', price: 20, tier: 'cheap' },
-  { id: 'title_local_legend', family: 'title', name: 'Légende locale', desc: '', price: 25, tier: 'cheap' },
-  { id: 'title_icon', family: 'title', name: 'Icône populaire', desc: '', price: 25, tier: 'cheap' },
+  { id: 'title_hope', family: 'title', name: 'Espoir du parquet', desc: 'Un titre pour bien commencer. Techniquement, tu n\'as encore rien prouvé.', price: 1500, tier: 'cheap' },
+  { id: 'title_vet', family: 'title', name: 'Vétéran respecté', desc: 'T\'as vu des choses. Beaucoup de choses. La plupart en G League, mais quand même.', price: 2000, tier: 'cheap' },
+  { id: 'title_strategist', family: 'title', name: 'Stratège du jeu', desc: 'Tu lis le jeu avant qu\'il ne se joue. Ou alors tu as juste de la chance -- personne ne le saura jamais.', price: 2000, tier: 'cheap' },
+  { id: 'title_wall', family: 'title', name: 'Mur défensif', desc: 'Rien ne passe. Enfin, presque rien. Disons "presque".', price: 2000, tier: 'cheap' },
+  { id: 'title_showman', family: 'title', name: 'Showman', desc: 'Le jeu, c\'est bien. Le spectacle, c\'est mieux. Le collectif, on verra plus tard.', price: 2500, tier: 'cheap' },
+  { id: 'title_clutch', family: 'title', name: 'Clutch Player', desc: 'Tu veux le ballon dans les 5 dernières secondes. Les stats de réussite restent entre nous.', price: 2500, tier: 'cheap' },
+  { id: 'title_local_legend', family: 'title', name: 'Légende locale', desc: 'Une légende dans ta ville. Ailleurs, on te demande encore d\'épeler ton nom.', price: 3000, tier: 'cheap' },
+  { id: 'title_icon', family: 'title', name: 'Icône populaire', desc: 'Même ceux qui détestent le basket connaissent ton nom. Allez savoir pourquoi.', price: 3000, tier: 'cheap' },
 
   // ---- Cadres de profil ("Ma progression") ----
-  { id: 'frame_wood', family: 'frame', name: 'Cadre Bois', desc: 'Sobre, dans l\'esprit du jeu.', price: 20, tier: 'cheap' },
-  { id: 'frame_bronze', family: 'frame', name: 'Cadre Bronze', desc: '', price: 25, tier: 'cheap' },
-  { id: 'frame_silver', family: 'frame', name: 'Cadre Argent', desc: '', price: 35, tier: 'cheap' },
-  { id: 'frame_emerald', family: 'frame', name: 'Cadre Émeraude', desc: '', price: 35, tier: 'cheap' },
-  { id: 'frame_amethyst', family: 'frame', name: 'Cadre Améthyste', desc: '', price: 40, tier: 'cheap' },
-  { id: 'frame_legends', family: 'frame', name: 'Cadre des Légendes', desc: 'Or et émeraude, ornements d\'angle -- le cadre le plus prestigieux de la boutique.', price: 520, tier: 'prestige' },
+  { id: 'frame_wood', family: 'frame', name: 'Cadre Bois', desc: 'Sobre, en bois véritable -- enfin, en pixels qui imitent le bois.', price: 2500, tier: 'cheap' },
+  { id: 'frame_bronze', family: 'frame', name: 'Cadre Bronze', desc: 'La médaille qu\'on accepte avec le sourire, la troisième fois.', price: 3000, tier: 'cheap' },
+  { id: 'frame_silver', family: 'frame', name: 'Cadre Argent', desc: 'Toujours deuxième, jamais oublié.', price: 4500, tier: 'cheap' },
+  { id: 'frame_emerald', family: 'frame', name: 'Cadre Émeraude', desc: 'Personne ne sait pourquoi c\'est cher. Mais ça a l\'air cher.', price: 4500, tier: 'cheap' },
+  { id: 'frame_amethyst', family: 'frame', name: 'Cadre Améthyste', desc: 'Un cadre qui en jette, sans jamais rien expliquer sur ton jeu réel.', price: 5000, tier: 'cheap' },
+  { id: 'frame_legends', family: 'frame', name: 'Cadre des Légendes', desc: 'Or, émeraude, ornements d\'angle. Ce cadre coûte plus cher que ton premier contrat pro.', price: 260000, tier: 'prestige' },
+
+  // ---- Collection (voir AGENDA.md AGD-47 point 5) : structure/emplacements préparés pour de
+  // futurs visuels à collectionner (cartes, maillots) -- pas encore d'image finale, fournie plus
+  // tard. `comingSoon:true` : jamais achetable/équipable pour l'instant, purement une vitrine
+  // d'emplacements réservés avec un rendu propre (voir ui/shop.js collectionSlotHTML()). ----
+  { id: 'collect_card_1', family: 'collection', sub: 'card', name: 'Carte à venir', desc: 'Un visuel collector arrive bientôt ici.', price: null, tier: 'comingSoon', comingSoon: true },
+  { id: 'collect_card_2', family: 'collection', sub: 'card', name: 'Carte à venir', desc: 'Un visuel collector arrive bientôt ici.', price: null, tier: 'comingSoon', comingSoon: true },
+  { id: 'collect_card_3', family: 'collection', sub: 'card', name: 'Carte à venir', desc: 'Un visuel collector arrive bientôt ici.', price: null, tier: 'comingSoon', comingSoon: true },
+  { id: 'collect_card_4', family: 'collection', sub: 'card', name: 'Carte à venir', desc: 'Un visuel collector arrive bientôt ici.', price: null, tier: 'comingSoon', comingSoon: true },
+  { id: 'collect_jersey_1', family: 'collection', sub: 'jersey', name: 'Maillot à venir', desc: 'Un maillot collector arrive bientôt ici.', price: null, tier: 'comingSoon', comingSoon: true },
+  { id: 'collect_jersey_2', family: 'collection', sub: 'jersey', name: 'Maillot à venir', desc: 'Un maillot collector arrive bientôt ici.', price: null, tier: 'comingSoon', comingSoon: true },
 ];
 const BY_ID = new Map(COSMETICS.map(c => [c.id, c]));
 const DEFAULT_IDS = new Set(['terre_battue', 'classic']); // toujours "possédés", jamais achetables
@@ -184,11 +205,13 @@ export function isOwned(id) {
 }
 export function equippedId(family) { return load().equipped[family]; }
 
-// Achète un item : refuse (avec raison) si déjà possédé, item inconnu, ou solde insuffisant.
-// Ne débite JAMAIS la cagnotte en cas d'échec (walletSpend() est lui-même atomique).
+// Achète un item : refuse (avec raison) si déjà possédé, item inconnu, pas encore disponible
+// (Collection, voir plus haut), ou solde insuffisant. Ne débite JAMAIS la cagnotte en cas
+// d'échec (walletSpend() est lui-même atomique).
 export function purchase(id) {
   const item = cosmeticById(id);
   if (!item) return { ok: false, reason: 'unknown' };
+  if (item.comingSoon) return { ok: false, reason: 'coming_soon' };
   if (isOwned(id)) return { ok: false, reason: 'owned' };
   if (!walletSpend(item.price)) return { ok: false, reason: 'insufficient' };
   const state = load();
@@ -198,12 +221,13 @@ export function purchase(id) {
 }
 
 // Équipe un item déjà possédé (ou un des deux defaults 'terre_battue'/'classic', ou `null` pour
-// vider un cadre/titre) dans son emplacement. Refuse silencieusement (false) un id non possédé ou
-// d'une autre famille -- jamais d'état incohérent (ex. un thème non acheté appliqué quand même).
+// vider un cadre/titre) dans son emplacement. Refuse silencieusement (false) un id non possédé,
+// pas encore disponible, ou d'une autre famille -- jamais d'état incohérent (ex. un thème non
+// acheté appliqué quand même).
 export function equip(family, id) {
   if (id !== null) {
     const item = cosmeticById(id);
-    if (!item || item.family !== family) return false;
+    if (!item || item.family !== family || item.comingSoon) return false;
     if (!isOwned(id)) return false;
   } else if (family !== 'frame' && family !== 'title') {
     return false; // seuls cadre/titre acceptent "aucun équipé" -- thème/carte ont toujours un défaut

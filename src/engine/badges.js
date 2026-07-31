@@ -56,7 +56,8 @@ export function badgesClear() {
   save();
 }
 
-const TIER_RANK = ['Parcours de combattant', 'Joueur de rotation', 'All-Star', 'Superstar', 'Légende · Hall of Fame', 'G.O.A.T.'];
+// Exporté pour engine/challengeCodec.js (index de palier compact dans le lien de résultat de défi).
+export const TIER_RANK = ['Parcours de combattant', 'Joueur de rotation', 'All-Star', 'Superstar', 'Légende · Hall of Fame', 'G.O.A.T.'];
 
 // Chaque badge : id stable, nom + description affichés, emoji + couleur d'accent pour la
 // pastille, et check(p, state) -> booléen. `p` est le joueur complet en fin de carrière (voir

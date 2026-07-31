@@ -46,13 +46,17 @@ export function chooseAcademy(academyNation){
   const p=G;
   p.playNation = academyNation.id;
   p.startPath = academyNation.path;
-  p.league = p.startPath==='us' ? 'college' : 'academy';
+  // Voie US : lycée D'ABORD, jamais directement la fac -- deux étapes distinctes du parcours
+  // (voir AGENDA.md), la promotion lycée -> NCAA se gagne en jeu (voir plus bas, section "VOIE US").
+  p.league = p.startPath==='us' ? 'highschool' : 'academy';
   // Le club de départ est EXACTEMENT celui affiché sur la carte choisie (voir
   // generateAcademyOffers() dans engine/academies.js) -- jamais un second tirage indépendant
   // dans le pays de l'académie, qui déconnectait le club réellement affecté de celui montré au
   // joueur au moment du choix.
   p.club = academyNation.club.name;
-  p.contractY = 2; p.salary = p.league==='college'?0:ri(20,60);
+  // Lycée et fac : sport amateur non rémunéré (NCAA historiquement, lycée par définition) --
+  // seules les voies EU/AU démarrent avec un petit salaire d'académie.
+  p.contractY = 2; p.salary = (p.league==='college'||p.league==='highschool')?0:ri(20,60);
   const abroad = academyNation.id !== p.nation.id;
   const linkedNote = academyNation.club.linkedClub ? ` · filière ${academyNation.club.linkedClub}` : '';
   pushTL(abroad
@@ -652,11 +656,25 @@ function resolveMovement(){
     return {type:'nbaSwan', to:'nba', club:pickClubName('nba', playCountry(p))};
   }
 
-  // ================= VOIE US =================
+  // ================= VOIE US (lycée -> NCAA -> pro) =================
+  // Lycée : jamais éligible à la draft directement (`return null` explicite ci-dessous coupe le
+  // fallthrough vers la fenêtre générique de déclaration internationale un peu plus bas -- un
+  // lycéen américain n'a pas de filière "draft intl", seulement la fac). Même structure que la
+  // promotion académie -> 3e division européenne (seuil de niveau OU âge), seuil d'âge plus bas
+  // (fin de lycée réaliste vers 18 ans, contre 19 pour une académie européenne générique).
+  if(p.league==='highschool'){
+    if(o>=LEAGUES.college.starter-2 || p.age>=18){
+      return {type:'promo', to:'college', club:pickClubName('college', playCountry(p))};
+    }
+    return null;
+  }
   if(p.league==='college'){
     if(!p.draftEntered){
       if(p.age>=22) return {type:'draftDecl', origin:'college', forced:true}; // éligibilité automatique : dernière chance
-      const yrs=p.seasons.length;
+      // Saisons RÉELLEMENT passées en NCAA, pas le total de la carrière -- depuis que le lycée
+      // précède la fac (voir AGENDA.md), p.seasons.length inclurait à tort les saisons de lycée,
+      // ce qui aurait rendu un joueur éligible à la draft après une seule vraie saison de fac.
+      const yrs=p.seasons.filter(s=>s.league==='college').length;
       if(p.age>=19 && (o>=60 || yrs>=3 || p.age>=21)){ return {type:'draftDecl', origin:'college'}; }
     }
     return null;

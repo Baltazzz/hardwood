@@ -14,7 +14,7 @@ import { NATIONS } from '../data/nations.js';
 import { POSITIONS } from '../data/positions.js';
 import { STYLES } from '../data/styles.js';
 import { generateAcademyOffers } from './academies.js';
-import { genChallengeId } from './challengeCodec.js';
+import { withSeededRandom } from './prng.js';
 
 const KEY = 'hardwood_challenges_v1';
 let mem = null;
@@ -33,22 +33,35 @@ function slimOffers(offers) {
 // Génère un profil de départ en réutilisant TELLES QUELLES les règles de génération normales
 // (rollTalent()/generateAcademyOffers()) sur un joueur "brouillon" jetable -- un défi doit être un
 // point de départ qu'une création de personnage normale aurait pu produire, jamais une distribution
-// à part. Purement engine (aucun DOM) : réutilisable à la fois par le défi entre amis (ui/challenge.js,
-// tirage libre) et le défi du jour (engine/dailyChallenge.js, RNG déterministe substituée le temps
-// de l'appel -- voir ce module pour le détail).
-export function generateChallengeDef() {
-  const scratch = newPlayer();
-  scratch.nation = NATIONS[Math.floor(Math.random() * NATIONS.length)];
-  scratch.pos = POSITIONS[Math.floor(Math.random() * POSITIONS.length)].id;
-  scratch.style = STYLES[Math.floor(Math.random() * STYLES.length)].id;
-  rollTalent(scratch);
-  const academyOffers = slimOffers(generateAcademyOffers(scratch.nation));
-  return {
-    id: genChallengeId(),
-    nationId: scratch.nation.id, pos: scratch.pos, style: scratch.style,
-    attrs: { ...scratch.attrs }, potential: scratch.potential, hype: scratch.hype,
-    academyOffers,
-  };
+// à part. Purement engine (aucun DOM) : réutilisable à la fois par le défi entre amis (ui/challenge.js)
+// et le défi du jour (engine/dailyChallenge.js).
+//
+// `seed` (optionnel) : TOUTE la génération (nation/poste/style/attributs/potentiel/offres
+// d'académie) tourne sous Math.random substitué par un générateur déterministe dérivé de cette
+// graine (voir engine/prng.js) -- reproductible à l'identique pour la même graine. Sans `seed`
+// fourni (création d'un nouveau défi entre amis), une graine fraîche est tirée au hasard.
+//
+// Compaction du lien de partage (voir AGENDA.md) : `id`/`seed` sont dérivés directement de la
+// graine (jamais un id aléatoire séparé) -- un lien de défi entre amis n'a donc besoin d'encoder
+// QUE cette graine (quelques caractères en base36, voir engine/challengeCodec.js), qui suffit à
+// reconstruire tout le profil (attributs + offres d'académie inclus) côté destinataire sans
+// jamais transmettre ces données elles-mêmes dans l'URL.
+export function generateChallengeDef(seed) {
+  const s = seed != null ? seed : Math.floor(Math.random() * 0x7FFFFFFF);
+  return withSeededRandom(s, () => {
+    const scratch = newPlayer();
+    scratch.nation = NATIONS[Math.floor(Math.random() * NATIONS.length)];
+    scratch.pos = POSITIONS[Math.floor(Math.random() * POSITIONS.length)].id;
+    scratch.style = STYLES[Math.floor(Math.random() * STYLES.length)].id;
+    rollTalent(scratch);
+    const academyOffers = slimOffers(generateAcademyOffers(scratch.nation));
+    return {
+      id: 'c' + s.toString(36), seed: s,
+      nationId: scratch.nation.id, pos: scratch.pos, style: scratch.style,
+      attrs: { ...scratch.attrs }, potential: scratch.potential, hype: scratch.hype,
+      academyOffers,
+    };
+  });
 }
 
 function load() {

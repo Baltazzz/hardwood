@@ -3769,106 +3769,146 @@ export const CLUB_DATA = {
         "secondary": "#FFFFFF"
       }
     ],
-    "academy": [
-      {
-        "name": "NBA Academy / Select Path",
-        "linkedClub": "NBA / G League",
-        "rating": 98,
-        "prestige": 95,
-        "category": null,
-        "comment": "Chemin fictif/jeu pour prospects américains très haut potentiel hors NCAA.",
-        "primary": "#C8102E",
-        "secondary": "#1D428A"
-      },
-      {
-        "name": "Overtime Elite",
-        "linkedClub": "Development / Pro Path",
-        "rating": 94,
-        "prestige": 88,
-        "category": null,
-        "comment": "Chemin alternatif moderne entre lycée, pro et draft.",
-        "primary": "#000000",
-        "secondary": "#FFFFFF"
-      },
+    "highschool": [
       {
         "name": "Montverde Academy",
-        "linkedClub": "Prep / NCAA pathway",
-        "rating": 98,
-        "prestige": 96,
-        "category": null,
-        "comment": "Prep school ultra réputée, pipeline NCAA/NBA.",
+        "strength": 78,
+        "potential": 96,
+        "prestige": 100,
+        "category": "Prep Powerhouse",
+        "comment": "Prep school ultra réputée en Floride, pipeline NCAA/NBA le plus prolifique du pays.",
         "primary": "#006633",
         "secondary": "#FFFFFF"
       },
       {
         "name": "IMG Academy",
-        "linkedClub": "Prep / NCAA pathway",
-        "rating": 97,
-        "prestige": 95,
-        "category": null,
-        "comment": "Structure sportive internationale, préparation pro très forte.",
+        "strength": 75,
+        "potential": 94,
+        "prestige": 96,
+        "category": "Prep Powerhouse",
+        "comment": "Structure sportive internationale en Floride, préparation physique et médiatique très forte.",
         "primary": "#003B5C",
         "secondary": "#00AEEF"
       },
       {
         "name": "Oak Hill Academy",
-        "linkedClub": "Prep / NCAA pathway",
-        "rating": 96,
-        "prestige": 98,
-        "category": null,
-        "comment": "Académie historique avec énorme prestige basket.",
+        "strength": 74,
+        "potential": 92,
+        "prestige": 97,
+        "category": "Prep Powerhouse",
+        "comment": "Académie historique de Virginie, énorme prestige basket depuis des décennies.",
         "primary": "#003366",
         "secondary": "#FFFFFF"
       },
       {
-        "name": "Duke Recruiting Pipeline",
-        "linkedClub": "Duke",
-        "rating": 97,
-        "prestige": 100,
-        "category": null,
-        "comment": "Point de départ bleu blood pour prospects 5 étoiles.",
-        "primary": "#003087",
-        "secondary": "#FFFFFF"
+        "name": "Sierra Canyon",
+        "strength": 73,
+        "potential": 90,
+        "prestige": 92,
+        "category": "Prep Powerhouse",
+        "comment": "Lycée californien très médiatisé, recrutement national et forte exposition.",
+        "primary": "#002F6C",
+        "secondary": "#C8102E"
       },
       {
-        "name": "Kentucky Recruiting Pipeline",
-        "linkedClub": "Kentucky",
-        "rating": 97,
-        "prestige": 100,
-        "category": null,
-        "comment": "Voie royale one-and-done/pro sous pression maximale.",
-        "primary": "#0033A0",
-        "secondary": "#FFFFFF"
-      },
-      {
-        "name": "G League Ignite Legacy Slot",
-        "linkedClub": "G League Development",
-        "rating": 90,
-        "prestige": 85,
-        "category": null,
-        "comment": "Slot gameplay inspiré des anciens chemins pro pré-draft.",
-        "primary": "#C8102E",
-        "secondary": "#1D428A"
-      },
-      {
-        "name": "USA Basketball Junior Pathway",
-        "linkedClub": "USA Basketball",
-        "rating": 96,
-        "prestige": 98,
-        "category": null,
-        "comment": "Sélection nationale junior, boost de prestige et potentiel.",
-        "primary": "#002868",
-        "secondary": "#BF0A30"
-      },
-      {
-        "name": "AAU Elite Circuit",
-        "linkedClub": "Prep / NCAA pathway",
-        "rating": 92,
+        "name": "DeMatha Catholic",
+        "strength": 70,
+        "potential": 86,
         "prestige": 90,
-        "category": null,
-        "comment": "Chemin AAU pour scouting, recrutement NCAA et exposition nationale.",
+        "category": "Prep Historique",
+        "comment": "Institution du Maryland, une des traditions basket les plus anciennes du pays.",
+        "primary": "#7B0522",
+        "secondary": "#FFFFFF"
+      },
+      {
+        "name": "La Lumiere School",
+        "strength": 70,
+        "potential": 88,
+        "prestige": 85,
+        "category": "Prep Powerhouse",
+        "comment": "Petit internat de l'Indiana, densité de talent élevée malgré sa taille modeste.",
+        "primary": "#00274C",
+        "secondary": "#FFC72C"
+      },
+      {
+        "name": "Long Island Lutheran",
+        "strength": 69,
+        "potential": 87,
+        "prestige": 84,
+        "category": "Prep Powerhouse",
+        "comment": "Programme new-yorkais en forte ascension, recrutement de plus en plus national.",
+        "primary": "#003DA5",
+        "secondary": "#FFFFFF"
+      },
+      {
+        "name": "Prolific Prep",
+        "strength": 68,
+        "potential": 89,
+        "prestige": 83,
+        "category": "Prep Moderne",
+        "comment": "Programme californien récent pensé comme un tremplin direct vers le haut niveau.",
+        "primary": "#000000",
+        "secondary": "#C8102E"
+      },
+      {
+        "name": "Wasatch Academy",
+        "strength": 66,
+        "potential": 85,
+        "prestige": 78,
+        "category": "Prep Moderne",
+        "comment": "Internat de l'Utah, filière internationale connue pour ses prospects venus d'ailleurs.",
+        "primary": "#00205B",
+        "secondary": "#FFFFFF"
+      },
+      {
+        "name": "Christ the King",
+        "strength": 65,
+        "potential": 82,
+        "prestige": 82,
+        "category": "Prep Historique",
+        "comment": "Lycée du Queens, tradition new-yorkaise ancienne et respectée.",
+        "primary": "#7B1E3A",
+        "secondary": "#FFFFFF"
+      },
+      {
+        "name": "Simeon Career Academy",
+        "strength": 64,
+        "potential": 83,
+        "prestige": 80,
+        "category": "Prep Historique",
+        "comment": "Lycée public de Chicago, réputation bâtie sur plusieurs générations de talents locaux.",
+        "primary": "#8A1538",
+        "secondary": "#FFFFFF"
+      },
+      {
+        "name": "Overtime Elite",
+        "strength": 60,
+        "potential": 90,
+        "prestige": 88,
+        "category": "Voie Alternative",
+        "comment": "Structure moderne hors système scolaire classique, entre lycée et statut semi-pro.",
         "primary": "#000000",
         "secondary": "#FFFFFF"
+      },
+      {
+        "name": "Roosevelt High",
+        "strength": 50,
+        "potential": 78,
+        "prestige": 55,
+        "category": "Lycée Public",
+        "comment": "Établissement public de quartier, sans grand nom mais un vrai vestiaire pour progresser.",
+        "primary": "#1B4332",
+        "secondary": "#FFFFFF"
+      },
+      {
+        "name": "Central Catholic High",
+        "strength": 52,
+        "potential": 76,
+        "prestige": 58,
+        "category": "Lycée Public",
+        "comment": "Programme catholique de ville moyenne, discipline stricte et développement solide.",
+        "primary": "#5C0511",
+        "secondary": "#FFC72C"
       }
     ]
   },

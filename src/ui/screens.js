@@ -6,7 +6,7 @@ import { LIFESTYLES } from '../data/lifestyles.js';
 import { LEAGUES } from '../data/leagues.js';
 import { newPlayer, rollTalent, rollArchetypeAndName, ovr, salaryFor, clubSalaryMod, playCountry } from '../engine/player.js';
 import { hofBest, hofAdd } from '../engine/hof.js';
-import { evaluateBadges, BADGES } from '../engine/badges.js';
+import { evaluateBadges, BADGES, TIER_RANK } from '../engine/badges.js';
 import { applyChoice, postSeason, doMove, beginSeasonKeep, draftProjection, seasonVerdict, startCareer, chooseAcademy, nextEventOrSim, beginSeason, pushTL, pickExpatNation } from '../engine/season.js';
 import { catTag } from '../engine/events.js';
 import { pickClub, pickClubName, pickClubs, clubInfo } from '../engine/clubs.js';
@@ -26,6 +26,8 @@ import { startChallengeCreation, renderChallengeLeaderboard, startDailyChallenge
 import { setInCareer } from './navbar.js';
 import { walletBalance, earnFromCareer } from '../engine/wallet.js';
 import { renderShop } from './shop.js';
+import { renderSettings } from './settings.js';
+import { t } from '../engine/i18n.js';
 
 /* ============================================================
    ÉCRANS : TITRE + CRÉATION
@@ -50,31 +52,22 @@ function welcomeStatRow(iconKey,label,text){
   return `<div class="ws-stat">${welcomeIcon(iconKey)}
     <div><div class="ws-stat-l">${label}</div><div class="ws-stat-t">${text}</div></div></div>`;
 }
-const TRAJ_STEPS = [
-  ['Parcours de combattant','Le sommet t\'échappe, mais tu as vécu du basket : ce que peu réussissent.'],
-  ['Joueur de rotation','Un vrai pro respecté, sans jamais percer tout en haut.'],
-  ['All-Star','Tu brilles parmi l\'élite, une vraie carrière de haut niveau.'],
-  ['Superstar','Des sommets touchés, un nom qui compte au plus haut niveau.'],
-  ['Légende · Hall of Fame','Ton maillot est retiré, ton héritage est écrit.'],
-];
 function trajectoryStrip(){
-  return `<div class="ws-traj">${TRAJ_STEPS.map((t,i)=>`
+  const steps=[[t('welcome.traj1t'),t('welcome.traj1d')],[t('welcome.traj2t'),t('welcome.traj2d')],[t('welcome.traj3t'),t('welcome.traj3d')],
+    [t('welcome.traj4t'),t('welcome.traj4d')],[t('welcome.traj5t'),t('welcome.traj5d')]];
+  return `<div class="ws-traj">${steps.map((s,i)=>`
     <div class="ws-traj-step"><div class="ws-traj-n">${i+1}</div>
-      <div><div class="ws-traj-l">${t[0]}</div><div class="ws-traj-d">${t[1]}</div></div></div>`).join('')}</div>`;
+      <div><div class="ws-traj-l">${s[0]}</div><div class="ws-traj-d">${s[1]}</div></div></div>`).join('')}</div>`;
 }
 
 // Étapes génériques (le libellé exact du menu de partage diffère selon iOS/Android/navigateur,
 // mais les trois gestes sont les mêmes partout) pour installer le lien comme une app sur l'écran
 // d'accueil du téléphone -- pas de PWA/manifest, juste un raccourci vers cette page.
-const HOME_SCREEN_STEPS = [
-  ['Partager', 'Dans ton navigateur, ouvre le menu de partage (l\'icône carrée avec une flèche, ou les trois points en haut/en bas selon le téléphone).'],
-  ['Ajouter à l\'écran d\'accueil', 'Cherche l\'option "Ajouter à l\'écran d\'accueil" (parfois nommée "Installer l\'application") dans la liste.'],
-  ['Lancer comme une app', 'Une icône HARDWOOD apparaît sur ton écran d\'accueil : elle rouvre directement ta carrière, plein écran, comme une vraie application.'],
-];
 function homeScreenStrip(){
-  return `<div class="ws-traj">${HOME_SCREEN_STEPS.map((t,i)=>`
+  const steps=[[t('welcome.step1t'),t('welcome.step1d')],[t('welcome.step2t'),t('welcome.step2d')],[t('welcome.step3t'),t('welcome.step3d')]];
+  return `<div class="ws-traj">${steps.map((s,i)=>`
     <div class="ws-traj-step"><div class="ws-traj-n">${i+1}</div>
-      <div><div class="ws-traj-l">${t[0]}</div><div class="ws-traj-d">${t[1]}</div></div></div>`).join('')}</div>`;
+      <div><div class="ws-traj-l">${s[0]}</div><div class="ws-traj-d">${s[1]}</div></div></div>`).join('')}</div>`;
 }
 
 // Écran de bienvenue plein écran (1re carrière uniquement, rouvrable depuis le titre) :
@@ -83,40 +76,40 @@ function homeScreenStrip(){
 export function screenWelcome(){
   setInCareer(false);
   stage.innerHTML = `<div class="welcome-screen">
-    <button class="welcome-skip" id="wSkip">Passer →</button>
-    <div class="eyebrow" style="text-align:left">Avant de te lancer</div>
-    <h2 class="ws-h1">Ta carrière commence maintenant.<br>Voici ce qui va vraiment compter.</h2>
+    <button class="welcome-skip" id="wSkip">${t('welcome.skip')}</button>
+    <div class="eyebrow" style="text-align:left">${t('welcome.eyebrow')}</div>
+    <h2 class="ws-h1">${t('welcome.h1')}</h2>
 
     <section class="ws-section">
-      <div class="ws-kicker">01 · Ta fiche</div>
-      <p class="ws-lead">Sous l'OVR, une poignée de jauges pilotent tout : minutes accordées, contrats, sélection nationale. Elles bougent à chaque saison, à chaque choix.</p>
+      <div class="ws-kicker">${t('welcome.k1')}</div>
+      <p class="ws-lead">${t('welcome.lead1')}</p>
       <div class="ws-grid">
-        ${welcomeStatRow('rep','Réputation','Ta cote aux yeux de la ligue : ouvre les gros clubs, la sélection nationale, les MVP.')}
-        ${welcomeStatRow('morale','Moral','Un joueur heureux progresse mieux. Un joueur cassé s\'effondre en silence.')}
-        ${welcomeStatRow('fitness','Forme','Ton capital physique. Le fatiguer sans compter, c\'est emprunter sur les saisons d\'après.')}
-        ${welcomeStatRow('coach','Confiance du coach','Elle décide qui reste sur le banc et qui joue le money-time. Elle se regagne plus vite qu\'elle ne se perd, mais pas d\'un coup.')}
+        ${welcomeStatRow('rep',t('welcome.repLabel'),t('welcome.repText'))}
+        ${welcomeStatRow('morale',t('welcome.moraleLabel'),t('welcome.moraleText'))}
+        ${welcomeStatRow('fitness',t('welcome.fitnessLabel'),t('welcome.fitnessText'))}
+        ${welcomeStatRow('coach',t('welcome.coachLabel'),t('welcome.coachText'))}
       </div>
     </section>
 
     <section class="ws-section">
-      <div class="ws-kicker">02 · Les choix</div>
-      <p class="ws-lead">Deux décisions par saison, jamais neutres. Un tir tenté dans le money-time, une interview trop franche, une nuit de trop avant un match clé : certaines conséquences se voient tout de suite, d'autres se referment sur toi bien plus tard dans la carrière, sans prévenir.</p>
+      <div class="ws-kicker">${t('welcome.k2')}</div>
+      <p class="ws-lead">${t('welcome.lead2')}</p>
     </section>
 
     <section class="ws-section">
-      <div class="ws-kicker">03 · Ta trajectoire</div>
-      <p class="ws-lead">De 16 à 38 ans. Personne ne connaît la sienne à l'avance.</p>
+      <div class="ws-kicker">${t('welcome.k3')}</div>
+      <p class="ws-lead">${t('welcome.lead3')}</p>
       ${trajectoryStrip()}
     </section>
 
     <section class="ws-section">
-      <div class="ws-kicker">04 · Sur ton téléphone</div>
-      <p class="ws-lead">HARDWOOD est un lien, pas une appli du store -- mais tu peux l'installer comme une, en trois gestes :</p>
+      <div class="ws-kicker">${t('welcome.k4')}</div>
+      <p class="ws-lead">${t('welcome.lead4')}</p>
       ${homeScreenStrip()}
     </section>
 
     <div style="margin-top:8px;text-align:center">
-      <button class="btn" id="wGo">Compris, on commence</button>
+      <button class="btn" id="wGo">${t('welcome.go')}</button>
     </div>
   </div>`;
   const skip=document.getElementById('wSkip'); if(skip) skip.onclick=()=>{ setWelcomeSeen(); screenTitle(); };
@@ -133,76 +126,79 @@ export function screenTitle(){
   // pause, "Commencer" repasse alors en secondaire -- reprendre est l'intention la plus probable.
   const resumable = hasSavedGame();
   stage.innerHTML = `<div class="title-screen">
-    <div class="eyebrow">Carrière · saison après saison</div>
+    <div class="eyebrow">${t('home.eyebrow')}</div>
     <h1>HARD<span class="o">W</span>OOD</h1>
-    <p class="tag">De 16 à 38 ans, écris ta légende du basket. Chaque choix pèse : le talent ouvre des portes, les décisions décident du reste. La NBA est le sommet, encore faut-il y arriver.</p>
+    <p class="tag">${t('home.tag')}</p>
 
     <!-- Geste principal : SEUL en haut, jamais noyé parmi d'autres tuiles -- reprendre prime sur
          démarrer quand une sauvegarde existe (repli en lien secondaire juste dessous, jamais perdu). -->
     <div class="home-primary">
-      <button class="btn home-cta" id="${resumable?'resumeGo':'go'}">${resumable?'▶️ Reprendre ma carrière':'Commencer ma carrière'}</button>
-      ${resumable?`<button class="btn ghost sm" id="go">Commencer une nouvelle carrière</button>`:''}
+      <button class="btn home-cta" id="${resumable?'resumeGo':'go'}">${resumable?t('home.resume'):t('home.start')}</button>
+      ${resumable?`<button class="btn ghost sm" id="go">${t('home.startNew')}</button>`:''}
     </div>
     <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-      ${best?`<div class="best-chip">🏆 Meilleur score légende : <b>${best}</b></div>`:''}
-      <div class="wallet-chip">🪙 Cagnotte : <b>${wallet}</b></div>
+      ${best?`<div class="best-chip">${t('home.bestScoreChip',{score:`<b>${best}</b>`})}</div>`:''}
+      <div class="wallet-chip">${t('wallet.chip',{balance:`<b>${money(wallet)}</b>`})}</div>
     </div>
 
     <!-- Modes de jeu : cartes (forme distincte des puces ci-dessous), une teinte propre à
          chacune -- le geste "lancer une partie", groupé et mis en avant. -->
     <div class="home-group home-modes">
-      <div class="eyebrow home-group-label">Modes de jeu</div>
+      <div class="eyebrow home-group-label">${t('home.modesLabel')}</div>
       <div class="home-modes-grid">
         <button class="mode-card accent-orange" id="challengeCreate">
-          <span class="mode-icon">🔗</span><span class="mode-ttl">Défi entre amis</span>
-          <span class="mode-desc">Même profil de départ, comparez vos carrières</span>
+          <span class="mode-icon">🔗</span><span class="mode-ttl">${t('home.friendChallengeTitle')}</span>
+          <span class="mode-desc">${t('home.friendChallengeDesc')}</span>
         </button>
         <button class="mode-card accent-mint" id="dailyChallenge">
-          <span class="mode-icon">📅</span><span class="mode-ttl">Défi du jour</span>
-          <span class="mode-desc">Un profil imposé, ton classement personnel</span>
+          <span class="mode-icon">📅</span><span class="mode-ttl">${t('home.dailyChallengeTitle')}</span>
+          <span class="mode-desc">${t('home.dailyChallengeDesc')}</span>
         </button>
       </div>
     </div>
 
     <!-- Suivi & records : puces compactes, format le plus scalable des trois groupes (voir
          styles.css) -- la Boutique rejoint ce groupe comme prévu par sa conception (voir
-         AGENDA.md AGD-41), sans rien bousculer. -->
+         AGENDA.md AGD-41), sans rien bousculer. Réglages (voir AGENDA.md "réglages et langue
+         anglaise") ajouté au même groupe -- même logique d'entrée peu fréquente que la Boutique. -->
     <div class="home-group home-meta">
-      <div class="eyebrow home-group-label">Suivi &amp; records</div>
+      <div class="eyebrow home-group-label">${t('home.trackingLabel')}</div>
       <div class="home-meta-row">
-        <button class="btn ghost sm" id="hof">🏆 Panthéon</button>
-        <button class="btn ghost sm" id="badges">🎖️ Hauts faits</button>
-        <button class="btn ghost sm" id="progress">📊 Ma progression</button>
-        <button class="btn ghost sm" id="shop">🛍️ Boutique</button>
+        <button class="btn ghost sm" id="hof">${t('home.hofBtn')}</button>
+        <button class="btn ghost sm" id="badges">${t('home.badgesBtn')}</button>
+        <button class="btn ghost sm" id="progress">${t('home.progressBtn')}</button>
+        <button class="btn ghost sm" id="shop">${t('home.shopBtn')}</button>
+        <button class="btn ghost sm" id="settings">${t('settings.button')}</button>
       </div>
     </div>
 
-    <div class="kbd"><img class="brand-mark-mini" src="/logo-mark.png" alt="" width="18" height="18">Écris ta légende, saison après saison · <a href="#" id="welcomeReopen" class="welcome-link">comment jouer ?</a></div>
-    <div class="credit">Créé par Gaspard G · <a href="#" id="cookieReopen" class="credit-link">Gérer les cookies</a></div>
+    <div class="kbd"><img class="brand-mark-mini" src="/logo-mark.png" alt="" width="18" height="18">${t('home.kbd')}<a href="#" id="welcomeReopen" class="welcome-link">${t('home.howToPlay')}</a></div>
+    <div class="credit">${t('home.credit')}<a href="#" id="cookieReopen" class="credit-link">${t('home.manageCookies')}</a></div>
   </div>`;
   document.getElementById('go').onclick=()=>{
     // Garde-fou : commencer une nouvelle carrière écraserait la sauvegarde en cours -- confirmation
     // explicite avant de perdre cette reprise possible (jamais silencieux).
-    if(hasSavedGame() && !confirm('Une carrière est en cours et sera définitivement écrasée si tu en commences une nouvelle. Continuer ?')) return;
+    if(hasSavedGame() && !confirm(t('home.confirmOverwriteNew'))) return;
     clearSavedGame();
     setWelcomeSeen(); setG(newPlayer()); screenCreate();
   };
   const resumeBtn=document.getElementById('resumeGo');
   if(resumeBtn) resumeBtn.onclick=()=>resumeCareer();
   document.getElementById('challengeCreate').onclick=()=>{
-    if(hasSavedGame() && !confirm('Une carrière est en cours et sera définitivement écrasée si tu commences un défi. Continuer ?')) return;
+    if(hasSavedGame() && !confirm(t('home.confirmOverwriteChallenge'))) return;
     clearSavedGame();
     startChallengeCreation();
   };
   document.getElementById('hof').onclick=()=>renderHallOfFame();
   document.getElementById('badges').onclick=()=>renderBadges();
   document.getElementById('dailyChallenge').onclick=()=>{
-    if(hasSavedGame() && !confirm('Une carrière est en cours et sera définitivement écrasée si tu commences le défi du jour. Continuer ?')) return;
+    if(hasSavedGame() && !confirm(t('home.confirmOverwriteDaily'))) return;
     clearSavedGame();
     startDailyChallenge();
   };
   document.getElementById('progress').onclick=()=>renderProgress();
   document.getElementById('shop').onclick=()=>renderShop();
+  document.getElementById('settings').onclick=()=>renderSettings();
   document.getElementById('welcomeReopen').onclick=(e)=>{ e.preventDefault(); screenWelcome(); };
   document.getElementById('cookieReopen').onclick=(e)=>{ e.preventDefault(); reopenConsentBanner(); };
 }
@@ -236,30 +232,30 @@ export function screenCreate(){
     // des autres étapes (4-8 choix), les nations sont ~35 -- la carte pleine taille générique
     // (.opt) forçait un long défilement. Tuile réduite au flag + nom + force en coin (réutilise
     // .abbr, déjà utilisé pour l'abréviation de poste), toutes visibles sans scroll pénible.
-    stage.innerHTML = wrapCreate(1,'Ton pays','Ton identité et ton éligibilité en sélection nationale -- ton point de départ sportif se décidera plus tard, indépendamment.',
+    stage.innerHTML = wrapCreate(1,t('create.step1Title'),t('create.step1Sub'),
       NATIONS.map((n,i)=>`<button class="opt nation-opt ${p.nation&&p.nation.id===n.id?'pick':''}" data-i="${i}">
         <span class="abbr">${n.strength}</span>
-        <div class="flag">${n.flag}</div><div class="ttl">${n.name}</div></button>`).join(''),
+        <div class="flag">${n.flag}</div><div class="ttl">${t('nations.'+n.id)}</div></button>`).join(''),
       false, !!p.nation, 'nation-grid');
     bindOpts(NATIONS,(n)=>{p.nation=n;});
   }
   else if(p.step===1){ // position
-    stage.innerHTML = wrapCreate(2,'Ton poste','Il décide de ton rôle sur le terrain et de ce qui te fera briller.',
+    stage.innerHTML = wrapCreate(2,t('create.step2Title'),t('create.step2Sub'),
       POSITIONS.map((pos,i)=>`<button class="opt ${p.pos===pos.id?'pick':''}" data-i="${i}">
-        <div class="abbr">${pos.emoji} ${pos.abbr}</div><div class="ttl">${pos.name}</div>
-        <div class="desc">${pos.desc}</div></button>`).join(''), false, !!p.pos);
+        <div class="abbr">${pos.emoji} ${pos.abbr}</div><div class="ttl">${t('positions.'+pos.id+'.name')}</div>
+        <div class="desc">${t('positions.'+pos.id+'.desc')}</div></button>`).join(''), false, !!p.pos);
     bindOpts(POSITIONS,(pos)=>{p.pos=pos.id;});
   }
   else if(p.step===2){ // style de jeu
-    stage.innerHTML = wrapCreate(3,'Ton style de jeu','Très tôt, tu te forges une identité. Elle oriente tes stats de départ et ta façon de progresser.',
+    stage.innerHTML = wrapCreate(3,t('create.step3Title'),t('create.step3Sub'),
       STYLES.map((st,i)=>`<button class="opt ${p.style===st.id?'pick':''}" data-i="${i}">
-        <div class="ttl">${st.emoji} ${st.name}</div><div class="desc">${st.desc}</div></button>`).join(''), false, !!p.style);
+        <div class="ttl">${st.emoji} ${t('styles.'+st.id+'.name')}</div><div class="desc">${t('styles.'+st.id+'.desc')}</div></button>`).join(''), false, !!p.style);
     bindOpts(STYLES,(st)=>{p.style=st.id;});
   }
   else if(p.step===3){ // lifestyle
-    stage.innerHTML = wrapCreate(4,'Ton mode de vie','La discipline forge ta progression… et ta réputation.',
+    stage.innerHTML = wrapCreate(4,t('create.step4Title'),t('create.step4Sub'),
       LIFESTYLES.map((l,i)=>`<button class="opt ${p.life===l.id?'pick':''}" data-i="${i}">
-        <div class="ttl">${l.emoji} ${l.name}</div><div class="desc">${l.desc}</div></button>`).join(''), false, !!p.life);
+        <div class="ttl">${l.emoji} ${t('lifestyles.'+l.id+'.name')}</div><div class="desc">${t('lifestyles.'+l.id+'.desc')}</div></button>`).join(''), false, !!p.life);
     bindOpts(LIFESTYLES,(l)=>{p.life=l.id;});
   }
   else if(p.step===4){ // scouting reveal + name
@@ -270,16 +266,16 @@ export function screenCreate(){
     if(p.challengeId || p.dailyDate) rollArchetypeAndName(p); else rollTalent(p);
     const hypeStars = starStr(p.hype);
     const st=STYLES.find(x=>x.id===p.style);
-    stage.innerHTML = wrapCreate(5,'Rapport de détection','Les recruteurs ont observé ton profil. Voici ce qu\'ils voient.',
+    stage.innerHTML = wrapCreate(5,t('create.step5Title'),t('create.step5Sub'),
       `<div class="scout">
         <div class="hype"><span class="stars">${hypeStars}</span>
-          <span style="color:var(--chalk-dim);font-size:13px">Potentiel évalué par les scouts · ${st?st.emoji+' '+st.name:''}</span></div>
-        <div class="attrs">${ATTRS.map(a=>`<div class="attr"><div class="arow"><span class="an">${a.name}</span>
+          <span style="color:var(--chalk-dim);font-size:13px">${t('create.scoutedPotential')}${st?st.emoji+' '+t('styles.'+st.id+'.name'):''}</span></div>
+        <div class="attrs">${ATTRS.map(a=>`<div class="attr"><div class="arow"><span class="an">${t('attrs.'+a.id)}</span>
           <span class="av">${p.attrs[a.id]}</span></div><div class="abar"><i style="width:${p.attrs[a.id]}%"></i></div></div>`).join('')}</div>
-        <div class="field" style="margin-top:20px"><label>Ton nom de joueur</label>
+        <div class="field" style="margin-top:20px"><label>${t('create.nameLabel')}</label>
           <input id="pname" value="${p.name}" maxlength="22" autocomplete="off"></div>
       </div>`, true, true);
-    document.getElementById('nextC').textContent='Signer ma première licence';
+    document.getElementById('nextC').textContent=t('create.signLicense');
   }
   wireNav();
 }
@@ -289,8 +285,8 @@ function wrapCreate(num,title,sub,inner,isLast,canNext,gridClass=''){
     <h2>${title}</h2><p class="sub">${sub}</p>
     <div class="opt-grid ${gridClass}">${isLast?'':inner}</div>${isLast?inner:''}
     <div class="nav-row">
-      <button class="btn ghost sm" id="backC">${num===1?'Annuler':'Retour'}</button>
-      <button class="btn" id="nextC" ${canNext?'':'disabled style="opacity:.4;pointer-events:none"'}>Continuer</button>
+      <button class="btn ghost sm" id="backC">${num===1?t('create.cancel'):t('create.back')}</button>
+      <button class="btn" id="nextC" ${canNext?'':'disabled style="opacity:.4;pointer-events:none"'}>${t('create.continueBtn')}</button>
     </div></div>`;
 }
 function bindOpts(list,setter){
@@ -319,7 +315,10 @@ function wireNav(){
 // l'identité d'un pays réel (avec ses propres données de club, voir ACADEMY_NATION_IDS) et un
 // vrai club d'académie tiré de ce pays -- choisir, c'est décider à la fois du pays de jeu ET de
 // la voie de développement (US/Europe/Australie), indépendamment de la nationalité du joueur.
-const ACADEMY_PATH_LABEL = { us:'Voie US · lycée → université → draft', eu:'Voie Europe · académie → clubs pro', au:'Voie Australie · académie → NBL1 → NBL' };
+// Fonction (pas une constante figée à l'import) : doit relire la langue courante à CHAQUE appel,
+// pas seulement au chargement du module (voir engine/i18n.js -- la langue peut changer en cours
+// de session, depuis l'écran Réglages).
+function academyPathLabel(path){ return { us:t('create.academyPathUs'), eu:t('create.academyPathEu'), au:t('create.academyPathAu') }[path]; }
 export function renderAcademyChoice(offers){
   const p = G;
   setInCareer(true);
@@ -335,14 +334,14 @@ export function renderAcademyChoice(offers){
     const abroad = n.id !== p.nation.id;
     return `<button class="opt academy-opt" data-i="${i}">
       <div class="flag">${n.flag}</div><div class="ttl">${club.name}</div>
-      <div class="desc">${n.name} · ${ACADEMY_PATH_LABEL[n.path]}</div>
-      <div class="desc academy-sub">${fl?fl+' · ':''}${abroad?'À l\'étranger, loin des tiens':'Dans ton pays natal'}</div>
+      <div class="desc">${t('nations.'+n.id)} · ${academyPathLabel(n.path)}</div>
+      <div class="desc academy-sub">${fl?fl+' · ':''}${abroad?t('create.abroad'):t('create.homeCountry')}</div>
     </button>`;
   }).join('');
   stage.innerHTML = `<div class="create academy-choice">
-    <div class="step-h"><span class="num">Nouveau chapitre</span></div>
-    <h2>Les académies s'intéressent à toi</h2>
-    <p class="sub">Ton profil a circulé. Plusieurs centres de formation, dans des pays différents, veulent te faire confiance. Ce choix décide de ton pays d'évolution et de ta voie de départ pour les prochaines années -- indépendamment de ta nationalité.</p>
+    <div class="step-h"><span class="num">${t('create.newChapter')}</span></div>
+    <h2>${t('create.academyH2')}</h2>
+    <p class="sub">${t('create.academySub')}</p>
     <div class="opt-grid academy-grid">${cards}</div>
   </div>`;
   stage.querySelectorAll('.academy-opt').forEach(el=>{
@@ -882,13 +881,16 @@ export function endCareer(reason){
   legend=Math.round(legend);
   p.hof = legend>=270 || (champsElite>=1 && p.peakOvr>=91) || mvps>=1;
 
+  // `tier` reste TOUJOURS en français en interne (format de stockage partagé -- Panthéon, défis,
+  // TIER_RANK -- voir card.js pour la traduction à l'affichage via tierIndex()/t('tierRank.N')) ;
+  // seul `blurb` (purement narratif, jamais stocké) est traduit directement ici.
   let tier, blurb;
-  if(legend>=365){ tier='G.O.A.T.'; blurb='On ne parlera plus du basket sans prononcer ton nom. Une ère porte ta signature.'; }
-  else if(legend>=280){ tier='Légende · Hall of Fame'; blurb='Tu entres au Panthéon. Ton maillot est retiré, ton héritage est écrit.'; }
-  else if(legend>=215){ tier='Superstar'; blurb='Une carrière énorme, des sommets touchés, un nom qui a compté au plus haut niveau.'; }
-  else if(legend>=155){ tier='All-Star'; blurb='Tu as brillé parmi l\'élite. Une belle et solide carrière de haut niveau.'; }
-  else if(legend>=92){ tier='Joueur de rotation'; blurb='Un vrai pro, respecté dans les vestiaires. Tu as vécu du basket, ce que peu réussissent.'; }
-  else { tier='Parcours de combattant'; blurb='Le sommet t\'a échappé, mais tu as tout donné. Le basket garde une place pour les acharnés.'; }
+  if(legend>=365){ tier='G.O.A.T.'; blurb=t('endCareer.tierGoat'); }
+  else if(legend>=280){ tier='Légende · Hall of Fame'; blurb=t('endCareer.tierHof'); }
+  else if(legend>=215){ tier='Superstar'; blurb=t('endCareer.tierSuperstar'); }
+  else if(legend>=155){ tier='All-Star'; blurb=t('endCareer.tierAllstar'); }
+  else if(legend>=92){ tier='Joueur de rotation'; blurb=t('endCareer.tierRotation'); }
+  else { tier='Parcours de combattant'; blurb=t('endCareer.tierJourneyman'); }
 
   const sceneStats={legend, champs, mvps, allstars, peakOvr:p.peakOvr};
   const quotes = pressReview(p, sceneStats);
@@ -905,13 +907,17 @@ export function endCareer(reason){
   const totalPts=sumStat('pts'), totalAst=sumStat('ast'), totalReb=sumStat('reb'), totalBlk=sumStat('blk'), totalStl=sumStat('stl');
 
   // --- Données de carrière (carte partageable + Panthéon) ---
+  // pos/style/nationId (identifiants) gardés À CÔTÉ de posName/styleName/nation (libellés français
+  // déjà affichés tels quels avant ce lot) : permet de traduire l'affichage via i18n (voir
+  // ui/card.js) sans casser le format des enregistrements Panthéon déjà sauvegardés, qui n'ont
+  // que les libellés -- repli automatique sur le libellé stocké si l'id est absent.
   const rec={ name:p.name, flag:p.nation.flag, posEmoji:POSITIONS.find(x=>x.id===p.pos).emoji, pos:p.pos, posName:POSITIONS.find(x=>x.id===p.pos).name,
-      styleName:(STYLES.find(x=>x.id===p.style)||{}).name||'', styleEmoji:(STYLES.find(x=>x.id===p.style)||{}).emoji||'',
+      style:p.style, styleName:(STYLES.find(x=>x.id===p.style)||{}).name||'', styleEmoji:(STYLES.find(x=>x.id===p.style)||{}).emoji||'',
       tier, score:legend, champs, mvps, allstars, peak:p.peakOvr, seasons:p.seasons.length, endAge:p.age,
       bestPts:Math.round(bestPts*10)/10, nba:reachedNBA, clutch:p.clutch||0, ovrSeries,
       tripleDoubles:p.tripleDoubles||0, accolades:{...A}, tags:activeTags(p).map(t=>t.id),
       totalPts, totalAst, totalReb, totalBlk, totalStl,
-      headline:(quotes[0]?quotes[0][1]:''), nation:p.nation.name, hof:p.hof, date:Date.now() };
+      headline:(quotes[0]?quotes[0][1]:''), nation:p.nation.name, nationId:p.nation.id, hof:p.hof, date:Date.now() };
   p.cardRec=rec; p.endReason=reason;
   trackEvent('career_end', { reason, tier, seasons: p.seasons.length, hof: p.hof, challenge: !!p.challengeId, daily: !!p.dailyDate });
   if(!p.savedHOF){ p.savedHOF=true; hofAdd(rec); }
@@ -922,10 +928,10 @@ export function endCareer(reason){
   if(!p.newBadges) p.newBadges = evaluateBadges(p);
   const newBadgeDefs = p.newBadges.map(id=>BADGES.find(b=>b.id===id)).filter(Boolean);
 
-  // Cagnotte (voir engine/wallet.js, AGENDA.md AGD-41) : une part de la trésorerie de fin de
-  // carrière convertie en jetons de boutique, une seule fois -- même garde-fou que p.savedHOF
-  // juste au-dessus (endCareer() peut être ré-invoqué). Purement cosmétique en aval (engine/
-  // cosmetics.js) : jamais relu par la simulation, aucun risque d'affecter le gameplay.
+  // Cagnotte (voir engine/wallet.js, AGENDA.md AGD-41/AGD-47) : la trésorerie de fin de carrière
+  // (+ primes de titres) crédite DIRECTEMENT la boutique, une seule fois -- même garde-fou que
+  // p.savedHOF juste au-dessus (endCareer() peut être ré-invoqué). Purement cosmétique en aval
+  // (engine/cosmetics.js) : jamais relu par la simulation, aucun risque d'affecter le gameplay.
   if(!p.savedWallet){ p.savedWallet=true; p.walletEarned=earnFromCareer(p); }
 
   // Défi entre amis (voir engine/challenges.js) : enregistre le score légende rattaché au défi,
@@ -944,67 +950,65 @@ export function endCareer(reason){
 
   const tl = p.timeline.slice(-14);
 
-  p.endSummary =
-    `🏀 HARDWOOD · ${p.name} ${p.nation.flag}\n`+
-    `${tier} · ${p.seasons.length} saisons · pic ${p.peakOvr} OVR\n`+
-    `Titres ${champs} · MVP ${mvps} · All-Star ${allstars} · Score légende ${legend}\n`+
-    `À toi de faire mieux.`;
+  p.endSummary = t('endCareer.summary',{name:p.name,flag:p.nation.flag,tier:t('tierRank.'+TIER_RANK.indexOf(tier)),
+    seasons:p.seasons.length,peak:p.peakOvr,champs,mvp:mvps,allstar:allstars,score:legend});
 
+  const tierDisplay = t('tierRank.'+TIER_RANK.indexOf(tier));
   stage.innerHTML = `<div class="end">
-    <div class="eyebrow">Fin de carrière · ${p.name}</div>
-    ${reason==='injury'?`<div class="forced-end-tag">Retraite forcée sur blessure</div>`:''}
-    <div class="legend-title">${tier}</div>
-    <p class="subline">${p.nation.flag} ${POSITIONS.find(x=>x.id===p.pos).emoji} ${POSITIONS.find(x=>x.id===p.pos).name} · ${p.seasons.length} saisons · pic à ${p.peakOvr} OVR${p.hof?' · <b style="color:var(--mint)">Hall of Fame</b>':''}</p>
+    <div class="eyebrow">${t('endCareer.eyebrow',{name:p.name})}</div>
+    ${reason==='injury'?`<div class="forced-end-tag">${t('endCareer.forcedInjury')}</div>`:''}
+    <div class="legend-title">${tierDisplay}</div>
+    <p class="subline">${p.nation.flag} ${POSITIONS.find(x=>x.id===p.pos).emoji} ${t('positions.'+p.pos+'.name')} · ${p.seasons.length} ${t('hof.seasons')} · pic à ${p.peakOvr} OVR${p.hof?` · <b style="color:var(--mint)">${t('endCareer.hofBadge')}</b>`:''}</p>
     <p class="body" style="max-width:520px;margin:14px auto 0;text-align:center">${blurb}</p>
     ${renderTagChips(activeTags(p), 'center')}
-    ${p.walletEarned?`<div style="text-align:center;margin-top:14px"><div class="wallet-chip">🪙 +${p.walletEarned} jetons gagnés pour la boutique</div></div>`:''}
+    ${p.walletEarned?`<div style="text-align:center;margin-top:14px"><div class="wallet-chip">${t('endCareer.walletEarned',{n:money(p.walletEarned)})}</div></div>`:''}
     ${newBadgeDefs.length?`<div class="recap-block new-badges-block">
-      <div class="eyebrow" style="text-align:center;margin-bottom:10px">🎖️ ${newBadgeDefs.length>1?'Nouveaux hauts faits débloqués':'Nouveau haut fait débloqué'}</div>
+      <div class="eyebrow" style="text-align:center;margin-bottom:10px">🎖️ ${newBadgeDefs.length>1?t('endCareer.newBadgePlural'):t('endCareer.newBadgeSingular')}</div>
       <div class="badge-grid compact">${newBadgeDefs.map(b=>`<div class="badge-tile unlocked" style="--badge-color:${b.color}">
-        <div class="bt-icon">${b.emoji}</div><div class="bt-name">${b.name}</div><div class="bt-desc">${b.desc}</div></div>`).join('')}</div>
+        <div class="bt-icon">${b.emoji}</div><div class="bt-name">${t('badges.'+b.id+'.name')}</div><div class="bt-desc">${t('badges.'+b.id+'.desc')}</div></div>`).join('')}</div>
     </div>`:''}
 
     <div class="legend-grid">
-      <div class="lg"><div class="v">${legend}</div><div class="l">Score légende</div></div>
-      <div class="lg"><div class="v">${champs}</div><div class="l">Titres</div></div>
-      <div class="lg"><div class="v">${mvps}</div><div class="l">MVP</div></div>
-      <div class="lg"><div class="v">${allstars}</div><div class="l">All-Star</div></div>
-      <div class="lg"><div class="v">${p.clutch||0}</div><div class="l">Moments clutch</div></div>
-      ${p.tripleDoubles?`<div class="lg"><div class="v">${p.tripleDoubles}</div><div class="l">Triple-doubles</div></div>`:''}
+      <div class="lg"><div class="v">${legend}</div><div class="l">${t('stats.legendScore')}</div></div>
+      <div class="lg"><div class="v">${champs}</div><div class="l">${t('stats.titles')}</div></div>
+      <div class="lg"><div class="v">${mvps}</div><div class="l">${t('stats.mvp')}</div></div>
+      <div class="lg"><div class="v">${allstars}</div><div class="l">${t('stats.allstar')}</div></div>
+      <div class="lg"><div class="v">${p.clutch||0}</div><div class="l">${t('endCareer.clutchMoments')}</div></div>
+      ${p.tripleDoubles?`<div class="lg"><div class="v">${p.tripleDoubles}</div><div class="l">${t('stats.tripleDoubles')}</div></div>`:''}
     </div>
 
     <div class="recap-block">
-      <div class="eyebrow" style="text-align:center;margin-bottom:10px">🗞️ Ce que la presse retient</div>
+      <div class="eyebrow" style="text-align:center;margin-bottom:10px">${t('endCareer.pressSection')}</div>
       ${quotes.map(q=>`<div class="press"><div class="press-txt">${q[1]}</div><div class="press-src">${q[0]}</div></div>`).join('')}
     </div>
 
     ${ovrSeries.length>1?`<div class="recap-block" style="text-align:center">${sparkline(ovrSeries)}</div>`:''}
 
     ${bestSeason?`<div class="recap-block best-season">
-      <div class="eyebrow" style="margin-bottom:6px">🌟 Meilleure saison</div>
-      <div class="bs-line"><b>${bestSeason.club}</b> <span style="color:var(--chalk-dim)">(${LEAGUES[bestSeason.league].short}, ${bestSeason.age} ans)</span></div>
+      <div class="eyebrow" style="margin-bottom:6px">${t('endCareer.bestSeason')}</div>
+      <div class="bs-line"><b>${bestSeason.club}</b> <span style="color:var(--chalk-dim)">(${LEAGUES[bestSeason.league].short}, ${bestSeason.age} ${t('endCareer.ageYears')})</span></div>
       <div class="bs-stats"><span>🏀 ${bestSeason.pts} pts</span><span>💪 ${bestSeason.reb} reb</span><span>🎯 ${bestSeason.ast} pas</span><span>📊 OVR ${bestSeason.ovr}</span></div>
     </div>`:''}
 
     <div class="recap-block" style="max-width:640px">
-      <div class="eyebrow" style="text-align:center;margin-bottom:14px">🏆 Armoire à trophées</div>
+      <div class="eyebrow" style="text-align:center;margin-bottom:14px">${t('endCareer.trophyCase')}</div>
       ${renderTrophyCabinet(A)}
     </div>
 
     <div class="timeline">
-      <div class="eyebrow" style="margin:24px 0 8px">Moments de carrière</div>
-      ${tl.map(t=>`<div class="tl-row"><span class="yr">${t.age} ans</span><span class="ev">${t.html}</span></div>`).join('')}
+      <div class="eyebrow" style="margin:24px 0 8px">${t('endCareer.careerMoments')}</div>
+      ${tl.map(tlItem=>`<div class="tl-row"><span class="yr">${tlItem.age} ${t('endCareer.ageYears')}</span><span class="ev">${tlItem.html}</span></div>`).join('')}
     </div>
 
     <div style="margin-top:28px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-      <button class="btn" id="again">Nouvelle carrière</button>
-      ${p.challengeId?`<button class="btn ghost" id="challengeCompare">🔗 Comparer avec mes amis</button>`:''}
-      ${p.dailyDate?`<button class="btn ghost" id="dailyCompare">📅 Mon historique quotidien</button>`:''}
-      <button class="btn ghost" id="cardBtn">🖼️ Ma carte</button>
-      <button class="btn ghost" id="hofView">🏆 Panthéon</button>
-      <button class="btn ghost" id="badgesView">🎖️ Hauts faits</button>
-      <button class="btn ghost" id="copyBtn">Copier mon résumé</button>
-      <button class="btn ghost" id="share">Voir la fiche complète</button>
+      <button class="btn" id="again">${t('endCareer.newCareer')}</button>
+      ${p.challengeId?`<button class="btn ghost" id="challengeCompare">${t('endCareer.compareFriends')}</button>`:''}
+      ${p.dailyDate?`<button class="btn ghost" id="dailyCompare">${t('endCareer.dailyHistory')}</button>`:''}
+      <button class="btn ghost" id="cardBtn">${t('endCareer.myCard')}</button>
+      <button class="btn ghost" id="hofView">${t('endCareer.hof')}</button>
+      <button class="btn ghost" id="badgesView">${t('endCareer.badges')}</button>
+      <button class="btn ghost" id="copyBtn">${t('endCareer.copySummary')}</button>
+      <button class="btn ghost" id="share">${t('endCareer.fullSheet')}</button>
     </div>
   </div>`;
   document.getElementById('again').onclick=()=>{ setG(newPlayer()); screenCreate(); };
@@ -1019,7 +1023,7 @@ export function endCareer(reason){
   document.getElementById('copyBtn').onclick=()=>copyShare(p.endSummary);
 }
 function copyShare(text){
-  const done=()=>{ const b=document.getElementById('copyBtn'); if(b){ const old=b.textContent; b.textContent='Copié !'; setTimeout(()=>{b.textContent=old;},1600);} };
+  const done=()=>{ const b=document.getElementById('copyBtn'); if(b){ const old=b.textContent; b.textContent=t('endCareer.copied'); setTimeout(()=>{b.textContent=old;},1600);} };
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text,done));
   } else fallbackCopy(text,done);

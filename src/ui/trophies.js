@@ -2,6 +2,11 @@
 // individuel / distinction / médaille), sa couleur, jamais une icône générique répétée. Fait
 // maison en SVG, cohérent avec la palette Terre battue (--mint = or, --orange = terracotta,
 // --plum = prune). Sert à la fois l'écran de fin de carrière et la fiche Panthéon.
+import { t } from '../engine/i18n.js';
+// Les clés d'accolade (ex. "Champion NBA", "MVP") sont utilisées TELLES QUELLES comme identifiants
+// partout dans le moteur (comptage, badges, Panthéon) -- seul le LIBELLÉ affiché est traduit ici
+// (voir i18n/fr.js/en.js trophyLabels), jamais la clé elle-même.
+function trophyLabel(key) { return t('trophyLabels.'+key) !== 'trophyLabels.'+key ? t('trophyLabels.'+key) : key; }
 
 const STAR_PATH = 'M12 2 14.9 8.6 22 9.3 16.8 14.1 18.2 21.2 12 17.6 5.8 21.2 7.2 14.1 2 9.3 9.1 8.6Z';
 const SILVER = '#A8A29A';
@@ -83,18 +88,18 @@ export function medalIcon(medal, size = 40) {
 }
 
 function trophyFor(key, size) {
-  if (key === 'Champion NBA') return { svg: ringSvg(size), label: 'Titre NBA', family: 'ring' };
-  if (key.startsWith('Champion ')) return { svg: trophyShell('var(--mint)', CUP_EMBLEM, size), label: key, family: 'cup' };
-  if (key === 'MVP des finales') return { svg: trophyShell('var(--mint)', SASH_EMBLEM, size), label: key, family: 'trophy' };
-  if (key === 'Meilleur défenseur') return { svg: trophyShell('var(--orange)', SHIELD_EMBLEM, size), label: key, family: 'trophy' };
-  if (key === "Rookie de l'année" || key === 'Meilleur jeune') return { svg: trophyShell('var(--plum)', CHEVRON_EMBLEM, size), label: key, family: 'trophy' };
-  if (key.startsWith('MVP')) return { svg: trophyShell('var(--mint)', STAR_EMBLEM, size), label: key, family: 'trophy' };
-  if (key === 'All-Star' || key === 'All-EuroLeague') return { svg: ribbonSvg('var(--mint)', size), label: key, family: 'ribbon' };
-  if (key === 'Meilleur marqueur') return { svg: ribbonSvg('var(--orange)', size), label: key, family: 'ribbon' };
-  if (key.startsWith('🥇')) return { svg: medalSvg('var(--mint)', size), label: key.replace('🥇', '').trim(), family: 'medal' };
-  if (key.startsWith('🥈')) return { svg: medalSvg(SILVER, size), label: key.replace('🥈', '').trim(), family: 'medal' };
-  if (key.startsWith('🥉')) return { svg: medalSvg(BRONZE, size), label: key.replace('🥉', '').trim(), family: 'medal' };
-  return { svg: ribbonSvg('var(--mint)', size), label: key, family: 'ribbon' };
+  if (key === 'Champion NBA') return { svg: ringSvg(size), label: trophyLabel('Champion NBA'), family: 'ring' };
+  if (key.startsWith('Champion ')) return { svg: trophyShell('var(--mint)', CUP_EMBLEM, size), label: trophyLabel(key), family: 'cup' };
+  if (key === 'MVP des finales') return { svg: trophyShell('var(--mint)', SASH_EMBLEM, size), label: trophyLabel(key), family: 'trophy' };
+  if (key === 'Meilleur défenseur') return { svg: trophyShell('var(--orange)', SHIELD_EMBLEM, size), label: trophyLabel(key), family: 'trophy' };
+  if (key === "Rookie de l'année" || key === 'Meilleur jeune') return { svg: trophyShell('var(--plum)', CHEVRON_EMBLEM, size), label: trophyLabel(key), family: 'trophy' };
+  if (key.startsWith('MVP')) return { svg: trophyShell('var(--mint)', STAR_EMBLEM, size), label: trophyLabel(key), family: 'trophy' };
+  if (key === 'All-Star' || key === 'All-EuroLeague') return { svg: ribbonSvg('var(--mint)', size), label: trophyLabel(key), family: 'ribbon' };
+  if (key === 'Meilleur marqueur') return { svg: ribbonSvg('var(--orange)', size), label: trophyLabel(key), family: 'ribbon' };
+  if (key.startsWith('🥇')) return { svg: medalSvg('var(--mint)', size), label: trophyLabel(key.replace('🥇', '').trim()), family: 'medal' };
+  if (key.startsWith('🥈')) return { svg: medalSvg(SILVER, size), label: trophyLabel(key.replace('🥈', '').trim()), family: 'medal' };
+  if (key.startsWith('🥉')) return { svg: medalSvg(BRONZE, size), label: trophyLabel(key.replace('🥉', '').trim()), family: 'medal' };
+  return { svg: ribbonSvg('var(--mint)', size), label: trophyLabel(key), family: 'ribbon' };
 }
 
 const FAMILY_RANK = { ring: 0, cup: 1, medal: 1, trophy: 2, ribbon: 3 };
@@ -119,8 +124,8 @@ export function renderTrophyCabinet(accolades, opts = {}) {
         return `<div class="trophy-item" title="${k}">${t.svg}<div class="trophy-label">${t.label}${v > 1 ? ` ×${v}` : ''}</div></div>`;
       }).join('')}</div>
     </div>`;
-  const clubHtml = section(club, 'Club &amp; championnats');
-  const natHtml = section(national, 'Sélection nationale');
-  if (!clubHtml && !natHtml) return `<p class="trophy-empty">L'armoire est encore vide. Les premiers trophées viendront avec les premiers grands moments.</p>`;
+  const clubHtml = section(club, t('trophies.clubSection'));
+  const natHtml = section(national, t('trophies.nationSection'));
+  if (!clubHtml && !natHtml) return `<p class="trophy-empty">${t('trophies.empty')}</p>`;
   return `<div class="trophy-cabinet">${clubHtml}${natHtml}</div>`;
 }

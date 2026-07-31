@@ -20,6 +20,18 @@ import { seedFromString } from './prng.js';
 const DAILY_KEY = 'hardwood_daily_v1';
 let mem = null;
 
+// Identité propre du défi du jour (voir AGENDA.md lot rétention) : contrairement au défi entre
+// amis (qui laisse le CHOIX de l'académie de départ), le défi du jour démarre "déjà engagé" --
+// l'académie est choisie POUR le joueur (voir forcedAcademyIndex, lu par startCareer() dans
+// engine/season.js, qui saute l'écran de choix pour p.dailyDate). Un thème du jour purement
+// narratif (juste des ids ici, libellés en i18n -- voir i18n/fr.js/en.js clé `daily.themes`)
+// habille cette contrainte pour qu'elle se sente comme un vrai rendez-vous quotidien, pas une
+// simple variante du défi entre amis.
+export const DAILY_THEMES = [
+  'signature_surprise', 'sans_detour', 'contrat_impose', 'destin_scelle',
+  'depart_minute', 'jour_sans_choix', 'billet_aller_simple', 'main_forcee',
+];
+
 function load() {
   if (mem !== null) return mem;
   try { const r = localStorage.getItem(DAILY_KEY); mem = r ? JSON.parse(r) : {}; } catch (e) { mem = {}; }
@@ -43,9 +55,16 @@ export function getTodayDateStr() {
 // et engine/prng.js pour le mécanisme de substitution partagé, même principe que le défi entre
 // amis compact -- seule la SOURCE de la graine diffère : la date ici, un entier aléatoire là-bas).
 export function generateDailyDef(dateStr = getTodayDateStr()) {
-  const def = generateChallengeDef(seedFromString(dateStr));
+  const seed = seedFromString(dateStr);
+  const def = generateChallengeDef(seed);
   def.id = 'daily-' + dateStr; // jamais l'id dérivé de la graine (voir challenges.js) -- distinct de l'id d'un défi entre amis
   def.date = dateStr;
+  // Dérivés de la MÊME graine (déterministe, jamais recalculés séparément) : la case d'académie
+  // imposée (index dans def.academyOffers, jamais un tirage indépendant) et le thème du jour
+  // affiché à l'écran -- deux bases de modulo différentes pour ne pas les faire coïncider
+  // artificiellement d'un jour à l'autre.
+  def.forcedAcademyIndex = def.academyOffers.length ? seed % def.academyOffers.length : 0;
+  def.themeIdx = Math.floor(seed / 7) % DAILY_THEMES.length;
   return def;
 }
 

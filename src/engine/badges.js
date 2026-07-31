@@ -35,6 +35,17 @@ function load() {
   // ui/card.js renderProgress()) -- le Panthéon ne garde que les 12 meilleures (hof.js), ce
   // compteur est le seul endroit qui connaît le vrai total joué.
   mem.totalCareers = mem.totalCareers || 0;
+  // Compteurs cumulatifs "de fond" (voir AGENDA.md lot rétention) : contrairement à
+  // stylesHof/positionsHof/startPaths ci-dessus (gagnés seulement au niveau Superstar+, réservés
+  // aux badges "collection"), ceux-ci progressent à CHAQUE carrière sans condition de niveau --
+  // servent à la fois aux nouveaux badges "à seuil cumulé" (lifetimePts/lifetimeTitles) et à la
+  // suggestion de prochain défi personnel (everPositions/everStartPaths/everNoHomeLeague, voir
+  // engine/retention.js) : ce que le joueur a déjà ESSAYÉ, pas seulement ce qu'il a réussi.
+  mem.lifetimePts = mem.lifetimePts || 0;
+  mem.lifetimeTitles = mem.lifetimeTitles || 0;
+  mem.everPositions = mem.everPositions || [];
+  mem.everStartPaths = mem.everStartPaths || [];
+  mem.everNoHomeLeague = mem.everNoHomeLeague || false;
   return mem;
 }
 function save() { try { localStorage.setItem(BADGES_KEY, JSON.stringify(mem)); } catch (e) { /* stockage indisponible : on continue en mémoire */ } }
@@ -51,8 +62,14 @@ export function badgesState() { return load(); }
 // badges cumulatifs (goldNations/stylesHof/positionsHof/startPaths, qui doivent redevenir
 // gagnables depuis zéro si on reset leur badge) sont concernés par ce bouton.
 export function badgesClear() {
-  const totalCareers = load().totalCareers || 0;
-  mem = { unlocked: {}, goldNations: [], stylesHof: [], positionsHof: [], startPaths: [], totalCareers };
+  const cur = load();
+  // Même principe que totalCareers (voir commentaire au-dessus) : les compteurs/traces "de fond"
+  // ne sont liés à AUCUN badge précis, ils décrivent le joueur lui-même à travers toutes ses
+  // carrières -- ils survivent à une réinitialisation des badges, seuls `unlocked` et les
+  // compteurs de progression PROPRES à des badges "collection" en repartent à zéro.
+  const { totalCareers, lifetimePts, lifetimeTitles, everPositions, everStartPaths, everNoHomeLeague } = cur;
+  mem = { unlocked: {}, goldNations: [], stylesHof: [], positionsHof: [], startPaths: [],
+    totalCareers, lifetimePts, lifetimeTitles, everPositions, everStartPaths, everNoHomeLeague };
   save();
 }
 
@@ -84,21 +101,36 @@ export const BADGES = [
     desc:'Être élu MVP (ligue majeure ou continentale) avant 23 ans.',
     check:(p)=> p.seasons.some(s=>s.age<23 && s.acc && s.acc.some(a=>a==='MVP'||a==='MVP EuroLeague'))},
 
-  {id:'marathon_career', name:'Increvable', emoji:'⏳', color:'var(--orange)',
-    desc:'Jouer 16 saisons ou plus sur une même carrière.',
-    check:(p)=> p.seasons.length>=16},
+  // Recalibré (voir AGENDA.md lot rétention) : sur 300 carrières pilotées, l'ancien seuil (16
+  // saisons) se déclenchait sur 100% d'entre elles -- la longévité brute est quasi garantie par
+  // le jeu dès qu'on évite une retraite forcée sur blessure (médiane observée 23 saisons, âge de
+  // fin quasi toujours proche de 38 ans). Un simple seuil plus haut ne suffit pas à le rendre
+  // rare (encore ~93% des carrières à 20 saisons) -- combiné à l'absence TOTALE de blessure sur
+  // toute la carrière (déjà le critère différenciant d'iron_man_career, 37.3%), le double
+  // critère redevient un vrai badge : jouer TRÈS longtemps ET ne jamais avoir été freiné.
+  {id:'marathon_career', name:'Marathonien', emoji:'⏳', color:'var(--orange)',
+    desc:'Jouer 20 saisons ou plus sur une même carrière, sans jamais connaître une seule saison marquée par une blessure.',
+    check:(p)=> p.seasons.length>=20 && p.seasons.every(s=>!s.injured)},
 
   {id:'multi_tier_champion', name:'Champion à tous les étages', emoji:'🏆', color:'var(--mint)',
     desc:'Remporter un titre à au moins deux paliers de ligue différents dans la même carrière.',
-    check:(p)=>{ const tiers=new Set(p.seasons.filter(s=>s.champion).map(s=>s.league)); return tiers.size>=2; }},
+    check:(p)=>{ const tiers=new Set(p.seasons.filter(s=>s.champion).map(s=>s.league)); return tiers.size>=2; },
+    progress:(p)=>({ value:new Set(p.seasons.filter(s=>s.champion).map(s=>s.league)).size, target:2, unit:'leagueTiers' })},
 
   {id:'clutch_icon', name:'Sang-froid légendaire', emoji:'🧊', color:'var(--plum)',
     desc:'Cumuler 8 moments clutch ou plus sur une carrière.',
-    check:(p)=> (p.clutch||0)>=8},
+    check:(p)=> (p.clutch||0)>=8,
+    progress:(p)=>({ value:p.clutch||0, target:8, unit:'clutchMoments' })},
 
+  // Recalibré (voir AGENDA.md lot rétention) : 4 paliers distincts se déclenchait sur 79.3% des
+  // carrières (médiane observée : 5 paliers distincts rien qu'en suivant un seul chemin de
+  // développement -- lycée/fac/G League/NBA, ou académie/3e/2e div/EuroLeague). Relevé à 6 (max
+  // observé sur l'échantillon : 7), ce qui exige de vraiment changer de VOIE en cours de carrière
+  // (passer du système US au système européen ou inversement), pas seulement de monter les
+  // échelons d'un même système -- plus fidèle à l'esprit "globe-trotter".
   {id:'tier_explorer', name:'Globe-trotter', emoji:'🧭', color:'var(--orange)',
-    desc:'Jouer dans au moins 4 paliers de ligue différents au cours d\'une même carrière.',
-    check:(p)=>{ const tiers=new Set(p.seasons.map(s=>s.league)); return tiers.size>=4; }},
+    desc:'Jouer dans au moins 6 paliers de ligue différents au cours d\'une même carrière -- changer vraiment de système, pas seulement grimper les échelons d\'un seul.',
+    check:(p)=>{ const tiers=new Set(p.seasons.map(s=>s.league)); return tiers.size>=6; }},
 
   {id:'hof_induction', name:'Intronisation au Panthéon', emoji:'🏛️', color:'var(--mint)',
     desc:'Terminer une carrière au niveau Hall of Fame.',
@@ -106,7 +138,8 @@ export const BADGES = [
 
   {id:'triple_double_machine', name:'Monsieur Triple-double', emoji:'🎯', color:'var(--plum)',
     desc:'Cumuler 10 triple-doubles ou plus sur une carrière.',
-    check:(p)=> (p.tripleDoubles||0)>=10},
+    check:(p)=> (p.tripleDoubles||0)>=10,
+    progress:(p)=>({ value:p.tripleDoubles||0, target:10, unit:'tripleDoubles' })},
 
   // ---- Lot d'extension (voir AGENDA.md) : ~20 badges supplémentaires, mêmes garanties
   // (persistant, robuste, jamais de crash sur des données inattendues) ----
@@ -117,15 +150,21 @@ export const BADGES = [
 
   {id:'goat_status', name:'Statut ultime', emoji:'👑', color:'var(--orange)',
     desc:'Terminer une carrière au niveau G.O.A.T. -- le sommet absolu, presque jamais atteint.',
-    check:(p)=> p.cardRec?.tier==='G.O.A.T.'},
+    check:(p)=> p.cardRec?.tier==='G.O.A.T.',
+    progress:(p)=>({ value:p.cardRec?.score||0, target:365, unit:'legendScore' })},
 
   {id:'iron_man_career', name:'Increvable, jamais blessé', emoji:'🛡️', color:'var(--plum)',
     desc:'Jouer 10 saisons ou plus sans une seule saison marquée par une blessure.',
     check:(p)=> p.seasons.length>=10 && p.seasons.every(s=>!s.injured)},
 
+  // Recalibré (voir AGENDA.md lot rétention) : le jeu retraite quasi tout le monde autour de 38
+  // ans (61% des carrières observées finissent exactement à cet âge) -- un simple seuil d'âge ne
+  // différencie donc presque rien. Ajout d'une exigence de PRODUCTION lors de cette toute
+  // dernière saison (minutes >=20, encore un vrai rôle) : "danse" une dernière fois en étant
+  // encore acteur du terrain, pas juste présent sur une feuille de match jusqu'au bout.
   {id:'last_dance', name:'Dernière danse', emoji:'🌅', color:'var(--mint)',
-    desc:'Jouer jusqu\'à 37 ans ou plus -- repousser sa carrière jusqu\'aux tout derniers instants.',
-    check:(p)=> (p.age||0)>=37},
+    desc:'Jouer jusqu\'à 38 ans en restant un vrai rotationnaire (20 minutes de moyenne ou plus) lors de ta toute dernière saison.',
+    check:(p)=>{ const last=p.seasons[p.seasons.length-1]; return (p.age||0)>=38 && !!last && (last.minutes||0)>=20; }},
 
   {id:'world_champion', name:'Champion du monde', emoji:'🌐', color:'var(--orange)',
     desc:'Décrocher une médaille (or, argent ou bronze) à la Coupe du Monde avec sa sélection.',
@@ -137,7 +176,8 @@ export const BADGES = [
 
   {id:'grand_slam_nation', name:'Grand chelem international', emoji:'🏵️', color:'var(--mint)',
     desc:'Décrocher une médaille dans au moins 3 tournois différents au cours de la même carrière.',
-    check:(p)=>{ const tourns=new Set(Object.keys(p.accolades||{}).filter(k=>k.startsWith('🥇')||k.startsWith('🥈')||k.startsWith('🥉')).map(k=>k.slice(k.indexOf(' ')+1))); return tourns.size>=3; }},
+    check:(p)=>{ const tourns=new Set(Object.keys(p.accolades||{}).filter(k=>k.startsWith('🥇')||k.startsWith('🥈')||k.startsWith('🥉')).map(k=>k.slice(k.indexOf(' ')+1))); return tourns.size>=3; },
+    progress:(p)=>({ value:new Set(Object.keys(p.accolades||{}).filter(k=>k.startsWith('🥇')||k.startsWith('🥈')||k.startsWith('🥉')).map(k=>k.slice(k.indexOf(' ')+1))).size, target:3, unit:'tournaments' })},
 
   {id:'style_collector', name:'Toutes les identités', emoji:'🎨', color:'var(--orange)',
     desc:'Atteindre Superstar ou plus avec chacun des 6 styles de jeu, toutes carrières confondues.',
@@ -189,7 +229,73 @@ export const BADGES = [
 
   {id:'multi_mvp', name:'Dynastie personnelle', emoji:'💎', color:'var(--orange)',
     desc:'Être élu MVP à 3 reprises ou plus au cours d\'une même carrière.',
-    check:(p)=> ((p.accolades&&p.accolades['MVP'])||0)>=3},
+    check:(p)=> ((p.accolades&&p.accolades['MVP'])||0)>=3,
+    progress:(p)=>({ value:(p.accolades&&p.accolades['MVP'])||0, target:3, unit:'mvps' })},
+
+  // ---- Lot rétention (voir AGENDA.md) : badges "carrière" plus variés, exploitant des données
+  // déjà calculées mais jamais récompensées jusqu'ici (titres de meilleur marqueur/défenseur,
+  // Rookie de l'année, rebond après blessure, fidélité d'un aller-retour) ----
+
+  {id:'scoring_champion_dynasty', name:'Sniper attitré', emoji:'💫', color:'var(--plum)',
+    desc:'Être élu meilleur marqueur de la ligue à 3 reprises ou plus au cours d\'une même carrière.',
+    check:(p)=> ((p.accolades&&p.accolades['Meilleur marqueur'])||0)>=3,
+    progress:(p)=>({ value:(p.accolades&&p.accolades['Meilleur marqueur'])||0, target:3, unit:'scorerTitles' })},
+
+  {id:'defensive_anchor', name:'Verrou défensif', emoji:'🧱', color:'var(--mint)',
+    desc:'Être élu meilleur défenseur de la ligue à 2 reprises ou plus au cours d\'une même carrière.',
+    check:(p)=> ((p.accolades&&p.accolades['Meilleur défenseur'])||0)>=2,
+    progress:(p)=>({ value:(p.accolades&&p.accolades['Meilleur défenseur'])||0, target:2, unit:'defenderTitles' })},
+
+  {id:'rookie_sensation', name:'Sensation rookie', emoji:'🎬', color:'var(--orange)',
+    desc:'Être élu Rookie de l\'année dès ta première saison en NBA.',
+    check:(p)=> ((p.accolades&&p.accolades["Rookie de l'année"])||0)>=1},
+
+  {id:'homecoming_retirement', name:'Retour aux sources', emoji:'🏡', color:'var(--plum)',
+    desc:'Terminer sa carrière dans le club où tout a commencé, après un parcours d\'au moins 8 saisons.',
+    check:(p)=>{ const s=p.seasons; return s.length>=8 && !!s[0].club && s[0].club===s[s.length-1].club; }},
+
+  {id:'phoenix_comeback', name:'Phénix', emoji:'🔥', color:'var(--orange)',
+    desc:'Revenir au niveau Superstar (94 OVR ou plus) dès la saison qui suit une saison marquée par une blessure.',
+    check:(p)=>{ const s=p.seasons; for(let i=0;i<s.length-1;i++){ if(s[i].injured && s[i+1] && (s[i+1].ovr||0)>=94) return true; } return false; }},
+
+  // ---- Lot rétention -- badges "à seuil cumulé", récompensent la fidélité AU JEU, pas une
+  // seule carrière : progressent à chaque partie terminée, ne repartent jamais à zéro (voir
+  // lifetimePts/lifetimeTitles/totalCareers dans load()/evaluateBadges() ci-dessous), même hors
+  // d'une réinitialisation des badges. Deux paliers par catégorie (accessible puis très
+  // long-terme), calibrés sur une distribution RÉELLE de 300 carrières pilotées (médiane ~11 800
+  // points/carrière, ~0.2 titre/carrière en moyenne) : le premier palier de points se rapproche
+  // de 4-5 carrières correctes, le second d'une vingtaine ; les titres, nettement plus rares par
+  // construction, réclament un vrai investissement dans la durée pour les deux paliers. ----
+
+  {id:'lifetime_points_1', name:'Scoreur de légende', emoji:'📈', color:'var(--mint)',
+    desc:'Cumuler 50 000 points à travers toutes tes carrières.',
+    check:(p,state)=> (state.lifetimePts||0)>=50000,
+    progress:(p,state)=>({ value:state.lifetimePts||0, target:50000, unit:'points' })},
+
+  {id:'lifetime_points_2', name:'Scoreur immortel', emoji:'♾️', color:'var(--orange)',
+    desc:'Cumuler 250 000 points à travers toutes tes carrières.',
+    check:(p,state)=> (state.lifetimePts||0)>=250000,
+    progress:(p,state)=>({ value:state.lifetimePts||0, target:250000, unit:'points' })},
+
+  {id:'lifetime_titles_1', name:'Collectionneur de bagues', emoji:'💍', color:'var(--plum)',
+    desc:'Cumuler 5 titres à travers toutes tes carrières.',
+    check:(p,state)=> (state.lifetimeTitles||0)>=5,
+    progress:(p,state)=>({ value:state.lifetimeTitles||0, target:5, unit:'titles' })},
+
+  {id:'lifetime_titles_2', name:'Dynastie sans fin', emoji:'🔱', color:'var(--mint)',
+    desc:'Cumuler 15 titres à travers toutes tes carrières.',
+    check:(p,state)=> (state.lifetimeTitles||0)>=15,
+    progress:(p,state)=>({ value:state.lifetimeTitles||0, target:15, unit:'titles' })},
+
+  {id:'lifetime_careers_1', name:'Pilier de la ligue', emoji:'🏟️', color:'var(--orange)',
+    desc:'Mener 25 carrières à leur terme.',
+    check:(p,state)=> (state.totalCareers||0)>=25,
+    progress:(p,state)=>({ value:state.totalCareers||0, target:25, unit:'careers' })},
+
+  {id:'lifetime_careers_2', name:'Une vie de basket', emoji:'🕰️', color:'var(--plum)',
+    desc:'Mener 75 carrières à leur terme.',
+    check:(p,state)=> (state.totalCareers||0)>=75,
+    progress:(p,state)=>({ value:state.totalCareers||0, target:75, unit:'careers' })},
 ];
 
 // Appelé une fois par carrière terminée (voir endCareer() dans screens.js). Retourne la liste
@@ -198,6 +304,15 @@ export const BADGES = [
 export function evaluateBadges(p) {
   const state = load();
   state.totalCareers = (state.totalCareers || 0) + 1;
+  // Compteurs/traces "de fond" (voir load() plus haut) : mis à jour AVANT la boucle de check, la
+  // carrière qui vient de se terminer compte donc bien dans le badge qu'elle débloque elle-même
+  // (même principe que totalCareers juste au-dessus).
+  state.lifetimePts = (state.lifetimePts || 0) + (p.cardRec?.totalPts || 0);
+  const champsThisCareer = Object.keys(p.accolades || {}).filter(k => k.startsWith('Champion')).reduce((s, k) => s + p.accolades[k], 0);
+  state.lifetimeTitles = (state.lifetimeTitles || 0) + champsThisCareer;
+  if (p.pos && !state.everPositions.includes(p.pos)) state.everPositions.push(p.pos);
+  if (p.startPath && !state.everStartPaths.includes(p.startPath)) state.everStartPaths.push(p.startPath);
+  if (p.nation && ['africa', 'asia', 'samerica'].includes(p.nation.continent)) state.everNoHomeLeague = true;
   const unlockedNow = [];
   for (const b of BADGES) {
     if (state.unlocked[b.id]) continue;

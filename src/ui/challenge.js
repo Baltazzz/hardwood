@@ -15,7 +15,7 @@ import { POSITIONS } from '../data/positions.js';
 import { STYLES } from '../data/styles.js';
 import { encodeChallengeDef, decodeChallengeDef, decodeResult, buildChallengeUrl, buildResultUrl } from '../engine/challengeCodec.js';
 import { ensureChallenge, getChallenge, addResult, generateChallengeDef } from '../engine/challenges.js';
-import { generateDailyDef, getTodayDateStr, getDailyBest, allDailyResults } from '../engine/dailyChallenge.js';
+import { generateDailyDef, getTodayDateStr, getDailyBest, allDailyResults, DAILY_THEMES } from '../engine/dailyChallenge.js';
 import { trackEvent } from '../engine/analytics.js';
 import { shareOrFallback } from './share.js';
 import { stage } from './dom.js';
@@ -192,6 +192,30 @@ export function handleIncomingLink() {
    Rendez-vous personnel : pas de lien à ouvrir, pas de classement
    partagé -- un profil du jour, un historique de SES propres scores.
 ============================================================ */
+// Thème du jour : purement narratif, habille la contrainte mécanique réelle (académie déjà
+// imposée, voir def.forcedAcademyIndex/engine/season.js startCareer()) -- l'id canonique vit
+// dans engine/dailyChallenge.js (DAILY_THEMES), le libellé/la phrase d'ambiance restent ici (même
+// séparation que tierLabel() ci-dessus). Écran encore non traduit (voir AGENDA.md, même périmètre
+// que le reste de cette section défi du jour) -- français uniquement pour l'instant.
+const DAILY_THEME_TEXT = {
+  signature_surprise: { label: 'Signature surprise', desc: 'L\'agence a signé pour toi, sans même te consulter.' },
+  sans_detour: { label: 'Sans détour', desc: 'Pas d\'hésitation permise aujourd\'hui -- la route est déjà tracée.' },
+  contrat_impose: { label: 'Contrat imposé', desc: 'Le contrat est déjà sur la table. À toi de le rentabiliser.' },
+  destin_scelle: { label: 'Destin scellé', desc: 'Le sort en est jeté avant même le premier match.' },
+  depart_minute: { label: 'Départ minute', desc: 'Pas le temps de réfléchir -- embarquement immédiat.' },
+  jour_sans_choix: { label: 'Jour sans choix', desc: 'Aujourd\'hui, une seule décision t\'appartient encore : bien jouer.' },
+  billet_aller_simple: { label: 'Billet aller simple', desc: 'Une destination, pas de retour en arrière possible.' },
+  main_forcee: { label: 'Main forcée', desc: 'Quelqu\'un d\'autre a décidé pour toi, cette fois.' },
+};
+function dailyThemeText(def) { return DAILY_THEME_TEXT[DAILY_THEMES[def.themeIdx]] || DAILY_THEME_TEXT.signature_surprise; }
+function forcedAcademyHTML(def) {
+  const n = def.academyOffers[def.forcedAcademyIndex];
+  if (!n) return '';
+  return `<div class="challenge-profile" style="margin-top:10px">
+    <div class="challenge-profile-row">📌 Académie déjà signée : <b>${n.club.name}</b> ${n.flag}</div>
+  </div>`;
+}
+
 function joinDaily(def) {
   setG(newPlayer());
   const p = G;
@@ -203,6 +227,9 @@ function joinDaily(def) {
   p.hype = def.hype;
   p.dailyDate = def.date;
   p.frozenAcademyOffers = def.academyOffers;
+  // Identité propre du défi du jour (voir engine/season.js startCareer(), AGENDA.md lot
+  // rétention) : contrairement au défi entre amis, l'académie n'est PAS choisie par le joueur.
+  p.dailyForcedAcademyIndex = def.forcedAcademyIndex;
   p.step = 3; // même raison qu'en défi entre amis : robuste à une sauvegarde pile sur l'atterrissage
   renderDailyLanding(def);
 }
@@ -211,12 +238,15 @@ function joinDaily(def) {
 export function startDailyChallenge() {
   const def = generateDailyDef();
   const best = getDailyBest(def.date);
+  const theme = dailyThemeText(def);
   setInCareer(false);
   stage.innerHTML = `<div class="end" style="max-width:520px">
     <div class="eyebrow" style="text-align:center">📅 Défi du jour</div>
     <h2 style="text-align:center;font-size:24px;margin:6px 0 4px">${def.date}</h2>
-    <p class="body" style="text-align:center;color:var(--chalk-dim);font-size:13.5px;margin-bottom:14px">Le même profil de départ pour tout le monde aujourd'hui, sans exception -- calculé depuis la date, jamais deux fois pareil d'un jour à l'autre.</p>
+    <div class="daily-theme-badge">🔥 Thème du jour : ${theme.label}</div>
+    <p class="body" style="text-align:center;color:var(--chalk-dim);font-size:13.5px;margin:8px 0 14px">${theme.desc}</p>
     ${profileSummary(def)}
+    ${forcedAcademyHTML(def)}
     ${best ? `<p class="body" style="text-align:center;color:var(--chalk-dim);font-size:13px;margin-top:14px">Ton meilleur score aujourd'hui : <b style="color:var(--mint)">${best.score}</b> (${tierLabel(best.tier)})</p>` : ''}
     <div style="margin-top:22px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
       <button class="btn" id="playDaily">${best ? 'Retenter le défi du jour' : 'Jouer le défi du jour'}</button>
@@ -231,11 +261,14 @@ export function startDailyChallenge() {
 
 function renderDailyLanding(def) {
   setInCareer(false);
+  const theme = dailyThemeText(def);
   stage.innerHTML = `<div class="end" style="max-width:520px">
     <div class="eyebrow" style="text-align:center">📅 Défi du jour -- ${def.date}</div>
-    <h2 style="text-align:center;font-size:24px;margin:6px 0 4px">Départ imposé, carrière libre</h2>
-    <p class="body" style="text-align:center;color:var(--chalk-dim);font-size:13.5px;margin-bottom:14px">Le profil est identique pour tout le monde aujourd'hui. À partir de là, tes choix et ton aléatoire n'appartiennent qu'à toi.</p>
+    <h2 style="text-align:center;font-size:24px;margin:6px 0 4px">Départ imposé, carrière déjà engagée</h2>
+    <div class="daily-theme-badge">🔥 Thème du jour : ${theme.label}</div>
+    <p class="body" style="text-align:center;color:var(--chalk-dim);font-size:13.5px;margin:8px 0 14px">Le profil ET l'académie de départ sont identiques pour tout le monde aujourd'hui -- pas de choix à faire, direction le terrain. À partir de là, tes choix et ton aléatoire n'appartiennent qu'à toi.</p>
     ${profileSummary(def)}
+    ${forcedAcademyHTML(def)}
     <div style="margin-top:22px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
       <button class="btn" id="continueDaily">Continuer</button>
       <button class="btn ghost" id="declineDaily">Plutôt une carrière libre</button>

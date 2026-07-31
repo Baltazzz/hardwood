@@ -6,7 +6,8 @@ import { LIFESTYLES } from '../data/lifestyles.js';
 import { LEAGUES } from '../data/leagues.js';
 import { newPlayer, rollTalent, rollArchetypeAndName, ovr, salaryFor, clubSalaryMod, playCountry } from '../engine/player.js';
 import { hofBest, hofAdd } from '../engine/hof.js';
-import { evaluateBadges, BADGES, TIER_RANK } from '../engine/badges.js';
+import { evaluateBadges, badgesState, BADGES, TIER_RANK } from '../engine/badges.js';
+import { rarityPct, nextBadgeHints, suggestChallenge } from '../engine/retention.js';
 import { applyChoice, postSeason, doMove, beginSeasonKeep, draftProjection, seasonVerdict, startCareer, chooseAcademy, nextEventOrSim, beginSeason, pushTL, pickExpatNation } from '../engine/season.js';
 import { catTag } from '../engine/events.js';
 import { pickClub, pickClubName, pickClubs, clubInfo } from '../engine/clubs.js';
@@ -853,6 +854,24 @@ export function renderForcedRetirement(onContinue){
   </div>`;
   document.getElementById('forcedEndContinue').onclick=()=>onContinue();
 }
+// Unité affichée dans le message "Encore X {unité} pour débloquer..." (voir engine/retention.js
+// nextBadgeHints()) : simple table de correspondance vers des clés i18n déjà existantes quand
+// possible (évite de dupliquer un libellé déjà traduit ailleurs), quelques clés dédiées sinon.
+const BADGE_UNIT_I18N = {
+  clutchMoments:'endCareer.clutchMoments', tripleDoubles:'stats.tripleDoubles', mvps:'stats.mvp',
+  points:'stats.points', titles:'stats.titles', careers:'progress.careersPlayed', legendScore:'stats.legendScore',
+  tournaments:'endCareer.unitTournaments', leagueTiers:'endCareer.unitLeagueTiers',
+  scorerTitles:'endCareer.unitScorerTitles', defenderTitles:'endCareer.unitDefenderTitles',
+};
+function badgeUnitLabel(unit){ const key=BADGE_UNIT_I18N[unit]; return key?t(key):unit; }
+// Texte de la suggestion de défi personnel (voir engine/retention.js suggestChallenge()) --
+// fonction (pas un littéral mis en cache) : relit t() à chaque appel, comme partout ailleurs.
+function suggestionText(s){
+  if(s.kind==='position') return t('endCareer.suggestPosition',{emoji:s.emoji, pos:t('positions.'+s.posId+'.name')});
+  if(s.kind==='noHomeLeague') return t('endCareer.suggestNoHomeLeague');
+  if(s.kind==='startPath') return t('endCareer.suggestStartPath',{path:academyPathLabel(s.path)});
+  return t('endCareer.suggestGeneric');
+}
 export function endCareer(reason){
   const p=G; p.retired=true;
   setInCareer(false);
@@ -928,6 +947,14 @@ export function endCareer(reason){
   if(!p.newBadges) p.newBadges = evaluateBadges(p);
   const newBadgeDefs = p.newBadges.map(id=>BADGES.find(b=>b.id===id)).filter(Boolean);
 
+  // Lot rétention (voir AGENDA.md, engine/retention.js) : évalués APRÈS evaluateBadges() ci-dessus
+  // (state.lifetimePts/everPositions/etc. déjà mis à jour par CETTE carrière) -- rareté crédible,
+  // prochain(s) haut(s) fait(s) juste hors de portée, piste de défi personnel jamais essayée.
+  const retentionState = badgesState();
+  const rarity = rarityPct(legend);
+  const nextBadges = nextBadgeHints(p, retentionState, 2);
+  const suggestion = suggestChallenge(retentionState);
+
   // Cagnotte (voir engine/wallet.js, AGENDA.md AGD-41/AGD-47) : la trésorerie de fin de carrière
   // (+ primes de titres) crédite DIRECTEMENT la boutique, une seule fois -- même garde-fou que
   // p.savedHOF juste au-dessus (endCareer() peut être ré-invoqué). Purement cosmétique en aval
@@ -960,6 +987,7 @@ export function endCareer(reason){
     <div class="legend-title">${tierDisplay}</div>
     <p class="subline">${p.nation.flag} ${POSITIONS.find(x=>x.id===p.pos).emoji} ${t('positions.'+p.pos+'.name')} · ${p.seasons.length} ${t('hof.seasons')} · pic à ${p.peakOvr} OVR${p.hof?` · <b style="color:var(--mint)">${t('endCareer.hofBadge')}</b>`:''}</p>
     <p class="body" style="max-width:520px;margin:14px auto 0;text-align:center">${blurb}</p>
+    ${rarity!=null?`<div class="rarity-banner">🔥 ${t('endCareer.rarityMessage',{pct:rarity})}</div>`:''}
     ${renderTagChips(activeTags(p), 'center')}
     ${p.walletEarned?`<div style="text-align:center;margin-top:14px"><div class="wallet-chip">${t('endCareer.walletEarned',{n:money(p.walletEarned)})}</div></div>`:''}
     ${newBadgeDefs.length?`<div class="recap-block new-badges-block">
@@ -967,6 +995,14 @@ export function endCareer(reason){
       <div class="badge-grid compact">${newBadgeDefs.map(b=>`<div class="badge-tile unlocked" style="--badge-color:${b.color}">
         <div class="bt-icon">${b.emoji}</div><div class="bt-name">${t('badges.'+b.id+'.name')}</div><div class="bt-desc">${t('badges.'+b.id+'.desc')}</div></div>`).join('')}</div>
     </div>`:''}
+    ${nextBadges.length?`<div class="recap-block next-badge-block">
+      <div class="eyebrow" style="text-align:center;margin-bottom:10px">🎯 ${t('endCareer.nextBadgeTitle')}</div>
+      ${nextBadges.map(h=>`<p class="body next-badge-row" style="text-align:center;margin:4px 0">${h.emoji} ${t('endCareer.nextBadgeHint',{missing:h.gap,unit:badgeUnitLabel(h.unit),badge:t('badges.'+h.id+'.name')})}</p>`).join('')}
+    </div>`:''}
+    <div class="recap-block suggestion-block">
+      <div class="eyebrow" style="text-align:center;margin-bottom:10px">🧭 ${t('endCareer.suggestTitle')}</div>
+      <p class="body" style="text-align:center;margin:4px 0">${suggestionText(suggestion)}</p>
+    </div>
 
     <div class="legend-grid">
       <div class="lg"><div class="v">${legend}</div><div class="l">${t('stats.legendScore')}</div></div>

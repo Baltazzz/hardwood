@@ -67,6 +67,86 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Coché récemment
 
+- [x] **AGD-52 — Lot rétention (rareté, prochain objectif, suggestion de défi, refonte des badges, identité du défi du jour)** _(implémenté et vérifié le 2026-08-01)_
+  Cinq points, tous vérifiés par exécution réelle (pas seulement lecture de code).
+  1. *Message de rareté en fin de carrière*. Nouveau module `engine/retention.js`
+     (`rarityPct(score)`), seuils calibrés sur une distribution RÉELLE de 300 carrières pilotées
+     (p75~149, p90~227, p95~274, p99~331 de score légende) -- arrondis délibérément AU-DESSUS du
+     percentile mesuré, jamais en dessous (mieux vaut sous-promettre la rareté que la dépasser en
+     pratique). N'affiche RIEN sous le seuil "top 25%" (score < 150) : réservé aux "grandes
+     carrières" comme demandé, pas un message sur chaque partie. Bandeau visuel dédié
+     (`.rarity-banner`, lavis or) affiché juste après le résumé de tier, avant les tags -- premier
+     élément marquant de l'écran de fin.
+  2. *Prochain objectif à débloquer*. `nextBadgeHints(p, state, 2)` (`engine/retention.js`) :
+     jusqu'à 2 hauts faits pas encore débloqués mais déjà à 50% ou plus de leur seuil, triés par
+     proximité. Repose sur un nouveau champ optionnel `progress(p,state)->{value,target,unit}`
+     ajouté à 14 badges (les critères numériques qui s'y prêtent -- clutch, triple-doubles, MVP,
+     titres de meilleur marqueur/défenseur, tournois internationaux, paliers de titre multiple,
+     score G.O.A.T., et les 6 nouveaux badges à seuil cumulé) ; les badges à conditions multiples/
+     qualitatives (fidélité à un club, renaissance après bust...) n'en ont délibérément PAS --
+     mieux vaut n'afficher aucun indice qu'un chiffre trompeur. Message concret conforme à la
+     demande : "Encore 1 titre pour débloquer « Champion à tous les étages »."
+  3. *Suggestion de nouveau défi personnel*. `suggestChallenge(state)` (`engine/retention.js`),
+     ordre de priorité poste jamais joué -> nation sans championnat local jamais représentée ->
+     voie de développement (US/Europe/Australie) jamais empruntée -> repli générique une fois tout
+     exploré. Nouveau suivi persistant "de fond" dans `engine/badges.js`
+     (`everPositions`/`everStartPaths`/`everNoHomeLeague`, mis à jour à CHAQUE carrière sans
+     condition de niveau atteint -- distinct des compteurs "collection" existants qui exigent
+     Superstar+, ici on veut savoir ce qui a été ESSAYÉ, pas seulement réussi). Préservé par
+     `badgesClear()` comme `totalCareers` (même raisonnement qu'AGD-39 : pas un badge, une trace
+     du joueur lui-même).
+  4. *Refonte des badges* (`engine/badges.js`, 30 -> 41 badges). Trois badges recalibrés après
+     avoir mesuré leur taux de déclenchement réel sur 300 carrières indépendantes (état frais
+     chacune) : `marathon_career` (16 saisons -> 100% de déclenchement, quasi aucune valeur
+     différenciante -- la longévité brute est presque garantie par le jeu dès qu'on évite une
+     retraite forcée, médiane observée 23 saisons) devient "Marathonien", 20 saisons ET aucune
+     blessure sur toute la carrière (RE-mesuré après correctif : 30.3%) ; `tier_explorer`
+     (4 paliers -> 79.3%) relevé à 6 paliers (RE-mesuré : 24.3%), exige un vrai changement de
+     SYSTÈME (US<->Europe<->Australie) plutôt que de monter les échelons d'un seul ; `last_dance`
+     (37 ans -> 77%, le jeu retraite quasi tout le monde vers 38 ans) exige en plus de rester un
+     vrai rotationnaire (20 min/match) lors de la toute dernière saison (RE-mesuré : 36%). 5
+     nouveaux badges "carrière" exploitant des données déjà calculées mais jamais
+     récompensées (Sniper attitré/Verrou défensif : titres de meilleur marqueur/défenseur ;
+     Sensation rookie : Rookie de l'année ; Retour aux sources : même club au départ et à la
+     retraite ; Phénix : retour au niveau Superstar la saison suivant une blessure). 6 NOUVEAUX
+     badges à seuil CUMULÉ INTER-CARRIÈRES comme demandé explicitement (points/titres/carrières,
+     2 paliers chacun) : `lifetimePts`/`lifetimeTitles` (nouveaux compteurs persistants dans
+     `badgesState()`, incrémentés à chaque `evaluateBadges()`, jamais remis à zéro par un reset de
+     badges) + `totalCareers` (déjà existant) -- seuils calibrés sur la même distribution de 300
+     carrières (médiane ~11 800 pts/carrière, ~0.2 titre/carrière en moyenne) : 50 000/250 000
+     points, 5/15 titres, 25/75 carrières.
+  5. *Identité propre du défi du jour*. Jusqu'ici quasi identique au défi entre amis (même écran,
+     même choix d'académie). Nouvelle disposition : l'académie de départ n'est PLUS choisie par le
+     joueur mais IMPOSÉE (`def.forcedAcademyIndex`, dérivé de la même graine que le profil du
+     jour -- déterministe, identique pour tout le monde ce jour-là), `startCareer()`
+     (`engine/season.js`) saute directement l'écran de choix pour `p.dailyDate` et démarre la
+     saison -- contrairement au défi entre amis, qui garde le choix libre, non touché. Habillé
+     d'un "thème du jour" purement narratif (8 thèmes tournants, `DAILY_THEMES` dans
+     `engine/dailyChallenge.js`, dérivé de la même graine par un modulo différent pour ne pas
+     coïncider avec l'académie imposée), affiché en badge dédié (`.daily-theme-badge`) sur les
+     deux écrans du défi du jour. Volontairement SANS toucher à la simulation elle-même (aucun
+     risque d'équilibrage) : seule la présentation + UNE décision en moins changent.
+  **Vérifié directement** (`tests/audit_retention.mjs`, nouveau, `npm run audit:retention`, 47
+  vérifications) : seuils de rareté testés aux bornes exactes ; badges "presque atteints" détectés
+  correctement (7/8 moments clutch) et jamais pour un badge trop loin (1/8) ou déjà débloqué ;
+  ordre de priorité des 4 branches de suggestion testé une par une ; les 3 badges recalibrés
+  refusent explicitement l'ancien seuil trivial et acceptent le nouveau ; les 5 nouveaux badges
+  "carrière" et les 6 badges à seuil cumulé testés déclenché/refusé sur des joueurs synthétiques ;
+  cumul `lifetimePts`/`lifetimeTitles`/`totalCareers` vérifié sur 5 évaluations enchaînées (pas
+  supposé) puis confirmé PRÉSERVÉ après `badgesClear()` (même garde-fou qu'AGD-39) ; déterminisme
+  du défi du jour vérifié sur deux appels à la même date (même académie imposée, même thème) et
+  variété confirmée entre deux dates différentes ; parcours réel piloté confirme qu'AUCUN écran de
+  choix d'académie n'apparaît pour le défi du jour (contrairement au défi entre amis, testé juste
+  à côté dans le même script pour confirmer l'absence de régression) ; carrière complète pilotée
+  jusqu'à l'écran de fin sans erreur JS avec tous les nouveaux blocs inclus. Non-régression :
+  `npm run audit` 150 carrières (0% crash), `npm run audit:i18n`/`audit:coherence`/
+  `audit:cosmetics`/`audit:link`/`audit:challenge` tous verts, `scripts/deep-audit.mjs` 300
+  carrières -- 0% crash, 0 violation d'intégrité `once`, taux de titre élite 13.7% (bande normale
+  7.7-21.7%). Recalibrage des 3 badges resserrés reconfirmé sur un second échantillon indépendant
+  de 300 carrières après correctif : marathon_career 100%->30.3%, tier_explorer 79.3%->24.3%,
+  last_dance 77%->36% -- les trois redevenus de vrais badges différenciants sans devenir
+  inatteignables.
+
 - [x] **AGD-51 — Vérification et complétion du défi entre amis de bout en bout** _(implémenté et vérifié le 2026-08-01)_
   Demande explicite : répondre d'abord aux 3 questions de diagnostic (sans coder), puis compléter
   ce qui manquait. Vérification menée par exécution réelle, PAS par lecture de code seule -- deux

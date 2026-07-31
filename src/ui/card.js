@@ -17,7 +17,7 @@ import { t } from '../engine/i18n.js';
 // Totaux cumulés de carrière (points/passes/rebonds/contres/interceptions) : séparateur de
 // milliers pour rester lisible sur des carrières longues (un total de 20 000+ points n'est pas
 // valorisant à lire collé en un seul bloc de chiffres).
-function fmtNum(n){ return Math.round(n||0).toLocaleString('fr-FR'); }
+export function fmtNum(n){ return Math.round(n||0).toLocaleString('fr-FR'); }
 // Le palier ("tier") d'un enregistrement de carrière (Panthéon, carte de fin) est stocké tel
 // quel EN FRANÇAIS (voir endCareer() dans screens.js -- changer ça toucherait au format de
 // sauvegarde) : traduit uniquement à l'affichage via son index dans TIER_RANK (voir i18n/fr.js/

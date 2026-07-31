@@ -17,3 +17,21 @@ export function careerPhase(p){
 }
 
 export function lastSeason(p){ return p.seasons.length ? p.seasons[p.seasons.length-1] : null; }
+
+/* ============================================================
+   MÉMOIRE DE SITUATION DU JOUEUR (voir AGENDA.md, "cohérence de l'arborescence des choix") --
+   dérivée de l'historique RÉEL des saisons (p.seasons), jamais d'un simple compteur/seuil qui
+   peut être satisfait sans que la situation narrative correspondante ait vraiment eu lieu.
+   Utilisée par les `when()` d'événements qui présupposent un passé précis (ancien club, rôle
+   d'avant, etc.) -- pour filtrer ce qui peut être proposé selon ce qui s'est VRAIMENT passé,
+   pas seulement selon des compteurs proxy comme clubTenure/seasons.length qui restent vrais même
+   pour un joueur resté au même club depuis le début de sa carrière.
+============================================================ */
+// Un "ancien club" n'existe que si le joueur a RÉELLEMENT évolué ailleurs avant d'arriver à son
+// club actuel -- clubTenure>=1 et seasons.length>=2 peuvent tous deux être vrais pour un joueur
+// qui n'a JAMAIS quitté son tout premier club (bug reproduit et corrigé : voir revenge_game dans
+// data/events/mid.js, "Retrouvailles avec ton ancien club" pouvait se déclencher sans qu'aucun
+// ancien club n'ait jamais existé).
+export function hasFormerClub(p){
+  return p.seasons.some(s => s.club && s.club !== p.club);
+}

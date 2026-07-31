@@ -49,7 +49,12 @@ export function applyFatigue(p) {
 export function applyRecovery(p) {
   const ageWear = clamp((p.age - 27) * 0.9, 0, 18);
   const target = clamp(82 - ageWear, 45, 82);
-  const rate = 0.5 + (Math.random() - 0.5) * 0.16; // 0.42-0.58 : un peu de variance saison à saison
+  // Rééquilibrage mesuré (voir AGENDA.md, "forme") après retour de test réel : base relevée de
+  // 0.5 à 0.56 (+12% relatif, ~1 point de forme en plus par saison pour un écart type) -- comble
+  // un peu plus l'écart vers la cible à chaque intersaison, sans toucher `target` (toujours plafonné
+  // à 82, jamais 100) : la cible elle-même reste la seule garantie contre un retour au défaut
+  // d'origine (forme bloquée en haut), qu'une récupération plus généreuse ne peut pas contourner.
+  const rate = 0.56 + (Math.random() - 0.5) * 0.16; // 0.48-0.64 : un peu de variance saison à saison
   const recovered = Math.round((target - p.fitness) * rate);
   p.fitness = clamp(p.fitness + recovered, 0, 100);
 }

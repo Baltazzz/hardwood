@@ -141,7 +141,7 @@ export const FR = {
     newBadgePlural: 'Nouveaux hauts faits débloqués', newBadgeSingular: 'Nouveau haut fait débloqué',
     clutchMoments: 'Moments clutch', pressSection: '🗞️ Ce que la presse retient',
     bestSeason: '🌟 Meilleure saison', trophyCase: '🏆 Armoire à trophées', careerMoments: 'Moments de carrière',
-    newCareer: 'Nouvelle carrière', compareFriends: '🔗 Comparer avec mes amis', dailyHistory: '📅 Mon historique quotidien',
+    newCareer: 'Nouvelle carrière', backToMenu: 'Retour au menu principal', compareFriends: '🔗 Comparer avec mes amis', dailyHistory: '📅 Mon historique quotidien',
     myCard: '🖼️ Ma carte', hof: '🏆 Panthéon', badges: '🎖️ Hauts faits', copySummary: 'Copier mon résumé',
     fullSheet: 'Voir la fiche complète', copied: 'Copié !', ageYears: 'ans',
     tierGoat: 'On ne parlera plus du basket sans prononcer ton nom. Une ère porte ta signature.',

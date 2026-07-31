@@ -138,7 +138,7 @@ export const EN = {
     newBadgePlural: 'New achievements unlocked', newBadgeSingular: 'New achievement unlocked',
     clutchMoments: 'Clutch moments', pressSection: '🗞️ What the press remembers',
     bestSeason: '🌟 Best season', trophyCase: '🏆 Trophy Case', careerMoments: 'Career moments',
-    newCareer: 'New career', compareFriends: '🔗 Compare with friends', dailyHistory: '📅 My daily history',
+    newCareer: 'New career', backToMenu: 'Back to main menu', compareFriends: '🔗 Compare with friends', dailyHistory: '📅 My daily history',
     myCard: '🖼️ My card', hof: '🏆 Hall of Fame', badges: '🎖️ Achievements', copySummary: 'Copy my summary',
     fullSheet: 'View full sheet', copied: 'Copied!', ageYears: 'yo',
     tierGoat: 'Nobody will talk about basketball again without saying your name. An era carries your signature.',

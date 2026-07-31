@@ -1,5 +1,5 @@
 import { LIFESTYLES } from '../lifestyles.js';
-import { ovr, attrOf } from '../../engine/player.js';
+import { ovr, attrOf, roleOf } from '../../engine/player.js';
 import { ri, pick, clamp, actionRoll } from '../../engine/utils.js';
 import { mediaWeight } from './_helpers.js';
 
@@ -343,7 +343,13 @@ export const SHARED_EVENTS = [
     ]},
 
   {id:'benched', cat:'locker', cooldown:2,
-    when:(p,lg)=>{const last=p.seasons[p.seasons.length-1]; return last && last.minutes<16 && p.age<32;},
+    // Deux signaux combinés, pas un seul : la tendance récente (minutes basses la saison passée)
+    // ET le rôle STRUCTUREL actuel (roleOf(), déterministe -- voir engine/player.js), jamais
+    // seulement la tendance passée. Sans le second, un joueur qui a franchi le seuil de titulaire
+    // pendant l'intersaison (progression d'attributs) pouvait encore se voir proposer "le coach te
+    // laisse sur le banc" alors qu'il est redevenu titulaire -- bug signalé et corrigé, voir
+    // AGENDA.md "cohérence de l'arborescence des choix".
+    when:(p,lg)=>{const last=p.seasons[p.seasons.length-1]; return last && last.minutes<16 && p.age<32 && ['bench','rotation'].includes(roleOf(p).key);},
     title:'Le coach te laisse sur le banc',
     body:({p})=>`Les minutes se font rares. Tu ronges ton frein en bout de banc. Trois voies s'offrent à toi.`,
     choices:()=>[

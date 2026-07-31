@@ -67,6 +67,69 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Coché récemment
 
+- [x] **AGD-50 — Lot cohérence et confort (suite à des tests réels)** _(implémenté et vérifié le 2026-08-01)_
+  Cinq points remontés en testant le jeu.
+  1. *Cohérence de l'arborescence des choix*. Deux incohérences précises, reproduites puis
+     corrigées, et une vraie brique de "mémoire de situation" pour prévenir la classe de bug :
+     nouvelle fonction `hasFormerClub(p)` (`data/events/_helpers.js`), dérivée de l'historique
+     RÉEL des saisons (`p.seasons[].club`) plutôt que d'un compteur proxy -- `revenge_game`
+     ("Retrouvailles avec ton ancien club", `mid.js`) se déclenchait pour un joueur resté à son
+     tout premier club depuis le début de sa carrière : `clubTenure>=1` et `seasons.length>=2`
+     restent vrais dans ce cas alors qu'aucun "ancien club" n'a jamais existé. Corrigé en ajoutant
+     `hasFormerClub(p)` à son `when()`. `benched` ("Le coach te laisse sur le banc", `shared.js`)
+     se basait uniquement sur les minutes de la SAISON PASSÉE (`last.minutes<16`), pouvant encore
+     se déclencher pour un joueur devenu titulaire entre-temps (progression d'attributs à
+     l'intersaison) : corrigé en exigeant EN PLUS que le rôle structurel ACTUEL (`roleOf(p)`,
+     déjà déterministe et réutilisé tel quel depuis `engine/player.js`, jamais dupliqué) soit
+     `'bench'` ou `'rotation'`, jamais `'starter'`/`'star'`/`'franchise'`.
+  2. *Débordement d'écran*. Cause trouvée : depuis qu'HARDWOOD est réellement installable en PWA
+     plein écran (AGD-25), l'appli peut s'étendre sous l'encoche/la caméra frontale/la barre de
+     statut translucide (`apple-mobile-web-app-status-bar-style:black-translucent`, déjà en place)
+     sans qu'aucune règle CSS ne réserve cet espace -- le bouton accueil (position fixe, coin
+     supérieur gauche) pouvait donc se retrouver sous la caméra, presque inatteignable.
+     `env(safe-area-inset-*)` (repli 0px si non supporté, donc aucun changement sur le reste)
+     ajouté à `.wrap` (conteneur principal, réserve l'espace pour tous les écrans en une seule
+     fois) et individuellement aux éléments à position fixe qui échappent à ce conteneur
+     (`.home-fab`, `.consent-banner`).
+  3. *Récap de fin de carrière*. Bouton "Retour au menu principal" ajouté (`id="backToMenu"`,
+     réinitialise le joueur et retourne à l'écran titre, même logique que "Nouvelle carrière").
+     Statistiques cumulées de carrière (points/passes/rebonds/contres/interceptions, déjà
+     calculées pour la carte partageable et le Panthéon) désormais affichées directement sur cet
+     écran aussi -- `fmtNum()` exporté depuis `ui/card.js` plutôt que dupliqué.
+  4. *Matchs joués par saison*. Cause trouvée : un joueur en bonne santé et non mis à l'écart
+     jouait mécaniquement 100% du calendrier de la ligue (`gamesPlayed === leagueGames`) chaque
+     saison -- seules les blessures narratives (`missedInjury`) et la mise à l'écart d'un joueur
+     de banc (`dnp`, minutes<10) réduisaient ce total. Nouveau terme `routineAbsence`
+     (`engine/season.js`) TOUJOURS présent (contrairement aux deux autres, conditionnels) : au
+     moins 1 match manqué, jusqu'à ~4.5% du calendrier réel de la ligue -- repos, petit pépin,
+     maladie, réalistes même pour un titulaire increvable. Se répercute automatiquement sur les
+     statistiques cumulées de carrière, qui pondèrent déjà chaque saison par `gamesPlayed` (voir
+     AGD-39) : aucun changement nécessaire côté calcul des totaux.
+  5. *Forme*. Rééquilibrage mesuré de `applyRecovery()` (`engine/vitals.js`) : taux de base relevé
+     de 0.5 à 0.56 (+12% relatif) -- comble un peu plus l'écart vers la cible chaque intersaison.
+     La cible elle-même (plafonnée à 82, jamais 100) reste inchangée : c'est elle qui garantit
+     qu'une récupération plus généreuse ne peut pas recréer le défaut d'origine (forme bloquée en
+     haut), un simple ajustement de taux ne peut pas la contourner.
+  Rendu vérifié en navigateur réel (Playwright, viewport 390×844) : bouton accueil positionné
+  correctement (repli 8px propre en l'absence de zone de sécurité réelle, comme attendu sur desktop) ;
+  carrière complète pilotée jusqu'à l'écran de fin, bloc "Statistiques cumulées de carrière" et
+  bouton "Retour au menu principal" confirmés visibles à l'écran, dans cet ordre, avant l'armoire à
+  trophées.
+  **Vérifié directement** (`tests/audit_coherence.mjs`, nouveau, `npm run audit:coherence`) :
+  `revenge_game.when()` testé directement contre un joueur synthétique resté à un seul club
+  (refusé) et un joueur ayant réellement changé de club (accepté) ; `benched.when()` testé contre
+  un joueur au rôle actuel largement titulaire malgré un signal de minutes passées bas (refusé) ;
+  présence des règles `env(safe-area-inset-*)` vérifiée directement dans `styles.css` (haut pour
+  `.wrap`/`.home-fab`, bas pour `.consent-banner`) ; carrière pilotée jusqu'au bout confirme le
+  bouton "retour au menu" présent et fonctionnel (ramène bien à l'écran titre) et deux grilles
+  `.legend-grid` distinctes affichées (paliers + cumulées) ; sur 23 saisons observées lors d'une
+  carrière pilotée, 0/23 saison jouée à 100% du calendrier, moyenne de matchs manqués modeste
+  (1.4-3.0 selon les runs, toujours dans la fourchette "quelques matchs" attendue). Audit de
+  non-régression : `scripts/deep-audit.mjs` 300 carrières -- 0% crash, 0 violation d'intégrité
+  `once`, taux de titre élite 10.3% (bande normale) ; forme moyenne passée de ~62.6-63.2 à 66.8
+  (amélioration mesurée, comme demandé), quasi-plafond (>=97) resté bas à 0.1% (en baisse, pas en
+  hausse -- confirmé ne PAS recréer le défaut d'origine "forme bloquée en haut").
+
 - [x] **AGD-48 — Masquer l'onglet Collection (rendu pas assez satisfaisant sans vrais visuels)** _(implémenté et vérifié le 2026-07-31)_
   Suite directe d'AGD-47 point 5 : l'utilisateur a jugé le rendu de l'onglet Collection (silhouettes
   SVG faites maison + "Bientôt disponible") pas assez satisfaisant en l'état, sans les vrais

@@ -12,7 +12,7 @@ import { catTag } from '../engine/events.js';
 import { pickClub, pickClubName, pickClubs, clubInfo } from '../engine/clubs.js';
 import { renderHUD, animateStats } from './hud.js';
 import { resetAccent } from '../engine/accent.js';
-import { renderHallOfFame, renderCareerCard, renderBadges, renderProgress } from './card.js';
+import { renderHallOfFame, renderCareerCard, renderBadges, renderProgress, fmtNum } from './card.js';
 import { renderTrophyCabinet, medalIcon } from './trophies.js';
 import { activeTags, renderTagChips, renderTraitUnlockCard } from '../engine/tags.js';
 import { pick, clamp, money, ordinal, ri } from '../engine/utils.js';
@@ -991,6 +991,17 @@ export function endCareer(reason){
     </div>`:''}
 
     <div class="recap-block" style="max-width:640px">
+      <div class="eyebrow" style="text-align:center;margin-bottom:14px">${t('stats.careerCumulated')}</div>
+      <div class="legend-grid">
+        <div class="lg"><div class="v">${fmtNum(totalPts)}</div><div class="l">${t('stats.points')}</div></div>
+        <div class="lg"><div class="v">${fmtNum(totalAst)}</div><div class="l">${t('stats.assists')}</div></div>
+        <div class="lg"><div class="v">${fmtNum(totalReb)}</div><div class="l">${t('stats.rebounds')}</div></div>
+        <div class="lg"><div class="v">${fmtNum(totalBlk)}</div><div class="l">${t('stats.blocks')}</div></div>
+        <div class="lg"><div class="v">${fmtNum(totalStl)}</div><div class="l">${t('stats.steals')}</div></div>
+      </div>
+    </div>
+
+    <div class="recap-block" style="max-width:640px">
       <div class="eyebrow" style="text-align:center;margin-bottom:14px">${t('endCareer.trophyCase')}</div>
       ${renderTrophyCabinet(A)}
     </div>
@@ -1002,6 +1013,7 @@ export function endCareer(reason){
 
     <div style="margin-top:28px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
       <button class="btn" id="again">${t('endCareer.newCareer')}</button>
+      <button class="btn ghost" id="backToMenu">${t('endCareer.backToMenu')}</button>
       ${p.challengeId?`<button class="btn ghost" id="challengeCompare">${t('endCareer.compareFriends')}</button>`:''}
       ${p.dailyDate?`<button class="btn ghost" id="dailyCompare">${t('endCareer.dailyHistory')}</button>`:''}
       <button class="btn ghost" id="cardBtn">${t('endCareer.myCard')}</button>
@@ -1012,6 +1024,7 @@ export function endCareer(reason){
     </div>
   </div>`;
   document.getElementById('again').onclick=()=>{ setG(newPlayer()); screenCreate(); };
+  document.getElementById('backToMenu').onclick=()=>{ setG(newPlayer()); screenTitle(); };
   const challengeBtn=document.getElementById('challengeCompare');
   if(challengeBtn) challengeBtn.onclick=()=>renderChallengeLeaderboard(p.challengeId);
   const dailyBtn=document.getElementById('dailyCompare');

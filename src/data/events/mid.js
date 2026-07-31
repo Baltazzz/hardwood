@@ -1,7 +1,7 @@
 import { LEGENDS } from '../legends.js';
 import { ovr, roleOf, attrOf } from '../../engine/player.js';
 import { actionRoll, pick } from '../../engine/utils.js';
-import { mediaWeight, clutchWeight } from './_helpers.js';
+import { mediaWeight, clutchWeight, hasFormerClub } from './_helpers.js';
 
 /* ============================================================
    PHASE MILIEU DE CARRIÈRE — conquête du statut titulaire puis
@@ -243,7 +243,10 @@ export const MID_EVENTS = [
     ]},
 
   {id:'revenge_game', cat:'rivalry', phase:'mid', cooldown:3,
-    when:(p,lg)=>(p.clubTenure||0)>=1 && p.seasons.length>=2 && lg.tier<=3,
+    // hasFormerClub(p) (voir _helpers.js) : clubTenure/seasons.length seuls ne suffisaient pas --
+    // un joueur resté à son tout premier club depuis le début de sa carrière les satisfaisait déjà,
+    // sans qu'aucun "ancien club" n'ait jamais existé (bug signalé et corrigé, voir AGENDA.md).
+    when:(p,lg)=>(p.clubTenure||0)>=1 && p.seasons.length>=2 && lg.tier<=3 && hasFormerClub(p),
     title:'Retrouvailles avec ton ancien club',
     body:()=>`<i>(Le même vestiaire visiteur qui t'accueillait autrefois côté domicile.)</i> Ce soir, tu affrontes le club qui t'a laissé partir. La salle entière attend de voir comment tu vas réagir.`,
     weight:()=>0.75,

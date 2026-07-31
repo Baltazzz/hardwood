@@ -345,7 +345,13 @@ export function simulateSeason(){
   // uniquement l'affichage "matchs joués" qui reflète le vrai calendrier, pas la pénalité de jeu.
   const missedInjury = Math.min(Math.round(p.seasonMods.injuryGames * leagueGames/82), leagueGames);
   const dnp = minutes<10 ? ri(0, Math.max(0, Math.round(leagueGames*0.08))) : 0;
-  const gamesPlayed = clamp(leagueGames - missedInjury - dnp, 0, leagueGames);
+  // Absences de routine (voir AGENDA.md, "matchs joués par saison") : même un titulaire en pleine
+  // santé ne joue jamais 100% du calendrier dans la réalité (petit pépin, repos, maladie...) --
+  // contrairement à missedInjury/dnp (conditionnels), TOUJOURS au moins 1 match manqué, jusqu'à
+  // ~4.5% du calendrier réel de la ligue. Se répercute automatiquement sur les statistiques
+  // cumulées de carrière (sumStat() dans endCareer(), screens.js, pondère déjà par gamesPlayed).
+  const routineAbsence = ri(1, Math.max(1, Math.round(leagueGames*0.045)));
+  const gamesPlayed = clamp(leagueGames - missedInjury - dnp - routineAbsence, 0, leagueGames);
 
   // accolades
   const acc=[]; const A=(k)=>{acc.push(k); p.accolades[k]=(p.accolades[k]||0)+1;};

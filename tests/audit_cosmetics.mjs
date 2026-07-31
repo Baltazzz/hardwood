@@ -199,11 +199,11 @@ async function main() {
   check('bouton "Équiper" apparaît après achat', !!equipBtn);
   equipBtn.click();
   check('équipement en un clic confirmé', cosmetics.equippedId('card') === boughtId);
-  const collectionTab = document.querySelector('[data-tab="collection"]');
-  check('onglet "Collection" présent', !!collectionTab);
-  collectionTab.click();
-  check('écran Collection rendu sans crash (emplacement réservé visible)', document.querySelectorAll('.collection-slot').length > 0);
-  check('aucun bouton acheter/équiper actif dans l\'onglet Collection', document.querySelectorAll('.collection-slot [data-act]').length === 0);
+  // Onglet Collection volontairement caché pour l'instant (rendu jugé pas assez satisfaisant
+  // sans vrais visuels, voir AGENDA.md et COLLECTION_TAB_ENABLED dans ui/shop.js) -- le code
+  // reste en place (catalogue, rendu, garde-fous d'achat) mais n'est plus accessible depuis
+  // l'écran, vérifié ici par son absence, pas par son fonctionnement.
+  check('onglet "Collection" absent tant qu\'il est désactivé', !document.querySelector('[data-tab="collection"]'));
   document.getElementById('shopBack').click();
   check('retour à l\'écran titre depuis la boutique sans crash', !!document.getElementById('shop'));
   check('aucune erreur JS levée pendant tout le parcours', errors.length === 0);

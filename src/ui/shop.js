@@ -1,9 +1,11 @@
 /* ============================================================
-   BOUTIQUE COSMÉTIQUE (voir AGENDA.md AGD-41/AGD-47) — écran de la boutique : quatre onglets
-   (thèmes de couleur / styles de carte / profil / collection), payés DIRECTEMENT en trésorerie de
-   carrière cumulée (engine/wallet.js -- plus de jetons abstraits depuis AGD-47), catalogue et
-   logique d'achat/équipement dans engine/cosmetics.js. Cet écran ne fait QUE de l'affichage/
-   interaction -- aucune règle de prix ou de possession décidée ici.
+   BOUTIQUE COSMÉTIQUE (voir AGENDA.md AGD-41/AGD-47) — écran de la boutique : trois onglets
+   actifs (thèmes de couleur / styles de carte / profil) + un quatrième (collection) prêt mais
+   VOLONTAIREMENT CACHÉ pour l'instant (voir COLLECTION_TAB_ENABLED plus bas -- rendu jugé pas
+   assez satisfaisant sans les vrais visuels). Payés DIRECTEMENT en trésorerie de carrière cumulée
+   (engine/wallet.js -- plus de jetons abstraits depuis AGD-47), catalogue et logique d'achat/
+   équipement dans engine/cosmetics.js. Cet écran ne fait QUE de l'affichage/interaction -- aucune
+   règle de prix ou de possession décidée ici.
 ============================================================ */
 import { stage } from './dom.js';
 import { screenTitle } from './screens.js';
@@ -14,12 +16,20 @@ import { CARD_STYLES } from './card.js';
 import { t } from '../engine/i18n.js';
 import { money } from '../engine/utils.js';
 
-const TABS = [
+// Onglet Collection (voir AGENDA.md AGD-47 point 5) : caché pour l'instant sur demande explicite
+// de l'utilisateur -- le rendu sans vrais visuels n'est pas satisfaisant. Code entièrement
+// conservé (catalogue `family:'collection'` dans engine/cosmetics.js, collectionSlotHTML()
+// ci-dessous, CSS `.collection-slot` dans styles.css) : un seul drapeau à repasser à `true` pour
+// le réactiver quand les visuels seront prêts, rien d'autre à refaire.
+const COLLECTION_TAB_ENABLED = false;
+
+const ALL_TABS = [
   { id: 'theme', labelKey: 'shop.tabThemes' },
   { id: 'card', labelKey: 'shop.tabCards' },
   { id: 'profile', labelKey: 'shop.tabProfile' },
   { id: 'collection', labelKey: 'shop.tabCollection' },
 ];
+const TABS = ALL_TABS.filter(tb => tb.id !== 'collection' || COLLECTION_TAB_ENABLED);
 let currentTab = 'theme';
 
 const FRAME_SWATCH = {
@@ -97,6 +107,11 @@ function gridFor(family) {
 
 export function renderShop() {
   setInCareer(false);
+  // Garde-fou : si l'onglet est désactivé (voir COLLECTION_TAB_ENABLED ci-dessus) mais que
+  // currentTab pointe quand même dessus (état résiduel d'une session précédente où il était
+  // actif, ou tout autre chemin imprévu), on retombe sur l'onglet par défaut plutôt que de rendre
+  // un onglet censé être inaccessible.
+  if (currentTab === 'collection' && !COLLECTION_TAB_ENABLED) currentTab = 'theme';
   let body;
   if (currentTab === 'profile') {
     body = `
@@ -104,7 +119,7 @@ export function renderShop() {
       <div class="shop-grid">${noneTileHTML('title', t('shop.noTitle'))}${catalogByFamily('title').map(tileHTML).join('')}</div>
       <div class="shop-section-h">${t('shop.framesSection')}</div>
       <div class="shop-grid">${noneTileHTML('frame', t('shop.noFrame'))}${catalogByFamily('frame').map(tileHTML).join('')}</div>`;
-  } else if (currentTab === 'collection') {
+  } else if (currentTab === 'collection' && COLLECTION_TAB_ENABLED) {
     const items = catalogByFamily('collection');
     body = `
       <p class="body" style="text-align:center;color:var(--chalk-dim);font-size:13px;max-width:480px;margin:0 auto 18px">${t('shop.collectionIntro')}</p>

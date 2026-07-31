@@ -9,6 +9,17 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Ouvert
 
+- [ ] **AGD-49 — Réactiver l'onglet Collection une fois les vrais visuels fournis**
+  Ajouté au registre le 2026-07-31, suite directe d'AGD-48 (masquage). L'utilisateur fournira les
+  visuels (cartes/maillots à collectionner) plus tard. Quand ce sera fait : remplacer les
+  silhouettes SVG de `collectionSlotHTML()` (`ui/shop.js`) par les vrais visuels, passer
+  `COLLECTION_TAB_ENABLED` à `true` dans ce même fichier, retirer le statut `comingSoon:true` des
+  entrées concernées du catalogue (`engine/cosmetics.js`) une fois qu'elles sont réellement
+  achetables/équipables (ou les garder `comingSoon` pour celles pas encore prêtes, l'activation
+  peut être progressive item par item).
+  **Critère** : à définir avec l'utilisateur au moment où les visuels seront fournis (quels
+  visuels pour quels emplacements, prix, éventuelle condition de déblocage).
+
 - [ ] **AGD-46 — Traduction anglaise du corpus narratif (~200 événements de carrière)**
   Ajouté au registre le 2026-07-31, suite explicite d'AGD-44 : l'utilisateur a choisi lui-même le
   périmètre de cette session ("Interface + données d'abord, narratif ensuite") -- ce ticket
@@ -55,6 +66,23 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
   les écrans vus souvent, un peu plus affirmé sur ceux vus rarement).
 
 ## Coché récemment
+
+- [x] **AGD-48 — Masquer l'onglet Collection (rendu pas assez satisfaisant sans vrais visuels)** _(implémenté et vérifié le 2026-07-31)_
+  Suite directe d'AGD-47 point 5 : l'utilisateur a jugé le rendu de l'onglet Collection (silhouettes
+  SVG faites maison + "Bientôt disponible") pas assez satisfaisant en l'état, sans les vrais
+  visuels à venir. Demande explicite : garder le code en place, rendre l'onglet invisible et
+  inaccessible. Nouveau drapeau `COLLECTION_TAB_ENABLED = false` en tête de `ui/shop.js` : filtre
+  l'onglet hors de la liste affichée (`TABS`), et garde-fou supplémentaire dans `renderShop()` qui
+  retombe sur l'onglet "Thèmes" si `currentTab` pointait quand même sur `'collection'` (état
+  résiduel improbable mais couvert). AUCUN code supprimé : catalogue `family:'collection'`
+  (`engine/cosmetics.js`, toujours `comingSoon:true`, toujours refusé à l'achat/l'équipement),
+  `collectionSlotHTML()`, CSS `.collection-slot` -- tout reste en place, prêt à être réactivé
+  (voir AGD-49) par un seul changement de drapeau une fois les vrais visuels fournis.
+  **Vérifié** : test dédié mis à jour (`tests/audit_cosmetics.mjs`) confirme l'absence du bouton
+  d'onglet `[data-tab="collection"]` sur l'écran boutique ; rendu vérifié en navigateur réel
+  (Playwright) -- seuls 3 onglets visibles (Thèmes/Cartes/Profil), confirmé par lecture directe du
+  DOM (`.shop-tab` -> 3 éléments, "Collection" absent). Audit de non-régression : `npm run audit`
+  150 carrières + audits dédiés (i18n, lien de défi/traits) : 0% crash, tout passe.
 
 - [x] **AGD-47 — Refonte économie boutique (monnaie réelle, primes de titres, descriptifs, onglet Collection)** _(implémenté et vérifié le 2026-07-31)_
   Cinq points, en creusant AGD-41 juste après sa livraison.

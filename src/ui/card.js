@@ -38,7 +38,7 @@ function recNationName(r){ return r.nationId ? t('nations.'+r.nationId) : (r.nat
 ============================================================ */
 // Glyphe de rang : couronne pour le n°1, médaille or/argent pour les 2e/3e (même langage SVG que
 // l'armoire à trophées), chiffre net et centré au-delà -- jamais un simple numéro pour un podium.
-function rankGlyph(i){
+export function rankGlyph(i){
   if(i===0) return `<span class="rk-medal" title="${t('hof.rank1')}">${crownIcon(30)}</span>`;
   if(i===1) return `<span class="rk-medal" title="${t('hof.rank2')}">${medalIcon('Argent',28)}</span>`;
   if(i===2) return `<span class="rk-medal" title="${t('hof.rank3')}">${medalIcon('Bronze',28)}</span>`;

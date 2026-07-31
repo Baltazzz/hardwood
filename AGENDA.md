@@ -67,6 +67,56 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Coché récemment
 
+- [x] **AGD-51 — Vérification et complétion du défi entre amis de bout en bout** _(implémenté et vérifié le 2026-08-01)_
+  Demande explicite : répondre d'abord aux 3 questions de diagnostic (sans coder), puis compléter
+  ce qui manquait. Vérification menée par exécution réelle, PAS par lecture de code seule -- deux
+  puis trois "appareils" simulés en process Node RÉELLEMENT séparés (`tests/challenge_flow_device.mjs`),
+  volontairement PAS deux instances jsdom dans le même process : `ui/dom.js` expose `stage` comme
+  une constante de module figée à l'import (liée au premier `document` global rencontré) et
+  `engine/challenges.js` cache son état en mémoire (`mem`) -- deux "appareils" partageant le même
+  process partageraient ces singletons et ne prouveraient rien sur un cas réel à deux téléphones,
+  qui eux ne partagent QUE ce qui transite explicitement par un lien.
+  **Réponses aux 3 questions (diagnostic avant tout code) :**
+  1. *Partage d'un lien de résultat en fin de carrière ?* Déjà en place et fonctionnel avant cette
+     session : `renderChallengeLeaderboard()` (`ui/challenge.js`) expose un bouton "📤 Partager mon
+     score" branché sur `shareOrFallback()` (partage natif déjà existant) avec `buildResultUrl(myResult)`,
+     et `handleIncomingLink()` décode un lien `?result=...` reçu pour l'ajouter au classement local
+     (`mine:false` forcé). Confirmé par exécution réelle : lien produit, décodé, mêmes valeurs.
+  2. *Vrai écran de comparaison/podium ?* Un écran de classement réel existait déjà
+     (`renderChallengeLeaderboard()`, trié par score décroissant côté `engine/challenges.js`
+     `addResult()`), MAIS son rendu était une liste à numéros nus (`<span class="rk">${i+1}</span>`)
+     -- pas un podium, contrairement au Panthéon qui a déjà son propre traitement couronne/médaille
+     (`rankGlyph()` dans `ui/card.js`, `crownIcon()`/`medalIcon()` dans `ui/trophies.js`). **Manque
+     confirmé et corrigé** : `rankGlyph()` exporté depuis `ui/card.js` et réutilisé tel quel dans
+     `renderChallengeLeaderboard()` (même traitement visuel que le Panthéon : couronne 1er, médailles
+     or/argent 2e/3e, classe `.podium`/`.top` sur les 3 premières lignes). Ajouté au passage (pas
+     demandé explicitement mais nécessaire à une "comparaison claire") : ma propre ligne repérée par
+     un indicateur "(toi)" + un liseré `.hof-row.mine` (`styles.css`), pour qu'on distingue sa place
+     dans le classement même hors podium.
+  3. *Score rattaché à l'id du défi et conservé ?* Oui, déjà correct avant cette session :
+     `screens.js` `endCareer()` appelle `addResult(p.challengeId, {...})` avec le même garde-fou
+     anti-double-comptage que la cagnotte/le Panthéon (`p.savedChallengeResult`), et
+     `engine/challenges.js` stocke `{ [challengeId]: { def, results: [...] } }` en localStorage
+     (`hardwood_challenges_v1`, même robustesse repli-mémoire que Panthéon/badges/cagnotte).
+     Confirmé directement : résultat retrouvé sous le bon id, dédoublonnage fonctionnel, trié par
+     score décroissant.
+  **Donc un seul manque réel** : le rendu "podium" du classement -- corrigé comme décrit au point 2,
+  rien d'autre à implémenter côté logique (partage + persistance déjà solides).
+  **Vérifié directement, parcours complet à deux joueurs réels sur le MÊME défi** (nouveau script
+  permanent `tests/audit_challenge_flow.mjs`, `npm run audit:challenge`, 3 process Node indépendants) :
+  appareil A crée le défi, joue sa carrière jusqu'au bout sans erreur JS, génère un lien de résultat
+  court (<200 caractères) ; appareil B (process totalement distinct) décode ce même lien de défi
+  (même id régénéré depuis la graine), joue sa PROPRE carrière, ne voit d'abord que son propre score,
+  puis ouvre le lien de résultat de A -- classement fusionné contient bien les 2 scores, triés par
+  score décroissant, `mine` JAMAIS confondu entre les deux joueurs, podium (couronne/médaille SVG)
+  réellement rendu dans le HTML, "(toi)" affiché sur la bonne ligne ; vérifié symétriquement (appareil
+  A ouvre ensuite le lien de résultat de B) avec le même résultat. 21 vérifications, toutes passées.
+  Audit de non-régression : `npm run audit` (100 carrières, 0% crash), `npm run audit:i18n`,
+  `npm run audit:coherence`, `npm run audit:cosmetics`, `npm run audit:link` (tous verts, la
+  réutilisation de `rankGlyph()` ne touche aucun de ces parcours) ; `scripts/deep-audit.mjs`
+  300 carrières -- 0% crash, 0 violation d'intégrité `once`, aucune régression détectée (lot
+  purement UI, aucune logique de jeu touchée).
+
 - [x] **AGD-50 — Lot cohérence et confort (suite à des tests réels)** _(implémenté et vérifié le 2026-08-01)_
   Cinq points remontés en testant le jeu.
   1. *Cohérence de l'arborescence des choix*. Deux incohérences précises, reproduites puis

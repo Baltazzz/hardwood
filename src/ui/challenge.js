@@ -23,6 +23,7 @@ import { setInCareer } from './navbar.js';
 import { screenTitle, screenCreate } from './screens.js';
 import { t } from '../engine/i18n.js';
 import { TIER_RANK } from '../engine/badges.js';
+import { rankGlyph } from './card.js';
 
 // `tier` est stocké en français (voir endCareer() dans screens.js) -- traduit uniquement à
 // l'affichage, jamais dans le stockage (même principe que ui/card.js).
@@ -130,10 +131,10 @@ export function renderChallengeLeaderboard(challengeId) {
   const entry = getChallenge(challengeId);
   const results = (entry && entry.results) || [];
   const rows = results.length ? results.map((r, i) => `
-    <div class="hof-row${i === 0 ? ' top' : ''}">
-      <span class="rk">${i + 1}</span>
+    <div class="hof-row${i === 0 ? ' top' : i < 3 ? ' podium' : ''}${r.mine ? ' mine' : ''}">
+      ${rankGlyph(i)}
       <span class="hof-main">
-        <span class="hof-name">${r.name}${r.hof ? ' 🏛️' : ''}</span>
+        <span class="hof-name">${r.name}${r.hof ? ' 🏛️' : ''}${r.mine ? ' <small style="color:var(--mint)">(toi)</small>' : ''}</span>
         <span class="hof-sub">${tierLabel(r.tier)} · ${r.seasons} ${t('hof.seasons')}</span>
       </span>
       <span class="hof-score"><b>${r.score}</b><small>score</small></span>

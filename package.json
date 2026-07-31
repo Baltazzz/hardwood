@@ -13,6 +13,7 @@
     "audit:i18n": "node tests/audit_i18n.mjs",
     "audit:link": "node tests/audit_challenge_link.mjs",
     "audit:coherence": "node tests/audit_coherence.mjs",
+    "audit:challenge": "node tests/audit_challenge_flow.mjs",
     "gen:data": "node scripts/gen-club-data.mjs",
     "ship": "node scripts/ship.mjs"
   },

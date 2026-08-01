@@ -260,14 +260,19 @@ export function renderCareerCard(r, back){
   }
   // Bouton "Partager" = le geste principal désormais (voir AGENDA.md) : ouvre la feuille de
   // partage native de l'appareil avec l'IMAGE de la carte quand c'est possible (Web Share Level
-  // 2), texte seul sinon -- jamais de copie de lien pour une image (ça n'a pas de sens ici) :
-  // le repli propre sur un navigateur sans partage natif est le téléchargement déjà en place.
+  // 2), texte seul sinon -- jamais de copie de lien SÉPARÉ pour une image (ça n'a pas de sens
+  // ici, voir shareOrFallback() dans ui/share.js qui ignore `url` dès que des fichiers sont
+  // partagés) : le repli propre sur un navigateur sans partage natif est le téléchargement déjà
+  // en place. Le lien voyage donc DANS le texte lui-même (voir AGENDA.md AGD-53 -- "chaque
+  // partage doit ramener des curieux") : c'est le seul moyen qui fonctionne identiquement sur
+  // TOUS les chemins (partage de fichier, partage texte+URL de repli, et même la copie
+  // presse-papiers de dernier recours, qui copierait sinon `text` sans aucun lien).
   document.getElementById('shareCard').onclick=async()=>{
     trackEvent('card_share');
     const file = await canvasToFile(canvas, filename);
     const result = await shareOrFallback({
       title: t('careerCard.shareTitle'),
-      text: t('careerCard.shareText',{name:r.name||t('cardCanvas.defaultName'),tier:t('tierRank.'+tierIndex(r.tier)),score:r.score||0}),
+      text: t('careerCard.shareText',{name:r.name||t('cardCanvas.defaultName'),tier:t('tierRank.'+tierIndex(r.tier)),score:r.score||0,url:window.location.origin}),
       files: file ? [file] : undefined,
     });
     if(result==='unsupported'){ downloadCard(); document.getElementById('dlHint').style.display='block'; }
@@ -456,8 +461,20 @@ export function drawCard(canvas, r, styleId){
 
   // Pied de carte -- toujours ancré au bas du cadre, jamais dépendant du curseur (indépendant du
   // contenu au-dessus, qui ne peut plus jamais l'atteindre grâce au calcul de marge ci-dessus).
-  x.fillStyle=C.dim; x.font='600 26px "Bricolage Grotesque", Arial, sans-serif';
-  spacedText(x,'🏀 HARDWOOD',CX,H-70,2);
+  // Porte à la fois le nom du jeu ET le lien (voir AGENDA.md AGD-53 -- "chaque partage doit
+  // ramener des curieux") : la carte est partagée comme IMAGE (Web Share Level 2, voir
+  // renderCareerCard() ci-dessous), jamais accompagnée d'un aperçu de lien -- si le domaine
+  // n'est écrit NULLE PART dans les pixels eux-mêmes, un curieux qui voit l'image seule (repost,
+  // capture d'écran, aperçu de conversation) n'a aucun moyen de retrouver le jeu. `window.location.host`
+  // (jamais un domaine codé en dur, qui se périmerait au moindre changement d'hébergement) --
+  // taille réduite dynamiquement comme le reste des lignes de la carte si la combinaison
+  // "HARDWOOD + domaine" dépassait la largeur sûre.
+  const domain=(typeof window!=='undefined' && window.location && window.location.host) ? window.location.host : '';
+  const footerText = domain ? `🏀 HARDWOOD  ·  ${domain}` : '🏀 HARDWOOD';
+  x.fillStyle=C.dim; let footSize=26;
+  x.font=`600 ${footSize}px "Bricolage Grotesque", Arial, sans-serif`;
+  while(footSize>15 && x.measureText(footerText).width>safeW){ footSize-=1; x.font=`600 ${footSize}px "Bricolage Grotesque", Arial, sans-serif`; }
+  x.fillText(footerText, CX, H-70);
 }
 // Étoile dessinée (pas le glyphe unicode ★, absent de Bricolage Grotesque et sujet à un
 // repli de police imprévisible sur canvas selon le navigateur).

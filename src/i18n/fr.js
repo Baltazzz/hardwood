@@ -205,7 +205,7 @@ export const FR = {
   careerCard: {
     eyebrow: '🖼️ Ta carte de carrière', subtitle: 'Partage-la directement avec tes potes.',
     share: '📤 Partager', download: '⬇️ Télécharger l\'image', shareUnavailable: 'Le partage direct n\'est pas disponible ici -- l\'image a été téléchargée à la place.',
-    shareTitle: 'Ma carte HARDWOOD', shareText: '{name} · {tier} · score légende {score}',
+    shareTitle: 'Ma carte HARDWOOD', shareText: '{name} · {tier} · score légende {score}\n🏀 Joue à HARDWOOD : {url}',
   },
   cosmetics: {
     terre_battue: { name: 'Terre battue', desc: 'La palette d\'origine du jeu. Un classique ne se démode pas.' },
@@ -261,6 +261,7 @@ export const FR = {
     buy: 'Acheter · 💰 {price}', equip: 'Équiper', equipped: 'Équipé',
     collectionIntro: 'Bientôt : des visuels à collectionner (cartes, maillots) au fil de tes carrières. Les emplacements sont prêts, le contenu arrive.',
     collectionCardsSection: 'Cartes à collectionner', collectionJerseysSection: 'Maillots à collectionner', comingSoon: 'Bientôt disponible',
+    tier: { common: 'Commun', rare: 'Rare', prestige: 'Prestige' },
   },
   badges: {
     loyal_one_club: { name: 'Fidélité totale', desc: 'Terminer une carrière de 6 saisons ou plus dans un seul et même club.' },

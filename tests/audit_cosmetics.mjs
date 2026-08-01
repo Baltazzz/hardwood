@@ -96,7 +96,7 @@ async function main() {
   // ---- 3 + 4. Achat / possession / équipement, avec vérif directe du localStorage ----
   cosmetics.cosmeticsReset();
   wallet.walletReset();
-  const themeItem = cosmetics.catalogByFamily('theme').find(c => c.tier === 'cheap');
+  const themeItem = cosmetics.catalogByFamily('theme').find(c => c.tier === 'common');
   let r = cosmetics.purchase(themeItem.id);
   check(`achat refusé sans solde suffisant (${themeItem.id}, prix ${themeItem.price} k€, solde 0)`, r.ok === false && r.reason === 'insufficient');
   check('rien débité/possédé après un achat refusé', wallet.walletBalance() === 0 && !cosmetics.isOwned(themeItem.id));
@@ -113,7 +113,7 @@ async function main() {
   check('rachat refusé ne débite pas une seconde fois', wallet.walletBalance() === balAfterBuy);
 
   check('equip() refuse une mauvaise famille (theme id équipé sur "card")', cosmetics.equip('card', themeItem.id) === false);
-  const otherTheme = cosmetics.catalogByFamily('theme').find(c => c.tier === 'cheap' && c.id !== themeItem.id);
+  const otherTheme = cosmetics.catalogByFamily('theme').find(c => c.tier === 'common' && c.id !== themeItem.id);
   check('equip() refuse un item non possédé', cosmetics.equip('theme', otherTheme.id) === false);
   check('equip() accepte un item possédé', cosmetics.equip('theme', themeItem.id) === true);
   check('equippedId reflète le nouvel équipement', cosmetics.equippedId('theme') === themeItem.id);

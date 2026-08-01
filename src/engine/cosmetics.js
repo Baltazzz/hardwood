@@ -124,62 +124,73 @@ export function themePreviewColors(id) {
 /* ------------------------------------------------------------
    Catalogue -- chaque item : id stable, family, name/desc affichés, price EN K€ (voir AGENDA.md
    AGD-47 -- la cagnotte est directement la trésorerie de carrière cumulée, plus jetons abstraits),
-   tier ('cheap'|'prestige', purement indicatif pour le regroupement d'affichage).
+   tier ('common'|'rare'|'prestige', voir AGENDA.md AGD-53 -- trois paliers de rareté clairement
+   séparés, pas seulement indicatifs pour l'affichage : chaque saut de palier est un vrai saut de
+   prix, pas une variation cosmétique du même ordre de grandeur).
 
-   Calibrage (voir engine/wallet.js) : distribution RÉELLE de trésorerie de fin de carrière
-   mesurée sur 300 carrières pilotées (médiane ~13 900 k€, p90 ~54 300 k€, max observé sur
-   l'échantillon ~89 200 k€, sur UNE SEULE carrière). La cagnotte cumule cette trésorerie À TRAVERS
-   toutes les carrières (jamais remise à zéro) : les prix "cheap" (1 500-8 000 k€) restent
-   accessibles dès une carrière correcte à moyenne, les prix "prestige" (150 000-260 000 k€)
-   réclament plusieurs grosses carrières cumulées, jamais une seule -- même la meilleure carrière
-   observée sur l'échantillon (89 200 k€) n'y suffit pas seule.
+   Calibrage (voir engine/wallet.js earnFromCareer) : distribution RÉELLE du gain par carrière
+   RE-mesurée sur 300 carrières pilotées sur l'état ACTUEL du jeu (AGD-53, après les lots
+   cohérence/confort et rétention qui ont fait monter les gains depuis le calibrage d'AGD-47) :
+   p25 ~9 100 k€, médiane ~20 600 k€, p75 ~41 800 k€, p90 ~64 600 k€, p95 ~81 100 k€, max observé
+   ~112 400 k€ sur UNE SEULE carrière. Trois paliers nettement séparés (chacun plusieurs fois le
+   précédent, jamais un simple +50%) :
+   - "common" (10 000-12 000 k€) : le plancher est délibérément relevé (AGD-53 -- l'ancien plancher
+     à 1 500 k€ cassait la valeur perçue des récompenses) mais reste sous la médiane observée
+     (~20 600 k€) -- une carrière correcte, pas nécessairement exceptionnelle, suffit à se payer au
+     moins un item.
+   - "rare" (32 000-40 000 k€) : au-dessus de p75 (~41 800 k€) pour les items les plus chers de ce
+     palier -- réclame une très bonne carrière isolée, ou deux carrières correctes cumulées, jamais
+     un simple à-côté d'une carrière moyenne.
+   - "prestige" (230 000-320 000 k€) : AU-DESSUS du maximum observé sur l'échantillon (112 400 k€)
+     -- aucune carrière, même exceptionnelle, n'y suffit seule ; réclame une accumulation réelle sur
+     plusieurs grosses carrières, conformément à "mieux vaut trop dur que trop facile".
 ------------------------------------------------------------ */
 export const COSMETICS = [
   // ---- Thèmes de couleur d'interface ----
   { id: 'terre_battue', family: 'theme', name: 'Terre battue', desc: 'La palette d\'origine du jeu. Un classique ne se démode pas.', price: 0, tier: 'default' },
-  { id: 'ocean', family: 'theme', name: 'Bleu Océan', desc: 'Le genre de bleu qui inspire confiance en interview, même après une défaite de 40 points.', price: 4000, tier: 'cheap' },
-  { id: 'forest', family: 'theme', name: 'Vert Forêt', desc: 'Discret, efficace, jamais le sujet de la conversation -- comme ce pivot qui fait juste son travail.', price: 4000, tier: 'cheap' },
-  { id: 'royal', family: 'theme', name: 'Violet Royal', desc: 'Pour te sentir en contrat max, même en G League.', price: 4000, tier: 'cheap' },
-  { id: 'brick', family: 'theme', name: 'Rouge Brique', desc: 'Sérieux, presque menaçant. Le coach adverse s\'inquiète avant même le tip-off.', price: 4000, tier: 'cheap' },
-  { id: 'slate', family: 'theme', name: 'Gris Ardoise', desc: 'Sobre et neutre, comme ce coéquipier qui ne parle jamais mais fait toujours le bon appel défensif.', price: 4000, tier: 'cheap' },
-  { id: 'amber', family: 'theme', name: 'Ambre', desc: 'Moins m\'as-tu-vu que l\'or classique, tout aussi doré sur les bords.', price: 4000, tier: 'cheap' },
-  { id: 'boston', family: 'theme', name: 'Vert Celtique', desc: 'Vert et or, l\'ADN d\'une grande franchise historique de Boston. Dix-sept banderoles ne rentrent pas dans cette description, mais l\'esprit y est.', price: 7000, tier: 'cheap' },
-  { id: 'lakers', family: 'theme', name: 'Pourpre & Or', desc: 'Violet et or, showtime garanti même si tu joues en G League.', price: 7000, tier: 'cheap' },
-  { id: 'warriors', family: 'theme', name: 'Baie Dorée', desc: 'Bleu et or de la Baie. Prévois de shooter à 3 points depuis le parking.', price: 7000, tier: 'cheap' },
-  { id: 'heat', family: 'theme', name: 'Chaleur Tropicale', desc: 'Grenat et orange. Culture, intensité, et une irrépressible envie de jouer un match blanc en playoffs.', price: 7000, tier: 'cheap' },
-  { id: 'bulls', family: 'theme', name: 'Rouge Taureau', desc: 'Rouge et noir. Six bagues d\'écart avec le reste du monde, ambiance comprise.', price: 7000, tier: 'cheap' },
-  { id: 'knicks', family: 'theme', name: 'Bleu & Orange', desc: 'Le Madison Square Garden hurle dans ton interface, gratuitement.', price: 7000, tier: 'cheap' },
-  { id: 'nets', family: 'theme', name: 'Noir & Blanc', desc: 'Minimaliste jusqu\'à l\'os, pour ceux qui trouvent que le reste du jeu a déjà trop de couleurs.', price: 7000, tier: 'cheap' },
-  { id: 'spurs', family: 'theme', name: 'Argent Sobre', desc: 'Système, discipline, zéro esbroufe -- Pop approuverait.', price: 7000, tier: 'cheap' },
-  { id: 'sixers', family: 'theme', name: 'Étoile de Philadelphie', desc: '"Trust the process", même pour choisir un thème d\'interface.', price: 7000, tier: 'cheap' },
-  { id: 'raptors', family: 'theme', name: 'Griffe du Nord', desc: 'Le seul thème du jeu avec un passeport.', price: 7000, tier: 'cheap' },
-  { id: 'champion_gold', family: 'theme', name: 'Or Champion', desc: 'Or vieilli, noir profond. Réservé à ceux qui ont vraiment gagné quelque chose -- littéralement, regarde le prix.', price: 220000, tier: 'prestige' },
+  { id: 'ocean', family: 'theme', name: 'Bleu Océan', desc: 'Le genre de bleu qui inspire confiance en interview, même après une défaite de 40 points.', price: 12000, tier: 'common' },
+  { id: 'forest', family: 'theme', name: 'Vert Forêt', desc: 'Discret, efficace, jamais le sujet de la conversation -- comme ce pivot qui fait juste son travail.', price: 12000, tier: 'common' },
+  { id: 'royal', family: 'theme', name: 'Violet Royal', desc: 'Pour te sentir en contrat max, même en G League.', price: 12000, tier: 'common' },
+  { id: 'brick', family: 'theme', name: 'Rouge Brique', desc: 'Sérieux, presque menaçant. Le coach adverse s\'inquiète avant même le tip-off.', price: 12000, tier: 'common' },
+  { id: 'slate', family: 'theme', name: 'Gris Ardoise', desc: 'Sobre et neutre, comme ce coéquipier qui ne parle jamais mais fait toujours le bon appel défensif.', price: 12000, tier: 'common' },
+  { id: 'amber', family: 'theme', name: 'Ambre', desc: 'Moins m\'as-tu-vu que l\'or classique, tout aussi doré sur les bords.', price: 12000, tier: 'common' },
+  { id: 'boston', family: 'theme', name: 'Vert Celtique', desc: 'Vert et or, l\'ADN d\'une grande franchise historique de Boston. Dix-sept banderoles ne rentrent pas dans cette description, mais l\'esprit y est.', price: 40000, tier: 'rare' },
+  { id: 'lakers', family: 'theme', name: 'Pourpre & Or', desc: 'Violet et or, showtime garanti même si tu joues en G League.', price: 40000, tier: 'rare' },
+  { id: 'warriors', family: 'theme', name: 'Baie Dorée', desc: 'Bleu et or de la Baie. Prévois de shooter à 3 points depuis le parking.', price: 40000, tier: 'rare' },
+  { id: 'heat', family: 'theme', name: 'Chaleur Tropicale', desc: 'Grenat et orange. Culture, intensité, et une irrépressible envie de jouer un match blanc en playoffs.', price: 40000, tier: 'rare' },
+  { id: 'bulls', family: 'theme', name: 'Rouge Taureau', desc: 'Rouge et noir. Six bagues d\'écart avec le reste du monde, ambiance comprise.', price: 40000, tier: 'rare' },
+  { id: 'knicks', family: 'theme', name: 'Bleu & Orange', desc: 'Le Madison Square Garden hurle dans ton interface, gratuitement.', price: 40000, tier: 'rare' },
+  { id: 'nets', family: 'theme', name: 'Noir & Blanc', desc: 'Minimaliste jusqu\'à l\'os, pour ceux qui trouvent que le reste du jeu a déjà trop de couleurs.', price: 40000, tier: 'rare' },
+  { id: 'spurs', family: 'theme', name: 'Argent Sobre', desc: 'Système, discipline, zéro esbroufe -- Pop approuverait.', price: 40000, tier: 'rare' },
+  { id: 'sixers', family: 'theme', name: 'Étoile de Philadelphie', desc: '"Trust the process", même pour choisir un thème d\'interface.', price: 40000, tier: 'rare' },
+  { id: 'raptors', family: 'theme', name: 'Griffe du Nord', desc: 'Le seul thème du jeu avec un passeport.', price: 40000, tier: 'rare' },
+  { id: 'champion_gold', family: 'theme', name: 'Or Champion', desc: 'Or vieilli, noir profond. Réservé à ceux qui ont vraiment gagné quelque chose -- littéralement, regarde le prix.', price: 280000, tier: 'prestige' },
 
   // ---- Styles de carte de fin de carrière ----
   { id: 'classic', family: 'card', name: 'Classique', desc: 'La carte telle qu\'elle a toujours été.', price: 0, tier: 'default' },
-  { id: 'noir', family: 'card', name: 'Carte Nuit', desc: 'Fond noir, contraste inversé. Pour une carrière qu\'on prend très, très au sérieux.', price: 6000, tier: 'cheap' },
-  { id: 'parquet', family: 'card', name: 'Fond Parquet', desc: 'Le parquet en fond, la maison. Rien de plus logique pour finir là où tout a commencé.', price: 5000, tier: 'cheap' },
-  { id: 'vintage', family: 'card', name: 'Bandeau Vintage', desc: 'Cadre double liseré, esprit une du journal du lendemain matin. Ta carrière, imprimée comme en 1998.', price: 5000, tier: 'cheap' },
-  { id: 'gold_frame', family: 'card', name: 'Cadre Or', desc: 'Un cadre or bien épais, cérémonie des retraités incluse.', price: 5000, tier: 'cheap' },
-  { id: 'legend_foil', family: 'card', name: 'Édition Légende', desc: 'Bandeau or, ornements d\'angle, le tout. La carte que tu montres à tes petits-enfants.', price: 180000, tier: 'prestige' },
+  { id: 'noir', family: 'card', name: 'Carte Nuit', desc: 'Fond noir, contraste inversé. Pour une carrière qu\'on prend très, très au sérieux.', price: 12000, tier: 'common' },
+  { id: 'parquet', family: 'card', name: 'Fond Parquet', desc: 'Le parquet en fond, la maison. Rien de plus logique pour finir là où tout a commencé.', price: 12000, tier: 'common' },
+  { id: 'vintage', family: 'card', name: 'Bandeau Vintage', desc: 'Cadre double liseré, esprit une du journal du lendemain matin. Ta carrière, imprimée comme en 1998.', price: 38000, tier: 'rare' },
+  { id: 'gold_frame', family: 'card', name: 'Cadre Or', desc: 'Un cadre or bien épais, cérémonie des retraités incluse.', price: 38000, tier: 'rare' },
+  { id: 'legend_foil', family: 'card', name: 'Édition Légende', desc: 'Bandeau or, ornements d\'angle, le tout. La carte que tu montres à tes petits-enfants.', price: 230000, tier: 'prestige' },
 
   // ---- Titres honorifiques (profil, "Ma progression") ----
-  { id: 'title_hope', family: 'title', name: 'Espoir du parquet', desc: 'Un titre pour bien commencer. Techniquement, tu n\'as encore rien prouvé.', price: 1500, tier: 'cheap' },
-  { id: 'title_vet', family: 'title', name: 'Vétéran respecté', desc: 'T\'as vu des choses. Beaucoup de choses. La plupart en G League, mais quand même.', price: 2000, tier: 'cheap' },
-  { id: 'title_strategist', family: 'title', name: 'Stratège du jeu', desc: 'Tu lis le jeu avant qu\'il ne se joue. Ou alors tu as juste de la chance -- personne ne le saura jamais.', price: 2000, tier: 'cheap' },
-  { id: 'title_wall', family: 'title', name: 'Mur défensif', desc: 'Rien ne passe. Enfin, presque rien. Disons "presque".', price: 2000, tier: 'cheap' },
-  { id: 'title_showman', family: 'title', name: 'Showman', desc: 'Le jeu, c\'est bien. Le spectacle, c\'est mieux. Le collectif, on verra plus tard.', price: 2500, tier: 'cheap' },
-  { id: 'title_clutch', family: 'title', name: 'Clutch Player', desc: 'Tu veux le ballon dans les 5 dernières secondes. Les stats de réussite restent entre nous.', price: 2500, tier: 'cheap' },
-  { id: 'title_local_legend', family: 'title', name: 'Légende locale', desc: 'Une légende dans ta ville. Ailleurs, on te demande encore d\'épeler ton nom.', price: 3000, tier: 'cheap' },
-  { id: 'title_icon', family: 'title', name: 'Icône populaire', desc: 'Même ceux qui détestent le basket connaissent ton nom. Allez savoir pourquoi.', price: 3000, tier: 'cheap' },
+  { id: 'title_hope', family: 'title', name: 'Espoir du parquet', desc: 'Un titre pour bien commencer. Techniquement, tu n\'as encore rien prouvé.', price: 10000, tier: 'common' },
+  { id: 'title_vet', family: 'title', name: 'Vétéran respecté', desc: 'T\'as vu des choses. Beaucoup de choses. La plupart en G League, mais quand même.', price: 10000, tier: 'common' },
+  { id: 'title_strategist', family: 'title', name: 'Stratège du jeu', desc: 'Tu lis le jeu avant qu\'il ne se joue. Ou alors tu as juste de la chance -- personne ne le saura jamais.', price: 10000, tier: 'common' },
+  { id: 'title_wall', family: 'title', name: 'Mur défensif', desc: 'Rien ne passe. Enfin, presque rien. Disons "presque".', price: 10000, tier: 'common' },
+  { id: 'title_showman', family: 'title', name: 'Showman', desc: 'Le jeu, c\'est bien. Le spectacle, c\'est mieux. Le collectif, on verra plus tard.', price: 32000, tier: 'rare' },
+  { id: 'title_clutch', family: 'title', name: 'Clutch Player', desc: 'Tu veux le ballon dans les 5 dernières secondes. Les stats de réussite restent entre nous.', price: 32000, tier: 'rare' },
+  { id: 'title_local_legend', family: 'title', name: 'Légende locale', desc: 'Une légende dans ta ville. Ailleurs, on te demande encore d\'épeler ton nom.', price: 32000, tier: 'rare' },
+  { id: 'title_icon', family: 'title', name: 'Icône populaire', desc: 'Même ceux qui détestent le basket connaissent ton nom. Allez savoir pourquoi.', price: 32000, tier: 'rare' },
 
   // ---- Cadres de profil ("Ma progression") ----
-  { id: 'frame_wood', family: 'frame', name: 'Cadre Bois', desc: 'Sobre, en bois véritable -- enfin, en pixels qui imitent le bois.', price: 2500, tier: 'cheap' },
-  { id: 'frame_bronze', family: 'frame', name: 'Cadre Bronze', desc: 'La médaille qu\'on accepte avec le sourire, la troisième fois.', price: 3000, tier: 'cheap' },
-  { id: 'frame_silver', family: 'frame', name: 'Cadre Argent', desc: 'Toujours deuxième, jamais oublié.', price: 4500, tier: 'cheap' },
-  { id: 'frame_emerald', family: 'frame', name: 'Cadre Émeraude', desc: 'Personne ne sait pourquoi c\'est cher. Mais ça a l\'air cher.', price: 4500, tier: 'cheap' },
-  { id: 'frame_amethyst', family: 'frame', name: 'Cadre Améthyste', desc: 'Un cadre qui en jette, sans jamais rien expliquer sur ton jeu réel.', price: 5000, tier: 'cheap' },
-  { id: 'frame_legends', family: 'frame', name: 'Cadre des Légendes', desc: 'Or, émeraude, ornements d\'angle. Ce cadre coûte plus cher que ton premier contrat pro.', price: 260000, tier: 'prestige' },
+  { id: 'frame_wood', family: 'frame', name: 'Cadre Bois', desc: 'Sobre, en bois véritable -- enfin, en pixels qui imitent le bois.', price: 12000, tier: 'common' },
+  { id: 'frame_bronze', family: 'frame', name: 'Cadre Bronze', desc: 'La médaille qu\'on accepte avec le sourire, la troisième fois.', price: 12000, tier: 'common' },
+  { id: 'frame_silver', family: 'frame', name: 'Cadre Argent', desc: 'Toujours deuxième, jamais oublié.', price: 36000, tier: 'rare' },
+  { id: 'frame_emerald', family: 'frame', name: 'Cadre Émeraude', desc: 'Personne ne sait pourquoi c\'est cher. Mais ça a l\'air cher.', price: 36000, tier: 'rare' },
+  { id: 'frame_amethyst', family: 'frame', name: 'Cadre Améthyste', desc: 'Un cadre qui en jette, sans jamais rien expliquer sur ton jeu réel.', price: 36000, tier: 'rare' },
+  { id: 'frame_legends', family: 'frame', name: 'Cadre des Légendes', desc: 'Or, émeraude, ornements d\'angle. Ce cadre coûte plus cher que ton premier contrat pro.', price: 320000, tier: 'prestige' },
 
   // ---- Collection (voir AGENDA.md AGD-47 point 5) : structure/emplacements préparés pour de
   // futurs visuels à collectionner (cartes, maillots) -- pas encore d'image finale, fournie plus

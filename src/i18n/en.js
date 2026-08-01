@@ -202,7 +202,7 @@ export const EN = {
   careerCard: {
     eyebrow: '🖼️ Your career card', subtitle: 'Share it directly with your friends.',
     share: '📤 Share', download: '⬇️ Download image', shareUnavailable: 'Direct sharing isn\'t available here -- the image was downloaded instead.',
-    shareTitle: 'My HARDWOOD Card', shareText: '{name} · {tier} · legend score {score}',
+    shareTitle: 'My HARDWOOD Card', shareText: '{name} · {tier} · legend score {score}\n🏀 Play HARDWOOD: {url}',
   },
   cosmetics: {
     terre_battue: { name: 'Clay Court', desc: 'The game\'s original palette. A classic never goes out of style.' },
@@ -258,6 +258,7 @@ export const EN = {
     buy: 'Buy · 💰 {price}', equip: 'Equip', equipped: 'Equipped',
     collectionIntro: 'Coming soon: collectible visuals (cards, jerseys) tied to your careers. The slots are ready, the content is on its way.',
     collectionCardsSection: 'Collectible Cards', collectionJerseysSection: 'Collectible Jerseys', comingSoon: 'Coming soon',
+    tier: { common: 'Common', rare: 'Rare', prestige: 'Prestige' },
   },
   badges: {
     loyal_one_club: { name: 'Total Loyalty', desc: 'Finish a career of 6+ seasons with a single club.' },

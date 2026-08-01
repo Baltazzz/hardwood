@@ -62,11 +62,20 @@ function actionHTML(item) {
   return `<button class="shop-action buy" data-act="buy" data-id="${item.id}" ${afford ? '' : 'disabled'}>${t('shop.buy',{price:money(item.price)})}</button>`;
 }
 
+// Puce de palier de rareté (voir AGENDA.md AGD-53) : "common"/"rare"/"prestige" affichés
+// explicitement sur chaque tuile, pas seulement suggérés par le prix -- on doit SENTIR la
+// hiérarchie au premier coup d'œil, pas la déduire d'un chiffre. Jamais posée sur les defaults
+// (aucune rareté à afficher pour l'item d'origine, déjà possédé) ni sur Collection (comingSoon).
+function rarityChipHTML(item) {
+  if (item.tier !== 'common' && item.tier !== 'rare' && item.tier !== 'prestige') return '';
+  return `<span class="rarity-chip rarity-${item.tier}">${t('shop.tier.'+item.tier)}</span>`;
+}
 function tileHTML(item) {
   const owned = isOwned(item.id);
   const equipped = equippedId(item.family) === item.id;
   const desc = t('cosmetics.'+item.id+'.desc');
-  return `<div class="shop-tile ${equipped ? 'equipped' : ''} ${item.tier === 'prestige' ? 'prestige' : ''}">
+  return `<div class="shop-tile ${equipped ? 'equipped' : ''} ${item.tier === 'prestige' ? 'prestige' : ''} ${item.tier === 'rare' ? 'rare' : ''}">
+    ${rarityChipHTML(item)}
     ${swatchHTML(item)}
     <div class="st-name">${t('cosmetics.'+item.id+'.name')}</div>
     ${desc ? `<div class="st-desc">${desc}</div>` : '<div class="st-desc"></div>'}

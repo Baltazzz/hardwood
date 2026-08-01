@@ -835,6 +835,17 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
 .shop-price{font-family:'Bricolage Grotesque';font-weight:700;font-size:12px;color:var(--mint-soft);letter-spacing:.03em}
 .shop-price.cant-afford{color:var(--chalk-dim)}
 .shop-tile.prestige{background:linear-gradient(160deg, rgba(161,130,31,.12), var(--panel) 60%);border-color:var(--mint)}
+/* Palier "rare" (voir AGENDA.md AGD-53) : traitement intermédiaire délibéré -- plus affirmé que la
+   tuile par défaut, nettement moins que le lavis or du prestige, pour que l'œil perçoive 3 crans
+   distincts en parcourant la grille, pas juste 2. */
+.shop-tile.rare{border-color:var(--orange);box-shadow:0 0 0 1px rgba(224,86,45,.18), var(--tile-shadow)}
+/* Puce de rareté (voir rarityChipHTML() dans ui/shop.js) : posée en haut de chaque tuile, avant
+   même le visuel -- la hiérarchie doit se lire au premier coup d'œil, pas seulement au prix. */
+.rarity-chip{align-self:flex-start;font-family:'Bricolage Grotesque';font-weight:700;font-size:9.5px;
+  letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:999px;margin-bottom:2px}
+.rarity-chip.rarity-common{background:var(--panel2);color:var(--chalk-dim)}
+.rarity-chip.rarity-rare{background:rgba(224,86,45,.14);color:var(--orange)}
+.rarity-chip.rarity-prestige{background:rgba(161,130,31,.18);color:var(--mint-soft)}
 .shop-action{font-family:'Bricolage Grotesque';font-weight:700;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;
   border:none;border-radius:999px;padding:7px 16px;cursor:pointer;transition:.16s;width:100%}
 .shop-action.buy{background:var(--orange-deep);color:var(--on-accent)}

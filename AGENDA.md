@@ -9,6 +9,30 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Ouvert
 
+- [ ] **AGD-54 — Écran de bienvenue : risque de friction pour un nouveau joueur**
+  Ajouté au registre le 2026-08-01, constat du point 2 d'AGD-53 (diagnostic demandé explicitement,
+  "vérifie... signale-moi", aucune réécriture de contenu faite unilatéralement -- c'est une
+  décision éditoriale qui revient à l'utilisateur). Confirmé fonctionnellement solide (parcours
+  complet piloté sans erreur, voir `tests/audit_polish.mjs`) et confirmé que l'écran de bienvenue
+  EST bien le tout premier écran vu (jamais un écran distinct qui le précède) -- mais deux
+  observations concrètes sur le ressenti "quelques secondes, envie immédiate" demandé :
+  1. Contenu dense : ~390 mots répartis sur 4 sections (fiche/jauges, choix, trajectoire, guide
+     d'installation) avant le bouton principal en bas de page -- plus proche d'un mini-tutoriel que
+     d'un accroche de quelques secondes, même si un bouton "Passer →" existe dès le début.
+  2. Le bouton "Passer" est délibérément discret (12.5px, `--chalk-dim`, sans fond ni bordure,
+     voir `.welcome-skip` dans `styles.css`) -- lisible par convention (coin haut-droit) mais pas
+     visuellement mis en avant, ce qui peut donner l'impression que lire les 4 sections est
+     attendu plutôt qu'optionnel.
+  Non vérifié faute d'outil de rendu réel dans cet environnement (Playwright/Chromium
+  indisponibles) : chevauchement possible entre le bandeau cookies (position fixe, bas d'écran) et
+  le bouton "Compris, on commence" tout en bas de l'écran de bienvenue sur un petit mobile --
+  `.wrap` réserve déjà 60px de marge basse + `.welcome-screen` 50px de plus (110px cumulés), qui
+  semblent suffisants sur le papier mais n'ont pas été mesurés contre la hauteur réelle du bandeau
+  (texte + boutons, potentiellement 2 lignes sur un écran étroit).
+  **Critère** : à définir avec l'utilisateur -- réduire/restructurer le contenu, rendre "Passer"
+  plus visible, et/ou vérification en navigateur réel du chevauchement bandeau cookies/CTA sur
+  petit mobile.
+
 - [ ] **AGD-49 — Réactiver l'onglet Collection une fois les vrais visuels fournis**
   Ajouté au registre le 2026-07-31, suite directe d'AGD-48 (masquage). L'utilisateur fournira les
   visuels (cartes/maillots à collectionner) plus tard. Quand ce sera fait : remplacer les
@@ -66,6 +90,78 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
   les écrans vus souvent, un peu plus affirmé sur ceux vus rarement).
 
 ## Coché récemment
+
+- [x] **AGD-53 — Lot de finitions avant diffusion (prix boutique, première impression, carte de partage)** _(implémenté et vérifié le 2026-08-01)_
+  Trois points.
+  1. *Rééquilibrage des prix de la boutique*. Ancien système à 2 paliers flous ("cheap" 1 500-
+     8 000 k€, "prestige" 150 000-260 000 k€ presque sans hiérarchie interne -- ex. les 6 thèmes
+     originaux et les 10 thèmes de franchises NBA n'étaient séparés que de 4 000 vs 7 000 k€,
+     quasiment le même prix). Recalibré sur une distribution RÉELLE de gain par carrière
+     RE-mesurée sur l'état actuel du jeu (300 carrières pilotées, `earnFromCareer` = trésorerie +
+     primes de titres -- a monté depuis le calibrage d'AGD-47, suite aux lots cohérence/confort et
+     rétention) : médiane ~20 600 k€, p75 ~41 800 k€, max observé sur une seule carrière
+     ~112 400 k€. Trois paliers nommés et nettement séparés (`tier:'common'|'rare'|'prestige'`,
+     `engine/cosmetics.js`) : commun 10 000-12 000 k€ (plancher relevé x6.7 par rapport à l'ancien
+     1 500 k€, comme demandé -- reste sous la médiane, "une carrière correcte" y suffit), rare
+     32 000-40 000 k€ (au-dessus de p75, réclame une très bonne carrière isolée ou deux carrières
+     cumulées), prestige 230 000-320 000 k€ (AU-DESSUS du maximum observé sur une seule carrière --
+     aucune carrière, même exceptionnelle, n'y suffit seule). Chaque item des 4 familles (thèmes/
+     cartes/titres/cadres) reclassé selon son degré d'élaboration relative (ex. thèmes de
+     franchises NBA vs palettes originales, cadres à pierres précieuses vs cadres bois/bronze).
+     Puce de rareté explicite ajoutée sur chaque tuile de la boutique (`rarityChipHTML()`,
+     `ui/shop.js`) + traitement visuel dédié au palier "rare" (`.shop-tile.rare`, bordure
+     terracotta) en plus du traitement "prestige" déjà existant (lavis or) -- la hiérarchie se
+     voit au premier coup d'œil, pas seulement au prix affiché.
+  2. *Première impression*. Diagnostic demandé explicitement ("vérifie... signale-moi"), traité
+     comme tel -- aucune réécriture de contenu unilatérale. Confirmé : l'écran de bienvenue EST le
+     tout premier écran vu par un nouveau joueur (`screenTitle()` redirige immédiatement vers
+     `screenWelcome()` tant qu'aucun choix n'est mémorisé, jamais un écran distinct avant) ;
+     parcours complet piloté (bienvenue -> "Passer" OU "Compris, on commence" -> écran titre ->
+     geste principal -> création de personnage) sans la moindre erreur JS. Deux frictions
+     potentielles identifiées et documentées dans un nouveau ticket dédié (voir AGD-54, section
+     Ouvert) plutôt que corrigées sans validation : contenu dense (~390 mots) avant le bouton
+     principal, bouton "Passer" visuellement discret. Décision éditoriale laissée à l'utilisateur.
+  3. *Carte de fin de carrière*. Manque réel trouvé : AUCUN lien vers le jeu nulle part -- ni dans
+     les pixels de la carte (canvas), ni dans le texte de partage. Le nom "HARDWOOD" était déjà
+     bien présent (titre en haut + pied de carte), mais un curieux qui tombe sur l'image seule
+     (repost, capture d'écran, aperçu de conversation sans le texte d'origine) n'avait aucun moyen
+     de retrouver le jeu -- exactement le scénario que "chaque partage doit ramener des curieux"
+     cherche à éviter. Corrigé à la source, pas seulement en apparence :
+     - Pied de carte (`drawCard()`, `ui/card.js`) : porte désormais `🏀 HARDWOOD · {domaine}`
+       (`window.location.host`, jamais un domaine codé en dur qui se périmerait au moindre
+       changement d'hébergement), avec la même réduction dynamique de police que le reste de la
+       carte si la combinaison dépassait la largeur sûre -- remplace l'ancien texte fixe
+       "🏀 HARDWOOD" sans lien.
+     - Texte de partage (`careerCard.shareText`, i18n fr/en) : le lien complet
+       (`window.location.origin`) est désormais intégré AU TEXTE lui-même, pas passé comme champ
+       `url` séparé -- `shareOrFallback()` (`ui/share.js`) ignore ce champ dès que des fichiers
+       sont partagés (cas normal ici, l'image de la carte), et la copie presse-papiers de dernier
+       recours perdrait le lien si celui-ci n'était que dans `url`. Un seul endroit porte le lien,
+       il survit donc à TOUS les chemins de partage identiquement.
+     Le reste de la revue ("irréprochable dans tous les cas") a confirmé le système déjà en place
+     plutôt que trouvé de nouveaux défauts : curseur Y dynamique (aucune position codée en dur),
+     troncature par largeur réelle sur le nom, réduction de police dynamique sur les lignes de
+     stats/citation, gestion des champs optionnels (HOF, totaux cumulés, sparkline) -- déjà audité
+     lors de sessions précédentes (AGD-32/35), re-testé ici sur des cas volontairement extrêmes
+     plutôt que simplement relu.
+  **Vérifié directement** (`tests/audit_polish.mjs`, nouveau, `npm run audit:polish`, 33
+  vérifications) : les 36 items payants confirmés répartis sur 3 paliers sans chevauchement (max
+  commun 12 000 < min rare 32 000 < max rare 40 000 < min prestige 230 000), plancher de prix
+  vérifié à 10 000 k€ (>= 1 500 k€ x6.7) ; parcours de première impression piloté deux fois (via
+  "Passer" et via "Compris, on commence") sans erreur JS ; carte de fin de carrière testée avec un
+  contexte canvas instrumenté à métriques PROPORTIONNELLES (measureText réaliste, contrairement au
+  stub global à largeur fixe des autres tests -- seul moyen d'exercer réellement les boucles de
+  troncature/réduction de police) sur un cas extrême riche (nom de 60 caractères, score à 6
+  chiffres, citation de presse démesurée x2) ET un cas extrême pauvre (nom d'1 caractère, carrière
+  d'1 saison, aucune statistique cumulée/citation) : aucune exception, aucune coordonnée de texte
+  hors des bornes du canvas dans les deux cas, nom tronqué avec ellipse sur le cas riche jamais sur
+  le cas pauvre, pied de carte (nom du jeu + domaine) toujours présent et jamais recouvert par la
+  citation de presse même démesurée, domaine confirmé présent dans le texte de partage. Les 6
+  styles de carte de la boutique retestés sur le cas riche (le plus contraignant), tous
+  fonctionnels. Audit de non-régression : `npm run audit`/`audit:meta`/`audit:i18n`/
+  `audit:coherence`/`audit:cosmetics`/`audit:link`/`audit:challenge`/`audit:retention` tous verts ;
+  `scripts/deep-audit.mjs` 300 carrières -- 0% crash, 0 violation d'intégrité `once`, taux de titre
+  élite 9% (bande normale 7,7-21,7%).
 
 - [x] **AGD-52 — Lot rétention (rareté, prochain objectif, suggestion de défi, refonte des badges, identité du défi du jour)** _(implémenté et vérifié le 2026-08-01)_
   Cinq points, tous vérifiés par exécution réelle (pas seulement lecture de code).

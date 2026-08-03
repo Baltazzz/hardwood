@@ -107,7 +107,7 @@ export const EN = {
     bestScoreChip: '🏆 Best legend score: {score}',
     modesLabel: 'Game modes', friendChallengeTitle: 'Friend Challenge', friendChallengeDesc: 'Same starting profile, compare your careers',
     dailyChallengeTitle: 'Daily Challenge', dailyChallengeDesc: 'A set profile, your personal leaderboard',
-    trackingLabel: 'Tracking &amp; records', hofBtn: '🏆 Hall of Fame', badgesBtn: '🎖️ Achievements', progressBtn: '📊 My Progress', shopBtn: '🛍️ Shop',
+    trackingLabel: 'Tracking &amp; records', hofBtn: '🏆 Hall of Fame', badgesBtn: '🎖️ Achievements', progressBtn: '📊 My Progress', myChallengesBtn: '🔗 My Challenges', shopBtn: '🛍️ Shop',
     kbd: 'Write your legend, season after season · ', howToPlay: 'how to play?',
     credit: 'Created by Gaspard G · ', manageCookies: 'Manage cookies',
   },

@@ -76,22 +76,54 @@ function save() { try { localStorage.setItem(KEY, JSON.stringify(mem)); } catch 
 // lien, ou ouvrir le lien après l'avoir déjà créé sur cet appareil, ne l'écrase jamais.
 export function ensureChallenge(def) {
   const all = load();
-  if (!all[def.id]) { all[def.id] = { def, results: [] }; save(); }
+  if (!all[def.id]) { all[def.id] = { def, results: [], updatedAt: Date.now() }; save(); }
   return all[def.id];
 }
 export function getChallenge(id) { return load()[id] || null; }
 
-// Ajoute un résultat (le sien, ou celui d'un ami reçu par lien de résultat) -- dédoublonné sur
-// nom+score+date (un même lien de résultat ouvert deux fois ne crée pas deux lignes). Fonctionne
-// même si le défi n'était pas encore connu localement (lien de résultat reçu avant le lien de
-// défi original) : crée une entrée avec def:null, le classement reste consultable, seule
-// l'invitation à "rejouer ce défi" restera indisponible tant que def n'est pas connu.
+// Tous les défis connus sur cet appareil (créés, rejoints, ou simplement reçus par un lien de
+// résultat), triés du plus récemment actif au plus ancien -- voir AGENDA.md "correction
+// prioritaire" : le classement d'un défi doit rester consultable en permanence via cette liste,
+// pas seulement juste après avoir fini sa propre carrière.
+export function listChallenges() {
+  const all = load();
+  return Object.keys(all).map(id => ({ id, ...all[id] })).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+}
+
+// Ajoute un résultat REÇU d'un ami (lien de résultat) -- dédoublonné sur nom+score+date (un même
+// lien de résultat ouvert deux fois ne crée pas deux lignes). Fonctionne même si le défi n'était
+// pas encore connu localement (lien de résultat reçu avant le lien de défi original) : crée une
+// entrée avec def:null, le classement reste consultable, seule l'invitation à "rejouer ce défi"
+// restera indisponible tant que def n'est pas connu. Pour SON PROPRE résultat, voir
+// recordMyChallengeResult() ci-dessous -- une règle différente s'applique (un seul appareil ne
+// peut avoir qu'UN seul "soi", jamais plusieurs lignes qui s'accumulent à chaque tentative).
 export function addResult(challengeId, result) {
   const all = load();
   if (!all[challengeId]) all[challengeId] = { def: null, results: [] };
   const dup = all[challengeId].results.some(r => r.name === result.name && r.score === result.score && r.date === result.date);
   if (!dup) all[challengeId].results.push(result);
   all[challengeId].results.sort((a, b) => b.score - a.score);
+  all[challengeId].updatedAt = Date.now();
+  save();
+  return all[challengeId];
+}
+
+// Résultat du joueur LOCAL sur ce défi (voir AGENDA.md "correction prioritaire", point 2 --
+// "rejouer le même défi pour retenter un meilleur score") : contrairement à addResult() ci-dessus
+// (résultats reçus d'amis, potentiellement plusieurs personnes), un même appareil ne représente
+// jamais qu'UNE seule personne -- une nouvelle tentative REMPLACE l'ancienne au lieu de s'empiler
+// à côté, et seulement si elle est meilleure (même principe que recordDailyResult() dans
+// engine/dailyChallenge.js). Le classement reste donc toujours "ton MEILLEUR score", jamais une
+// liste de tes propres essais qui noierait les scores des autres participants.
+export function recordMyChallengeResult(challengeId, result) {
+  const all = load();
+  if (!all[challengeId]) all[challengeId] = { def: null, results: [] };
+  const results = all[challengeId].results;
+  const existingIdx = results.findIndex(r => r.mine);
+  if (existingIdx === -1) results.push({ ...result, mine: true });
+  else if (result.score > results[existingIdx].score) results[existingIdx] = { ...result, mine: true };
+  results.sort((a, b) => b.score - a.score);
+  all[challengeId].updatedAt = Date.now();
   save();
   return all[challengeId];
 }

@@ -91,6 +91,56 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Coché récemment
 
+- [x] **AGD-55 — Correction prioritaire : accès permanent au podium du défi entre amis** _(implémenté et vérifié le 2026-08-03)_
+  Bug confirmé : une fois l'écran de classement quitté ("Retour à l'accueil" -> `screenTitle()`),
+  il n'existait plus AUCUN moyen d'y revenir -- `renderChallengeLeaderboard()` n'était appelée que
+  depuis le bouton "Comparer avec mes amis" de l'écran de fin de carrière (disparaît dès qu'on
+  quitte cet écran) ou depuis l'ouverture d'un lien de résultat reçu. Le classement restait pourtant
+  bien intact en mémoire (`localStorage`, `hardwood_challenges_v1`) -- seul l'ACCÈS manquait, pas
+  la donnée.
+  1. *Accès permanent*. Nouvelle fonction `listChallenges()` (`engine/challenges.js`) : tous les
+     défis connus sur l'appareil (créés, rejoints, ou même seulement reçus par un lien de résultat
+     sans avoir jamais eu le lien de défi original), triés du plus récemment actif au plus ancien
+     (nouveau champ `updatedAt`, posé à la création et retouché à chaque résultat ajouté). Nouvel
+     écran "Mes défis" (`renderMyChallenges()`, `ui/challenge.js`) : une ligne par défi (profil de
+     départ + meilleur score personnel + nombre de participants), cliquable, ramène directement sur
+     le classement de CE défi précis. Entrée ajoutée au groupe "Suivi & records" de l'accueil
+     (`🔗 Mes défis`, à côté de Panthéon/Hauts faits/Ma progression), toujours visible même sans
+     aucun défi joué (état vide géré, comme le Panthéon).
+  2. *Rejouer ou nouveau défi, choix explicite*. Deux boutons nets ajoutés sur l'écran de
+     classement, mis en avant (rang au-dessus des actions secondaires partager/inviter) : "🔁
+     Rejouer ce défi" (réutilise `joinChallenge(entry.def)` -- même id de défi, même profil de
+     départ imposé, uniquement si le défi est réellement connu localement) et "🆕 Nouveau défi"
+     (réutilise `startChallengeCreation()` -- graine fraîche, nouveau profil, nouvel id, devient
+     une entrée séparée dans "Mes défis"). Même garde-fou de confirmation qu'à l'accueil pour
+     toute action qui écraserait une carrière en cours (`hasSavedGame()`/`confirm()`,
+     `home.confirmOverwriteChallenge` réutilisé tel quel).
+     Effet de bord nécessaire, découvert en concevant "rejouer" : l'ancien `addResult()` empilait
+     une nouvelle ligne "mine" à chaque tentative de la MÊME personne sur le MÊME défi -- rejouer
+     plusieurs fois aurait fini par noyer le classement sous ses propres essais. Nouvelle fonction
+     dédiée `recordMyChallengeResult()` (`engine/challenges.js`, même principe que
+     `recordDailyResult()` du défi du jour) : une seule ligne "mine" par défi, REMPLACÉE seulement
+     si la nouvelle tentative fait mieux -- "retenter un meilleur score" au sens propre, jamais un
+     historique qui s'accumule. `addResult()` reste inchangée pour les résultats REÇUS d'amis (voir
+     `handleIncomingLink()`), où plusieurs personnes différentes doivent bien coexister.
+     `screens.js` `endCareer()` mis à jour pour appeler `recordMyChallengeResult()` au lieu
+     d'`addResult()` sur le résultat du joueur local.
+  **Vérifié directement, parcours complet** (`tests/audit_challenge_revisit.mjs`, nouveau,
+  `npm run audit:challenge-revisit`, 20 vérifications) : défi terminé -> retour à l'accueil -> plus
+  aucun bouton direct vers le classement (bug reproduit tel que rapporté) -> "Mes défis" depuis
+  l'accueil -> le défi précis y apparaît avec le bon score -> clic -> classement fidèle retrouvé,
+  rien perdu ; "Rejouer ce défi" confirmé démarrer avec le MÊME id de défi et le MÊME profil imposé,
+  une 2e tentative confirmée ne PAS dupliquer la ligne "mine" (toujours 1 seule) et conserver le
+  MEILLEUR des deux scores ; "Nouveau défi" confirmé générer un lien et un id VRAIMENT différents,
+  qui devient une 2e entrée séparée et indépendante dans "Mes défis" (les deux défis restent
+  accessibles individuellement) ; 0 erreur JS sur l'ensemble du parcours. Non-régression :
+  `tests/audit_challenge_flow.mjs` (AGD-51, toujours vert -- le remplacement d'`addResult()` par
+  `recordMyChallengeResult()` ne change rien à un scénario à une seule tentative par personne) ;
+  suite complète (`audit`/`audit:meta`/`audit:i18n`/`audit:coherence`/`audit:cosmetics`/
+  `audit:link`/`audit:retention`/`audit:polish`) tous verts ; `scripts/deep-audit.mjs` 300
+  carrières -- 0% crash, 0 violation d'intégrité `once`, taux de titre élite 10% (bande normale
+  7,7-21,7%).
+
 - [x] **AGD-53 — Lot de finitions avant diffusion (prix boutique, première impression, carte de partage)** _(implémenté et vérifié le 2026-08-01)_
   Trois points.
   1. *Rééquilibrage des prix de la boutique*. Ancien système à 2 paliers flous ("cheap" 1 500-

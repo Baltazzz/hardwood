@@ -14,13 +14,14 @@ import { NATIONS } from '../data/nations.js';
 import { POSITIONS } from '../data/positions.js';
 import { STYLES } from '../data/styles.js';
 import { encodeChallengeDef, decodeChallengeDef, decodeResult, buildChallengeUrl, buildResultUrl } from '../engine/challengeCodec.js';
-import { ensureChallenge, getChallenge, addResult, generateChallengeDef } from '../engine/challenges.js';
+import { ensureChallenge, getChallenge, listChallenges, addResult, generateChallengeDef } from '../engine/challenges.js';
 import { generateDailyDef, getTodayDateStr, getDailyBest, allDailyResults, DAILY_THEMES } from '../engine/dailyChallenge.js';
 import { trackEvent } from '../engine/analytics.js';
 import { shareOrFallback } from './share.js';
 import { stage } from './dom.js';
 import { setInCareer } from './navbar.js';
 import { screenTitle, screenCreate } from './screens.js';
+import { hasSavedGame, clearSavedGame } from '../engine/savegame.js';
 import { t } from '../engine/i18n.js';
 import { TIER_RANK } from '../engine/badges.js';
 import { rankGlyph } from './card.js';
@@ -34,6 +35,16 @@ export { generateChallengeDef };
 function nationOf(def) { return NATIONS.find(n => n.id === def.nationId) || NATIONS[0]; }
 function posOf(def) { return POSITIONS.find(x => x.id === def.pos) || POSITIONS[0]; }
 function styleOf(def) { return STYLES.find(x => x.id === def.style) || STYLES[0]; }
+
+// Même garde-fou que l'écran titre (voir screenTitle() dans screens.js) pour toute action qui
+// démarre une carrière -- rejouer un défi ou en lancer un nouveau depuis le podium (voir AGENDA.md
+// "correction prioritaire", point 2) écrase la sauvegarde en cours exactement de la même façon,
+// jamais silencieusement.
+function guardOverwrite() {
+  if (hasSavedGame() && !confirm(t('home.confirmOverwriteChallenge'))) return false;
+  clearSavedGame();
+  return true;
+}
 
 function starStrInline(n) {
   let s = ''; for (let i = 1; i <= 5; i++) s += `<span style="color:${i <= n ? 'var(--mint)' : 'rgba(36,24,19,.16)'}">★</span>`;
@@ -146,10 +157,18 @@ export function renderChallengeLeaderboard(challengeId) {
     <h2 style="text-align:center;font-size:24px;margin:6px 0 14px">Qui s'en sort le mieux ?</h2>
     ${entry && entry.def ? profileSummary(entry.def) : ''}
     <div class="hof-list" style="max-width:560px;margin:18px auto 0">${rows}</div>
-    <div style="margin-top:24px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+    <!-- Deux actions nettes et distinctes (voir AGENDA.md "correction prioritaire", point 2) :
+         rejouer CE défi (même profil de départ, pour retenter un meilleur score) contre en lancer
+         un TOUT NOUVEAU -- jamais la même action, jamais ambiguës l'une avec l'autre. -->
+    <div style="margin-top:26px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      ${entry && entry.def ? `<button class="btn" id="replayChallenge">🔁 Rejouer ce défi</button>` : ''}
+      <button class="btn ${entry && entry.def ? 'ghost' : ''}" id="newChallenge">🆕 Nouveau défi</button>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
       ${myResult ? `<button class="btn ghost sm" id="shareMyResult">📤 Partager mon score</button>` : ''}
       ${entry && entry.def ? `<button class="btn ghost sm" id="inviteMore">📤 Inviter d'autres amis</button>` : ''}
-      <button class="btn" id="leaderboardBack">Retour à l'accueil</button>
+      <button class="btn ghost sm" id="myChallengesLink">📋 Mes défis</button>
+      <button class="btn ghost sm" id="leaderboardBack">Retour à l'accueil</button>
     </div>
     <p class="body" id="challengeCopyHint" style="text-align:center;color:var(--chalk-dim);font-size:12px;margin-top:10px;display:none">Lien copié !</p>
   </div>`;
@@ -159,7 +178,49 @@ export function renderChallengeLeaderboard(challengeId) {
   if (shareBtn) shareBtn.onclick = () => share({ title: 'Mon score HARDWOOD', text: `${myResult.name} · ${tierLabel(myResult.tier)} · score ${myResult.score}`, url: buildResultUrl(myResult) });
   const inviteBtn = document.getElementById('inviteMore');
   if (inviteBtn) inviteBtn.onclick = () => share({ title: 'Défi HARDWOOD', text: 'Rejoins mon défi sur HARDWOOD !', url: buildChallengeUrl(entry.def) });
+  const replayBtn = document.getElementById('replayChallenge');
+  if (replayBtn) replayBtn.onclick = () => { if (!guardOverwrite()) return; joinChallenge(entry.def); };
+  document.getElementById('newChallenge').onclick = () => { if (!guardOverwrite()) return; startChallengeCreation(); };
+  document.getElementById('myChallengesLink').onclick = () => renderMyChallenges();
   document.getElementById('leaderboardBack').onclick = () => screenTitle();
+}
+
+// ---- Accès permanent au classement d'un défi (voir AGENDA.md "correction prioritaire", point 1)
+// : avant ce correctif, une fois quitté l'écran de classement (`leaderboardBack` -> accueil), il
+// n'existait AUCUN moyen d'y revenir -- ni depuis l'accueil, ni depuis nulle part ailleurs, le
+// classement restait pourtant bien en mémoire (localStorage). Cette liste couvre tous les défis
+// connus sur cet appareil (créés, rejoints, ou même seulement reçus par un lien de résultat).
+export function renderMyChallenges() {
+  setInCareer(false);
+  const list = listChallenges();
+  const rows = list.length ? list.map(entry => {
+    const { id, def, results } = entry;
+    const myResult = results.find(r => r.mine);
+    const profileLabel = def
+      ? `${nationOf(def).flag} ${posOf(def).emoji} ${t('positions.'+posOf(def).id+'.name')} · ${styleOf(def).emoji} ${t('styles.'+styleOf(def).id+'.name')}`
+      : '🔗 Défi reçu par lien';
+    const statusLabel = myResult ? `${tierLabel(myResult.tier)} · score ${myResult.score}` : 'Pas encore joué';
+    return `<div class="hof-row" data-id="${id}" style="cursor:pointer">
+      <span class="rk">🔗</span>
+      <span class="hof-main">
+        <span class="hof-name">${profileLabel}</span>
+        <span class="hof-sub">${statusLabel} · ${results.length} participant${results.length>1?'s':''}</span>
+      </span>
+      <span class="hof-score">${myResult ? `<b>${myResult.score}</b><small>score</small>` : '<small>—</small>'}</span>
+    </div>`;
+  }).join('') : `<p class="body" style="text-align:center;color:var(--chalk-dim);margin:20px 0">Aucun défi entre amis pour l'instant. Crée-en un depuis l'accueil !</p>`;
+  stage.innerHTML = `<div class="end" style="text-align:left">
+    <div class="eyebrow" style="text-align:center">🔗 Mes défis entre amis</div>
+    <h2 style="text-align:center;font-size:26px;margin:6px 0 14px">${list.length} défi${list.length>1?'s':''}</h2>
+    <div class="hof-list" style="max-width:560px;margin:0 auto">${rows}</div>
+    <div style="margin-top:26px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn" id="myChallengesBack">Retour à l'accueil</button>
+      <button class="btn ghost" id="myChallengesNew">🆕 Nouveau défi</button>
+    </div>
+  </div>`;
+  stage.querySelectorAll('[data-id]').forEach(el => { el.onclick = () => renderChallengeLeaderboard(el.dataset.id); });
+  document.getElementById('myChallengesBack').onclick = () => screenTitle();
+  document.getElementById('myChallengesNew').onclick = () => { if (!guardOverwrite()) return; startChallengeCreation(); };
 }
 
 /* ---- Point d'entrée : lien ouvert au chargement de l'app (voir main.js) ---- */

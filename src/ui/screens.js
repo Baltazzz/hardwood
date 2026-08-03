@@ -21,9 +21,9 @@ import { stage } from './dom.js';
 import { saveGame, loadGame, hasSavedGame, clearSavedGame } from '../engine/savegame.js';
 import { trackEvent } from '../engine/analytics.js';
 import { reopenConsentBanner } from './consentBanner.js';
-import { addResult } from '../engine/challenges.js';
+import { recordMyChallengeResult } from '../engine/challenges.js';
 import { recordDailyResult } from '../engine/dailyChallenge.js';
-import { startChallengeCreation, renderChallengeLeaderboard, startDailyChallenge, renderDailyLeaderboard } from './challenge.js';
+import { startChallengeCreation, renderChallengeLeaderboard, renderMyChallenges, startDailyChallenge, renderDailyLeaderboard } from './challenge.js';
 import { setInCareer } from './navbar.js';
 import { walletBalance, earnFromCareer } from '../engine/wallet.js';
 import { renderShop } from './shop.js';
@@ -168,6 +168,7 @@ export function screenTitle(){
         <button class="btn ghost sm" id="hof">${t('home.hofBtn')}</button>
         <button class="btn ghost sm" id="badges">${t('home.badgesBtn')}</button>
         <button class="btn ghost sm" id="progress">${t('home.progressBtn')}</button>
+        <button class="btn ghost sm" id="myChallenges">${t('home.myChallengesBtn')}</button>
         <button class="btn ghost sm" id="shop">${t('home.shopBtn')}</button>
         <button class="btn ghost sm" id="settings">${t('settings.button')}</button>
       </div>
@@ -198,6 +199,7 @@ export function screenTitle(){
     startDailyChallenge();
   };
   document.getElementById('progress').onclick=()=>renderProgress();
+  document.getElementById('myChallenges').onclick=()=>renderMyChallenges();
   document.getElementById('shop').onclick=()=>renderShop();
   document.getElementById('settings').onclick=()=>renderSettings();
   document.getElementById('welcomeReopen').onclick=(e)=>{ e.preventDefault(); screenWelcome(); };
@@ -966,7 +968,7 @@ export function endCareer(reason){
   // endCareer() comme callback), même garde-fou que p.savedHOF juste au-dessus.
   if(p.challengeId && !p.savedChallengeResult){
     p.savedChallengeResult = true;
-    addResult(p.challengeId, { challengeId:p.challengeId, name:p.name, score:legend, tier, seasons:p.seasons.length, hof:p.hof, date:Date.now(), mine:true });
+    recordMyChallengeResult(p.challengeId, { challengeId:p.challengeId, name:p.name, score:legend, tier, seasons:p.seasons.length, hof:p.hof, date:Date.now(), mine:true });
   }
   // Défi du jour (voir engine/dailyChallenge.js) : distinct du défi entre amis -- son propre
   // stockage, ne garde que le MEILLEUR score du jour, jamais un simple historique de tentatives.

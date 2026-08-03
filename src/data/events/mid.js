@@ -1,7 +1,6 @@
-import { LEGENDS } from '../legends.js';
 import { ovr, roleOf, attrOf } from '../../engine/player.js';
-import { actionRoll, pick } from '../../engine/utils.js';
-import { mediaWeight, clutchWeight, hasFormerClub } from './_helpers.js';
+import { actionRoll } from '../../engine/utils.js';
+import { mediaWeight, clutchWeight, hasFormerClub, legendFor } from './_helpers.js';
 
 /* ============================================================
    PHASE MILIEU DE CARRIÈRE — conquête du statut titulaire puis
@@ -194,7 +193,7 @@ export const MID_EVENTS = [
   {id:'comparison', cat:'media', phase:'mid', once:true,
     when:(p,lg)=>p.age<=27 && p.hype>=3 && lg.tier<=3,
     title:'La comparaison qui fait du bruit',
-    body:({p})=>{ const L=pick(LEGENDS[p.pos]||['un grand nom']);
+    body:({p})=>{ const L=legendFor(p, 'un grand nom');
       return `<i>(Plateau télé, le consultant s'emballe, le bandeau clignote.)</i> Un analyste réputé compare ton profil à celui de <b>${L}</b>, toutes proportions gardées. La hype s'emballe autour de ton nom.`; },
     weight:(p)=>mediaWeight(p)*0.7,
     choices:()=>[
@@ -432,7 +431,7 @@ export const MID_EVENTS = [
   {id:'legend_hot_take', cat:'media', phase:'mid', cooldown:4,
     when:(p,lg)=>p.reputation>=45 && lg.tier<=2,
     title:'Une légende du jeu parle de toi',
-    body:({p})=>{ const L=pick(LEGENDS[p.pos]||['une ancienne gloire']);
+    body:({p})=>{ const L=legendFor(p, 'une ancienne gloire');
       return `<i>(Plateau télé, l'invité du soir n'est autre qu'une immense figure du basket.)</i> Interrogé sur la nouvelle génération, ${L!=='une ancienne gloire'?`quelqu\'un qui rappelle un peu le profil de <b>${L}</b>`:'un consultant réputé'} donne son avis tranché sur ton niveau actuel. Les réseaux s'emballent déjà.`; },
     weight:()=>0.5,
     choices:()=>[

@@ -1,6 +1,5 @@
 import { STYLES } from '../styles.js';
-import { LEGENDS } from '../legends.js';
-import { pick } from '../../engine/utils.js';
+import { legendFor } from './_helpers.js';
 
 /* ============================================================
    PHASE DÉBUT DE CARRIÈRE — premiers entraînements, adaptation,
@@ -63,7 +62,7 @@ export const EARLY_EVENTS = [
   {id:'idol', cat:'youth', phase:'early', once:true,
     when:(p,lg)=>p.age<=19,
     title:'Ton idole de jeunesse',
-    body:({p})=>{ const L=pick(LEGENDS[p.pos]||['un immense joueur']);
+    body:({p})=>{ const L=legendFor(p, 'un immense joueur');
       return `<i>(Casque sur les oreilles, vieilles mixtapes en boucle jusqu'à 2h du matin.)</i> Gamin, tu as usé les vidéos de <b>${L}</b>. Ce soir, tu bosses en repensant à ce qui t'a fait aimer ce jeu.`; },
     weight:()=>0.75,
     choices:({p})=>[

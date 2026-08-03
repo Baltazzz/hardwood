@@ -1,4 +1,5 @@
-import { clamp } from '../../engine/utils.js';
+import { clamp, pick } from '../../engine/utils.js';
+import { LEGENDS, NATION_LEGENDS } from '../legends.js';
 
 // Poids d'exposition médiatique : plus le joueur est médiatisé, plus les événements liés
 // aux médias/à la polémique reviennent souvent. Utilisé par les événements cat:'media'.
@@ -17,6 +18,19 @@ export function careerPhase(p){
 }
 
 export function lastSeason(p){ return p.seasons.length ? p.seasons[p.seasons.length-1] : null; }
+
+// Légende citée pour "s'inspirer de son idole" et événements similaires (voir AGENDA.md) :
+// adaptée à la NATIONALITÉ du joueur en priorité (data/legends.js NATION_LEGENDS -- un nom réel
+// originaire de cette nation), et seulement à défaut (nation sans légende référencée, dont 'US' --
+// voir le commentaire de NATION_LEGENDS) repli sur un nom du même POSTE, exactement comme avant ce
+// lot (`fallback` préserve le filet de sécurité historique de chaque site d'appel, propre à son
+// propre texte -- ex. "une ancienne gloire" dans data/events/mid.js, comparé littéralement par le
+// site d'appel pour adapter sa phrase).
+export function legendFor(p, fallback){
+  const nationLegend = NATION_LEGENDS[p.nation && p.nation.id];
+  if(nationLegend) return nationLegend.name;
+  return pick(LEGENDS[p.pos] || [fallback]);
+}
 
 /* ============================================================
    MÉMOIRE DE SITUATION DU JOUEUR (voir AGENDA.md, "cohérence de l'arborescence des choix") --

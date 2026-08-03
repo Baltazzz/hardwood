@@ -235,6 +235,16 @@ function leaderboardRowsHTML(results) {
     </div>`).join('')
     : `<p class="body" style="text-align:center;color:var(--chalk-dim);margin:20px 0">Aucun résultat pour l'instant. Sois le premier à terminer ce défi !</p>`;
 }
+// Invitation discrète au partage (voir AGENDA.md) : uniquement quand la ligne "mine" est
+// effectivement en TÊTE d'un classement à plusieurs participants -- jamais affichée pour un
+// classement encore à une seule ligne (rien à "gagner" tout seul), jamais un texte générique qui
+// apparaîtrait à chaque visite. Réutilise le bandeau `.rarity-banner` déjà établi (même traitement
+// visuel chaleureux que la rareté de fin de carrière) plutôt qu'un nouveau style.
+function winNudgeHTML(results) {
+  if (results.length < 2 || !results[0] || !results[0].mine) return '';
+  return `<div class="rarity-banner">🏆 ${t('challenge.winNudge')}</div>`;
+}
+
 export function renderChallengeLeaderboard(challengeId) {
   setInCareer(false);
   const entry = getChallenge(challengeId);
@@ -256,6 +266,7 @@ export function renderChallengeLeaderboard(challengeId) {
       ${entry && entry.def ? `<button class="btn" id="replayChallenge">🔁 Rejouer ce défi</button>` : ''}
       <button class="btn ${entry && entry.def ? 'ghost' : ''}" id="newChallenge">🆕 Nouveau défi</button>
     </div>
+    <div id="challengeWinNudge" style="margin-top:16px;max-width:420px;margin-left:auto;margin-right:auto">${winNudgeHTML(results)}</div>
     <div style="margin-top:12px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
       ${myResult ? `<button class="btn ghost sm" id="shareMyResult">📤 Partager mon score</button>` : ''}
       ${entry && entry.def ? `<button class="btn ghost sm" id="inviteMore">📤 Inviter d'autres amis</button>` : ''}
@@ -294,6 +305,8 @@ export function renderChallengeLeaderboard(challengeId) {
       const sorted = [...remote].sort((a, b) => b.score - a.score);
       rowsEl.innerHTML = leaderboardRowsHTML(sorted);
       statusEl2.textContent = '';
+      const nudgeEl = document.getElementById('challengeWinNudge');
+      if (nudgeEl) nudgeEl.innerHTML = winNudgeHTML(sorted);
     } else {
       statusEl2.textContent = '📡 Classement local uniquement -- hors ligne ou serveur injoignable pour l\'instant.';
     }

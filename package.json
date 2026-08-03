@@ -22,6 +22,7 @@
     "audit:profile-identity": "node tests/audit_profile_identity.mjs",
     "audit:world-leaderboard": "node tests/audit_world_leaderboard_offline.mjs",
     "audit:world-leaderboard-live": "node tests/audit_world_leaderboard_live.mjs",
+    "audit:finishing-touches": "node tests/audit_finishing_touches.mjs",
     "gen:data": "node scripts/gen-club-data.mjs",
     "ship": "node scripts/ship.mjs"
   },

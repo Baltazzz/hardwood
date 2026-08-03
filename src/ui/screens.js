@@ -32,6 +32,7 @@ import { setInCareer } from './navbar.js';
 import { walletBalance, earnFromCareer } from '../engine/wallet.js';
 import { renderShop } from './shop.js';
 import { renderSettings } from './settings.js';
+import { shareOrFallback } from './share.js';
 import { t } from '../engine/i18n.js';
 
 /* ============================================================
@@ -197,7 +198,7 @@ export function screenTitle(){
     </div>
 
     <div class="kbd"><img class="brand-mark-mini" src="/logo-mark.png" alt="" width="18" height="18">${t('home.kbd')}<a href="#" id="welcomeReopen" class="welcome-link">${t('home.howToPlay')}</a></div>
-    <div class="credit">${t('home.credit')}<a href="#" id="cookieReopen" class="credit-link">${t('home.manageCookies')}</a></div>
+    <div class="credit">${t('home.credit')}<a href="#" id="cookieReopen" class="credit-link">${t('home.manageCookies')}</a> · <a href="https://x.com/Hardwoodgame" target="_blank" rel="noopener noreferrer" class="credit-link">${t('home.twitterLink')}</a></div>
   </div>`;
   document.getElementById('go').onclick=()=>{
     // Garde-fou : commencer une nouvelle carrière écraserait la sauvegarde en cours -- confirmation
@@ -1035,7 +1036,11 @@ export function endCareer(reason){
     <div class="legend-title">${tierDisplay}</div>
     <p class="subline">${p.nation.flag} ${POSITIONS.find(x=>x.id===p.pos).emoji} ${t('positions.'+p.pos+'.name')} · ${p.seasons.length} ${t('hof.seasons')} · pic à ${p.peakOvr} OVR${p.hof?` · <b style="color:var(--mint)">${t('endCareer.hofBadge')}</b>`:''}</p>
     <p class="body" style="max-width:520px;margin:14px auto 0;text-align:center">${blurb}</p>
-    ${rarity!=null?`<div class="rarity-banner">🔥 ${t('endCareer.rarityMessage',{pct:rarity})}</div>`:''}
+    ${rarity!=null?`<div class="rarity-banner">🔥 ${t('endCareer.rarityMessage',{pct:rarity})}</div>
+    <div style="text-align:center;margin-top:8px">
+      <button class="btn ghost sm" id="shareRareNudge">${t('endCareer.shareRareNudge')}</button>
+      <p class="body" id="shareRareHint" style="color:var(--chalk-dim);font-size:12px;margin-top:6px;display:none">${t('common.linkCopied')}</p>
+    </div>`:''}
     ${renderTagChips(activeTags(p), 'center')}
     ${p.walletEarned?`<div style="text-align:center;margin-top:14px"><div class="wallet-chip">${t('endCareer.walletEarned',{n:money(p.walletEarned)})}</div></div>`:''}
     ${newBadgeDefs.length?`<div class="recap-block new-badges-block">
@@ -1118,6 +1123,14 @@ export function endCareer(reason){
   document.getElementById('badgesView').onclick=()=>renderBadges();
   document.getElementById('share').onclick=()=>renderFullSheet();
   document.getElementById('copyBtn').onclick=()=>copyShare(p.endSummary);
+  // Invitation discrète au partage (voir AGENDA.md) : uniquement quand la carte affiche déjà le
+  // bandeau de rareté (grande carrière, top 25%) -- jamais pour une carrière ordinaire, jamais un
+  // encart séparé qui s'ajouterait à la longue liste de boutons du bas.
+  const shareRareBtn=document.getElementById('shareRareNudge');
+  if(shareRareBtn) shareRareBtn.onclick=async()=>{
+    const hint=document.getElementById('shareRareHint');
+    await shareOrFallback({ title:t('endCareer.eyebrow',{name:p.name}), text:`${p.endSummary} ${window.location.origin}` }, ()=>{ if(hint) hint.style.display='block'; });
+  };
 }
 function copyShare(text){
   const done=()=>{ const b=document.getElementById('copyBtn'); if(b){ const old=b.textContent; b.textContent=t('endCareer.copied'); setTimeout(()=>{b.textContent=old;},1600);} };

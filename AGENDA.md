@@ -70,14 +70,6 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
   l'historique — à clarifier avec l'utilisateur : qu'est-ce qui manque concrètement ?
   **Critère** : à définir avec l'utilisateur une fois le manque précisé.
 
-- [ ] **AGD-24 — Handle/@ à ajouter à la signature auteur**
-  Ajouté au registre le 2026-07-27, en creusant AGD-23 point 1. La signature « Créé par
-  Gaspard G » est en place en pied de l'écran titre (`.credit` dans `styles.css`,
-  `screenTitle()` dans `screens.js`), mais l'utilisateur a explicitement indiqué vouloir y
-  accoler un handle/@ qu'il préciserait plus tard — jamais fourni dans la session AGD-23.
-  **Critère** : le handle fourni apparaît accolé à la signature (ex. « Créé par Gaspard G ·
-  @handle »), vérifié par rendu direct de l'écran titre.
-
 - [ ] **AGD-33 — Généraliser le nouveau motif de fond aux autres écrans**
   Ajouté au registre le 2026-07-27, en creusant AGD-32 point 2. La direction "plus de présence
   en fond" (motif de terrain agrandi/recentré + trame de parquet, fait main en SVG) a été
@@ -90,6 +82,77 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
   les écrans vus souvent, un peu plus affirmé sur ceux vus rarement).
 
 ## Coché récemment
+
+- [x] **AGD-60 — Dernier lot avant diffusion : vérification + partage/social/légendes/couleurs nationales** _(implémenté et vérifié le 2026-08-04)_
+  Demande en deux temps : vérifier d'abord ("preuve à l'appui") si quatre points antérieurs étaient
+  déjà livrés, puis implémenter seulement ce qui manquait réellement, plus quatre ajustements
+  demandés dans tous les cas.
+  **Partie A -- vérification, preuve à l'appui (rien à implémenter, tout déjà en place)** :
+  1. *Anecdotes NBA "plus mordantes"* : déjà fait (AGD-36 + AGD-38). Les 23 événements existent
+     dans `data/events/nba_franchise.js`, réécrits à un ton plus mordant -- MAIS 3 escalades
+     explicitement demandées à l'époque (Memphis/Miami/Charlotte, identification possible d'une
+     personne réelle commettant un acte dangereux/illégal) avaient été refusées et communiquées à
+     l'utilisateur, pas silencieusement édulcorées. Non retouché cette session, aucune nouvelle
+     instruction ne revenant sur ce refus.
+  2. *Lot rétention* (AGD-52) : les 5 points (rareté, prochain badge, suggestion de défi, 41 badges
+     dont 6 à seuils cumulés inter-carrières, identité propre du défi du jour) reconfirmés présents
+     par lecture directe de `engine/retention.js`/`engine/badges.js`/`engine/dailyChallenge.js`.
+  3. *Prix boutique* (AGD-53) : 3 paliers (`common`/`rare`/`prestige`) et plancher à 10 000 k€
+     reconfirmés dans `engine/cosmetics.js`.
+  4. *"Tirer sa révérence"* : AGENDA.md intégralement relu (2255 lignes) -- AUCUNE trace d'une
+     demande de modification de cette formule. AGD-26 est au contraire la session qui l'a
+     introduite (en remplacement de "Raccrocher les baskets") et avait explicitement clos le sujet
+     ("formulations déjà idiomatiques"). Signalé tel quel à l'utilisateur, rien modifié faute de
+     savoir ce qui serait visé -- pas de nouvelle instruction reçue depuis.
+  **Partie B -- ajustements livrés dans tous les cas** :
+  1. *Invitations discrètes au partage*, aux moments d'enthousiasme uniquement, jamais répétées
+     sans condition. Fin de grande carrière (`ui/screens.js` `endCareer()`) : un bouton
+     "📤 Partager cette carrière" apparaît UNIQUEMENT sous le bandeau de rareté déjà existant (top
+     25%, `rarityPct()` non nul), réutilise `shareOrFallback()` (déjà utilisé ailleurs dans le jeu,
+     `ui/share.js`) avec le résumé de carrière déjà généré. Victoire en défi entre amis
+     (`ui/challenge.js` `renderChallengeLeaderboard()`) : un bandeau "🏆 Tu es en tête du
+     classement !" apparaît UNIQUEMENT quand `results[0].mine` est vrai ET qu'il y a au moins 2
+     participants (rien à "gagner" tout seul), rafraîchi après réception du classement serveur.
+  2. *Lien vers le compte X du jeu* (`https://x.com/Hardwoodgame`, fourni par l'utilisateur),
+     présenté comme le moyen de donner un retour ou suivre les nouveautés -- accroché au pied de
+     l'écran d'accueil (`.credit`, emplacement déjà préparé par AGD-24/AGD-23) ET dans un nouveau
+     bloc dédié des réglages (`ui/settings.js`, 3e `.recap-block`).
+  3. *Légende "idole" adaptée à la nationalité*. Nouveau `NATION_LEGENDS` (`data/legends.js`,
+     33 nations sur 34 -- 'US' exclu délibérément, le pool par poste `LEGENDS` existant est déjà
+     100% américain) : un nom réel et réellement originaire de chaque nation (ex. France -> Tony
+     Parker, Allemagne -> Dirk Nowitzki, Nigeria -> Hakeem Olajuwon, Chine -> Yao Ming...). Nouvelle
+     fonction partagée `legendFor(p, fallback)` (`data/events/_helpers.js`) : priorité à la
+     nationalité, repli sur le pool par poste (`LEGENDS[p.pos]`) sinon -- utilisée aux 3 endroits où
+     une légende était citée (`data/events/early.js` "Ton idole de jeunesse",
+     `data/events/mid.js` "comparison"/"legend_hot_take"), texte de repli propre à chaque site
+     préservé à l'identique (aucun changement de comportement en dehors du choix du nom).
+  4. *Couleurs de sélection nationale corrigées*. `engine/accent.js` `NATION_ACCENT` entièrement
+     réécrit : les DEUX couleurs réellement les plus présentes sur le drapeau de chacune des 34
+     nations jouables (primaire + secondaire quand pertinent, blanc exclu par principe -- illisible
+     en aplat sur le fond crème, secondaire alors dérivée algorithmiquement comme pour un club sans
+     couleur officielle). Corrige un vrai bug signalé : l'Australie ressortait en VERT
+     (`#00843D`, couleur des "Boomers", jamais présente sur le drapeau réel) -- désormais bleu/rouge
+     (Union Jack + Croix du Sud). `emblemColors()` mis à jour pour utiliser cette secondaire curatée
+     par nation plutôt que de toujours la dériver algorithmiquement.
+  **Vérifié directement** : nouveau `npm run audit:finishing-touches` (21 vérifications) --
+  les 34 nations ont toutes une couleur curatée distincte (aucune sur le repli générique), rendu
+  réel sans exception sur un échantillon diversifié (France/Allemagne/Brésil/Nigeria/Japon/
+  Australie/Turquie/États-Unis), Australie confirmée ne plus être verte ; légende adaptée à la
+  nationalité testée sur plusieurs nations (prime sur le poste) + repli pool-par-poste pour les
+  États-Unis/nation inconnue/nation absente, les 34 nations couvertes ; invitation au partage de
+  défi testée présente à 2 participants avec "mine" en tête, absente si en retard ou seul
+  participant ; invitation de fin de carrière testée sur 15 carrières réelles pilotées (invariant
+  bandeau/bouton jamais désaccordé) PUIS déterministement forcée au-dessus et en dessous du seuil
+  de rareté sur le même joueur réel (couvre les deux branches, pas seulement l'absence -- les choix
+  aléatoires de test franchissent trop rarement le seuil pour s'y fier seuls). Non-régression :
+  suite complète existante tous verts, `scripts/deep-audit.mjs` 300 carrières -- 0% crash, 0
+  violation d'intégrité `once`, taux de titre élite 9% (bande normale 7,7-21,7%) ; `npm run build`
+  vert.
+
+- [x] **AGD-24 — Handle/@ à ajouter à la signature auteur** _(clos le 2026-08-04, décision de l'utilisateur)_
+  Décision explicite : pas de handle -- la signature reste « Créé par Gaspard G » seule, sans rien
+  y accoler. Ticket refermé sur cette base, aucun changement de code nécessaire (le texte n'a
+  jamais été modifié depuis sa mise en place initiale, voir AGD-23).
 
 - [x] **AGD-59 — Classements mondiaux (défi du jour + carrières), Supabase + pseudo de profil** _(implémenté et vérifié le 2026-08-04)_
   Quatre volets demandés explicitement, plan détaillé validé avec l'utilisateur avant exécution

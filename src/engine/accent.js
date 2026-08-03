@@ -61,11 +61,40 @@ function realColorsFor(clubName) {
   return REAL_CLUB_COLORS.get(clubName) || null;
 }
 
-// Couleur "sélection nationale", dérivée de l'identité fédérale/drapeau réelle de chaque nation
-// jouable (src/data/nations.js).
+// Couleur "sélection nationale" -- corrigé (voir AGENDA.md, "couleurs de sélection nationale
+// aujourd'hui fausses") : les DEUX couleurs les plus présentes sur le drapeau réel de chaque
+// nation jouable (src/data/nations.js, 34 nations), jamais une couleur sportive/de marque
+// (l'ancienne valeur AU:'#00843D', un vert, en était l'exemple le plus flagrant -- le drapeau
+// australien n'a AUCUN vert, ce vert venait de la couleur des "Boomers", pas du drapeau). `white`
+// exclu par principe (illisible en aplat sur le fond crème --court, la garde de contraste
+// l'assombrirait au point de ne plus ressembler à du blanc) -- pour un drapeau à dominante
+// blanche + une seule couleur (ex. Turquie, Japon, Pologne), seule `primary` est renseignée, la
+// secondaire est alors dérivée algorithmiquement comme pour un club sans secondaire officielle
+// (voir deriveSecondary() plus bas) plutôt que de forcer un blanc qui ne resterait pas fidèle une
+// fois passé par le garde-fou de contraste. Pour un tricolore à bandes strictement égales sans
+// blanc (ex. Allemagne, Lituanie), les deux couleurs retenues sont la première et la dernière
+// bande (repli neutre et cohérent, aucune des trois n'étant objectivement "plus présente").
+// `secondary` absente = pas de couleur curatée, voir emblemColors() plus bas.
 const NATION_ACCENT = {
-  US:'#B31942', FR:'#0055A4', RS:'#C6363C', ES:'#AA151B', DE:'#FFCE00',
-  GR:'#0D5EAF', AU:'#00843D', CA:'#FF0000', SI:'#0057B7',
+  FR:{primary:'#002654',secondary:'#ED2939'}, RS:{primary:'#C6363C',secondary:'#0C4076'},
+  ES:{primary:'#FFC400',secondary:'#C60B1E'}, DE:{primary:'#1C1C1C',secondary:'#FFCE00'},
+  GR:{primary:'#0D5EAF',secondary:'#FFFFFF'}, SI:{primary:'#0057B7',secondary:'#ED1C24'},
+  LT:{primary:'#FDB913',secondary:'#C8313E'}, IT:{primary:'#009246',secondary:'#CE2B37'},
+  TR:{primary:'#E30A17'}, HR:{primary:'#FF0000',secondary:'#171796'},
+  LV:{primary:'#9E3039'}, ME:{primary:'#C40308',secondary:'#D4AF37'},
+  BA:{primary:'#002395',secondary:'#FECB00'}, FI:{primary:'#003580'},
+  CH:{primary:'#D52B1E'}, UA:{primary:'#0057B7',secondary:'#FFD700'},
+  PL:{primary:'#DC143C'},
+  US:{primary:'#B31942',secondary:'#0A3161'}, CA:{primary:'#FF0000'},
+  PR:{primary:'#ED2939',secondary:'#003893'}, DO:{primary:'#002D62',secondary:'#CE1126'},
+  BS:{primary:'#00778B',secondary:'#FFC72C'}, VI:{primary:'#0056A8',secondary:'#FFCC00'},
+  AR:{primary:'#75AADB',secondary:'#FCBF49'}, BR:{primary:'#009639',secondary:'#FEDD00'},
+  AU:{primary:'#00247D',secondary:'#E4002B'},
+  NG:{primary:'#008751'}, SN:{primary:'#00853F',secondary:'#E31B23'},
+  CM:{primary:'#007A5E',secondary:'#FCD116'}, SS:{primary:'#171717',secondary:'#078930'},
+  CD:{primary:'#007FFF',secondary:'#CE1021'},
+  CN:{primary:'#DE2910',secondary:'#FFDE00'}, JP:{primary:'#BC002D'},
+  PH:{primary:'#0038A8',secondary:'#CE1126'},
 };
 
 const FALLBACK_ACCENT = '#E0562D'; // = --orange : repli si aucune donnée de club/nation exploitable
@@ -163,8 +192,18 @@ function clubAccentRaw(clubName){
   if(real) return real.primary;
   return hslToHex(hashHue(clubName), 0.62, 0.5);
 }
-function nationAccentRaw(nationId){
-  return (nationId && NATION_ACCENT[nationId]) || null;
+// Exportées pour tests/audit_finishing_touches.mjs (vérification directe -- confirme qu'aucune
+// des 34 nations ne retombe silencieusement sur FALLBACK_ACCENT faute d'entrée dans la table).
+export function nationAccentRaw(nationId){
+  const entry = nationId && NATION_ACCENT[nationId];
+  return entry ? entry.primary : null;
+}
+// Secondaire CURATÉE (voir NATION_ACCENT plus haut) : absente pour les nations à dominante
+// blanche + une seule couleur -- emblemColors() retombe alors sur deriveSecondary() ci-dessous,
+// exactement comme un club sans secondaire officielle.
+export function nationSecondaryRaw(nationId){
+  const entry = nationId && NATION_ACCENT[nationId];
+  return (entry && entry.secondary) || null;
 }
 
 // Couleur "secondaire" pour la pastille bicolore (voir emblemColors ci-dessous) : dérivée
@@ -190,18 +229,19 @@ export function ensureVisible(hex, minRatio=1.6){
   return candidate;
 }
 
-// Couleurs primaire + secondaire de l'identité de club (tuile profil + pastille d'initiales),
-// toutes deux garanties lisibles/visibles sur --court. Utilise la vraie secondaire officielle
-// quand elle est connue (mode 'club' avec couleur réelle en base) plutôt qu'une dérivation
-// algorithmique, réservée aux clubs sans donnée officielle et au mode 'nation' (pas de
-// secondaire curatée par nation).
+// Couleurs primaire + secondaire de l'identité de club/nation (tuile profil + pastille
+// d'initiales), toutes deux garanties lisibles/visibles sur --court. Utilise la vraie secondaire
+// officielle quand elle est connue -- couleur de club réelle en base (mode 'club'), ou seconde
+// couleur de drapeau curatée (mode 'nation', voir NATION_ACCENT/nationSecondaryRaw() plus haut) --
+// et ne dérive algorithmiquement (deriveSecondary) que faute de donnée officielle des deux côtés.
 export function emblemColors(p, mode='club'){
   const real = mode==='club' ? realColorsFor(p.club) : null;
   if(real && real.secondary){
     return { primary: ensureContrast(real.primary), secondary: ensureVisible(real.secondary) };
   }
   const primary = getAccent(p, mode);
-  const secondary = ensureVisible(deriveSecondary(primary));
+  const curatedSecondary = mode==='nation' ? nationSecondaryRaw(p.nation && p.nation.id) : null;
+  const secondary = ensureVisible(curatedSecondary || deriveSecondary(primary));
   return { primary, secondary };
 }
 

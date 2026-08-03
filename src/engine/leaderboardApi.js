@@ -16,18 +16,18 @@
    panne réseau, un serveur injoignable, un appareil hors ligne doivent laisser le jeu strictement
    identique à avant ce lot, jamais un écran cassé ni une erreur visible. Repli systématique sur le
    fonctionnement 100% local déjà en place (engine/challenges.js).
+
+   SUPABASE_URL/BASE_HEADERS/fetchWithTimeout/FETCH_TIMEOUT_MS vivent désormais dans
+   engine/supabaseClient.js (voir AGENDA.md AGD-59) -- partagés avec engine/worldLeaderboardApi.js
+   (classements mondiaux), pour ne jamais dupliquer la clé/l'URL en dur une deuxième fois.
 ============================================================ */
-const SUPABASE_URL = 'https://mqrotkqlqpxtqquxmcxi.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcm90a3FscXB4dHFxdXhtY3hpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTg5NDMsImV4cCI6MjEwMTMzNDk0M30.BnOumRNtNDwS4mOelHwZC-YHbhEsBgwRHRv6Ymb9toQ';
+import { SUPABASE_URL, BASE_HEADERS, fetchWithTimeout, FETCH_TIMEOUT_MS } from './supabaseClient.js';
 const REST_URL = `${SUPABASE_URL}/rest/v1/challenge_scores`;
 // Exportée pour tests/leaderboard_device_check.mjs, qui doit pouvoir pré-remplir ce localStorage
 // clé-par-clé afin de simuler un appareil dont le client_id persiste entre plusieurs process Node
 // séparés (chaque process a son propre jsdom, donc son propre localStorage en mémoire vide).
 export const CLIENT_ID_KEY = 'hardwood_client_id_v1';
 const PENDING_KEY = 'hardwood_pending_scores_v1';
-const FETCH_TIMEOUT_MS = 6000;
-
-const BASE_HEADERS = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` };
 
 // Repli sans crypto.randomUUID (environnements anciens/non sécurisés -- ex. http:// pur en dev) :
 // UUID v4 "assez bon" pour un simple identifiant d'appareil, jamais un secret.
@@ -75,13 +75,6 @@ function toRow(challengeId, result) {
     hof: !!result.hof,
     summary: result.summary || null,
   };
-}
-
-async function fetchWithTimeout(url, opts, timeoutMs) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try { return await fetch(url, { ...opts, signal: controller.signal }); }
-  finally { clearTimeout(timer); }
 }
 
 // Envoi (upsert) d'un score vers le serveur partagé. Ne lève JAMAIS, ne bloque JAMAIS l'appelant

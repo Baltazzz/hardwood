@@ -30,6 +30,7 @@ import { fetchChallengeScores } from '../engine/leaderboardApi.js';
 import { t } from '../engine/i18n.js';
 import { TIER_RANK } from '../engine/badges.js';
 import { rankGlyph } from './card.js';
+import { renderDailyWorldLeaderboard } from './worldLeaderboard.js';
 
 // `tier` est stocké en français (voir endCareer() dans screens.js) -- traduit uniquement à
 // l'affichage, jamais dans le stockage (même principe que ui/card.js).
@@ -440,11 +441,13 @@ export function startDailyChallenge() {
     <div style="margin-top:22px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
       <button class="btn" id="playDaily">${best ? 'Retenter le défi du jour' : 'Jouer le défi du jour'}</button>
       <button class="btn ghost" id="dailyHistory">📅 Mon historique</button>
+      <button class="btn ghost" id="dailyWorldLb">🌍 Classement mondial</button>
       <button class="btn ghost" id="dailyBack">Retour</button>
     </div>
   </div>`;
   document.getElementById('playDaily').onclick = () => joinDaily(def);
   document.getElementById('dailyHistory').onclick = () => renderDailyLeaderboard();
+  document.getElementById('dailyWorldLb').onclick = () => renderDailyWorldLeaderboard();
   document.getElementById('dailyBack').onclick = () => screenTitle();
 }
 

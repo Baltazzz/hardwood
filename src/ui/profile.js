@@ -20,6 +20,7 @@ import { setInCareer } from './navbar.js';
 import { renderHallOfFame, renderBadges } from './card.js';
 import { renderShop } from './shop.js';
 import { screenTitle } from './screens.js';
+import { renderCareerWorldLeaderboard } from './worldLeaderboard.js';
 import { t } from '../engine/i18n.js';
 
 function recordRow(label, value) {
@@ -87,12 +88,14 @@ export function renderProfile(){
     <div style="margin-top:26px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
       <button class="btn" id="profileBack">${t('common.back')}</button>
       <button class="btn ghost" id="profileHof">${t('profile.viewHof')}</button>
+      <button class="btn ghost" id="profileWorldLb">${t('profile.viewWorldLb')}</button>
       <button class="btn ghost" id="profileShop">${t('profile.shopBtn',{balance:money(walletBalance())})}</button>
     </div>
   </div>`;
   document.getElementById('profileNicknameSave').onclick=()=>{ setNickname(document.getElementById('profileNicknameInput').value); renderProfile(); };
   document.getElementById('profileBack').onclick=()=>screenTitle();
   document.getElementById('profileHof').onclick=()=>renderHallOfFame();
+  document.getElementById('profileWorldLb').onclick=()=>renderCareerWorldLeaderboard();
   document.getElementById('profileViewBadges').onclick=()=>renderBadges();
   document.getElementById('profileShop').onclick=()=>renderShop();
 }

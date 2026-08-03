@@ -91,6 +91,64 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Coché récemment
 
+- [x] **AGD-59 — Classements mondiaux (défi du jour + carrières), Supabase + pseudo de profil** _(implémenté et vérifié le 2026-08-04)_
+  Quatre volets demandés explicitement, plan détaillé validé avec l'utilisateur avant exécution
+  (voir `/Users/gaspard/.claude/plans/snug-jumping-walrus.md`).
+  1. *Nettoyage de l'accueil*. Puce Panthéon retirée du menu principal (`ui/screens.js`) -- déjà
+     accessible depuis la tuile de profil (`renderProfile()`, AGD-58) et depuis l'écran de fin de
+     carrière (bouton `hofView`), les deux chemins confirmés intacts avant retrait. Clé i18n
+     `home.hofBtn` devenue orpheline retirée (fr.js + en.js).
+  2. *Classement mondial du défi du jour*. Nouvelle table `daily_world_scores`
+     (`supabase/migrations/0002_world_leaderboards.sql`) -- une ligne par (jour, pseudo), remise à
+     zéro "gratuitement" chaque jour (l'écran filtre toujours sur la date du jour, aucun job de
+     purge nécessaire). Mêmes garde-fous anti-triche que `challenge_scores` (AGD-57) : bornes de
+     score (0-600), throttle 5s entre deux vraies améliorations, meilleur score gardé.
+  3. *Classement mondial des carrières*. Nouvelle table `career_world_scores` -- une seule ligne
+     par pseudo, pour toujours (sa meilleure carrière, jamais une par tentative). Suppression d'une
+     ligne aberrante possible directement depuis le Dashboard Supabase (Table Editor, accès
+     propriétaire qui contourne RLS) -- aucune route de suppression exposée à la clé anon,
+     volontairement, pour qu'un visiteur ne puisse jamais vider le classement de tout le monde.
+     **Identité hybride pseudo+appareil**, décision actée avec l'utilisateur après qu'une revue
+     croisée a détecté qu'un simple `unique(nickname)` casserait silencieusement la progression
+     d'un joueur qui se renomme (fonctionnalité de première classe depuis AGD-58) : chaque ligne
+     reste identifiée par le pseudo (fidèle à la demande), mais porte aussi `client_id` (même UUID
+     d'appareil que `challenge_scores`, jamais unique, un simple indice de réconciliation) --
+     `engine/worldLeaderboardApi.js` vérifie avant toute soumission si CET appareil a déjà une
+     ligne sous un pseudo différent et, si oui, met à jour CETTE MÊME ligne plutôt que d'upserter
+     par pseudo (qui créerait une ligne fantôme ou entrerait en collision avec un homonyme). Trigger
+     SQL partagé `world_scores_guard()` corrigé en conséquence pour ne JAMAIS annuler
+     silencieusement un renommage, même sans amélioration de score.
+  4. *Affichage scalable*. Nouveau `ui/worldLeaderboard.js` : moteur de rendu paginé partagé par les
+     deux classements -- pagination "Charger plus" (20/page, jamais tout charger d'un coup), tri
+     Score/Saisons (re-fetch page 1 au changement), mise en évidence de sa propre ligne où qu'elle
+     soit -- surlignée directement si déjà chargée, sinon bandeau séparé "Ta position" calculé via
+     le "count trick" PostgREST (`Prefer: count=exact` + `Range: 0-0`, jamais besoin de tout
+     charger pour savoir son rang). Podium réutilisé tel quel (`rankGlyph()`, `ui/card.js`) --
+     correction importante appliquée : le rang GLOBAL (`offset + index`) est passé à `rankGlyph()`,
+     jamais l'index local d'une page (sinon la page 2 afficherait une couronne sur son propre rang
+     local 0). Index SQL composites (`score desc, id` / `seasons desc, id`) ajoutés pour que tri et
+     calcul de rang restent rapides même avec beaucoup de joueurs.
+  5. *Robustesse identique*. `engine/supabaseClient.js` (nouveau) extrait les primitives HTTP
+     partagées (URL/clé/timeout) d'`engine/leaderboardApi.js`, réutilisées par
+     `engine/worldLeaderboardApi.js` -- même contrat : jamais d'exception, timeout 6s, file
+     d'attente locale + retry au chargement (`flushPendingWorldScores()`, appelée dans `main.js`
+     à côté de l'existant), repli propre + message clair si le serveur est injoignable.
+  **Vérifié directement, contre le vrai serveur Supabase** (`npm run audit:world-leaderboard-live`,
+  24 vérifications) : deux appareils/pseudos distincts voient bien les deux scores partagés (jour
+  ET carrières) sans rien échanger, `mine` jamais confondu, tri par score décroissant correct, une
+  resoumission plus faible n'écrase jamais le meilleur score, une resoumission meilleure (après la
+  fenêtre anti-spam) remplace bien l'ancienne, score aberrant (999999) rejeté des deux classements
+  -- et le scénario clé de ce lot : un appareil qui se RENOMME (même `client_id`, nouveau pseudo,
+  même score) voit sa ligne mise à jour, l'ANCIEN pseudo n'a plus aucune ligne (pas de doublon
+  fantôme), le NOUVEAU porte le score préservé. Non-régression : nouveau
+  `npm run audit:world-leaderboard` (23 vérifications hors-ligne, timeout/erreur HTTP/hors-ligne
+  jamais levés pour les deux classements) vert ; suite complète existante
+  (`audit`/`audit:meta`/`audit:i18n`/`audit:coherence`/`audit:cosmetics`/`audit:link`/
+  `audit:challenge`/`audit:challenge-revisit`/`audit:retention`/`audit:polish`/`audit:leaderboard`/
+  `audit:profile-identity`) tous verts ; `scripts/deep-audit.mjs` 300 carrières -- 0% crash, 0
+  violation d'intégrité `once`, taux de titre élite 11,7% (bande normale 7,7-21,7%) ; `npm run
+  build` vert.
+
 - [x] **AGD-58 — Lot identité de joueur : profil persistant, tuile regroupée, équité du défi entre amis** _(implémenté et vérifié le 2026-08-03)_
   Trois volets demandés explicitement, plan détaillé validé avec l'utilisateur avant exécution.
   1. *Profil de joueur persistant*. Nouveau module `engine/profile.js` (`hardwood_profile_v1`,

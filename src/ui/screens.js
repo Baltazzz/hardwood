@@ -24,6 +24,7 @@ import { trackEvent } from '../engine/analytics.js';
 import { reopenConsentBanner } from './consentBanner.js';
 import { recordMyChallengeResult } from '../engine/challenges.js';
 import { submitChallengeScore } from '../engine/leaderboardApi.js';
+import { submitCareerWorldScore, submitDailyWorldScore } from '../engine/worldLeaderboardApi.js';
 import { profileNickname } from '../engine/profile.js';
 import { recordDailyResult } from '../engine/dailyChallenge.js';
 import { renderChallengeHub, renderChallengeLeaderboard, startDailyChallenge, renderDailyLeaderboard } from './challenge.js';
@@ -183,11 +184,13 @@ export function screenTitle(){
     <!-- Suivi & records : puces compactes, format le plus scalable des trois groupes (voir
          styles.css) -- la Boutique rejoint ce groupe comme prévu par sa conception (voir
          AGENDA.md AGD-41), sans rien bousculer. Réglages (voir AGENDA.md "réglages et langue
-         anglaise") ajouté au même groupe -- même logique d'entrée peu fréquente que la Boutique. -->
+         anglaise") ajouté au même groupe -- même logique d'entrée peu fréquente que la Boutique.
+         Panthéon retiré (voir AGENDA.md AGD-59) : déjà accessible depuis la tuile de profil
+         (renderProfile(), bouton "profileHof") et depuis l'écran de fin de carrière (bouton
+         "hofView") -- ces deux chemins restent inchangés, aucun accès perdu. -->
     <div class="home-group home-meta">
       <div class="eyebrow home-group-label">${t('home.trackingLabel')}</div>
       <div class="home-meta-row">
-        <button class="btn ghost sm" id="hof">${t('home.hofBtn')}</button>
         <button class="btn ghost sm" id="shop">${t('home.shopBtn')}</button>
         <button class="btn ghost sm" id="settings">${t('settings.button')}</button>
       </div>
@@ -211,7 +214,6 @@ export function screenTitle(){
   // "Nouveau défi" DANS ce hub (seule action qui écrase réellement une carrière en cours),
   // consulter les classements reste une navigation non destructrice.
   document.getElementById('challengeCreate').onclick=()=>renderChallengeHub();
-  document.getElementById('hof').onclick=()=>renderHallOfFame();
   document.getElementById('profileTile').onclick=()=>renderProfile();
   document.getElementById('dailyChallenge').onclick=()=>{
     if(hasSavedGame() && !confirm(t('home.confirmOverwriteDaily'))) return;
@@ -965,7 +967,14 @@ export function endCareer(reason){
       headline:(quotes[0]?quotes[0][1]:''), nation:p.nation.name, nationId:p.nation.id, hof:p.hof, date:Date.now() };
   p.cardRec=rec; p.endReason=reason;
   trackEvent('career_end', { reason, tier, seasons: p.seasons.length, hof: p.hof, challenge: !!p.challengeId, daily: !!p.dailyDate });
-  if(!p.savedHOF){ p.savedHOF=true; hofAdd(rec); }
+  if(!p.savedHOF){ p.savedHOF=true; hofAdd(rec);
+    // Classement MONDIAL des carrières (voir engine/worldLeaderboardApi.js, AGENDA.md AGD-59) :
+    // fire-and-forget comme submitChallengeScore() -- toute carrière finie concourt pour LE
+    // MEILLEUR score mondial de ce pseudo (identité de compte, jamais le nom du personnage), même
+    // garde anti-double-comptage que hofAdd() ci-dessus.
+    submitCareerWorldScore({ score:legend, tier, seasons:p.seasons.length, hof:p.hof,
+      summary:{ champs, mvps, allstars, peak:p.peakOvr } });
+  }
   // Badges transversaux (voir engine/badges.js) : évalués une seule fois, à la toute fin de la
   // carrière (p.cardRec/p.hof déjà posés juste au-dessus, dont certains badges dépendent).
   // p.newBadges mémorisé sur le joueur pour survivre à un éventuel re-rendu de cet écran (retour
@@ -1009,6 +1018,9 @@ export function endCareer(reason){
   if(p.dailyDate && !p.savedDailyResult){
     p.savedDailyResult = true;
     recordDailyResult(p.dailyDate, { date:p.dailyDate, name:p.name, score:legend, tier, seasons:p.seasons.length, hof:p.hof });
+    // Classement MONDIAL du défi du jour (voir engine/worldLeaderboardApi.js, AGENDA.md AGD-59) :
+    // fire-and-forget, même garde anti-double-comptage que recordDailyResult() ci-dessus.
+    submitDailyWorldScore(p.dailyDate, { score:legend, tier, seasons:p.seasons.length, hof:p.hof });
   }
 
   const tl = p.timeline.slice(-14);

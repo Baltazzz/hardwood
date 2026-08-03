@@ -8,6 +8,7 @@ import { initAnalytics } from './engine/analytics.js';
 import { handleIncomingLink } from './ui/challenge.js';
 import { applyEquippedTheme } from './engine/cosmetics.js';
 import { flushPendingScores } from './engine/leaderboardApi.js';
+import { flushPendingWorldScores } from './engine/worldLeaderboardApi.js';
 
 // Thème de boutique équipé (voir engine/cosmetics.js, AGENDA.md AGD-41) : posé une seule fois au
 // chargement, AVANT le premier écran -- persiste ensuite pour toute la session via les variables
@@ -52,6 +53,9 @@ if (!handleIncomingLink()) screenTitle();
 // (ex. carrière terminée hors ligne) -- fire-and-forget, ne retarde jamais le premier rendu, ne
 // lève jamais (voir la garantie de robustesse du module).
 flushPendingScores();
+// Classements MONDIAUX (voir engine/worldLeaderboardApi.js, AGENDA.md AGD-59) : même principe,
+// fire-and-forget, jamais de retard sur le premier rendu.
+flushPendingWorldScores();
 
 // PWA : enregistrement du service worker (voir public/sw.js) -- app shell précaché à
 // l'installation, reste mis en cache à la volée -- pour un vrai fonctionnement hors-ligne une

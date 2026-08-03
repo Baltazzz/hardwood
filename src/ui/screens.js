@@ -22,6 +22,7 @@ import { saveGame, loadGame, hasSavedGame, clearSavedGame } from '../engine/save
 import { trackEvent } from '../engine/analytics.js';
 import { reopenConsentBanner } from './consentBanner.js';
 import { recordMyChallengeResult } from '../engine/challenges.js';
+import { submitChallengeScore } from '../engine/leaderboardApi.js';
 import { recordDailyResult } from '../engine/dailyChallenge.js';
 import { renderChallengeHub, renderChallengeLeaderboard, startDailyChallenge, renderDailyLeaderboard } from './challenge.js';
 import { setInCareer } from './navbar.js';
@@ -968,6 +969,12 @@ export function endCareer(reason){
   if(p.challengeId && !p.savedChallengeResult){
     p.savedChallengeResult = true;
     recordMyChallengeResult(p.challengeId, { challengeId:p.challengeId, name:p.name, score:legend, tier, seasons:p.seasons.length, hof:p.hof, date:Date.now(), mine:true });
+    // Classement PARTAGÉ (voir engine/leaderboardApi.js, AGENDA.md "lot backend Supabase") :
+    // fire-and-forget explicite -- pas de `await`, jamais un `.catch()` qui remonterait quoi que
+    // ce soit ici, l'écran de fin de carrière s'affiche à l'identique que l'envoi réussisse, échoue,
+    // ou que le joueur soit hors ligne (voir la garantie de robustesse du module lui-même).
+    submitChallengeScore(p.challengeId, { name:p.name, score:legend, tier, seasons:p.seasons.length, hof:p.hof,
+      summary: { champs, mvps, allstars, peak:p.peakOvr } });
   }
   // Défi du jour (voir engine/dailyChallenge.js) : distinct du défi entre amis -- son propre
   // stockage, ne garde que le MEILLEUR score du jour, jamais un simple historique de tentatives.

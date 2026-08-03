@@ -22,6 +22,7 @@ import { stage } from './dom.js';
 import { setInCareer } from './navbar.js';
 import { screenTitle, screenCreate } from './screens.js';
 import { hasSavedGame, clearSavedGame } from '../engine/savegame.js';
+import { fetchChallengeScores } from '../engine/leaderboardApi.js';
 import { t } from '../engine/i18n.js';
 import { TIER_RANK } from '../engine/badges.js';
 import { rankGlyph } from './card.js';
@@ -159,11 +160,13 @@ function renderChallengeJoinLanding(def) {
 }
 
 /* ---- Classement d'un défi ---- */
-export function renderChallengeLeaderboard(challengeId) {
-  setInCareer(false);
-  const entry = getChallenge(challengeId);
-  const results = (entry && entry.results) || [];
-  const rows = results.length ? results.map((r, i) => `
+// Rendu des lignes seul (voir renderChallengeLeaderboard() ci-dessous) : réutilisé tel quel pour
+// le premier affichage LOCAL (immédiat, jamais d'attente réseau) et pour le remplacement par le
+// classement SERVEUR une fois reçu (voir AGENDA.md "lot backend Supabase") -- même structure
+// visuelle dans les deux cas, `mine` est déjà correctement posé par la source (localStorage pour
+// le local, correspondance client_id pour le serveur, voir engine/leaderboardApi.js).
+function leaderboardRowsHTML(results) {
+  return results.length ? results.map((r, i) => `
     <div class="hof-row${i === 0 ? ' top' : i < 3 ? ' podium' : ''}${r.mine ? ' mine' : ''}">
       ${rankGlyph(i)}
       <span class="hof-main">
@@ -173,16 +176,25 @@ export function renderChallengeLeaderboard(challengeId) {
       <span class="hof-score"><b>${r.score}</b><small>score</small></span>
     </div>`).join('')
     : `<p class="body" style="text-align:center;color:var(--chalk-dim);margin:20px 0">Aucun résultat pour l'instant. Sois le premier à terminer ce défi !</p>`;
+}
+export function renderChallengeLeaderboard(challengeId) {
+  setInCareer(false);
+  const entry = getChallenge(challengeId);
+  const results = (entry && entry.results) || [];
   const myResult = results.find(r => r.mine);
   stage.innerHTML = `<div class="end" style="text-align:left">
     <div class="eyebrow" style="text-align:center">🔗 Classement du défi</div>
-    <h2 style="text-align:center;font-size:24px;margin:6px 0 14px">Qui s'en sort le mieux ?</h2>
+    <h2 style="text-align:center;font-size:24px;margin:6px 0 4px">Qui s'en sort le mieux ?</h2>
+    <p class="body" id="leaderboardStatus" style="text-align:center;color:var(--chalk-dim);font-size:12px;min-height:15px;margin:0 0 8px"></p>
     ${entry && entry.def ? profileSummary(entry.def) : ''}
-    <div class="hof-list" style="max-width:560px;margin:18px auto 0">${rows}</div>
+    <div class="hof-list" id="leaderboardRows" style="max-width:560px;margin:18px auto 0">${leaderboardRowsHTML(results)}</div>
+    <div style="margin-top:10px;text-align:center">
+      <button class="btn ghost sm" id="refreshLeaderboard">🔄 Actualiser le classement</button>
+    </div>
     <!-- Deux actions nettes et distinctes (voir AGENDA.md "correction prioritaire", point 2) :
          rejouer CE défi (même profil de départ, pour retenter un meilleur score) contre en lancer
          un TOUT NOUVEAU -- jamais la même action, jamais ambiguës l'une avec l'autre. -->
-    <div style="margin-top:26px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+    <div style="margin-top:16px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
       ${entry && entry.def ? `<button class="btn" id="replayChallenge">🔁 Rejouer ce défi</button>` : ''}
       <button class="btn ${entry && entry.def ? 'ghost' : ''}" id="newChallenge">🆕 Nouveau défi</button>
     </div>
@@ -205,6 +217,31 @@ export function renderChallengeLeaderboard(challengeId) {
   document.getElementById('newChallenge').onclick = () => { if (!guardOverwrite()) return; startChallengeCreation(); };
   document.getElementById('myChallengesLink').onclick = () => renderMyChallenges();
   document.getElementById('leaderboardBack').onclick = () => screenTitle();
+
+  // Classement PARTAGÉ (voir engine/leaderboardApi.js, AGENDA.md "lot backend Supabase") : le
+  // local s'affiche IMMÉDIATEMENT ci-dessus (jamais d'attente réseau pour voir quelque chose),
+  // puis remplacé par le classement serveur (tous les participants, plus besoin d'échanger un
+  // lien de résultat) dès qu'il arrive. En cas d'échec (hors ligne, serveur injoignable) : message
+  // clair à la place d'une erreur, le classement local reste affiché tel quel -- ROBUSTESSE
+  // IMPÉRATIVE, jamais un écran cassé.
+  async function loadRemote(manual) {
+    const statusEl = document.getElementById('leaderboardStatus');
+    if (manual && statusEl) statusEl.textContent = 'Actualisation du classement…';
+    const remote = await fetchChallengeScores(challengeId);
+    // L'écran a pu être quitté pendant l'attente réseau -- ne touche plus rien dans ce cas.
+    const rowsEl = document.getElementById('leaderboardRows');
+    const statusEl2 = document.getElementById('leaderboardStatus');
+    if (!rowsEl || !statusEl2) return;
+    if (remote) {
+      const sorted = [...remote].sort((a, b) => b.score - a.score);
+      rowsEl.innerHTML = leaderboardRowsHTML(sorted);
+      statusEl2.textContent = '';
+    } else {
+      statusEl2.textContent = '📡 Classement local uniquement -- hors ligne ou serveur injoignable pour l\'instant.';
+    }
+  }
+  loadRemote(false);
+  document.getElementById('refreshLeaderboard').onclick = () => loadRemote(true);
 }
 
 // ---- Accès permanent aux classements des défis déjà joués (voir AGENDA.md "correction

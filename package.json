@@ -17,6 +17,8 @@
     "audit:retention": "node tests/audit_retention.mjs",
     "audit:polish": "node tests/audit_polish.mjs",
     "audit:challenge-revisit": "node tests/audit_challenge_revisit.mjs",
+    "audit:leaderboard": "node tests/audit_leaderboard_offline.mjs",
+    "audit:leaderboard-live": "node tests/audit_leaderboard_live.mjs",
     "gen:data": "node scripts/gen-club-data.mjs",
     "ship": "node scripts/ship.mjs"
   },

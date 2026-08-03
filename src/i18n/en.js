@@ -6,6 +6,7 @@ export const EN = {
     back: 'Back', continueBtn: 'Continue', cancel: 'Cancel', close: 'Close',
     accept: 'Accept', decline: 'Decline', share: 'Share', download: 'Download',
     copy: 'Copy', copied: 'Copied!', linkCopied: 'Link copied!', years: 'yo', seasons: 'seasons',
+    save: 'Save',
   },
   positions: {
     PG: { name: 'Point Guard', desc: 'The brain. Vision, dribbling, tempo.' },
@@ -83,8 +84,10 @@ export const EN = {
     eyebrow: '⚙️ Settings', title: 'Settings', language: 'Language', languageDesc: 'Change the language of the interface, menus, and all game statistics.',
     narrativeNote: 'Career events (stories, choices, dialogue) currently remain in French regardless of the language chosen.',
     button: '⚙️ Settings',
+    nickname: 'Nickname', nicknameDesc: 'Your identity on the friend-challenge leaderboard -- distinct from your character\'s name.',
   },
   wallet: { chip: '💰 Wallet: {balance}' },
+  challenge: { playingAs: 'You\'ll play as' },
   create: {
     step1Title: 'Your country', step1Sub: 'Your identity and national team eligibility -- your sporting starting point will be decided later, independently.',
     step2Title: 'Your position', step2Sub: 'It decides your role on the court and what will make you shine.',
@@ -107,7 +110,8 @@ export const EN = {
     bestScoreChip: '🏆 Best legend score: {score}',
     modesLabel: 'Game modes', friendChallengeTitle: 'Friend Challenge', friendChallengeDesc: 'Same starting profile, compare your careers',
     dailyChallengeTitle: 'Daily Challenge', dailyChallengeDesc: 'A set profile, your personal leaderboard',
-    trackingLabel: 'Tracking &amp; records', hofBtn: '🏆 Hall of Fame', badgesBtn: '🎖️ Achievements', progressBtn: '📊 My Progress', shopBtn: '🛍️ Shop',
+    trackingLabel: 'Tracking &amp; records', hofBtn: '🏆 Hall of Fame', shopBtn: '🛍️ Shop',
+    profileCareersChip: '{n} career{s}', profileBadgesChip: '{count}/{total} achievements',
     kbd: 'Write your legend, season after season · ', howToPlay: 'how to play?',
     credit: 'Created by Gaspard G · ', manageCookies: 'Manage cookies',
   },
@@ -172,8 +176,8 @@ export const EN = {
     unlockedSection: '🏆 Unlocked ({count})', lockedSection: '🔒 To unlock ({count})',
     reset: 'Reset my achievements', confirmReset: 'Reset all unlocked achievements?',
   },
-  progress: {
-    eyebrow: '📊 My progress', title: 'Your legend grows',
+  profile: {
+    eyebrow: '👤 My profile', title: 'Your legend grows',
     subtitleWithCareers: '{n} career{s} completed.',
     subtitleEmpty: 'No career completed yet -- the first one is always the most memorable.',
     noTitleEquipped: 'No title equipped',
@@ -181,7 +185,8 @@ export const EN = {
     longestCareer: 'Longest career', personalRecords: '🌟 Personal records', highestPeak: 'Highest peak OVR',
     titlesOneCareer: 'Titles (one career)', mvpOneCareer: 'MVP (one career)', bestPtsRecord: 'Best pts/game record',
     tripleDoublesOneCareer: 'Triple-doubles (one career)',
-    viewHof: '🏆 View Hall of Fame', viewBadges: '🎖️ View my achievements', shopBtn: '🛍️ Shop (💰 {balance})',
+    badgesSection: '🎖️ Achievements', noBadgesYet: 'No achievement unlocked yet.', viewAllBadges: 'View all my achievements',
+    viewHof: '🏆 View Hall of Fame', shopBtn: '🛍️ Shop (💰 {balance})',
   },
   stats: {
     legendScore: 'Legend Score', titles: 'Titles', mvp: 'MVP', allstar: 'All-Star', clutch: 'Clutch',

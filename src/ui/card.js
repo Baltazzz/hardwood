@@ -8,10 +8,7 @@ import { setInCareer } from './navbar.js';
 import { trackEvent } from '../engine/analytics.js';
 import { shareOrFallback, canvasToFile } from './share.js';
 import { hexToRgba } from '../engine/accent.js';
-import { walletBalance } from '../engine/wallet.js';
-import { money } from '../engine/utils.js';
-import { equippedCardStyleId, equippedFrameId, equippedTitleId, cosmeticById } from '../engine/cosmetics.js';
-import { renderShop } from './shop.js';
+import { equippedCardStyleId } from '../engine/cosmetics.js';
 import { t } from '../engine/i18n.js';
 
 // Totaux cumulés de carrière (points/passes/rebonds/contres/interceptions) : séparateur de
@@ -115,75 +112,6 @@ export function renderBadges(){
   </div>`;
   document.getElementById('badgesBack').onclick=()=>screenTitle();
   const bc=document.getElementById('badgesClear'); if(bc) bc.onclick=()=>{ if(confirm(t('badgesScreen.confirmReset'))){ badgesClear(); renderBadges(); } };
-}
-
-/* ============================================================
-   MA PROGRESSION — récapitulatif cumulé à travers toutes les
-   carrières (voir AGENDA.md, lot rétention) : nombre de carrières
-   jouées (compteur dédié, engine/badges.js -- le Panthéon ne garde
-   que les 12 meilleures), meilleur score légende, badges débloqués,
-   et quelques records personnels tirés du Panthéon.
-============================================================ */
-function recordRow(label, value) {
-  return `<div class="lg"><div class="v">${value}</div><div class="l">${label}</div></div>`;
-}
-export function renderProgress(){
-  setInCareer(false);
-  const list = hofLoad();
-  const state = badgesState();
-  const totalCareers = state.totalCareers || 0;
-  const best = hofBest();
-  const badgeCount = Object.keys(state.unlocked).length;
-  // Records tirés du Panthéon (les 12 meilleures carrières) : suffisant pour des "records
-  // marquants" -- une carrière plus modeste qu'aucune des 12 meilleures n'a de toute façon pas
-  // battu de record personnel.
-  const maxSeasons = list.length ? Math.max(...list.map(r=>r.seasons||0)) : 0;
-  const maxPeak = list.length ? Math.max(...list.map(r=>r.peak||0)) : 0;
-  const maxChamps = list.length ? Math.max(...list.map(r=>r.champs||0)) : 0;
-  const maxMvps = list.length ? Math.max(...list.map(r=>r.mvps||0)) : 0;
-  const maxPts = list.length ? Math.max(...list.map(r=>r.bestPts||0)) : 0;
-  const maxTd = list.length ? Math.max(...list.map(r=>r.tripleDoubles||0)) : 0;
-  // Profil cosmétique (voir engine/cosmetics.js) : cadre + titre honorifique équipés depuis la
-  // boutique, purement décoratifs -- aucun des deux n'entre dans un calcul, tous deux optionnels
-  // (aucun équipé par défaut).
-  const frameId = equippedFrameId();
-  const titleItem = cosmeticById(equippedTitleId());
-  const profileHeader = (frameId || titleItem) ? `<div class="profile-header ${frameId?`frame-${frameId.replace('frame_','')}`:''}">
-      ${titleItem?`<span class="profile-title-chip">${t('cosmetics.'+titleItem.id+'.name')}</span>`:`<span class="profile-title-chip" style="color:var(--chalk-dim)">${t('progress.noTitleEquipped')}</span>`}
-    </div>` : '';
-  stage.innerHTML = `<div class="end" style="text-align:left">
-    <div class="eyebrow" style="text-align:center">${t('progress.eyebrow')}</div>
-    <h2 style="text-align:center;font-size:26px;margin:6px 0 4px">${t('progress.title')}</h2>
-    <p class="body" style="text-align:center;color:var(--chalk-dim);margin-bottom:18px;font-size:13.5px">${totalCareers?t('progress.subtitleWithCareers',{n:totalCareers,s:totalCareers>1?'s':''}):t('progress.subtitleEmpty')}</p>
-    ${profileHeader}
-    <div class="legend-grid" style="max-width:560px">
-      ${recordRow(t('progress.careersPlayed'), totalCareers)}
-      ${recordRow(t('progress.bestScore'), best)}
-      ${recordRow(t('progress.badgesUnlocked'), `${badgeCount}/${BADGES.length}`)}
-      ${recordRow(t('progress.longestCareer'), maxSeasons?`${maxSeasons} ${t('hof.seasons')}`:'--')}
-    </div>
-    ${list.length?`
-    <div class="recap-block" style="max-width:640px">
-      <div class="eyebrow" style="text-align:center;margin-bottom:14px">${t('progress.personalRecords')}</div>
-      <div class="legend-grid">
-        ${recordRow(t('progress.highestPeak'), maxPeak||'--')}
-        ${recordRow(t('progress.titlesOneCareer'), maxChamps)}
-        ${recordRow(t('progress.mvpOneCareer'), maxMvps)}
-        ${recordRow(t('progress.bestPtsRecord'), maxPts||'--')}
-        ${recordRow(t('progress.tripleDoublesOneCareer'), maxTd)}
-      </div>
-    </div>`:''}
-    <div style="margin-top:26px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-      <button class="btn" id="progressBack">${t('common.back')}</button>
-      <button class="btn ghost" id="progressHof">${t('progress.viewHof')}</button>
-      <button class="btn ghost" id="progressBadges">${t('progress.viewBadges')}</button>
-      <button class="btn ghost" id="progressShop">${t('progress.shopBtn',{balance:money(walletBalance())})}</button>
-    </div>
-  </div>`;
-  document.getElementById('progressBack').onclick=()=>screenTitle();
-  document.getElementById('progressHof').onclick=()=>renderHallOfFame();
-  document.getElementById('progressBadges').onclick=()=>renderBadges();
-  document.getElementById('progressShop').onclick=()=>renderShop();
 }
 
 // rank : index dans le Panthéon (0-based, voir renderHallOfFame()) -- optionnel, absent quand la

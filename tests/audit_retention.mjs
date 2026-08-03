@@ -155,20 +155,22 @@ async function main() {
     pickRandomEl(document.querySelectorAll('.opt')).click();
     clickId(document, 'nextC');
     clickId(document, 'nextC');
-    check('défi du jour : AUCUN écran de choix d\'académie affiché (déjà engagé, contrairement au défi entre amis)',
+    check('défi du jour : AUCUN écran de choix d\'académie affiché (déjà engagé)',
       document.querySelectorAll('.academy-opt').length === 0);
     check('défi du jour : la carrière a bien démarré directement (écran de saison/événement affiché)',
       !!document.getElementById('afterSeason') || !!document.querySelector('.choice') || !!document.getElementById('natContinue'));
 
-    // Défi entre amis, en comparaison : garde bien le choix d'académie (non régressé par ce lot).
+    // Défi entre amis, en comparaison : depuis AGD-58 (équité totale), le profil de départ est
+    // désormais TOTALEMENT imposé lui aussi (mode de vie/nom/académie compris, pas seulement
+    // nation/poste/style/attributs) -- "Continuer" mène donc directement dans la saison, plus
+    // aucune étape de création à piloter, exactement comme le défi du jour ci-dessus.
     challengeUi.startChallengeCreation();
     clickId(document, 'startMyChallenge');
     clickId(document, 'continueJoin');
-    pickRandomEl(document.querySelectorAll('.opt')).click();
-    clickId(document, 'nextC');
-    clickId(document, 'nextC');
-    check('défi entre amis : l\'écran de choix d\'académie reste bien affiché (choix libre, pas "déjà engagé")',
-      document.querySelectorAll('.academy-opt').length > 0);
+    check('défi entre amis : AUCUN écran de choix d\'académie affiché (profil totalement imposé depuis AGD-58)',
+      document.querySelectorAll('.academy-opt').length === 0);
+    check('défi entre amis : la carrière a bien démarré directement (écran de saison/événement affiché)',
+      !!document.getElementById('afterSeason') || !!document.querySelector('.choice') || !!document.getElementById('natContinue'));
   }
 
   // ---- 9. Écran de fin de carrière : les nouveaux blocs s'affichent sans crasher, sur une vraie carrière pilotée ----

@@ -7,6 +7,7 @@ export const FR = {
     back: 'Retour', continueBtn: 'Continuer', cancel: 'Annuler', close: 'Fermer',
     accept: 'Accepter', decline: 'Refuser', share: 'Partager', download: 'Télécharger',
     copy: 'Copier', copied: 'Copié !', linkCopied: 'Lien copié !', years: 'ans', seasons: 'saisons',
+    save: 'Enregistrer',
   },
   positions: {
     PG: { name: 'Meneur', desc: 'Le cerveau. Vision, dribble, tempo.' },
@@ -86,8 +87,10 @@ export const FR = {
     eyebrow: '⚙️ Réglages', title: 'Réglages', language: 'Langue', languageDesc: 'Change la langue de l\'interface, des menus et de toutes les statistiques du jeu.',
     narrativeNote: 'Les événements de carrière (histoires, choix, dialogues) restent en français pour l\'instant, quelle que soit la langue choisie.',
     button: '⚙️ Réglages',
+    nickname: 'Pseudo', nicknameDesc: 'Ton identité au classement des défis entre amis -- distincte du nom de ton personnage.',
   },
   wallet: { chip: '💰 Cagnotte : {balance}' },
+  challenge: { playingAs: 'Tu joueras sous le pseudo' },
   create: {
     step1Title: 'Ton pays', step1Sub: 'Ton identité et ton éligibilité en sélection nationale -- ton point de départ sportif se décidera plus tard, indépendamment.',
     step2Title: 'Ton poste', step2Sub: 'Il décide de ton rôle sur le terrain et de ce qui te fera briller.',
@@ -110,7 +113,8 @@ export const FR = {
     bestScoreChip: '🏆 Meilleur score légende : {score}',
     modesLabel: 'Modes de jeu', friendChallengeTitle: 'Défi entre amis', friendChallengeDesc: 'Même profil de départ, comparez vos carrières',
     dailyChallengeTitle: 'Défi du jour', dailyChallengeDesc: 'Un profil imposé, ton classement personnel',
-    trackingLabel: 'Suivi &amp; records', hofBtn: '🏆 Panthéon', badgesBtn: '🎖️ Hauts faits', progressBtn: '📊 Ma progression', shopBtn: '🛍️ Boutique',
+    trackingLabel: 'Suivi &amp; records', hofBtn: '🏆 Panthéon', shopBtn: '🛍️ Boutique',
+    profileCareersChip: '{n} carrière{s}', profileBadgesChip: '{count}/{total} badges',
     kbd: 'Écris ta légende, saison après saison · ', howToPlay: 'comment jouer ?',
     credit: 'Créé par Gaspard G · ', manageCookies: 'Gérer les cookies',
   },
@@ -175,8 +179,8 @@ export const FR = {
     unlockedSection: '🏆 Débloqués ({count})', lockedSection: '🔒 À décrocher ({count})',
     reset: 'Réinitialiser mes hauts faits', confirmReset: 'Réinitialiser tous les hauts faits débloqués ?',
   },
-  progress: {
-    eyebrow: '📊 Ma progression', title: 'Ta légende grandit',
+  profile: {
+    eyebrow: '👤 Mon profil', title: 'Ta légende grandit',
     subtitleWithCareers: '{n} carrière{s} menée{s} à terme.',
     subtitleEmpty: 'Aucune carrière terminée pour l\'instant -- la première est toujours la plus marquante.',
     noTitleEquipped: 'Aucun titre équipé',
@@ -184,7 +188,8 @@ export const FR = {
     longestCareer: 'Plus longue carrière', personalRecords: '🌟 Records personnels', highestPeak: 'Pic OVR le plus haut',
     titlesOneCareer: 'Titres (une carrière)', mvpOneCareer: 'MVP (une carrière)', bestPtsRecord: 'Meilleur record pts/match',
     tripleDoublesOneCareer: 'Triple-doubles (une carrière)',
-    viewHof: '🏆 Voir le Panthéon', viewBadges: '🎖️ Voir mes hauts faits', shopBtn: '🛍️ Boutique (💰 {balance})',
+    badgesSection: '🎖️ Hauts faits', noBadgesYet: 'Aucun haut fait débloqué pour l\'instant.', viewAllBadges: 'Voir tous mes hauts faits',
+    viewHof: '🏆 Voir le Panthéon', shopBtn: '🛍️ Boutique (💰 {balance})',
   },
   stats: {
     legendScore: 'Score légende', titles: 'Titres', mvp: 'MVP', allstar: 'All-Star', clutch: 'Clutch',

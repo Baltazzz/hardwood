@@ -41,12 +41,6 @@ function driveCareerToEnd(document, errors) {
   }
   throw new Error('plafond atteint');
 }
-function driveCreationSteps(document) {
-  pickRandomEl(document.querySelectorAll('.opt')).click(); clickId(document, 'nextC');
-  clickId(document, 'nextC');
-  pickRandomEl(document.querySelectorAll('.academy-opt')).click();
-}
-
 async function main() {
   const { document, errors } = setupEnvironment();
   localStorage.setItem('hw_welcome_seen', '1');
@@ -84,7 +78,6 @@ async function main() {
   const link1 = document.getElementById('challengeLink').value;
   clickId(document, 'startMyChallenge');
   clickId(document, 'continueJoin');
-  driveCreationSteps(document);
   driveCareerToEnd(document, errors);
   clickId(document, 'challengeCompare');
   const challengeId1 = state.G.challengeId;
@@ -110,7 +103,6 @@ async function main() {
   check('rejouer ramène directement à l\'atterrissage du défi (même profil imposé)', !!document.getElementById('continueJoin'));
   check('rejouer préserve bien le MÊME id de défi', state.G.challengeId === challengeId1);
   clickId(document, 'continueJoin');
-  driveCreationSteps(document);
   driveCareerToEnd(document, errors);
   clickId(document, 'challengeCompare');
   const score2 = challengesEngine.getChallenge(challengeId1).results.find(r => r.mine).score;
@@ -128,7 +120,6 @@ async function main() {
   const challengeId2 = state.G.challengeId;
   check('le nouveau défi a bien un id différent du premier', challengeId2 !== challengeId1);
   clickId(document, 'continueJoin');
-  driveCreationSteps(document);
   driveCareerToEnd(document, errors);
   clickId(document, 'challengeCompare');
   check('le 2e défi enregistre bien son propre score, indépendant du premier', challengesEngine.getChallenge(challengeId2).results.find(r => r.mine) != null);

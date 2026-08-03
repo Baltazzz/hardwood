@@ -59,11 +59,10 @@ export function generateDailyDef(dateStr = getTodayDateStr()) {
   const def = generateChallengeDef(seed);
   def.id = 'daily-' + dateStr; // jamais l'id dérivé de la graine (voir challenges.js) -- distinct de l'id d'un défi entre amis
   def.date = dateStr;
-  // Dérivés de la MÊME graine (déterministe, jamais recalculés séparément) : la case d'académie
-  // imposée (index dans def.academyOffers, jamais un tirage indépendant) et le thème du jour
-  // affiché à l'écran -- deux bases de modulo différentes pour ne pas les faire coïncider
-  // artificiellement d'un jour à l'autre.
-  def.forcedAcademyIndex = def.academyOffers.length ? seed % def.academyOffers.length : 0;
+  // def.forcedAcademyIndex est déjà posé par generateChallengeDef() ci-dessus (voir AGENDA.md
+  // AGD-58 -- centralisé là-bas pour profiter aussi au défi entre amis). Thème du jour dérivé de
+  // la MÊME graine, base de modulo différente pour ne pas coïncider artificiellement avec l'index
+  // d'académie d'un jour à l'autre.
   def.themeIdx = Math.floor(seed / 7) % DAILY_THEMES.length;
   return def;
 }

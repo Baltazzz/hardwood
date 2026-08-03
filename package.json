@@ -19,6 +19,7 @@
     "audit:challenge-revisit": "node tests/audit_challenge_revisit.mjs",
     "audit:leaderboard": "node tests/audit_leaderboard_offline.mjs",
     "audit:leaderboard-live": "node tests/audit_leaderboard_live.mjs",
+    "audit:profile-identity": "node tests/audit_profile_identity.mjs",
     "gen:data": "node scripts/gen-club-data.mjs",
     "ship": "node scripts/ship.mjs"
   },

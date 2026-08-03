@@ -91,6 +91,62 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Coché récemment
 
+- [x] **AGD-58 — Lot identité de joueur : profil persistant, tuile regroupée, équité du défi entre amis** _(implémenté et vérifié le 2026-08-03)_
+  Trois volets demandés explicitement, plan détaillé validé avec l'utilisateur avant exécution.
+  1. *Profil de joueur persistant*. Nouveau module `engine/profile.js` (`hardwood_profile_v1`,
+     même gabarit robuste que badges/wallet/cosmetics) : un pseudo est auto-généré et persisté
+     SILENCIEUSEMENT dès le tout premier accès (`getProfile()`), sans écran bloquant -- ajustement
+     demandé explicitement en cours de session (la conversion depuis un lien de défi partagé exige
+     de pouvoir démarrer une carrière immédiatement). Modifiable à 3 endroits, chacun au moment où
+     il prend du sens : réglages (`ui/settings.js`, nouveau bloc), tuile de profil (`ui/profile.js`),
+     et écran de défi entre amis (`ui/challenge.js` -- hub/création/atterrissage, édition en ligne
+     sans redirection qui casserait le geste en cours).
+  2. *Tuile de profil regroupée*. Nouvel écran `renderProfile()` (`ui/profile.js`) remplace
+     `renderProgress()` (retiré de `ui/card.js`) : pseudo + statistiques cumulées + résumé de hauts
+     faits (compteur + icônes, lien vers la grille complète inchangée) + progression, personnalisable
+     via les cadres/titres déjà achetables en boutique (repris tel quel de l'ancien écran). Nouvelle
+     tuile visuelle sur l'accueil (remplace les puces séparées "Ma progression"/"Hauts faits"), fond
+     SVG dédié (sceau/médaillon festonné fait main, jamais réutilisé ailleurs dans le jeu, opacité
+     discrète -- même convention que les motifs existants de `styles.css`).
+  3. *Équité totale du défi entre amis* (le point le plus sensible). `generateChallengeDef()`
+     (`engine/challenges.js`) impose désormais AUSSI le nom du personnage et le mode de vie (déjà
+     seedé pour le nom via `rollTalent()`, nouveau tirage seedé pour le mode de vie), et centralise
+     le calcul de l'académie imposée (`forcedAcademyIndex`, partagé avec le défi du jour). Comme un
+     lien de défi n'encode que sa graine, ces nouveaux champs voyagent gratuitement -- aucun impact
+     sur la longueur du lien (AGD-42 préservé). `joinChallenge()` (`ui/challenge.js`) impose
+     désormais mode de vie/nom/académie en plus du reste, et roule explicitement l'archétype de
+     développement (`rollArchetypeAndName()`, sans quoi `p.devArchetype` -- qui influence réellement
+     la simulation, vérifié dans `engine/season.js` -- resterait `null`). L'assistant de création
+     est entièrement court-circuité pour un joueur de défi (`screenCreate()` : `startCareer()`
+     immédiat si `p.challengeId`), et `engine/season.js` saute l'écran de choix d'académie pour les
+     défis entre amis comme il le faisait déjà pour le défi du jour. Le classement utilise désormais
+     le PSEUDO DE COMPTE (`profileNickname()`) plutôt que le nom du personnage pour identifier chaque
+     participant (`endCareer()`) -- indispensable puisque le nom de personnage est maintenant
+     identique pour tous. Défi du jour non touché (mode de vie/nom restent libres, comme demandé).
+  **Vérifié directement** : nouveau `npm run audit:profile-identity` (16 vérifications, deux process
+  Node indépendants simulant deux appareils distincts) -- pseudo auto-généré silencieusement dès le
+  premier accès sans action explicite, premier lancement confirmé mener directement à l'écran titre
+  normal (aucun écran de configuration interposé), pseudo modifiable confirmé aux 3 endroits prévus,
+  et surtout : deux appareils rejoignant le MÊME défi obtiennent un nom de personnage, un mode de vie
+  et une académie (même club de départ) STRICTEMENT identiques, tout en affichant deux pseudos de
+  classement bien DISTINCTS. Non-régression : `npm run audit`/`audit:meta`/`audit:i18n`/
+  `audit:coherence`/`audit:cosmetics`/`audit:link`/`audit:retention`/`audit:polish`/`audit:leaderboard`
+  tous verts ; `audit:challenge`/`audit:challenge-revisit` mis à jour (l'ancien pilotage de
+  l'assistant de création pour un défi entre amis n'a plus lieu d'être, remplacé par la vérification
+  du nouveau flux direct) et repassent au vert ; `scripts/deep-audit.mjs` 300 carrières -- 0% crash,
+  0 violation d'intégrité `once`, taux de titre élite 13,3% (bande normale 7,7-21,7%). `npm run build`
+  et rendu réel démarré (`npm run dev`) pour inspection visuelle -- **limite transparente** : aucun
+  outil d'automatisation navigateur disponible cette session (extension Claude in Chrome déclinée,
+  pas de Playwright/chromium-cli installé) pour capturer des captures d'écran ; le serveur a été
+  ouvert dans le navigateur de l'utilisateur pour une vérification visuelle manuelle, la correction
+  fonctionnelle repose sur les audits DOM ci-dessus (présence des éléments, contenu HTML, zéro
+  erreur JS), pas sur une inspection visuelle automatisée.
+  **Limite acceptée, documentée** : une carrière de défi entre amis sauvegardée pile au milieu de
+  l'ancien assistant de création (entre les anciennes étapes 3 et 5), au moment précis où cette mise
+  à jour est déployée, reprendrait directement dans la saison avec un nom/mode de vie potentiellement
+  encore vide -- fenêtre extrêmement étroite, acceptée plutôt que sur-corrigée (même tolérance que
+  d'autres évolutions de schéma passées, ex. AGD-56).
+
 - [x] **AGD-57 — Backend Supabase pour le classement des défis entre amis** _(implémenté et vérifié le 2026-08-03)_
   Suite du lot backend Supabase (migration SQL + client REST + branchement dans `endCareer()`/le
   podium, déjà commités en 4 commits précédents) : la table `challenge_scores` était absente du

@@ -13,7 +13,8 @@ import { catTag } from '../engine/events.js';
 import { pickClub, pickClubName, pickClubs, clubInfo } from '../engine/clubs.js';
 import { renderHUD, animateStats } from './hud.js';
 import { resetAccent } from '../engine/accent.js';
-import { renderHallOfFame, renderCareerCard, renderBadges, renderProgress, fmtNum } from './card.js';
+import { renderHallOfFame, renderCareerCard, renderBadges, fmtNum } from './card.js';
+import { renderProfile } from './profile.js';
 import { renderTrophyCabinet, medalIcon } from './trophies.js';
 import { activeTags, renderTagChips, renderTraitUnlockCard } from '../engine/tags.js';
 import { pick, clamp, money, ordinal, ri } from '../engine/utils.js';
@@ -23,6 +24,7 @@ import { trackEvent } from '../engine/analytics.js';
 import { reopenConsentBanner } from './consentBanner.js';
 import { recordMyChallengeResult } from '../engine/challenges.js';
 import { submitChallengeScore } from '../engine/leaderboardApi.js';
+import { profileNickname } from '../engine/profile.js';
 import { recordDailyResult } from '../engine/dailyChallenge.js';
 import { renderChallengeHub, renderChallengeLeaderboard, startDailyChallenge, renderDailyLeaderboard } from './challenge.js';
 import { setInCareer } from './navbar.js';
@@ -124,6 +126,11 @@ export function screenTitle(){
   if(!welcomeSeen()){ screenWelcome(); return; }
   const best=hofBest();
   const wallet=walletBalance();
+  // Tuile de profil regroupée (voir AGENDA.md AGD-58) : pseudo + résumé -- mêmes données que
+  // l'écran de profil complet (ui/profile.js renderProfile()), simplement condensées ici.
+  const badgeState = badgesState();
+  const totalCareers = badgeState.totalCareers||0;
+  const badgeCount = Object.keys(badgeState.unlocked).length;
   // Reprise de partie (voir engine/savegame.js) : bouton principal quand une carrière est en
   // pause, "Commencer" repasse alors en secondaire -- reprendre est l'intention la plus probable.
   const resumable = hasSavedGame();
@@ -159,6 +166,20 @@ export function screenTitle(){
       </div>
     </div>
 
+    <!-- Tuile de profil regroupée (voir AGENDA.md AGD-58) : pseudo + statistiques cumulées +
+         badges + progression réunis en un seul geste, personnalisable via les cosmétiques de la
+         boutique (cadre/titre, voir renderProfile() dans ui/profile.js) -- remplace les anciennes
+         puces séparées "Ma progression"/"Hauts faits" du groupe Suivi & records ci-dessous. -->
+    <div class="home-group home-profile">
+      <button class="profile-tile" id="profileTile">
+        <span class="profile-tile-name">👤 ${profileNickname()}</span>
+        <span class="profile-tile-stats">
+          <span>${t('home.profileCareersChip',{n:totalCareers,s:totalCareers>1?'s':''})}</span>
+          <span>${t('home.profileBadgesChip',{count:badgeCount,total:BADGES.length})}</span>
+        </span>
+      </button>
+    </div>
+
     <!-- Suivi & records : puces compactes, format le plus scalable des trois groupes (voir
          styles.css) -- la Boutique rejoint ce groupe comme prévu par sa conception (voir
          AGENDA.md AGD-41), sans rien bousculer. Réglages (voir AGENDA.md "réglages et langue
@@ -167,8 +188,6 @@ export function screenTitle(){
       <div class="eyebrow home-group-label">${t('home.trackingLabel')}</div>
       <div class="home-meta-row">
         <button class="btn ghost sm" id="hof">${t('home.hofBtn')}</button>
-        <button class="btn ghost sm" id="badges">${t('home.badgesBtn')}</button>
-        <button class="btn ghost sm" id="progress">${t('home.progressBtn')}</button>
         <button class="btn ghost sm" id="shop">${t('home.shopBtn')}</button>
         <button class="btn ghost sm" id="settings">${t('settings.button')}</button>
       </div>
@@ -193,13 +212,12 @@ export function screenTitle(){
   // consulter les classements reste une navigation non destructrice.
   document.getElementById('challengeCreate').onclick=()=>renderChallengeHub();
   document.getElementById('hof').onclick=()=>renderHallOfFame();
-  document.getElementById('badges').onclick=()=>renderBadges();
+  document.getElementById('profileTile').onclick=()=>renderProfile();
   document.getElementById('dailyChallenge').onclick=()=>{
     if(hasSavedGame() && !confirm(t('home.confirmOverwriteDaily'))) return;
     clearSavedGame();
     startDailyChallenge();
   };
-  document.getElementById('progress').onclick=()=>renderProgress();
   document.getElementById('shop').onclick=()=>renderShop();
   document.getElementById('settings').onclick=()=>renderSettings();
   document.getElementById('welcomeReopen').onclick=(e)=>{ e.preventDefault(); screenWelcome(); };
@@ -229,6 +247,12 @@ export function resumeCareer(){
 
 export function screenCreate(){
   const p=G;
+  // Défi entre amis (voir ui/challenge.js joinChallenge(), AGENDA.md AGD-58 -- équité totale) :
+  // plus AUCUNE étape de création à choisir (nation/poste/style/mode de vie/nom/académie sont
+  // tous imposés par le défi) -- point de passage unique qui couvre à la fois le bouton
+  // "Continuer" de l'écran d'atterrissage et le repli de reprise de partie (resumeCareer()
+  // ci-dessous), sans dupliquer ce garde-fou à chaque appelant.
+  if(p.challengeId){ startCareer(); return; }
   setInCareer(true);
   if(p.step===0){ // nation
     // Grille compacte dédiée (voir .nation-grid/.nation-opt dans styles.css) : à la différence
@@ -861,7 +885,7 @@ export function renderForcedRetirement(onContinue){
 // possible (évite de dupliquer un libellé déjà traduit ailleurs), quelques clés dédiées sinon.
 const BADGE_UNIT_I18N = {
   clutchMoments:'endCareer.clutchMoments', tripleDoubles:'stats.tripleDoubles', mvps:'stats.mvp',
-  points:'stats.points', titles:'stats.titles', careers:'progress.careersPlayed', legendScore:'stats.legendScore',
+  points:'stats.points', titles:'stats.titles', careers:'profile.careersPlayed', legendScore:'stats.legendScore',
   tournaments:'endCareer.unitTournaments', leagueTiers:'endCareer.unitLeagueTiers',
   scorerTitles:'endCareer.unitScorerTitles', defenderTitles:'endCareer.unitDefenderTitles',
 };
@@ -966,14 +990,18 @@ export function endCareer(reason){
   // Défi entre amis (voir engine/challenges.js) : enregistre le score légende rattaché au défi,
   // une seule fois -- endCareer() peut être ré-invoqué (ex. retour depuis "Ma carte", qui rappelle
   // endCareer() comme callback), même garde-fou que p.savedHOF juste au-dessus.
+  // `name` est ici le PSEUDO DE COMPTE (engine/profile.js), pas p.name (nom du personnage) : depuis
+  // AGD-58, le profil de départ d'un défi entre amis est totalement imposé, donc p.name est
+  // IDENTIQUE pour tous les participants -- seul le pseudo de compte les distingue au classement.
   if(p.challengeId && !p.savedChallengeResult){
     p.savedChallengeResult = true;
-    recordMyChallengeResult(p.challengeId, { challengeId:p.challengeId, name:p.name, score:legend, tier, seasons:p.seasons.length, hof:p.hof, date:Date.now(), mine:true });
+    const nickname = profileNickname();
+    recordMyChallengeResult(p.challengeId, { challengeId:p.challengeId, name:nickname, score:legend, tier, seasons:p.seasons.length, hof:p.hof, date:Date.now(), mine:true });
     // Classement PARTAGÉ (voir engine/leaderboardApi.js, AGENDA.md "lot backend Supabase") :
     // fire-and-forget explicite -- pas de `await`, jamais un `.catch()` qui remonterait quoi que
     // ce soit ici, l'écran de fin de carrière s'affiche à l'identique que l'envoi réussisse, échoue,
     // ou que le joueur soit hors ligne (voir la garantie de robustesse du module lui-même).
-    submitChallengeScore(p.challengeId, { name:p.name, score:legend, tier, seasons:p.seasons.length, hof:p.hof,
+    submitChallengeScore(p.challengeId, { name:nickname, score:legend, tier, seasons:p.seasons.length, hof:p.hof,
       summary: { champs, mvps, allstars, peak:p.peakOvr } });
   }
   // Défi du jour (voir engine/dailyChallenge.js) : distinct du défi entre amis -- son propre

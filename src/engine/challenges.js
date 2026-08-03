@@ -13,6 +13,7 @@ import { newPlayer, rollTalent } from './player.js';
 import { NATIONS } from '../data/nations.js';
 import { POSITIONS } from '../data/positions.js';
 import { STYLES } from '../data/styles.js';
+import { LIFESTYLES } from '../data/lifestyles.js';
 import { generateAcademyOffers } from './academies.js';
 import { withSeededRandom } from './prng.js';
 
@@ -52,15 +53,24 @@ function slimOffers(offers) {
 // et le défi du jour (engine/dailyChallenge.js).
 //
 // `seed` (optionnel) : TOUTE la génération (nation/poste/style/attributs/potentiel/offres
-// d'académie) tourne sous Math.random substitué par un générateur déterministe dérivé de cette
-// graine (voir engine/prng.js) -- reproductible à l'identique pour la même graine. Sans `seed`
-// fourni (création d'un nouveau défi entre amis), une graine fraîche est tirée au hasard.
+// d'académie/mode de vie/nom/académie retenue) tourne sous Math.random substitué par un générateur
+// déterministe dérivé de cette graine (voir engine/prng.js) -- reproductible à l'identique pour la
+// même graine. Sans `seed` fourni (création d'un nouveau défi entre amis), une graine fraîche est
+// tirée au hasard.
 //
 // Compaction du lien de partage (voir AGENDA.md) : `id`/`seed` sont dérivés directement de la
 // graine (jamais un id aléatoire séparé) -- un lien de défi entre amis n'a donc besoin d'encoder
 // QUE cette graine (quelques caractères en base36, voir engine/challengeCodec.js), qui suffit à
-// reconstruire tout le profil (attributs + offres d'académie inclus) côté destinataire sans
-// jamais transmettre ces données elles-mêmes dans l'URL.
+// reconstruire tout le profil côté destinataire (nom/mode de vie/académie imposée inclus, voir
+// AGENDA.md AGD-58) sans jamais transmettre ces données elles-mêmes dans l'URL.
+//
+// `name`/`life`/`forcedAcademyIndex` (voir AGD-58, équité du défi entre amis) : un défi entre amis
+// impose désormais un profil de départ TOTALEMENT identique pour tous les participants -- plus
+// seulement attributs/poste/style/nationalité, mais aussi le nom du personnage, son mode de vie, et
+// l'académie retenue. `name` est déjà fixé de façon seedée par rollTalent() ci-dessous, aucun
+// tirage supplémentaire nécessaire. `forcedAcademyIndex` est calculé ICI (et non plus seulement
+// dans engine/dailyChallenge.js) pour profiter aux deux modes -- le défi du jour l'utilisait déjà,
+// le défi entre amis en a désormais besoin lui aussi (voir joinChallenge() dans ui/challenge.js).
 export function generateChallengeDef(seed) {
   const s = seed != null ? seed : Math.floor(Math.random() * 0x7FFFFFFF);
   return withSeededRandom(s, () => {
@@ -68,13 +78,15 @@ export function generateChallengeDef(seed) {
     scratch.nation = NATIONS[Math.floor(Math.random() * NATIONS.length)];
     scratch.pos = POSITIONS[Math.floor(Math.random() * POSITIONS.length)].id;
     scratch.style = STYLES[Math.floor(Math.random() * STYLES.length)].id;
+    scratch.life = LIFESTYLES[Math.floor(Math.random() * LIFESTYLES.length)].id;
     rollTalent(scratch);
     const academyOffers = slimOffers(generateAcademyOffers(scratch.nation));
     return {
       id: 'c' + s.toString(36), seed: s,
       nationId: scratch.nation.id, pos: scratch.pos, style: scratch.style,
       attrs: { ...scratch.attrs }, potential: scratch.potential, hype: scratch.hype,
-      academyOffers,
+      name: scratch.name, life: scratch.life,
+      academyOffers, forcedAcademyIndex: academyOffers.length ? s % academyOffers.length : 0,
     };
   });
 }

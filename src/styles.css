@@ -864,8 +864,9 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
 .shop-tile.collection-slot:hover{transform:none;border-color:var(--line)}
 .shop-swatch.collection-swatch{align-items:center;justify-content:center;background:var(--panel2);color:var(--chalk-dim)}
 
-/* Profil "Ma progression" -- titre honorifique + cadre équipés (voir renderProgress() dans
-   card.js), purement décoratifs. Cadres : bordure/dégradé distincts, jamais de contenu changé. */
+/* Profil de joueur -- titre honorifique + cadre équipés (voir renderProfile() dans
+   ui/profile.js, AGENDA.md AGD-58), purement décoratifs. Cadres : bordure/dégradé distincts,
+   jamais de contenu changé. */
 .profile-header{max-width:420px;margin:0 auto 18px;border-radius:16px;padding:14px 18px;text-align:center;
   border:1px solid var(--line);background:var(--panel);transition:.16s}
 .profile-title-chip{display:inline-block;font-family:'Bricolage Grotesque';font-weight:700;font-size:13px;
@@ -877,3 +878,44 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
 .profile-header.frame-amethyst{border-color:#7B4FA0;background:linear-gradient(160deg, rgba(123,79,160,.12), var(--panel));box-shadow:0 0 0 1px rgba(123,79,160,.28)}
 .profile-header.frame-legends{border-color:var(--mint);background:linear-gradient(135deg, rgba(161,130,31,.18), var(--panel) 55%, rgba(47,143,91,.10));
   box-shadow:0 0 0 1.5px var(--mint), 0 8px 20px rgba(161,130,31,.18)}
+
+/* Écran de profil regroupé (voir AGENDA.md AGD-58) : pseudo modifiable en ligne, résumé de hauts
+   faits, et un motif de fond dédié -- un sceau/médaillon festonné (jamais utilisé ailleurs dans le
+   jeu : le terrain/ballon habille les autres grands écrans, ce tracé-ci évoque explicitement
+   "badge/récompense", cohérent avec le contenu de cet écran), toujours strictement sous le texte,
+   toujours discret (même principe que .title-screen::before/.create::before). */
+.profile-screen{position:relative;overflow:hidden}
+.profile-screen::before{
+  content:"";position:absolute;inset:auto -10% -14% auto;width:min(300px,55vw);height:min(300px,55vw);
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%23C9A227' stroke-width='1.6' stroke-linejoin='round'%3E%3Cpath d='M100,8 L120.2,24.7 L146,20.3 L155.2,44.8 L179.7,54 L175.3,79.8 L192,100 L175.3,120.2 L179.7,146 L155.2,155.2 L146,179.7 L120.2,175.3 L100,192 L79.8,175.3 L54,179.7 L44.8,155.2 L20.3,146 L24.7,120.2 L8,100 L24.7,79.8 L20.3,54 L44.8,44.8 L54,20.3 L79.8,24.7 Z'/%3E%3Ccircle cx='100' cy='100' r='55'/%3E%3C/g%3E%3C/svg%3E") no-repeat;
+  background-size:contain;opacity:.05;z-index:0;pointer-events:none;
+}
+.profile-screen>*{position:relative;z-index:1}
+.profile-nickname-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;max-width:360px;margin:0 auto}
+.profile-nickname-row input{flex:1;min-width:160px;background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  color:var(--chalk);padding:10px 12px;font-family:'Bricolage Grotesque';font-weight:600;font-size:15px}
+.profile-nickname-row input:focus{outline:none;border-color:var(--orange)}
+.badge-mini-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.badge-mini{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;
+  font-size:17px;background:var(--panel2);border:1px solid var(--badge-color,var(--line));box-shadow:var(--tile-shadow)}
+
+/* Tuile de profil de l'accueil (voir AGENDA.md AGD-58) -- même famille visuelle que .mode-card,
+   accent or (identité/récompense) pour se distinguer des deux tuiles de mode juste au-dessus. */
+.home-profile{margin-top:18px;max-width:560px;margin-left:auto;margin-right:auto}
+.profile-tile{width:100%;background:var(--panel);border:1px solid rgba(220,201,175,.55);border-radius:16px;
+  padding:14px 18px;cursor:pointer;transition:.16s;text-align:left;position:relative;overflow:hidden;color:var(--chalk);
+  box-shadow:var(--tile-shadow), inset 0 1px 0 rgba(255,255,255,.5);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.profile-tile::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:var(--star-gold,#C9A227)}
+.profile-tile:hover{transform:translateY(-2px);border-color:var(--star-gold,#C9A227);box-shadow:0 8px 18px rgba(36,24,19,.12), inset 0 1px 0 rgba(255,255,255,.5)}
+.profile-tile-name{font-family:'Bricolage Grotesque';font-weight:700;font-size:16px}
+.profile-tile-stats{display:flex;gap:12px;flex-wrap:wrap;color:var(--chalk-dim);font-family:'Bricolage Grotesque';font-size:12.5px}
+
+/* Pseudo de compte, édition en ligne sur les écrans du défi entre amis (voir ui/challenge.js,
+   AGENDA.md AGD-58) -- même style que .profile-nickname-row ci-dessus, nom distinct pour refléter
+   son propre contexte (pas de couplage accidentel si l'un des deux évolue plus tard). */
+.nickname-edit{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;max-width:360px;margin:14px auto 0}
+.nickname-edit-label{font-family:'Bricolage Grotesque';font-size:12.5px;color:var(--chalk-dim)}
+.nickname-edit input{flex:1;min-width:140px;background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  color:var(--chalk);padding:8px 10px;font-family:'Bricolage Grotesque';font-weight:600;font-size:14px}
+.nickname-edit input:focus{outline:none;border-color:var(--orange)}

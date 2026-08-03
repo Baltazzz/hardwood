@@ -1,21 +1,25 @@
 /* ============================================================
-   DÉFI ENTRE AMIS — écrans + logique de bout en bout. Principe :
-   un défi fige UNIQUEMENT le profil de départ (attributs, poste,
-   style, nationalité, potentiel, offres d'académie proposées) --
-   tout le reste (mode de vie, nom, choix d'académie retenu, et
-   toute la carrière ensuite) reste libre et propre à chaque
-   participant. Entièrement client : le lien encode tout l'état
-   nécessaire (voir engine/challengeCodec.js), le classement vit en
-   localStorage (voir engine/challenges.js), jamais de serveur.
+   DÉFI ENTRE AMIS — écrans + logique de bout en bout. Principe (voir AGENDA.md AGD-58, "équité du
+   défi entre amis") : un défi fige TOTALEMENT le profil de départ -- attributs, poste, style,
+   nationalité, potentiel, offres d'académie proposées, mode de vie, NOM du personnage, et
+   l'académie retenue (imposée, comme le défi du jour). Aucune divergence de départ n'est possible
+   entre deux participants d'un même défi : à partir de là, seule la carrière elle-même (choix
+   d'événements, aléatoire de simulation) reste libre et propre à chaque participant. Le pseudo de
+   COMPTE (engine/profile.js, distinct du nom du personnage) est ce qui distingue désormais chaque
+   participant au classement, puisque le nom de personnage est identique pour tous. Entièrement
+   client : le lien encode tout l'état nécessaire (voir engine/challengeCodec.js), le classement vit
+   en localStorage (voir engine/challenges.js), jamais de serveur pour le lien lui-même.
 ============================================================ */
 import { G, setG } from '../engine/state.js';
 import { newPlayer, rollArchetypeAndName } from '../engine/player.js';
 import { NATIONS } from '../data/nations.js';
 import { POSITIONS } from '../data/positions.js';
 import { STYLES } from '../data/styles.js';
+import { LIFESTYLES } from '../data/lifestyles.js';
 import { encodeChallengeDef, decodeChallengeDef, decodeResult, buildChallengeUrl, buildResultUrl } from '../engine/challengeCodec.js';
 import { ensureChallenge, getChallenge, listChallenges, addResult, clearChallenges, generateChallengeDef } from '../engine/challenges.js';
 import { generateDailyDef, getTodayDateStr, getDailyBest, allDailyResults, DAILY_THEMES } from '../engine/dailyChallenge.js';
+import { profileNickname, setNickname } from '../engine/profile.js';
 import { trackEvent } from '../engine/analytics.js';
 import { shareOrFallback } from './share.js';
 import { stage } from './dom.js';
@@ -61,6 +65,43 @@ function profileSummary(def) {
   </div>`;
 }
 
+// Identité IMPOSÉE (nom du personnage + mode de vie) -- voir AGENDA.md AGD-58, équité du défi
+// entre amis. Affichée UNIQUEMENT sur les écrans du défi entre amis ci-dessous, JAMAIS dans
+// profileSummary() ci-dessus (partagée avec le défi du jour, qui n'impose PAS ces deux champs --
+// les y afficher mentirait sur ce qui est réellement figé pour ce mode-là).
+function imposedIdentityHTML(def) {
+  // def.name absent : un défi créé avant AGD-58 (ancien lien/ancienne entrée locale), le nom
+  // n'était pas encore imposé -- repli silencieux plutôt qu'afficher "undefined".
+  if (!def.name) return '';
+  const life = LIFESTYLES.find(l => l.id === def.life);
+  return `<div class="challenge-profile" style="margin-top:10px">
+    <div class="challenge-profile-row">🪪 <b>${def.name}</b></div>
+    ${life ? `<div class="challenge-profile-row">${life.emoji} ${t('lifestyles.'+life.id+'.name')}</div>` : ''}
+  </div>`;
+}
+
+// Pseudo de COMPTE (voir engine/profile.js, distinct du nom du personnage ci-dessus) : modifiable
+// directement sur ces écrans, au moment où il devient significatif -- il va apparaître au
+// classement face aux amis. Jamais un écran séparé qui casserait le fil du geste en cours
+// (créer/rejoindre un défi). Ne re-rend PAS l'écran appelant (certains, comme
+// startChallengeCreation(), génèrent un NOUVEAU défi à chaque appel -- un re-rendu recréerait un
+// défi différent) : reflète juste la valeur nettoyée/finale directement dans le champ.
+function nicknameEditHTML() {
+  return `<div class="nickname-edit">
+    <span class="nickname-edit-label">${t('challenge.playingAs')}</span>
+    <input id="nicknameInput" value="${profileNickname()}" maxlength="22" autocomplete="off">
+    <button class="btn ghost sm" id="nicknameSave">${t('common.save')}</button>
+  </div>`;
+}
+function wireNicknameEdit() {
+  const btn = document.getElementById('nicknameSave');
+  if (!btn) return;
+  btn.onclick = () => {
+    const input = document.getElementById('nicknameInput');
+    input.value = setNickname(input.value);
+  };
+}
+
 /* ---- Écran d'entrée du mode "Défi entre amis" (depuis la tuile de l'accueil) : deux choix nets,
    jamais confondus -- lancer un nouveau défi, ou consulter les classements des défis déjà joués
    (voir AGENDA.md, ajustement du 2026-08-03). ---- */
@@ -70,6 +111,7 @@ export function renderChallengeHub() {
     <div class="eyebrow" style="text-align:center">🔗 Défi entre amis</div>
     <h2 style="text-align:center;font-size:24px;margin:6px 0 4px">Même profil, chacun sa carrière</h2>
     <p class="body" style="text-align:center;color:var(--chalk-dim);font-size:13.5px;margin-bottom:14px">Défie tes amis sur un profil de départ identique -- ensuite, chacun vit sa propre carrière, ses choix, son aléatoire.</p>
+    ${nicknameEditHTML()}
     <div style="margin-top:22px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
       <button class="btn" id="challengeHubNew">🆕 Nouveau défi</button>
       <button class="btn ghost" id="challengeHubResults">🏆 Mes classements</button>
@@ -78,6 +120,7 @@ export function renderChallengeHub() {
       <button class="btn ghost sm" id="challengeHubBack">${t('common.back')}</button>
     </div>
   </div>`;
+  wireNicknameEdit();
   document.getElementById('challengeHubNew').onclick = () => { if (!guardOverwrite()) return; startChallengeCreation(); };
   document.getElementById('challengeHubResults').onclick = () => renderMyChallenges();
   document.getElementById('challengeHubBack').onclick = () => screenTitle();
@@ -92,8 +135,11 @@ export function startChallengeCreation() {
   stage.innerHTML = `<div class="end" style="max-width:520px">
     <div class="eyebrow" style="text-align:center">🔗 Défi entre amis</div>
     <h2 style="text-align:center;font-size:24px;margin:6px 0 4px">Ton défi est prêt</h2>
-    <p class="body" style="text-align:center;color:var(--chalk-dim);font-size:13.5px;margin-bottom:14px">Chaque ami qui ouvre ce lien démarre avec EXACTEMENT le même profil. Ensuite, chacun vit sa propre carrière -- ses choix, son aléatoire.</p>
+    <p class="body" style="text-align:center;color:var(--chalk-dim);font-size:13.5px;margin-bottom:14px">Chaque ami qui ouvre ce lien démarre avec EXACTEMENT le même profil -- même nom de personnage, même mode de vie, même académie. Ensuite, chacun vit sa propre carrière -- ses choix, son aléatoire.</p>
     ${profileSummary(def)}
+    ${imposedIdentityHTML(def)}
+    ${forcedAcademyHTML(def)}
+    ${nicknameEditHTML()}
     <div class="field" style="margin-top:18px"><label>Lien à partager</label>
       <input id="challengeLink" value="${url}" readonly autocomplete="off"></div>
     <div style="margin-top:16px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
@@ -105,6 +151,7 @@ export function startChallengeCreation() {
     </div>
     <p class="body" id="copyHint" style="text-align:center;color:var(--chalk-dim);font-size:12px;margin-top:10px;display:none">Lien copié !</p>
   </div>`;
+  wireNicknameEdit();
   // Le partage natif est désormais le geste principal (voir AGENDA.md) : ouvre la feuille de
   // partage de l'appareil directement avec le lien, repli copie presse-papiers uniquement si
   // navigator.share est absent -- jamais les deux affichés en même temps.
@@ -135,11 +182,17 @@ export function joinChallenge(def) {
   p.hype = def.hype;
   p.challengeId = def.id;
   p.frozenAcademyOffers = def.academyOffers;
-  // Posé dès maintenant (pas seulement au clic "Continuer") : l'autosauvegarde (voir main.js)
-  // peut écrire l'état sur un simple changement de visibilité, avant tout clic -- si l'appareil
-  // se ferme pile sur cet écran d'atterrissage, une reprise doit retomber directement sur l'étape
-  // mode de vie (nation/poste/style déjà figés ci-dessus), jamais rejouer l'étape nation à 0.
-  p.step = 3;
+  // Équité totale (voir AGENDA.md AGD-58) : mode de vie et nom du personnage sont désormais
+  // imposés eux aussi, comme le reste du profil ci-dessus -- plus aucune divergence de départ
+  // possible entre participants. `rollArchetypeAndName(p)` roule l'archétype de développement
+  // (p.devArchetype, lit réellement la simulation -- voir engine/season.js) ; son garde-fou
+  // interne `if(!p.name)` ne re-touche pas le nom, déjà posé juste au-dessus.
+  p.life = def.life;
+  p.name = def.name;
+  rollArchetypeAndName(p);
+  // Académie imposée elle aussi (même principe que le défi du jour, voir engine/season.js
+  // startCareer()) -- plus un choix, un champ dédié pour ne jamais confondre les deux modes.
+  p.challengeForcedAcademyIndex = def.forcedAcademyIndex;
   renderChallengeJoinLanding(def);
 }
 
@@ -148,13 +201,17 @@ function renderChallengeJoinLanding(def) {
   stage.innerHTML = `<div class="end" style="max-width:520px">
     <div class="eyebrow" style="text-align:center">🔗 Tu rejoins le défi d'un ami !</div>
     <h2 style="text-align:center;font-size:24px;margin:6px 0 4px">Départ imposé, carrière libre</h2>
-    <p class="body" style="text-align:center;color:var(--chalk-dim);font-size:13.5px;margin-bottom:14px">Tu démarres avec exactement le même profil que les autres participants. À partir de là, tes choix et ton aléatoire n'appartiennent qu'à toi.</p>
+    <p class="body" style="text-align:center;color:var(--chalk-dim);font-size:13.5px;margin-bottom:14px">Tu démarres avec exactement le même profil que les autres participants -- même nom de personnage, même mode de vie, même académie. À partir de là, tes choix et ton aléatoire n'appartiennent qu'à toi.</p>
     ${profileSummary(def)}
+    ${imposedIdentityHTML(def)}
+    ${forcedAcademyHTML(def)}
+    ${nicknameEditHTML()}
     <div style="margin-top:22px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
       <button class="btn" id="continueJoin">Continuer</button>
       <button class="btn ghost" id="declineJoin">Plutôt une carrière libre</button>
     </div>
   </div>`;
+  wireNicknameEdit();
   document.getElementById('continueJoin').onclick = () => screenCreate();
   document.getElementById('declineJoin').onclick = () => { setG(newPlayer()); screenTitle(); };
 }
@@ -186,7 +243,7 @@ export function renderChallengeLeaderboard(challengeId) {
     <div class="eyebrow" style="text-align:center">🔗 Classement du défi</div>
     <h2 style="text-align:center;font-size:24px;margin:6px 0 4px">Qui s'en sort le mieux ?</h2>
     <p class="body" id="leaderboardStatus" style="text-align:center;color:var(--chalk-dim);font-size:12px;min-height:15px;margin:0 0 8px"></p>
-    ${entry && entry.def ? profileSummary(entry.def) : ''}
+    ${entry && entry.def ? profileSummary(entry.def) + imposedIdentityHTML(entry.def) + forcedAcademyHTML(entry.def) : ''}
     <div class="hof-list" id="leaderboardRows" style="max-width:560px;margin:18px auto 0">${leaderboardRowsHTML(results)}</div>
     <div style="margin-top:10px;text-align:center">
       <button class="btn ghost sm" id="refreshLeaderboard">🔄 Actualiser le classement</button>
@@ -354,10 +411,15 @@ function joinDaily(def) {
   p.hype = def.hype;
   p.dailyDate = def.date;
   p.frozenAcademyOffers = def.academyOffers;
-  // Identité propre du défi du jour (voir engine/season.js startCareer(), AGENDA.md lot
-  // rétention) : contrairement au défi entre amis, l'académie n'est PAS choisie par le joueur.
+  // Académie imposée (voir engine/season.js startCareer()) -- comme le défi entre amis désormais
+  // (voir AGENDA.md AGD-58), mais champ dédié pour ne jamais confondre les deux modes.
   p.dailyForcedAcademyIndex = def.forcedAcademyIndex;
-  p.step = 3; // même raison qu'en défi entre amis : robuste à une sauvegarde pile sur l'atterrissage
+  // Contrairement au défi entre amis (dont l'assistant de création est désormais entièrement
+  // court-circuité, voir joinChallenge()/screenCreate()), le défi du jour garde mode de vie et nom
+  // LIBRES -- p.step=3 laisse donc réellement l'écran de création reprendre à l'étape mode de vie.
+  // Posé dès maintenant (pas seulement au clic "Continuer") pour la même raison de robustesse à la
+  // reprise de partie que documentée plus haut sur p.frozenAcademyOffers.
+  p.step = 3;
   renderDailyLanding(def);
 }
 

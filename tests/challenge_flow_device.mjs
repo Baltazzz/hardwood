@@ -26,14 +26,6 @@ function driveCareerToEnd(document, errors) {
   }
   throw new Error('plafond atteint');
 }
-function driveCreationSteps(document) {
-  // Étape 3 (mode de vie, seule étape .opt restante quand nation/poste/style sont figés par un
-  // défi) -> étape 4 (nom, pas de .opt) -> nextC déclenche startCareer() -> académies figées.
-  pickRandomEl(document.querySelectorAll('.opt')).click(); clickId(document, 'nextC');
-  clickId(document, 'nextC');
-  pickRandomEl(document.querySelectorAll('.academy-opt')).click();
-}
-
 async function main() {
   const mode = process.argv[2];
   const { document, errors } = setupEnvironment();
@@ -61,8 +53,10 @@ async function main() {
       challengeUi.joinChallenge(def);
     }
     const landingOk = !!document.getElementById('continueJoin');
+    // Profil de départ totalement imposé (voir AGENDA.md AGD-58) : "Continuer" mène désormais
+    // directement dans la saison, plus aucune étape de création (mode de vie/nom/académie) à
+    // piloter -- screenCreate() court-circuite tout pour un joueur de défi entre amis.
     clickId(document, 'continueJoin');
-    driveCreationSteps(document);
     driveCareerToEnd(document, errors);
     const compareBtn = document.getElementById('challengeCompare');
     const compareBtnPresent = !!compareBtn;

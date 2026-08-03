@@ -37,12 +37,14 @@ export function startCareer(){
   // jamais re-générées dans ce cas, seul le CHOIX parmi ces offres reste libre pour chaque
   // joueur (chooseAcademy() ci-après).
   const offers = ((p.challengeId || p.dailyDate) && p.frozenAcademyOffers) ? p.frozenAcademyOffers : generateAcademyOffers(p.nation);
-  // Défi du jour (voir engine/dailyChallenge.js, AGENDA.md lot rétention) : identité propre par
-  // rapport au défi entre amis -- "déjà engagé", l'académie n'est PAS choisie par le joueur mais
-  // imposée (même index pour tout le monde ce jour-là, dérivé de la même graine que le profil).
-  // Ne concerne QUE p.dailyDate : un défi entre amis (p.challengeId) garde le choix libre.
-  if(p.dailyDate && p.dailyForcedAcademyIndex!=null && offers[p.dailyForcedAcademyIndex]){
-    chooseAcademy(offers[p.dailyForcedAcademyIndex]);
+  // Défi du jour (voir engine/dailyChallenge.js, AGENDA.md lot rétention) ET défi entre amis (voir
+  // ui/challenge.js joinChallenge(), AGENDA.md AGD-58 -- équité totale du défi entre amis) :
+  // l'académie n'est PAS choisie par le joueur mais imposée (même index pour tous les
+  // participants, dérivé de la même graine que le reste du profil figé). Un même index de champ
+  // par mode (p.dailyForcedAcademyIndex / p.challengeForcedAcademyIndex, jamais confondus).
+  const forcedIdx = p.dailyDate ? p.dailyForcedAcademyIndex : (p.challengeId ? p.challengeForcedAcademyIndex : null);
+  if(forcedIdx!=null && offers[forcedIdx]){
+    chooseAcademy(offers[forcedIdx]);
     return;
   }
   renderAcademyChoice(offers);

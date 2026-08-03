@@ -7,6 +7,7 @@ import { mountConsentBanner } from './ui/consentBanner.js';
 import { initAnalytics } from './engine/analytics.js';
 import { handleIncomingLink } from './ui/challenge.js';
 import { applyEquippedTheme } from './engine/cosmetics.js';
+import { flushPendingScores } from './engine/leaderboardApi.js';
 
 // Thème de boutique équipé (voir engine/cosmetics.js, AGENDA.md AGD-41) : posé une seule fois au
 // chargement, AVANT le premier écran -- persiste ensuite pour toute la session via les variables
@@ -45,6 +46,12 @@ window.addEventListener('pagehide', autosaveIfActive);
 // (partagé par un ami) prend le pas sur l'écran titre normal -- handleIncomingLink() rend déjà le
 // bon écran lui-même dans ce cas et retourne true, sinon écran titre habituel.
 if (!handleIncomingLink()) screenTitle();
+
+// Classement partagé des défis (voir engine/leaderboardApi.js, AGENDA.md "lot backend Supabase") :
+// rattrape en silence tout score qui n'avait pas pu être envoyé faute de réseau la dernière fois
+// (ex. carrière terminée hors ligne) -- fire-and-forget, ne retarde jamais le premier rendu, ne
+// lève jamais (voir la garantie de robustesse du module).
+flushPendingScores();
 
 // PWA : enregistrement du service worker (voir public/sw.js) -- app shell précaché à
 // l'installation, reste mis en cache à la volée -- pour un vrai fonctionnement hors-ligne une

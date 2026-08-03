@@ -14,7 +14,7 @@ import { NATIONS } from '../data/nations.js';
 import { POSITIONS } from '../data/positions.js';
 import { STYLES } from '../data/styles.js';
 import { encodeChallengeDef, decodeChallengeDef, decodeResult, buildChallengeUrl, buildResultUrl } from '../engine/challengeCodec.js';
-import { ensureChallenge, getChallenge, listChallenges, addResult, generateChallengeDef } from '../engine/challenges.js';
+import { ensureChallenge, getChallenge, listChallenges, addResult, clearChallenges, generateChallengeDef } from '../engine/challenges.js';
 import { generateDailyDef, getTodayDateStr, getDailyBest, allDailyResults, DAILY_THEMES } from '../engine/dailyChallenge.js';
 import { trackEvent } from '../engine/analytics.js';
 import { shareOrFallback } from './share.js';
@@ -60,7 +60,29 @@ function profileSummary(def) {
   </div>`;
 }
 
-/* ---- Création d'un défi (depuis l'écran titre) ---- */
+/* ---- Écran d'entrée du mode "Défi entre amis" (depuis la tuile de l'accueil) : deux choix nets,
+   jamais confondus -- lancer un nouveau défi, ou consulter les classements des défis déjà joués
+   (voir AGENDA.md, ajustement du 2026-08-03). ---- */
+export function renderChallengeHub() {
+  setInCareer(false);
+  stage.innerHTML = `<div class="end" style="max-width:520px">
+    <div class="eyebrow" style="text-align:center">🔗 Défi entre amis</div>
+    <h2 style="text-align:center;font-size:24px;margin:6px 0 4px">Même profil, chacun sa carrière</h2>
+    <p class="body" style="text-align:center;color:var(--chalk-dim);font-size:13.5px;margin-bottom:14px">Défie tes amis sur un profil de départ identique -- ensuite, chacun vit sa propre carrière, ses choix, son aléatoire.</p>
+    <div style="margin-top:22px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn" id="challengeHubNew">🆕 Nouveau défi</button>
+      <button class="btn ghost" id="challengeHubResults">🏆 Mes classements</button>
+    </div>
+    <div style="margin-top:16px;text-align:center">
+      <button class="btn ghost sm" id="challengeHubBack">${t('common.back')}</button>
+    </div>
+  </div>`;
+  document.getElementById('challengeHubNew').onclick = () => { if (!guardOverwrite()) return; startChallengeCreation(); };
+  document.getElementById('challengeHubResults').onclick = () => renderMyChallenges();
+  document.getElementById('challengeHubBack').onclick = () => screenTitle();
+}
+
+/* ---- Création d'un défi (depuis l'écran d'entrée ci-dessus) ---- */
 export function startChallengeCreation() {
   const def = generateChallengeDef();
   ensureChallenge(def);
@@ -95,7 +117,7 @@ export function startChallengeCreation() {
     }
   };
   document.getElementById('startMyChallenge').onclick = () => joinChallenge(def);
-  document.getElementById('challengeBack').onclick = () => screenTitle();
+  document.getElementById('challengeBack').onclick = () => renderChallengeHub();
 }
 
 /* ---- Rejoindre un défi (lien ?challenge=...) ---- */
@@ -167,7 +189,7 @@ export function renderChallengeLeaderboard(challengeId) {
     <div style="margin-top:12px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
       ${myResult ? `<button class="btn ghost sm" id="shareMyResult">📤 Partager mon score</button>` : ''}
       ${entry && entry.def ? `<button class="btn ghost sm" id="inviteMore">📤 Inviter d'autres amis</button>` : ''}
-      <button class="btn ghost sm" id="myChallengesLink">📋 Mes défis</button>
+      <button class="btn ghost sm" id="myChallengesLink">🏆 Mes classements</button>
       <button class="btn ghost sm" id="leaderboardBack">Retour à l'accueil</button>
     </div>
     <p class="body" id="challengeCopyHint" style="text-align:center;color:var(--chalk-dim);font-size:12px;margin-top:10px;display:none">Lien copié !</p>
@@ -185,42 +207,49 @@ export function renderChallengeLeaderboard(challengeId) {
   document.getElementById('leaderboardBack').onclick = () => screenTitle();
 }
 
-// ---- Accès permanent au classement d'un défi (voir AGENDA.md "correction prioritaire", point 1)
-// : avant ce correctif, une fois quitté l'écran de classement (`leaderboardBack` -> accueil), il
-// n'existait AUCUN moyen d'y revenir -- ni depuis l'accueil, ni depuis nulle part ailleurs, le
-// classement restait pourtant bien en mémoire (localStorage). Cette liste couvre tous les défis
-// connus sur cet appareil (créés, rejoints, ou même seulement reçus par un lien de résultat).
+// ---- Accès permanent aux classements des défis déjà joués (voir AGENDA.md "correction
+// prioritaire" + ajustement du 2026-08-03) : avant le premier correctif, une fois quitté l'écran
+// de classement, il n'existait AUCUN moyen d'y revenir -- le classement restait pourtant bien en
+// mémoire (localStorage). Désormais accessible en permanence depuis le "hub" du mode défi entre
+// amis (voir renderChallengeHub() ci-dessus). Filtré aux défis RÉELLEMENT joués (résultat "mine"
+// présent) -- un défi créé/reçu mais jamais mené à son terme n'a pas de score à montrer, il n'a
+// pas sa place dans un CLASSEMENT (voir AGENDA.md). Purge automatique après un mois d'inactivité
+// (voir engine/challenges.js pruneStale()) + bouton de purge manuelle ci-dessous.
 export function renderMyChallenges() {
   setInCareer(false);
-  const list = listChallenges();
+  const list = listChallenges().filter(entry => entry.results.some(r => r.mine));
   const rows = list.length ? list.map(entry => {
     const { id, def, results } = entry;
     const myResult = results.find(r => r.mine);
     const profileLabel = def
       ? `${nationOf(def).flag} ${posOf(def).emoji} ${t('positions.'+posOf(def).id+'.name')} · ${styleOf(def).emoji} ${t('styles.'+styleOf(def).id+'.name')}`
       : '🔗 Défi reçu par lien';
-    const statusLabel = myResult ? `${tierLabel(myResult.tier)} · score ${myResult.score}` : 'Pas encore joué';
     return `<div class="hof-row" data-id="${id}" style="cursor:pointer">
       <span class="rk">🔗</span>
       <span class="hof-main">
         <span class="hof-name">${profileLabel}</span>
-        <span class="hof-sub">${statusLabel} · ${results.length} participant${results.length>1?'s':''}</span>
+        <span class="hof-sub">${tierLabel(myResult.tier)} · score ${myResult.score} · ${results.length} participant${results.length>1?'s':''}</span>
       </span>
-      <span class="hof-score">${myResult ? `<b>${myResult.score}</b><small>score</small>` : '<small>—</small>'}</span>
+      <span class="hof-score"><b>${myResult.score}</b><small>score</small></span>
     </div>`;
-  }).join('') : `<p class="body" style="text-align:center;color:var(--chalk-dim);margin:20px 0">Aucun défi entre amis pour l'instant. Crée-en un depuis l'accueil !</p>`;
+  }).join('') : `<p class="body" style="text-align:center;color:var(--chalk-dim);margin:20px 0">Aucun défi joué pour l'instant -- lance-en un pour voir ton classement ici.</p>`;
   stage.innerHTML = `<div class="end" style="text-align:left">
-    <div class="eyebrow" style="text-align:center">🔗 Mes défis entre amis</div>
-    <h2 style="text-align:center;font-size:26px;margin:6px 0 14px">${list.length} défi${list.length>1?'s':''}</h2>
+    <div class="eyebrow" style="text-align:center">🏆 Mes classements</div>
+    <h2 style="text-align:center;font-size:26px;margin:6px 0 14px">${list.length} défi${list.length>1?'s':''} joué${list.length>1?'s':''}</h2>
     <div class="hof-list" style="max-width:560px;margin:0 auto">${rows}</div>
     <div style="margin-top:26px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-      <button class="btn" id="myChallengesBack">Retour à l'accueil</button>
+      <button class="btn" id="myChallengesBack">${t('common.back')}</button>
       <button class="btn ghost" id="myChallengesNew">🆕 Nouveau défi</button>
+      ${list.length ? `<button class="btn ghost sm" id="myChallengesClear">🗑️ Vider mes classements</button>` : ''}
     </div>
   </div>`;
   stage.querySelectorAll('[data-id]').forEach(el => { el.onclick = () => renderChallengeLeaderboard(el.dataset.id); });
-  document.getElementById('myChallengesBack').onclick = () => screenTitle();
+  document.getElementById('myChallengesBack').onclick = () => renderChallengeHub();
   document.getElementById('myChallengesNew').onclick = () => { if (!guardOverwrite()) return; startChallengeCreation(); };
+  const clearBtn = document.getElementById('myChallengesClear');
+  if (clearBtn) clearBtn.onclick = () => {
+    if (confirm('Effacer tous tes classements de défis entre amis ? Cette action est définitive.')) { clearChallenges(); renderMyChallenges(); }
+  };
 }
 
 /* ---- Point d'entrée : lien ouvert au chargement de l'app (voir main.js) ---- */

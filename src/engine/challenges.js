@@ -19,6 +19,21 @@ import { withSeededRandom } from './prng.js';
 const KEY = 'hardwood_challenges_v1';
 let mem = null;
 
+// Nettoyage automatique (voir AGENDA.md, ajustement du 2026-08-03 -- "clean automatiquement au
+// bout d'un mois") : un défi ni créé ni retouché depuis plus de 30 jours (`updatedAt`, posé à la
+// création et à chaque résultat ajouté) est purgé. Purement une question d'hygiène de stockage --
+// aucune donnée "importante" ne dépend d'un défi entre amis au-delà de sa fenêtre d'usage naturelle
+// (le temps que des amis se répondent les uns aux autres), jamais relu par la simulation.
+const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+function pruneStale(all) {
+  const cutoff = Date.now() - MAX_AGE_MS;
+  let changed = false;
+  for (const id of Object.keys(all)) {
+    if ((all[id].updatedAt || 0) < cutoff) { delete all[id]; changed = true; }
+  }
+  return changed;
+}
+
 // Ne garde des offres d'académie que ce qui est réellement affiché/consommé (voir
 // renderAcademyChoice()/chooseAcademy() dans screens.js/season.js) -- un lien de défi n'a pas
 // besoin de porter les listes de prénoms de la nation ou les couleurs de club, inutiles ici et
@@ -68,6 +83,7 @@ function load() {
   if (mem !== null) return mem;
   try { const r = localStorage.getItem(KEY); mem = r ? JSON.parse(r) : {}; } catch (e) { mem = {}; }
   if (!mem || typeof mem !== 'object') mem = {};
+  if (pruneStale(mem)) save();
   return mem;
 }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(mem)); } catch (e) { /* repli mémoire pour la session en cours */ } }

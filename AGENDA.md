@@ -91,6 +91,55 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Coché récemment
 
+- [x] **AGD-56 — Ajustement du défi entre amis : classements dans le hub, filtrés, purgeables** _(implémenté et vérifié le 2026-08-03)_
+  Suite directe d'AGD-55, quatre ajustements demandés explicitement le jour même.
+  1. *Classements déplacés dans l'onglet "Défi entre amis"*. La tuile d'accueil "🔗 Défi entre
+     amis" (`id="challengeCreate"`, inchangé) n'ouvre plus directement la création -- elle ouvre
+     désormais un écran d'entrée dédié, `renderChallengeHub()` (`ui/challenge.js`), avec deux choix
+     nets et explicites : "🆕 Nouveau défi" et "🏆 Mes classements" (nom choisi pour refléter le
+     contenu réel -- des SCORES, pas une simple liste de défis). Le bouton autonome "🔗 Mes défis"
+     du groupe accueil "Suivi & records" (ajouté par AGD-55) est retiré -- un seul point d'entrée
+     désormais, sous la tuile du mode lui-même, plus cohérent qu'une entrée dupliquée à deux
+     endroits. Garde-fou de confirmation d'écrasement de sauvegarde déplacé en conséquence : plus
+     sur la tuile (qui ne fait plus que naviguer vers le hub, jamais destructeur), mais sur le
+     bouton "Nouveau défi" DANS le hub -- la seule action qui démarre réellement une carrière.
+  2. *Filtré aux défis réellement joués*. `renderMyChallenges()` ne liste plus QUE les défis où
+     `results.some(r => r.mine)` -- un défi créé ou rejoint mais jamais mené à son terme n'a aucun
+     score à montrer, il n'a "pas de sens" dans un classement (tel que demandé). Un défi encore
+     "en cours" (rejoint, jamais fini) reste bien connu du moteur (`engine/challenges.js`, pour
+     pouvoir reprendre la carrière normalement via la sauvegarde) -- seul l'AFFICHAGE dans "Mes
+     classements" l'exclut.
+  3. *Purge*. Deux mécanismes complémentaires, comme demandé ("clean la page OU clean
+     automatiquement au bout d'un mois") :
+     - Manuelle : bouton "🗑️ Vider mes classements" sur l'écran (visible seulement si la liste
+       n'est pas vide), avec confirmation, réutilise `clearChallenges()` (déjà existant, même
+       fonction que le Panthéon/les badges).
+     - Automatique : nouveau champ `updatedAt` par défi (déjà posé par AGD-55 pour le tri), lu par
+       `pruneStale()` (`engine/challenges.js`) au chargement du module -- tout défi non retouché
+       depuis plus de 30 jours est supprimé silencieusement du stockage, sans action de l'utilisateur.
+       Aucune donnée "importante" n'est concernée (jamais relu par la simulation, purement le
+       classement social d'un défi entre amis dont la fenêtre d'usage naturelle est de toute façon
+       courte).
+  Navigation resserrée en cohérence : "Retour" depuis l'écran de création d'un défi et depuis "Mes
+  classements" ramènent désormais au hub (leur parent logique direct) plutôt qu'à l'accueil --
+  évite de perdre le fil en deux clics quand on hésite entre les deux choix.
+  **Vérifié directement** (`tests/audit_challenge_revisit.mjs`, réécrit pour ce nouveau parcours,
+  30 vérifications ; nouveau `tests/challenge_prune_check.mjs`, process dédié pour la purge
+  automatique -- le cache mémoire du module n'étant peuplé qu'une fois par process, la donnée
+  pré-expirée doit être en place avant le tout premier appel, exactement comme un vrai
+  redémarrage) : la tuile d'accueil ouvre bien le hub avec ses deux choix ; un défi créé mais
+  jamais joué confirmé ABSENT de "Mes classements" avant et après avoir joué d'autres défis ;
+  parcours complet terminer -> quitter -> revenir via le hub -> rejouer (même id, score remplacé
+  seulement si meilleur) -> nouveau défi (id distinct, entrée séparée) -> les deux défis joués
+  listés, le défi jamais terminé toujours absent ; purge manuelle confirmée vider la liste ET le
+  moteur ; purge automatique confirmée sur un défi à 40 jours d'inactivité (supprimé) contre un
+  défi à 2 jours (conservé), dans `listChallenges()` ET dans le localStorage brut. Non-régression :
+  `tests/audit_challenge_flow.mjs`/`tests/challenge_flow_device.mjs` (AGD-51) mis à jour pour
+  passer par le hub, toujours verts ; suite complète (`audit`/`audit:meta`/`audit:i18n`/
+  `audit:coherence`/`audit:cosmetics`/`audit:link`/`audit:retention`/`audit:polish`) tous verts ;
+  `scripts/deep-audit.mjs` 300 carrières -- 0% crash, 0 violation d'intégrité `once`, taux de titre
+  élite 13,7% (bande normale 7,7-21,7%).
+
 - [x] **AGD-55 — Correction prioritaire : accès permanent au podium du défi entre amis** _(implémenté et vérifié le 2026-08-03)_
   Bug confirmé : une fois l'écran de classement quitté ("Retour à l'accueil" -> `screenTitle()`),
   il n'existait plus AUCUN moyen d'y revenir -- `renderChallengeLeaderboard()` n'était appelée que

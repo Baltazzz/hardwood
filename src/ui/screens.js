@@ -23,7 +23,7 @@ import { trackEvent } from '../engine/analytics.js';
 import { reopenConsentBanner } from './consentBanner.js';
 import { recordMyChallengeResult } from '../engine/challenges.js';
 import { recordDailyResult } from '../engine/dailyChallenge.js';
-import { startChallengeCreation, renderChallengeLeaderboard, renderMyChallenges, startDailyChallenge, renderDailyLeaderboard } from './challenge.js';
+import { renderChallengeHub, renderChallengeLeaderboard, startDailyChallenge, renderDailyLeaderboard } from './challenge.js';
 import { setInCareer } from './navbar.js';
 import { walletBalance, earnFromCareer } from '../engine/wallet.js';
 import { renderShop } from './shop.js';
@@ -168,7 +168,6 @@ export function screenTitle(){
         <button class="btn ghost sm" id="hof">${t('home.hofBtn')}</button>
         <button class="btn ghost sm" id="badges">${t('home.badgesBtn')}</button>
         <button class="btn ghost sm" id="progress">${t('home.progressBtn')}</button>
-        <button class="btn ghost sm" id="myChallenges">${t('home.myChallengesBtn')}</button>
         <button class="btn ghost sm" id="shop">${t('home.shopBtn')}</button>
         <button class="btn ghost sm" id="settings">${t('settings.button')}</button>
       </div>
@@ -186,11 +185,12 @@ export function screenTitle(){
   };
   const resumeBtn=document.getElementById('resumeGo');
   if(resumeBtn) resumeBtn.onclick=()=>resumeCareer();
-  document.getElementById('challengeCreate').onclick=()=>{
-    if(hasSavedGame() && !confirm(t('home.confirmOverwriteChallenge'))) return;
-    clearSavedGame();
-    startChallengeCreation();
-  };
+  // Ouvre désormais le "hub" du mode (choix explicite entre nouveau défi et classements des défis
+  // déjà joués, voir renderChallengeHub() dans ui/challenge.js) plutôt que de lancer directement
+  // une création -- la confirmation d'écrasement de sauvegarde est donc déplacée sur le bouton
+  // "Nouveau défi" DANS ce hub (seule action qui écrase réellement une carrière en cours),
+  // consulter les classements reste une navigation non destructrice.
+  document.getElementById('challengeCreate').onclick=()=>renderChallengeHub();
   document.getElementById('hof').onclick=()=>renderHallOfFame();
   document.getElementById('badges').onclick=()=>renderBadges();
   document.getElementById('dailyChallenge').onclick=()=>{
@@ -199,7 +199,6 @@ export function screenTitle(){
     startDailyChallenge();
   };
   document.getElementById('progress').onclick=()=>renderProgress();
-  document.getElementById('myChallenges').onclick=()=>renderMyChallenges();
   document.getElementById('shop').onclick=()=>renderShop();
   document.getElementById('settings').onclick=()=>renderSettings();
   document.getElementById('welcomeReopen').onclick=(e)=>{ e.preventDefault(); screenWelcome(); };

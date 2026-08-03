@@ -49,7 +49,8 @@ async function main() {
     let link = process.argv[3];
     if (mode === 'create') {
       screens.screenTitle();
-      clickId(document, 'challengeCreate');
+      clickId(document, 'challengeCreate'); // -> hub (voir renderChallengeHub(), AGENDA.md ajustement du 2026-08-03)
+      clickId(document, 'challengeHubNew');
       link = document.getElementById('challengeLink').value;
       clickId(document, 'startMyChallenge');
     } else {

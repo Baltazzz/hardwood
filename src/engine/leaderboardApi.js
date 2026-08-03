@@ -20,7 +20,10 @@
 const SUPABASE_URL = 'https://mqrotkqlqpxtqquxmcxi.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xcm90a3FscXB4dHFxdXhtY3hpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTg5NDMsImV4cCI6MjEwMTMzNDk0M30.BnOumRNtNDwS4mOelHwZC-YHbhEsBgwRHRv6Ymb9toQ';
 const REST_URL = `${SUPABASE_URL}/rest/v1/challenge_scores`;
-const CLIENT_ID_KEY = 'hardwood_client_id_v1';
+// Exportée pour tests/leaderboard_device_check.mjs, qui doit pouvoir pré-remplir ce localStorage
+// clé-par-clé afin de simuler un appareil dont le client_id persiste entre plusieurs process Node
+// séparés (chaque process a son propre jsdom, donc son propre localStorage en mémoire vide).
+export const CLIENT_ID_KEY = 'hardwood_client_id_v1';
 const PENDING_KEY = 'hardwood_pending_scores_v1';
 const FETCH_TIMEOUT_MS = 6000;
 

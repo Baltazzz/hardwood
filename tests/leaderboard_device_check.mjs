@@ -1,16 +1,27 @@
 // Simule UN appareil réel face au VRAI serveur Supabase (voir tests/audit_leaderboard_live.mjs) --
 // process Node indépendant pour que chaque "appareil" ait son propre client_id persistant, exactement
 // comme deux téléphones différents n'ayant jamais partagé leur stockage local.
+//
+// Un process Node = un jsdom = un localStorage EN MÉMOIRE VIDE à chaque lancement -- rien ne le
+// distingue naturellement d'un autre process. Pour qu'un même "appareil" (ex. "A") garde le MÊME
+// client_id à travers plusieurs appels successifs de ce script (ex. soumission, puis re-soumission),
+// on doit persister ce client_id nous-mêmes sur disque, dans HARDWOOD_DEVICE_STATE_DIR (fourni par
+// audit_leaderboard_live.mjs, un répertoire temporaire propre à cette exécution de l'audit).
 // Usage :
 //   node leaderboard_device_check.mjs probe
-//   node leaderboard_device_check.mjs submit <challengeId> <name> <score>
-//   node leaderboard_device_check.mjs fetch <challengeId>
+//   node leaderboard_device_check.mjs submit <deviceId> <challengeId> <name> <score>
+//   node leaderboard_device_check.mjs fetch <deviceId> <challengeId>
+import fs from 'node:fs';
+import path from 'node:path';
 import { setupEnvironment } from './env.mjs';
 
 setupEnvironment();
 localStorage.setItem('hw_welcome_seen', '1');
 
 const mode = process.argv[2];
+const deviceId = process.argv[3];
+const stateDir = process.env.HARDWOOD_DEVICE_STATE_DIR;
+const statePath = stateDir && deviceId ? path.join(stateDir, `device-${deviceId}.json`) : null;
 
 async function main() {
   if (mode === 'probe') {
@@ -30,16 +41,26 @@ async function main() {
 
   const api = await import('../src/engine/leaderboardApi.js');
 
+  // Réinjecte le client_id de cet appareil s'il a déjà été vu lors d'un appel précédent de
+  // l'audit (voir en-tête) -- doit se faire avant tout appel à getClientId()/submit/fetch,
+  // qui sinon en génèrerait un nouveau faute de le trouver dans ce localStorage vierge.
+  if (statePath && fs.existsSync(statePath)) {
+    const saved = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+    localStorage.setItem(api.CLIENT_ID_KEY, saved.clientId);
+  }
+
   if (mode === 'submit') {
-    const [, , , challengeId, name, score] = process.argv;
+    const [, , , , challengeId, name, score] = process.argv;
     const ok = await api.submitChallengeScore(challengeId, { name, score: Number(score), tier: 'All-Star', seasons: 12, hof: false });
+    if (statePath) fs.writeFileSync(statePath, JSON.stringify({ clientId: api.getClientId() }));
     console.log('RESULT:' + JSON.stringify({ ok, clientId: api.getClientId() }));
     return;
   }
 
   if (mode === 'fetch') {
-    const [, , , challengeId] = process.argv;
+    const [, , , , challengeId] = process.argv;
     const rows = await api.fetchChallengeScores(challengeId);
+    if (statePath) fs.writeFileSync(statePath, JSON.stringify({ clientId: api.getClientId() }));
     console.log('RESULT:' + JSON.stringify({ rows, clientId: api.getClientId() }));
     return;
   }

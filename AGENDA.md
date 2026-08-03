@@ -9,32 +9,6 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Ouvert
 
-- [ ] **AGD-57 — Backend Supabase pour le classement des défis entre amis : étape manuelle requise**
-  Ajouté au registre le 2026-08-03. Code entièrement écrit et commité en 4 commits séparés (voir
-  historique git) : migration SQL (`supabase/migrations/0001_challenge_scores.sql` --
-  table + contraintes anti-triche simples + trigger "garde le meilleur score, throttle à 5s" +
-  RLS publique en lecture/écriture, voir `supabase/README.md`), client REST sans nouvelle
-  dépendance (`engine/leaderboardApi.js` -- `submitChallengeScore()`/`fetchChallengeScores()`/
-  `flushPendingScores()`, aucune fonction ne lève jamais, timeout 6s, file d'attente locale pour
-  rattraper un envoi manqué), branchement dans `endCareer()` (envoi fire-and-forget) et
-  `renderChallengeLeaderboard()` (affichage local immédiat, remplacé par le classement serveur dès
-  qu'il arrive, message clair + repli local si indisponible, bouton "Actualiser").
-  **Bloqué sur une action manuelle que je ne peux pas faire moi-même** : la clé fournie est la clé
-  "anon" publique (lecture/écriture protégées par RLS, jamais de droits DDL) -- impossible de créer
-  la table à distance. `npm run audit:leaderboard-live` confirme actuellement `table "challenge_scores"
-  n'existe pas encore` (vérifié directement contre le vrai projet, pas supposé). Il faut exécuter
-  `supabase/migrations/0001_challenge_scores.sql` dans l'éditeur SQL du dashboard Supabase (voir
-  `supabase/README.md` pour la marche à suivre exacte), puis relancer `npm run audit:leaderboard-live`
-  -- une fois vert, le lot pourra être coché et livré (`npm run ship`).
-  **Déjà vérifié, indépendamment de la table** (`npm run audit:leaderboard`, 14 vérifications,
-  toutes vertes) : le jeu ne lève jamais d'exception et ne bloque jamais si le serveur est
-  injoignable, hors ligne, en timeout, ou répond une erreur HTTP -- repli local systématique,
-  message clair jamais une erreur brute, aucune régression sur la suite complète des audits
-  existants ni sur `scripts/deep-audit.mjs`.
-  **Critère de complétion** : `npm run audit:leaderboard-live` vert contre le vrai serveur (deux
-  process/appareils indépendants voient bien les deux scores sans échange de lien, meilleur score
-  conservé au replay, score aberrant rejeté), puis `npm run ship`.
-
 - [ ] **AGD-54 — Écran de bienvenue : risque de friction pour un nouveau joueur**
   Ajouté au registre le 2026-08-01, constat du point 2 d'AGD-53 (diagnostic demandé explicitement,
   "vérifie... signale-moi", aucune réécriture de contenu faite unilatéralement -- c'est une
@@ -116,6 +90,47 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
   les écrans vus souvent, un peu plus affirmé sur ceux vus rarement).
 
 ## Coché récemment
+
+- [x] **AGD-57 — Backend Supabase pour le classement des défis entre amis** _(implémenté et vérifié le 2026-08-03)_
+  Suite du lot backend Supabase (migration SQL + client REST + branchement dans `endCareer()`/le
+  podium, déjà commités en 4 commits précédents) : la table `challenge_scores` était absente du
+  projet Supabase distant (clé "anon" fournie, sans droits DDL -- impossible de la créer moi-même,
+  étape manuelle documentée dans ce ticket). L'utilisateur a exécuté
+  `supabase/migrations/0001_challenge_scores.sql` dans l'éditeur SQL du dashboard.
+  Relancé `npm run audit:leaderboard-live` contre le VRAI serveur (aucun mock) : la table existe
+  désormais, mais 3 vérifications sur 15 échouaient -- **pas un défaut du code de production**, un
+  défaut du harnais de test lui-même. Diagnostic : `tests/audit_leaderboard_live.mjs` simule
+  chaque "appareil" via un process Node séparé (`tests/leaderboard_device_check.mjs`), correct pour
+  isoler les singletons de module (même raison qu'AGD-51) -- mais chaque process recrée un jsdom
+  avec un `localStorage` EN MÉMOIRE VIDE, donc un `client_id` neuf à chaque appel, y compris pour
+  plusieurs appels censés représenter le MÊME appareil (ex. "A" qui se resoumet). Conséquence :
+  `mine` ne correspondait jamais côté client (client_id différent à chaque lecture) et l'upsert
+  serveur `on_conflict=(challenge_id, client_id)` ne pouvait jamais fusionner (client_id différent
+  à chaque soumission), empilant une ligne par tentative au lieu de mettre à jour la même.
+  Corrigé dans le harnais de test (`leaderboardApi.js` inchangé côté logique, seul `CLIENT_ID_KEY`
+  exporté pour permettre au test de le préremplir) : `leaderboard_device_check.mjs` accepte
+  désormais un `deviceId` explicite et persiste le `client_id` de cet appareil dans un fichier
+  d'état temporaire (`HARDWOOD_DEVICE_STATE_DIR`, propre à chaque exécution de l'audit, nettoyé à
+  la fin) -- deux appels successifs avec le même `deviceId` sont enfin le même appareil aux yeux du
+  serveur, exactement comme deux appels sur le même téléphone.
+  Une fois ce vrai bug de simulation corrigé, une 4e vérification a d'abord échoué à son tour
+  (resoumission à un MEILLEUR score rejetée) -- pas un bug non plus : le trigger SQL anti-spam de
+  la migration (`challenge_scores_guard`, throttle à 5s entre deux vraies améliorations de la même
+  ligne, voir `0001_challenge_scores.sql`) fonctionnait EXACTEMENT comme prévu, l'audit enchaînait
+  simplement les soumissions plus vite qu'un joueur réel ne le ferait jamais (un défi se joue en
+  bien plus de 5 secondes). Corrigé en ajoutant une pause de 5.2s dans l'audit avant cette étape,
+  pas en affaiblissant la garde anti-triche.
+  **Vérifié directement, contre le vrai serveur Supabase** (`npm run audit:leaderboard-live`, 15
+  vérifications, toutes vertes après les deux corrections ci-dessus) : deux appareils/process
+  indépendants voient bien les deux scores partagés sans échange de lien, `mine` jamais confondu
+  entre eux dans les deux sens, tri par score décroissant correct, une resoumission plus faible
+  n'écrase jamais le meilleur score enregistré, une resoumission meilleure (après la fenêtre
+  anti-spam) remplace bien l'ancienne ligne SANS empiler (toujours exactement 2 lignes après 3
+  soumissions du même appareil), score aberrant (999999) rejeté par le serveur et absent de tout
+  classement. Non-régression : `npm run audit` (100 carrières, 0% crash), `npm run
+  audit:leaderboard` (14 vérifications hors-ligne, repli local/timeout/erreur HTTP toujours sans
+  exception), `npm run audit:challenge` (23 vérifications, parcours à 3 appareils via lien de
+  défi/résultat toujours intact) tous verts.
 
 - [x] **AGD-56 — Ajustement du défi entre amis : classements dans le hub, filtrés, purgeables** _(implémenté et vérifié le 2026-08-03)_
   Suite directe d'AGD-55, quatre ajustements demandés explicitement le jour même.

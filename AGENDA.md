@@ -9,6 +9,32 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Ouvert
 
+- [ ] **AGD-57 — Backend Supabase pour le classement des défis entre amis : étape manuelle requise**
+  Ajouté au registre le 2026-08-03. Code entièrement écrit et commité en 4 commits séparés (voir
+  historique git) : migration SQL (`supabase/migrations/0001_challenge_scores.sql` --
+  table + contraintes anti-triche simples + trigger "garde le meilleur score, throttle à 5s" +
+  RLS publique en lecture/écriture, voir `supabase/README.md`), client REST sans nouvelle
+  dépendance (`engine/leaderboardApi.js` -- `submitChallengeScore()`/`fetchChallengeScores()`/
+  `flushPendingScores()`, aucune fonction ne lève jamais, timeout 6s, file d'attente locale pour
+  rattraper un envoi manqué), branchement dans `endCareer()` (envoi fire-and-forget) et
+  `renderChallengeLeaderboard()` (affichage local immédiat, remplacé par le classement serveur dès
+  qu'il arrive, message clair + repli local si indisponible, bouton "Actualiser").
+  **Bloqué sur une action manuelle que je ne peux pas faire moi-même** : la clé fournie est la clé
+  "anon" publique (lecture/écriture protégées par RLS, jamais de droits DDL) -- impossible de créer
+  la table à distance. `npm run audit:leaderboard-live` confirme actuellement `table "challenge_scores"
+  n'existe pas encore` (vérifié directement contre le vrai projet, pas supposé). Il faut exécuter
+  `supabase/migrations/0001_challenge_scores.sql` dans l'éditeur SQL du dashboard Supabase (voir
+  `supabase/README.md` pour la marche à suivre exacte), puis relancer `npm run audit:leaderboard-live`
+  -- une fois vert, le lot pourra être coché et livré (`npm run ship`).
+  **Déjà vérifié, indépendamment de la table** (`npm run audit:leaderboard`, 14 vérifications,
+  toutes vertes) : le jeu ne lève jamais d'exception et ne bloque jamais si le serveur est
+  injoignable, hors ligne, en timeout, ou répond une erreur HTTP -- repli local systématique,
+  message clair jamais une erreur brute, aucune régression sur la suite complète des audits
+  existants ni sur `scripts/deep-audit.mjs`.
+  **Critère de complétion** : `npm run audit:leaderboard-live` vert contre le vrai serveur (deux
+  process/appareils indépendants voient bien les deux scores sans échange de lien, meilleur score
+  conservé au replay, score aberrant rejeté), puis `npm run ship`.
+
 - [ ] **AGD-54 — Écran de bienvenue : risque de friction pour un nouveau joueur**
   Ajouté au registre le 2026-08-01, constat du point 2 d'AGD-53 (diagnostic demandé explicitement,
   "vérifie... signale-moi", aucune réécriture de contenu faite unilatéralement -- c'est une

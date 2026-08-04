@@ -89,7 +89,10 @@ async function main() {
   const cheat = run(['career-submit', 'devCheat', cheatCareer, '999999']);
   check('carrière -- score aberrant (999999) REJETÉ par le serveur', cheat.ok === false);
   const cheatRank = run(['career-rank', cheatCareer]);
-  check('carrière -- le score aberrant rejeté n\'apparaît dans aucun classement', cheatRank.result === null);
+  // fetchMyCareerWorldRank() : `null` = serveur injoignable, `{row:null}` = joignable mais aucune
+  // ligne pour ce pseudo (voir engine/worldLeaderboardApi.js) -- ici on attend spécifiquement ce
+  // 2e cas (le serveur a bien répondu, en rejetant l'insertion).
+  check('carrière -- le score aberrant rejeté n\'apparaît dans aucun classement', !cheatRank.result || cheatRank.result.row === null);
 
   // ---- Réconciliation de renommage (le scénario clé de ce lot, voir AGENDA.md AGD-59) : le MÊME
   // appareil se renomme -- doit mettre à jour SA MÊME ligne, jamais en créer une seconde. ----
@@ -99,7 +102,7 @@ async function main() {
   const renameSub2 = run(['career-submit', 'devRename', nameAfter, '55']);
   check('renommage -- 2e soumission (même appareil, nouveau pseudo, même score) acceptée', renameSub2.ok);
   const rankOldName = run(['career-rank', nameBefore]);
-  check('renommage -- l\'ANCIEN pseudo n\'a plus de ligne (pas de doublon fantôme)', rankOldName.result === null);
+  check('renommage -- l\'ANCIEN pseudo n\'a plus de ligne (pas de doublon fantôme)', !rankOldName.result || rankOldName.result.row === null);
   const rankNewName = run(['career-rank', nameAfter]);
   check('renommage -- le NOUVEAU pseudo porte bien la ligne, score préservé (55)', rankNewName.result?.row?.score === 55);
 

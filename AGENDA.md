@@ -9,6 +9,33 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Ouvert
 
+- [x] **AGD-62 — Classements mondiaux : lignes condensées + filtre "autour de moi"** _(implémenté et vérifié le 2026-08-04)_
+  Demande : "toute la liste doit être beaucoup plus condensée derrière [le podium], et faire une
+  sorte de filtre où on voit direct notre classement et les personnes devant/derrière nous" --
+  navigation/lecture faciles même avec des centaines de joueurs. `ui/worldLeaderboard.js` :
+  - Podium (rangs 1-3) inchangé (traitement plein format). Rangs 4+ basculent en variante
+    condensée (`.hof-row.compact`, `src/styles.css`) : rembourrage réduit, sous-titre
+    palier/saisons masqué, score/nom réduits -- scopée uniquement via cette classe, sans effet sur
+    le Panthéon local ni le classement de défi entre amis (qui réutilisent `.hof-row` sans elle).
+  - Nouveau bouton bascule "🔍 Autour de moi" / "📜 Classement complet" : fenêtre fixe de 11 lignes
+    (5 devant/5 derrière + soi, `AROUND_CONTEXT`) centrée sur mon rang réel, calculée via
+    `fetchMyRank()` (rang approximatif, "count trick" PostgREST déjà existant) puis une page
+    `fetchPage(offset, limit)` correctement positionnée -- pas de "Charger plus" dans ce mode.
+  - Contrat de `fetchMyRank()` étendu de 2 à 3 états (`engine/worldLeaderboardApi.js`) pour
+    distinguer "pas encore classé" (`{row:null,rank:null}`, message d'invitation dédié) de "serveur
+    injoignable" (`null`, message hors-ligne standard) -- nécessaire pour ne pas confondre les deux
+    cas dans le nouveau mode. Tous les appelants existants audités et mis à jour en conséquence
+    (2 assertions corrigées dans `tests/audit_world_leaderboard_live.mjs`).
+  **Vérifié** : nouvelles vérifications dans `tests/audit_world_leaderboard_offline.mjs` (podium
+  jamais condensé, rangs 4+ tous condensés, bouton de bascule présent et fonctionnel, message
+  d'invitation correct si pas encore classé, ma ligne bien centrée dans la fenêtre si classé,
+  aucun bouton "Charger plus" en mode "autour de moi") + `npm run audit:world-leaderboard` --
+  toutes passent. Suite complète de non-régression (`audit`, `audit:meta`, `audit:i18n`,
+  `audit:coherence`, `audit:cosmetics`, `audit:link`, `audit:challenge`, `audit:challenge-revisit`,
+  `audit:retention`, `audit:polish`, `audit:leaderboard`, `audit:profile-identity`,
+  `audit:world-leaderboard`, `audit:finishing-touches`, `audit:finishing-touches2`) verte,
+  `scripts/deep-audit.mjs` (300 carrières, 0% crash, 0 violation `once`) vert, `npm run build` vert.
+
 - [ ] **AGD-61 — Lot d'ajustements : bug draft, classements, étape manuelle requise (nettoyage des données de test)**
   Ajouté au registre le 2026-08-04. Quatre volets, la partie code entièrement livrée et vérifiée ;
   reste une étape manuelle Supabase (voir ci-dessous) avant de considérer le point B totalement clos.
@@ -39,11 +66,14 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
      de test, aucune d'un vrai joueur).
   **Bloqué sur une étape manuelle que je ne peux pas faire moi-même** : la clé anon n'a aucun droit de
   suppression sur `career_world_scores`/`daily_world_scores` (RLS volontairement sans politique
-  delete, voir AGD-59). Script `supabase/reset_and_seed_career_leaderboard.sql` prêt (vide les deux
-  tables -- entièrement des données de test, voir plus haut -- puis sème 6 profils d'amorce à scores
-  MODESTES et variés sur `career_world_scores`, 20 à 105, faciles à dépasser dès une carrière un tant
-  soit peu réussie) : à exécuter dans l'éditeur SQL du dashboard Supabase (voir `supabase/README.md`).
-  **Critère de complétion** : script exécuté, `career_world_scores` contient exactement les 6 profils
+  delete, voir AGD-59). Script `supabase/reset_and_seed_career_leaderboard.sql` prêt, ajusté deux
+  fois sur demande explicite (v2 trop timide, v3 retenue) : vide les deux tables -- entièrement des
+  données de test, voir plus haut -- puis sème **15** profils d'amorce sur `career_world_scores`,
+  scores échelonnés **65 à 250** (traverse Parcours de combattant/Joueur de rotation/All-Star/
+  Superstar, jamais Légende·Hall of Fame), pseudos mélangés entre format par défaut `JoueurXXXX` et
+  pseudos personnalisés crédibles : à exécuter dans l'éditeur SQL du dashboard Supabase (voir
+  `supabase/README.md`).
+  **Critère de complétion** : script exécuté, `career_world_scores` contient exactement les 15 profils
   d'amorce prévus (vérifiable par `curl`, voir `supabase/README.md`) -- alors seulement ce ticket
   pourra être coché.
   **Déjà vérifié, indépendamment de l'étape manuelle** : nouveau `npm run audit:finishing-touches2`

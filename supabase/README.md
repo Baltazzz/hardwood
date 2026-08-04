@@ -82,11 +82,14 @@ Les deux doivent répondre `[]`, puis `npm run audit:world-leaderboard-live` doi
 Script de MAINTENANCE DE DONNÉES (pas une migration -- aucune table/colonne touchée), à lancer
 manuellement quand tu le décides. Vide entièrement `career_world_scores`/`daily_world_scores` (les
 lignes qui y étaient venaient à 100% de mes propres sessions de test, jamais d'un vrai joueur --
-voir AGENDA.md) puis sème 6 profils d'amorce sur `career_world_scores` avec des scores
-VOLONTAIREMENT modestes (20-105, sous ou tout juste au-dessus du seuil "Joueur de rotation") --
-faciles à dépasser dès une carrière un tant soit peu réussie, pour qu'un classement neuf donne
-quelque chose à viser plutôt qu'un vide intimidant. Rien semé sur `daily_world_scores`, qui se
-remet à zéro chaque jour par construction -- semer "aujourd'hui" n'aurait plus de sens dès demain.
+voir AGENDA.md) puis sème 15 profils d'amorce sur `career_world_scores` -- scores ÉCHELONNÉS de
+**65 à 250**, traversant 4 paliers (Parcours de combattant / Joueur de rotation / All-Star /
+Superstar, jamais Légende·Hall of Fame à 280+) pour une variété crédible, sans jamais être hors de
+portée d'une bonne carrière. Pseudos mélangés à dessein : certains restent au format par défaut
+jamais personnalisé (`JoueurXXXX`, réaliste -- beaucoup de joueurs occasionnels ne changent jamais
+leur pseudo), d'autres personnalisés comme un vrai joueur le ferait. Rien semé sur
+`daily_world_scores`, qui se remet à zéro chaque jour par construction -- semer "aujourd'hui"
+n'aurait plus de sens dès demain.
 
 Les scripts de test (`tests/env.mjs`) bloquent désormais le réseau par défaut pour éviter que
 d'autres sessions de test repolluent ces tables à l'avenir -- seuls

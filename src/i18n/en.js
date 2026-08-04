@@ -99,6 +99,8 @@ export const EN = {
     loadMore: 'Load more', you: 'you', yourRank: 'Your position',
     unavailable: '📡 World leaderboard unavailable right now -- offline or server unreachable.',
     loadMoreFailed: '📡 Could not load more -- offline or server unreachable.',
+    aroundMe: '🔍 Around me', fullList: '📜 Full leaderboard',
+    notRankedYet: 'You\'re not on this leaderboard yet -- play to get listed!',
   },
   create: {
     step1Title: 'Your country', step1Sub: 'Your identity and national team eligibility -- your sporting starting point will be decided later, independently.',

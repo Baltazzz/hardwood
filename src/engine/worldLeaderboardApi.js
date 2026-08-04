@@ -161,9 +161,15 @@ export async function fetchDailyWorldPage({ date, ...rest } = {}) {
 // via le "count trick" PostgREST (Prefer: count=exact + Range: 0-0, total lu dans Content-Range)
 // -- évite de charger tout le classement pour savoir où je me situe. Approximatif en cas d'égalité
 // de score (accepté, même tolérance que d'autres valeurs dérivées de ce jeu -- ex. l'index
-// d'académie imposée du défi du jour, dérivé par modulo). Retourne `null` si ma ligne n'existe pas
-// encore ou si le serveur est injoignable. Recalculé selon l'axe de tri actif (`orderBy`) --
-// jamais figé sur le score si le joueur trie par saisons.
+// d'académie imposée du défi du jour, dérivé par modulo). Recalculé selon l'axe de tri actif
+// (`orderBy`) -- jamais figé sur le score si le joueur trie par saisons.
+//
+// Contrat de retour à TROIS états, distingués volontairement (voir ui/worldLeaderboard.js "autour
+// de moi", qui a besoin d'un message différent selon le cas) :
+//   - `null`                      -> serveur injoignable/hors ligne (même convention que le reste
+//                                     de ce module -- jamais confondu avec "pas encore classé").
+//   - `{ row: null, rank: null }` -> serveur joignable, mais ce joueur n'a encore aucune ligne ici.
+//   - `{ row, rank }`             -> trouvé, rang 1-based.
 async function fetchMyRank(restUrl, filterQS, orderBy) {
   try {
     const nickname = profileNickname();
@@ -171,7 +177,8 @@ async function fetchMyRank(restUrl, filterQS, orderBy) {
     const mineRes = await fetchWithTimeout(mineUrl, { headers: BASE_HEADERS }, FETCH_TIMEOUT_MS);
     if (!mineRes.ok) return null;
     const mineRows = await mineRes.json();
-    if (!Array.isArray(mineRows) || !mineRows.length) return null;
+    if (!Array.isArray(mineRows)) return null;
+    if (!mineRows.length) return { row: null, rank: null };
     const myRow = mineRows[0];
     const col = orderBy === 'seasons' ? 'seasons' : 'score';
     const myValue = myRow[col];

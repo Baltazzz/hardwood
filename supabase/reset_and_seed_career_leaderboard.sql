@@ -13,23 +13,35 @@
 -- scripts de test -- seuls les 2 scripts qui vérifient RÉELLEMENT le serveur y accèdent encore
 -- explicitement, avec des scores modestes désormais, voir tests/audit_world_leaderboard_live.mjs).
 --
--- CE SCRIPT : vide entièrement les deux tables (aucune ligne actuelle ne mérite d'être conservée),
--- puis sème 6 profils d'amorce sur career_world_scores -- des scores VOLONTAIREMENT modestes
--- (20-105, tous sous le seuil "Joueur de rotation" ou tout juste dedans -- voir la distribution
--- réelle mesurée dans engine/retention.js, p75 ~149), faciles à dépasser par n'importe quelle
--- carrière un tant soit peu réussie. Objectif : un classement qui donne quelque chose à viser
--- plutôt qu'un vide intimidant, sans jamais décourager un nouveau joueur qui le dépasserait dès sa
--- première vraie carrière. Rien semé sur daily_world_scores : ce classement se remet à zéro chaque
--- jour par construction (filtré sur la date du jour), semer "aujourd'hui" n'aurait plus de sens dès
--- demain.
+-- CE SCRIPT (v3, ajusté sur demande explicite -- v2 était allée trop bas) : vide entièrement les
+-- deux tables (aucune ligne actuelle ne mérite d'être conservée), puis sème 15 profils d'amorce
+-- sur career_world_scores. Scores ÉCHELONNÉS de 65 à 250 (traverse les 4 premiers paliers de
+-- endCareer() dans ui/screens.js -- Parcours de combattant / Joueur de rotation / All-Star /
+-- Superstar -- pour une variété crédible, sans jamais atteindre Légende·Hall of Fame à 280+) :
+-- une bonne carrière garde de quoi les dépasser tous, mais ça demande un vrai effort pour les
+-- plus hauts, contrairement à une version précédente jugée trop timide. Pseudos mélangés à
+-- dessein : certains restent au format par défaut jamais personnalisé ("JoueurXXXX", voir
+-- suggestNickname() dans engine/profile.js -- réaliste, la plupart des joueurs occasionnels ne
+-- changent jamais leur pseudo), d'autres sont personnalisés comme un vrai joueur le ferait. Rien
+-- semé sur daily_world_scores : ce classement se remet à zéro chaque jour par construction
+-- (filtré sur la date du jour), semer "aujourd'hui" n'aurait plus de sens dès demain.
 
 delete from public.career_world_scores;
 delete from public.daily_world_scores;
 
 insert into public.career_world_scores (nickname, client_id, score, tier, seasons, hof, summary) values
-  ('Sam',    '293d76d4-6c90-4bfd-90e7-e3659ce61f27', 20,  'Parcours de combattant', 5,  false, null),
-  ('Robin',  '7fa9503a-6e97-40a9-8a96-92eac4590a15', 35,  'Parcours de combattant', 7,  false, null),
-  ('Casey',  'f6840c85-0892-4e1a-b051-65b45368b89c', 50,  'Parcours de combattant', 9,  false, null),
-  ('Alex',   '25f418f9-4a20-4870-8380-d10c070b4fec', 65,  'Parcours de combattant', 11, false, null),
-  ('Jamie',  '84ef0e47-4894-4c19-ae69-a693b9ffe0ac', 85,  'Parcours de combattant', 13, false, null),
-  ('Morgan', 'fd29b8a8-2351-450f-9aac-51f807e1168e', 105, 'Joueur de rotation',     15, false, null);
+  ('Joueur4127',     '82432f1d-e5ee-46b9-a951-79da83fb16e2', 65,  'Parcours de combattant', 8,  false, null),
+  ('MarcoB',         'bb64d71e-ca87-44e9-a106-90676473a0e5', 78,  'Parcours de combattant', 9,  false, null),
+  ('Joueur8853',     'fd061985-7194-466b-8abb-5c9b316e9174', 92,  'Joueur de rotation',     10, false, null),
+  ('hoopsofia',      '922409ea-407b-4921-8612-5a78ed55d4e0', 105, 'Joueur de rotation',     11, false, null),
+  ('kenji_23',       '1e2cd211-f431-4675-85a4-344d29021b93', 118, 'Joueur de rotation',     12, false, null),
+  ('Joueur2091',     '3d62d2e6-fc79-44ce-a4ee-77e66554dbbf', 132, 'Joueur de rotation',     13, false, null),
+  ('AmaraP',         'e2a1ca5c-df3d-451b-86e9-3a9f2c00d7b1', 145, 'Joueur de rotation',     14, false, null),
+  ('tballer',        '11ad778d-a5cc-4aee-84d9-db96583f9427', 158, 'All-Star',               15, false, null),
+  ('Joueur6642',     '77e4684b-169d-47f4-beb6-0f996eb628c2', 172, 'All-Star',               16, false, null),
+  ('lucas.mvp',      '968faf30-6992-4696-aea3-94b47720e07d', 185, 'All-Star',               17, false, null),
+  ('zoe_courtside',  '0f6c8911-8960-4ce3-a191-f0eda695aa6e', 198, 'All-Star',               18, false, null),
+  ('Joueur5308',     '3dcb75ad-3204-43f8-b182-989aeaf8acf9', 212, 'All-Star',               19, false, null),
+  ('diego99',        '6ef72683-f8fc-4948-b288-be5fbd3d41b0', 225, 'Superstar',              20, false, null),
+  ('NoahRuns',       'd72399b6-6892-4c12-8909-925048b13c1a', 238, 'Superstar',              21, false, null),
+  ('Joueur9174',     '2f97117f-74b9-48cb-81ca-ded1231e94b7', 250, 'Superstar',              22, false, null);

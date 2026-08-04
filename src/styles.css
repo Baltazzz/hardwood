@@ -755,6 +755,18 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;lett
    les pages chargées, pour que je sache toujours où je me situe sans tout charger. */
 .world-lb-mine-label{font-family:'Bricolage Grotesque';font-weight:700;letter-spacing:.1em;text-transform:uppercase;
   font-size:11px;color:var(--chalk-dim);text-align:center;margin-bottom:8px}
+/* Lignes condensées au-delà du podium (rang 4+) : un classement mondial peut compter des centaines
+   de joueurs -- garder le format .hof-row plein (padding 12/14, sous-titre palier+saisons) pour
+   chacune rendrait la liste interminable à parcourir. Réduit le rembourrage et masque le sous-titre,
+   ne touche QUE `.hof-row.compact` -- le Panthéon local et le classement de défi entre amis
+   utilisent .hof-row sans cette classe et gardent leur format plein inchangé. */
+.hof-list.compact-list{gap:4px}
+.hof-row.compact{grid-template-columns:26px 1fr auto;gap:10px;padding:6px 12px;border-radius:9px}
+.hof-row.compact .hof-sub{display:none}
+.hof-row.compact .hof-name{font-size:13.5px}
+.hof-row.compact .hof-score b{font-size:16px}
+.hof-row.compact .hof-score small{display:none}
+.hof-row.compact .rk{font-size:13px;width:26px}
 
 /* ---------- Récap fin de carrière ---------- */
 .recap-block{max-width:620px;margin:22px auto 0}

@@ -102,6 +102,8 @@ export const FR = {
     loadMore: 'Charger plus', you: 'toi', yourRank: 'Ta position',
     unavailable: '📡 Classement mondial indisponible pour l\'instant -- hors ligne ou serveur injoignable.',
     loadMoreFailed: '📡 Impossible de charger la suite -- hors ligne ou serveur injoignable.',
+    aroundMe: '🔍 Autour de moi', fullList: '📜 Classement complet',
+    notRankedYet: 'Tu n\'apparais pas encore dans ce classement -- joue pour t\'y inscrire !',
   },
   create: {
     step1Title: 'Ton pays', step1Sub: 'Ton identité et ton éligibilité en sélection nationale -- ton point de départ sportif se décidera plus tard, indépendamment.',

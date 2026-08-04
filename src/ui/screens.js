@@ -15,6 +15,7 @@ import { renderHUD, animateStats } from './hud.js';
 import { resetAccent } from '../engine/accent.js';
 import { renderHallOfFame, renderCareerCard, renderBadges, fmtNum } from './card.js';
 import { renderProfile } from './profile.js';
+import { renderCareerWorldLeaderboard } from './worldLeaderboard.js';
 import { renderTrophyCabinet, medalIcon } from './trophies.js';
 import { activeTags, renderTagChips, renderTraitUnlockCard } from '../engine/tags.js';
 import { pick, clamp, money, ordinal, ri } from '../engine/utils.js';
@@ -188,10 +189,14 @@ export function screenTitle(){
          anglaise") ajouté au même groupe -- même logique d'entrée peu fréquente que la Boutique.
          Panthéon retiré (voir AGENDA.md AGD-59) : déjà accessible depuis la tuile de profil
          (renderProfile(), bouton "profileHof") et depuis l'écran de fin de carrière (bouton
-         "hofView") -- ces deux chemins restent inchangés, aucun accès perdu. -->
+         "hofView") -- ces deux chemins restent inchangés, aucun accès perdu. Classement mondial
+         des carrières ajouté ici (voir AGENDA.md) : jusque-là accessible UNIQUEMENT depuis la
+         tuile de profil, jugé trop enfoui -- un accès direct depuis le menu principal s'ajoute,
+         sans retirer celui de la tuile de profil (deux chemins, comme le Panthéon ci-dessus). -->
     <div class="home-group home-meta">
       <div class="eyebrow home-group-label">${t('home.trackingLabel')}</div>
       <div class="home-meta-row">
+        <button class="btn ghost sm" id="worldLbHome">${t('home.worldLbBtn')}</button>
         <button class="btn ghost sm" id="shop">${t('home.shopBtn')}</button>
         <button class="btn ghost sm" id="settings">${t('settings.button')}</button>
       </div>
@@ -221,6 +226,7 @@ export function screenTitle(){
     clearSavedGame();
     startDailyChallenge();
   };
+  document.getElementById('worldLbHome').onclick=()=>renderCareerWorldLeaderboard();
   document.getElementById('shop').onclick=()=>renderShop();
   document.getElementById('settings').onclick=()=>renderSettings();
   document.getElementById('welcomeReopen').onclick=(e)=>{ e.preventDefault(); screenWelcome(); };

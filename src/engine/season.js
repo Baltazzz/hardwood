@@ -636,7 +636,9 @@ function applyAging(){
 }
 
 /* Décide s'il faut proposer un transfert / promotion / draft cette intersaison */
-function resolveMovement(){
+// Exportée pour tests/audit_finishing_touches2.mjs (vérification directe de la garde ajoutée --
+// voir AGENDA.md, bug de la draft proposée à un joueur déjà en NBA/G-League).
+export function resolveMovement(){
   const p=G, lg=LEAGUES[p.league], o=ovr(p);
   const last=p.seasons[p.seasons.length-1];
   // dernier rung avant la NBA : EuroLeague pour les chemins eu/us, NBL pour l'Australie
@@ -700,11 +702,21 @@ function resolveMovement(){
   }
 
   // --- DÉCLARATION À LA DRAFT — fenêtre 19-22 ans, une seule vraie entrée par carrière ---
-  // Accessible à tous les paliers (hors college/G-League/NBA, qui ont leur propre filière),
-  // sans seuil de niveau/réputation. Au-delà de 22 ans on n'est plus draftable : éligibilité
-  // automatique forcée cette dernière année si le joueur n'a encore jamais tenté sa chance.
-  // La probabilité de se déclarer volontairement monte avec l'âge (on attend d'être prêt).
-  if(!p.draftEntered){
+  // Accessible à tous les paliers hors college/G-League/NBA (qui ont leur propre filière) : le
+  // college a son propre bloc dédié juste au-dessus (toujours un `return`, jamais de fallthrough
+  // jusqu'ici) ; G-League/NBA en revanche n'ONT PAS de bloc équivalent qui `return`e
+  // systématiquement (le callup G-League->NBA juste au-dessus ne se déclenche que sous condition
+  // de niveau) -- sans le garde-fou explicite ci-dessous, l'exclusion réelle du commentaire était
+  // FAUSSE pour ces deux paliers (bug corrigé, voir AGENDA.md) : un joueur ayant rejoint la NBA
+  // SANS jamais passer par une draftDecl (ex. signature pro directe en G-League via l'événement
+  // `early_pro`, data/events/early.js, puis callup -- p.draftEntered reste alors à false pour
+  // toujours) se voyait proposer la draft à 22 ans alors qu'il y était déjà. `p.draftEntered` seul
+  // ne suffit pas comme signal "déjà résolu" : ce n'est PAS renseigné par le callup/la promotion
+  // directe, contrairement à p.league qui, lui, reflète toujours fidèlement où en est le joueur.
+  // Sans seuil de niveau/réputation par ailleurs. Au-delà de 22 ans on n'est plus draftable :
+  // éligibilité automatique forcée cette dernière année si le joueur n'a encore jamais tenté sa
+  // chance. La probabilité de se déclarer volontairement monte avec l'âge (on attend d'être prêt).
+  if(!p.draftEntered && p.league!=='nba' && p.league!=='gleague'){
     if(p.age>=22){
       return {type:'draftDecl', origin:'intl', forced:true};
     }

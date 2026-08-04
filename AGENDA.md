@@ -9,6 +9,51 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Ouvert
 
+- [ ] **AGD-61 — Lot d'ajustements : bug draft, classements, étape manuelle requise (nettoyage des données de test)**
+  Ajouté au registre le 2026-08-04. Quatre volets, la partie code entièrement livrée et vérifiée ;
+  reste une étape manuelle Supabase (voir ci-dessous) avant de considérer le point B totalement clos.
+  1. *Bug d'éligibilité à la draft (prioritaire), corrigé*. `engine/season.js` `resolveMovement()` :
+     un joueur signé pro directement en G-League (`data/events/early.js` `early_pro`) puis appelé en
+     NBA (`callup`) ne passait jamais par une `draftDecl` -- `p.draftEntered` restait à `false` pour
+     toujours, et la fenêtre générique de déclaration (ligne ~707, à l'origine) ne vérifiait QUE ce
+     champ, jamais `p.league` -- un joueur déjà en NBA/G-League se voyait donc reproposer la draft à
+     22 ans. Corrigé : la garde exclut désormais explicitement `p.league==='nba'` et `'gleague'`, en
+     plus de `p.draftEntered`. Vérification plus large des autres types de mouvement (voir plan) :
+     c'était le SEUL type sur toute la liste qui pouvait se déclencher après être devenu caduc --
+     tous les autres sont naturellement bornés par une structure `if(p.league===X)` qui `return`
+     systématiquement, aucun autre correctif nécessaire.
+  2. *Classements, code livré*. Classement mondial des carrières désormais accessible directement
+     depuis le menu principal (`ui/screens.js`, bouton "🌍 Classement mondial" dans `home-meta`, en
+     plus du chemin existant via la tuile de profil -- deux accès, aucun retiré). Icônes de podium
+     réduites (`rankGlyph()` dans `ui/card.js` : couronne 30->23px, médailles 28->21px, répercuté
+     automatiquement partout où `rankGlyph()` est réutilisée -- Panthéon, défi entre amis,
+     classements mondiaux). **Cause racine de la pollution du classement signalée corrigée** :
+     `tests/env.mjs` bloque désormais le réseau PAR DÉFAUT dans tous les scripts de test (la quasi-
+     totalité des scripts de test pilotant de vraies carrières soumettaient silencieusement au VRAI
+     classement Supabase à chaque exécution, `endCareer()` n'ayant aucune garde "suis-je dans un
+     test ?") -- seuls `tests/leaderboard_device_check.mjs`/`tests/world_leaderboard_device_check.mjs`
+     (audits `*-live`, qui vérifient RÉELLEMENT le serveur) y accèdent encore, explicitement via
+     `{ allowNetwork: true }`, avec des scores de test désormais MODESTES (avant : 450-580,
+     délibérément écrasants -- exactement les "profils d'amorce quasi impossibles à battre" signalés,
+     confirmé en relisant la table réelle : 100% des lignes présentes venaient de mes propres sessions
+     de test, aucune d'un vrai joueur).
+  **Bloqué sur une étape manuelle que je ne peux pas faire moi-même** : la clé anon n'a aucun droit de
+  suppression sur `career_world_scores`/`daily_world_scores` (RLS volontairement sans politique
+  delete, voir AGD-59). Script `supabase/reset_and_seed_career_leaderboard.sql` prêt (vide les deux
+  tables -- entièrement des données de test, voir plus haut -- puis sème 6 profils d'amorce à scores
+  MODESTES et variés sur `career_world_scores`, 20 à 105, faciles à dépasser dès une carrière un tant
+  soit peu réussie) : à exécuter dans l'éditeur SQL du dashboard Supabase (voir `supabase/README.md`).
+  **Critère de complétion** : script exécuté, `career_world_scores` contient exactement les 6 profils
+  d'amorce prévus (vérifiable par `curl`, voir `supabase/README.md`) -- alors seulement ce ticket
+  pourra être coché.
+  **Déjà vérifié, indépendamment de l'étape manuelle** : nouveau `npm run audit:finishing-touches2`
+  (11 vérifications) -- bug de draft testé directement sur `resolveMovement()` (joueur NBA/G-League
+  déjà entré : plus jamais reproposé ; non-régression : joueur international jamais tenté toujours
+  proposé, joueur ayant déjà tenté jamais reproposé) ; bouton d'accueil confirmé présent et
+  fonctionnel ; tailles d'icônes confirmées réduites ; blocage réseau par défaut confirmé actif ET
+  levable explicitement. Suite complète de non-régression + `scripts/deep-audit.mjs` (300 carrières,
+  0% crash, 0 violation d'intégrité `once`) tous verts, `npm run build` vert.
+
 - [ ] **AGD-54 — Écran de bienvenue : risque de friction pour un nouveau joueur**
   Ajouté au registre le 2026-08-01, constat du point 2 d'AGD-53 (diagnostic demandé explicitement,
   "vérifie... signale-moi", aucune réécriture de contenu faite unilatéralement -- c'est une

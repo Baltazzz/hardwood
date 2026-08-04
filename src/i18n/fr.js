@@ -125,7 +125,7 @@ export const FR = {
     bestScoreChip: '🏆 Meilleur score légende : {score}',
     modesLabel: 'Modes de jeu', friendChallengeTitle: 'Défi entre amis', friendChallengeDesc: 'Même profil de départ, comparez vos carrières',
     dailyChallengeTitle: 'Défi du jour', dailyChallengeDesc: 'Un profil imposé, ton classement personnel',
-    trackingLabel: 'Suivi &amp; records', shopBtn: '🛍️ Boutique',
+    trackingLabel: 'Suivi &amp; records', worldLbBtn: '🌍 Classement mondial', shopBtn: '🛍️ Boutique',
     profileCareersChip: '{n} carrière{s}', profileBadgesChip: '{count}/{total} badges',
     kbd: 'Écris ta légende, saison après saison · ', howToPlay: 'comment jouer ?',
     credit: 'Créé par Gaspard G · ', manageCookies: 'Gérer les cookies', twitterLink: 'Donner un avis sur X',

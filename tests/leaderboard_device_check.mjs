@@ -15,7 +15,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { setupEnvironment } from './env.mjs';
 
-setupEnvironment();
+setupEnvironment({ allowNetwork: true }); // parle au VRAI serveur Supabase, voir tests/env.mjs
 localStorage.setItem('hw_welcome_seen', '1');
 
 const mode = process.argv[2];

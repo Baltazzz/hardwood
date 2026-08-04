@@ -18,7 +18,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { setupEnvironment } from './env.mjs';
 
-setupEnvironment();
+setupEnvironment({ allowNetwork: true }); // parle au VRAI serveur Supabase, voir tests/env.mjs
 localStorage.setItem('hw_welcome_seen', '1');
 
 const mode = process.argv[2];
@@ -79,8 +79,12 @@ async function main() {
     const nickname = isDaily ? maybeNickname : dateOrNickname;
     profile.setNickname(nickname); // pour que `mine` reflète bien le point de vue de CE pseudo
     const rows = isDaily
-      ? await api.fetchDailyWorldPage({ date: dateStr, offset: 0, limit: 50, orderBy: 'score' })
-      : await api.fetchCareerWorldPage({ offset: 0, limit: 50, orderBy: 'score' });
+      // limit volontairement large (voir audit_world_leaderboard_live.mjs -- les scores de test
+      // sont désormais MODESTES, pas dominants, pour ne jamais polluer la tête d'un classement
+      // partagé réel) : garantit de retrouver les lignes de test même noyées sous des scores
+      // réels plus élevés, sans dépendre d'y être en tête.
+      ? await api.fetchDailyWorldPage({ date: dateStr, offset: 0, limit: 300, orderBy: 'score' })
+      : await api.fetchCareerWorldPage({ offset: 0, limit: 300, orderBy: 'score' });
     console.log('RESULT:' + JSON.stringify({ rows, nickname }));
     return;
   }

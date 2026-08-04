@@ -10,7 +10,20 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-export function setupEnvironment() {
+// RÉSEAU BLOQUÉ PAR DÉFAUT (voir AGENDA.md -- des scripts de test pilotant de vraies carrières
+// écrivaient silencieusement dans le VRAI classement mondial Supabase à chaque exécution, aucune
+// suppression possible via la clé anon : `endCareer()` soumet toujours au classement mondial en
+// fire-and-forget, jamais gardé par un "suis-je dans un test ?"). Toute fonction `submit*`/`fetch*`
+// de ce jeu est conçue pour ne jamais lever face à un `fetch()` qui échoue (voir
+// engine/leaderboardApi.js/worldLeaderboardApi.js) -- bloquer le réseau ici est donc totalement
+// silencieux pour l'immense majorité des tests (ils testent la simulation, pas le réseau), qui
+// retombent simplement sur le comportement hors-ligne déjà pleinement supporté. Seuls les scripts
+// qui vérifient RÉELLEMENT le serveur (tests/*_device_check.mjs, appelés par les audits `*-live`)
+// doivent explicitement lever ce blocage via `{ allowNetwork: true }`.
+export function setupEnvironment({ allowNetwork = false } = {}) {
+  if (!allowNetwork) {
+    global.fetch = () => Promise.reject(new Error('réseau bloqué en test (voir tests/env.mjs) -- passer { allowNetwork: true } à setupEnvironment() pour l\'autoriser explicitement'));
+  }
   const dom = new JSDOM(indexHtml, { url: 'http://localhost/', pretendToBeVisual: true });
   const { window } = dom;
 

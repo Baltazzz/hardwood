@@ -9,6 +9,24 @@ implémentée **et** vérifiée (audit ou test) dans la session qui la coche.
 
 ## Ouvert
 
+- [x] **AGD-63 — Aperçu de lien sur X : image absente (placeholder gris)** _(implémenté et vérifié le 2026-08-05)_
+  Cause confirmée en comparant `index.html` local à la page réellement servie par
+  `https://hardwoodgame.com/` : `og:image`/`twitter:image` pointaient vers un chemin RELATIF
+  (`/og-image.png`) -- les crawlers de partage (X en tête) ne lisent que le HTML statique, sans
+  résoudre l'origine, et exigent une URL absolue pour l'image sous peine d'ignorer la balise.
+  Corrigé dans `index.html` : `og:image`/`twitter:image` en URL absolue
+  (`https://hardwoodgame.com/og-image.png`), ajout de `og:url` absolu (`https://hardwoodgame.com/`,
+  absent jusqu'ici) et de `og:image:type` (`image/png`, complète le couple largeur/hauteur déjà
+  présent). `twitter:card` était déjà `summary_large_image` -- rien à changer là.
+  **Vérifié** : build (`npm run build`) puis `dist/index.html` inspecté -- aucune balise `og:`/
+  `twitter:` dupliquée ou contradictoire (une seule occurrence de chacune) ; servi en local via
+  `vite preview` et récupéré par `curl`, balises identiques au fichier source, `og-image.png`
+  répond 200 avec `Content-Type: image/png` et fait bien 1200×630 (vérifié par lecture directe des
+  octets d'en-tête PNG). Confirmation supplémentaire contre la vraie production : `curl` sur
+  `https://hardwoodgame.com/og-image.png` répond bien 200/`image/png`/1200×630 (l'image en place
+  était déjà correcte, seule la balise qui la référençait était en cause) -- la correction ne sera
+  visible en ligne qu'après ce déploiement.
+
 - [x] **AGD-62 — Classements mondiaux : lignes condensées + filtre "autour de moi"** _(implémenté et vérifié le 2026-08-04)_
   Demande : "toute la liste doit être beaucoup plus condensée derrière [le podium], et faire une
   sorte de filtre où on voit direct notre classement et les personnes devant/derrière nous" --
